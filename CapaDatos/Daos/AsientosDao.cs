@@ -12,37 +12,25 @@ using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using CapaDatos.SQL;
 
 namespace CapaDatos.Daos
 {
     public class AsientosDao
     {
         Manejador manejador = new Manejador();
-        public bool Delete(Asiento t, Usuario user, out String mensaje)
+
+        public void Delete(Asiento asiento, Usuario user)
         {
-            try
+            if (!Guachi.Consultar(user, VentanaInfo.FormAsientos, CRUDName.Eliminar))
             {
-                if (!Guachi.Consultar(user, VentanaInfo.FormAsientos, CRUDName.Eliminar))
-                {
-                    mensaje = "Acceso denegado!!!";
-                    return false;
-                }
-
-                var sql = "UPDATE accounting_entries SET active = FALSE " +
-                          "WHERE accounting_entry_id = @accounting_entry_id LIMIT 1";
-
-                //int totalActulizados; 
-                var cnt = manejador.Ejecutar(sql, new List<Parametro> { new Parametro("@accounting_entry_id", t.Id) }, CommandType.Text);
-
-                mensaje = $"Se actualizaron {cnt} asientos";
-                return true;
+                throw new Exception("Acceso denegado");
             }
-            catch (Exception ex)
-            {
-                mensaje = ex.Message;
-                return false;
-            }
+
+            manejador.Ejecutar(Query.Asiento.Update, new List<Parametro> {new Parametro("@accounting_entry_id", asiento.Id)},
+                CommandType.Text);
         }
+
         public Asiento Insert(Asiento t, Usuario user, out String mensaje)
         {
             if (!Guachi.Consultar(user, VentanaInfo.FormAsientos, CRUDName.Insertar))
