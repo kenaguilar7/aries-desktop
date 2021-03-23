@@ -14,10 +14,11 @@ namespace CapaLogica
     public class AsientoCL
     {
         AsientosDao asientoDao = new AsientosDao();
-        public bool Delete(Asiento t, Usuario user, out String mensaje)
+        public void Delete(Asiento asiento, Usuario user)
         {
-            return asientoDao.Delete(t, user, out mensaje);
+            asientoDao.Delete(asiento, user);
         }
+
         public DataTable GetDataTable(Compañia t, Usuario user)
         {
             throw new NotImplementedException();

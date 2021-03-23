@@ -29,15 +29,15 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle10 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle18 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle11 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle12 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle13 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle14 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle15 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle16 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle17 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle9 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle7 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle8 = new System.Windows.Forms.DataGridViewCellStyle();
             this.lstNumeroAsientos = new System.Windows.Forms.ComboBox();
             this.lstMesesAbiertos = new System.Windows.Forms.ComboBox();
             this.label12 = new System.Windows.Forms.Label();
@@ -62,11 +62,6 @@
             this.rDebitos = new System.Windows.Forms.RadioButton();
             this.label1 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
-            this.txtErrorFecha = new System.Windows.Forms.Label();
-            this.txtErrorMonto = new System.Windows.Forms.Label();
-            this.txtErrorTipoCambio = new System.Windows.Forms.Label();
-            this.txtErrorReferencia = new System.Windows.Forms.Label();
-            this.txtErorDetalle = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.btnAgregarTransa = new System.Windows.Forms.Button();
@@ -74,7 +69,7 @@
             this.lstTipoCambio = new System.Windows.Forms.ComboBox();
             this.label13 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
-            this.fechaFactura = new System.Windows.Forms.MaskedTextBox();
+            this.txtBoxFechaFactura = new System.Windows.Forms.MaskedTextBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.panel2 = new System.Windows.Forms.Panel();
             this.tabControl1 = new System.Windows.Forms.TabControl();
@@ -84,7 +79,7 @@
             this.txtBoxReferencia = new System.Windows.Forms.TextBox();
             this.btnSeleccionarCuenta = new System.Windows.Forms.Button();
             this.txtTipoCambio = new System.Windows.Forms.TextBox();
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.txtMontoTotalTransaccion = new System.Windows.Forms.TextBox();
             this.txtBoxNombreCuenta = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
@@ -105,6 +100,7 @@
             this.BtbEliminar = new System.Windows.Forms.Button();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.txtCuentaToolT = new System.Windows.Forms.ToolTip(this.components);
+            this.AppErrorProvider = new System.Windows.Forms.ErrorProvider(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.GridDatos)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.tabControl1.SuspendLayout();
@@ -114,6 +110,7 @@
             this.groupBox3.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.groupBox4.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.AppErrorProvider)).BeginInit();
             this.SuspendLayout();
             // 
             // lstNumeroAsientos
@@ -125,6 +122,7 @@
             this.lstNumeroAsientos.Name = "lstNumeroAsientos";
             this.lstNumeroAsientos.Size = new System.Drawing.Size(68, 24);
             this.lstNumeroAsientos.TabIndex = 4;
+            this.lstNumeroAsientos.SelectedIndexChanged += new System.EventHandler(this.LstNumeroAsientos_SelectedIndexChanged);
             // 
             // lstMesesAbiertos
             // 
@@ -135,6 +133,7 @@
             this.lstMesesAbiertos.Name = "lstMesesAbiertos";
             this.lstMesesAbiertos.Size = new System.Drawing.Size(130, 24);
             this.lstMesesAbiertos.TabIndex = 3;
+            this.lstMesesAbiertos.SelectedIndexChanged += new System.EventHandler(this.LstMesesAbiertos_SelectedIndexChanged);
             // 
             // label12
             // 
@@ -199,8 +198,8 @@
             this.GridDatos.AllowUserToAddRows = false;
             this.GridDatos.AllowUserToDeleteRows = false;
             this.GridDatos.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle10.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.GridDatos.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle10;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.GridDatos.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
             this.GridDatos.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.GridDatos.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.DisplayedCells;
             this.GridDatos.BackgroundColor = System.Drawing.SystemColors.Control;
@@ -225,8 +224,8 @@
             this.GridDatos.Name = "GridDatos";
             this.GridDatos.ReadOnly = true;
             this.GridDatos.RowHeadersVisible = false;
-            dataGridViewCellStyle18.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.GridDatos.RowsDefaultCellStyle = dataGridViewCellStyle18;
+            dataGridViewCellStyle9.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.GridDatos.RowsDefaultCellStyle = dataGridViewCellStyle9;
             this.GridDatos.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.GridDatos.Size = new System.Drawing.Size(840, 254);
             this.GridDatos.TabIndex = 3;
@@ -235,8 +234,8 @@
             // 
             // dataGridViewButtonColumn1
             // 
-            dataGridViewCellStyle11.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.dataGridViewButtonColumn1.DefaultCellStyle = dataGridViewCellStyle11;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.dataGridViewButtonColumn1.DefaultCellStyle = dataGridViewCellStyle2;
             this.dataGridViewButtonColumn1.FillWeight = 119.1247F;
             this.dataGridViewButtonColumn1.HeaderText = "Cuenta";
             this.dataGridViewButtonColumn1.Name = "dataGridViewButtonColumn1";
@@ -260,9 +259,9 @@
             // 
             // dataGridViewTextBoxColumn3
             // 
-            dataGridViewCellStyle12.Format = "D";
-            dataGridViewCellStyle12.NullValue = null;
-            this.dataGridViewTextBoxColumn3.DefaultCellStyle = dataGridViewCellStyle12;
+            dataGridViewCellStyle3.Format = "D";
+            dataGridViewCellStyle3.NullValue = null;
+            this.dataGridViewTextBoxColumn3.DefaultCellStyle = dataGridViewCellStyle3;
             this.dataGridViewTextBoxColumn3.FillWeight = 119.1247F;
             this.dataGridViewTextBoxColumn3.HeaderText = "Fecha de documento";
             this.dataGridViewTextBoxColumn3.Name = "dataGridViewTextBoxColumn3";
@@ -270,10 +269,10 @@
             // 
             // debitos
             // 
-            dataGridViewCellStyle13.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            dataGridViewCellStyle13.Format = "₡#,0.00";
-            dataGridViewCellStyle13.NullValue = null;
-            this.debitos.DefaultCellStyle = dataGridViewCellStyle13;
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
+            dataGridViewCellStyle4.Format = "₡#,0.00";
+            dataGridViewCellStyle4.NullValue = null;
+            this.debitos.DefaultCellStyle = dataGridViewCellStyle4;
             this.debitos.FillWeight = 119.1247F;
             this.debitos.HeaderText = "Debitos";
             this.debitos.Name = "debitos";
@@ -281,10 +280,10 @@
             // 
             // dataGridViewTextBoxColumn2
             // 
-            dataGridViewCellStyle14.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            dataGridViewCellStyle14.Format = "₡#,0.00";
-            dataGridViewCellStyle14.NullValue = null;
-            this.dataGridViewTextBoxColumn2.DefaultCellStyle = dataGridViewCellStyle14;
+            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
+            dataGridViewCellStyle5.Format = "₡#,0.00";
+            dataGridViewCellStyle5.NullValue = null;
+            this.dataGridViewTextBoxColumn2.DefaultCellStyle = dataGridViewCellStyle5;
             this.dataGridViewTextBoxColumn2.FillWeight = 119.1247F;
             this.dataGridViewTextBoxColumn2.HeaderText = "Creditos";
             this.dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
@@ -292,8 +291,8 @@
             // 
             // Column2
             // 
-            dataGridViewCellStyle15.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            this.Column2.DefaultCellStyle = dataGridViewCellStyle15;
+            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            this.Column2.DefaultCellStyle = dataGridViewCellStyle6;
             this.Column2.FillWeight = 107.5672F;
             this.Column2.HeaderText = "Moneda";
             this.Column2.Name = "Column2";
@@ -301,10 +300,10 @@
             // 
             // ColumnTipoCambio
             // 
-            dataGridViewCellStyle16.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            dataGridViewCellStyle16.Format = "₡#,0.00";
-            dataGridViewCellStyle16.NullValue = null;
-            this.ColumnTipoCambio.DefaultCellStyle = dataGridViewCellStyle16;
+            dataGridViewCellStyle7.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
+            dataGridViewCellStyle7.Format = "₡#,0.00";
+            dataGridViewCellStyle7.NullValue = null;
+            this.ColumnTipoCambio.DefaultCellStyle = dataGridViewCellStyle7;
             this.ColumnTipoCambio.FillWeight = 107.5672F;
             this.ColumnTipoCambio.HeaderText = "Tipo Cambio";
             this.ColumnTipoCambio.Name = "ColumnTipoCambio";
@@ -312,10 +311,10 @@
             // 
             // ColumnMontoDolares
             // 
-            dataGridViewCellStyle17.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            dataGridViewCellStyle17.Format = "$#,0.00";
-            dataGridViewCellStyle17.NullValue = null;
-            this.ColumnMontoDolares.DefaultCellStyle = dataGridViewCellStyle17;
+            dataGridViewCellStyle8.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
+            dataGridViewCellStyle8.Format = "$#,0.00";
+            dataGridViewCellStyle8.NullValue = null;
+            this.ColumnMontoDolares.DefaultCellStyle = dataGridViewCellStyle8;
             this.ColumnMontoDolares.FillWeight = 107.5672F;
             this.ColumnMontoDolares.HeaderText = "Monto Dolares";
             this.ColumnMontoDolares.Name = "ColumnMontoDolares";
@@ -382,66 +381,6 @@
             this.label3.Size = new System.Drawing.Size(73, 17);
             this.label3.TabIndex = 1;
             this.label3.Text = "Referencia:";
-            // 
-            // txtErrorFecha
-            // 
-            this.txtErrorFecha.AutoSize = true;
-            this.txtErrorFecha.Font = new System.Drawing.Font("Arial", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtErrorFecha.ForeColor = System.Drawing.Color.Red;
-            this.txtErrorFecha.Location = new System.Drawing.Point(183, 192);
-            this.txtErrorFecha.Name = "txtErrorFecha";
-            this.txtErrorFecha.Size = new System.Drawing.Size(13, 16);
-            this.txtErrorFecha.TabIndex = 62;
-            this.txtErrorFecha.Text = "*";
-            this.txtErrorFecha.Visible = false;
-            // 
-            // txtErrorMonto
-            // 
-            this.txtErrorMonto.AutoSize = true;
-            this.txtErrorMonto.Font = new System.Drawing.Font("Arial", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtErrorMonto.ForeColor = System.Drawing.Color.Red;
-            this.txtErrorMonto.Location = new System.Drawing.Point(348, 261);
-            this.txtErrorMonto.Name = "txtErrorMonto";
-            this.txtErrorMonto.Size = new System.Drawing.Size(13, 16);
-            this.txtErrorMonto.TabIndex = 65;
-            this.txtErrorMonto.Text = "*";
-            this.txtErrorMonto.Visible = false;
-            // 
-            // txtErrorTipoCambio
-            // 
-            this.txtErrorTipoCambio.AutoSize = true;
-            this.txtErrorTipoCambio.Font = new System.Drawing.Font("Arial", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtErrorTipoCambio.ForeColor = System.Drawing.Color.Red;
-            this.txtErrorTipoCambio.Location = new System.Drawing.Point(348, 227);
-            this.txtErrorTipoCambio.Name = "txtErrorTipoCambio";
-            this.txtErrorTipoCambio.Size = new System.Drawing.Size(13, 16);
-            this.txtErrorTipoCambio.TabIndex = 64;
-            this.txtErrorTipoCambio.Text = "*";
-            this.txtErrorTipoCambio.Visible = false;
-            // 
-            // txtErrorReferencia
-            // 
-            this.txtErrorReferencia.AutoSize = true;
-            this.txtErrorReferencia.Font = new System.Drawing.Font("Arial", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtErrorReferencia.ForeColor = System.Drawing.Color.Red;
-            this.txtErrorReferencia.Location = new System.Drawing.Point(348, 131);
-            this.txtErrorReferencia.Name = "txtErrorReferencia";
-            this.txtErrorReferencia.Size = new System.Drawing.Size(13, 16);
-            this.txtErrorReferencia.TabIndex = 63;
-            this.txtErrorReferencia.Text = "*";
-            this.txtErrorReferencia.Visible = false;
-            // 
-            // txtErorDetalle
-            // 
-            this.txtErorDetalle.AutoSize = true;
-            this.txtErorDetalle.Font = new System.Drawing.Font("Arial", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtErorDetalle.ForeColor = System.Drawing.Color.Red;
-            this.txtErorDetalle.Location = new System.Drawing.Point(348, 163);
-            this.txtErorDetalle.Name = "txtErorDetalle";
-            this.txtErorDetalle.Size = new System.Drawing.Size(13, 16);
-            this.txtErorDetalle.TabIndex = 62;
-            this.txtErorDetalle.Text = "*";
-            this.txtErorDetalle.Visible = false;
             // 
             // label7
             // 
@@ -524,17 +463,17 @@
             this.label4.TabIndex = 2;
             this.label4.Text = "Detalle:";
             // 
-            // fechaFactura
+            // txtBoxFechaFactura
             // 
-            this.fechaFactura.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.fechaFactura.Location = new System.Drawing.Point(105, 192);
-            this.fechaFactura.Mask = "00/00/0000";
-            this.fechaFactura.Name = "fechaFactura";
-            this.fechaFactura.Size = new System.Drawing.Size(75, 22);
-            this.fechaFactura.TabIndex = 3;
-            this.fechaFactura.ValidatingType = typeof(System.DateTime);
-            this.fechaFactura.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.UsuarioKeyPress);
-            this.fechaFactura.Leave += new System.EventHandler(this.FechaFactura_Leave);
+            this.txtBoxFechaFactura.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtBoxFechaFactura.Location = new System.Drawing.Point(105, 192);
+            this.txtBoxFechaFactura.Mask = "00/00/0000";
+            this.txtBoxFechaFactura.Name = "txtBoxFechaFactura";
+            this.txtBoxFechaFactura.Size = new System.Drawing.Size(75, 22);
+            this.txtBoxFechaFactura.TabIndex = 3;
+            this.txtBoxFechaFactura.ValidatingType = typeof(System.DateTime);
+            this.txtBoxFechaFactura.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.UsuarioKeyPress);
+            this.txtBoxFechaFactura.Validating += new System.ComponentModel.CancelEventHandler(this.fechaFactura_Validating);
             // 
             // groupBox1
             // 
@@ -580,17 +519,12 @@
             this.tabPage1.Controls.Add(this.txtBoxReferencia);
             this.tabPage1.Controls.Add(this.btnSeleccionarCuenta);
             this.tabPage1.Controls.Add(this.txtTipoCambio);
-            this.tabPage1.Controls.Add(this.textBox1);
+            this.tabPage1.Controls.Add(this.txtMontoTotalTransaccion);
             this.tabPage1.Controls.Add(this.txtBoxNombreCuenta);
             this.tabPage1.Controls.Add(this.label15);
-            this.tabPage1.Controls.Add(this.txtErrorFecha);
-            this.tabPage1.Controls.Add(this.txtErrorMonto);
-            this.tabPage1.Controls.Add(this.txtErrorReferencia);
             this.tabPage1.Controls.Add(this.label9);
             this.tabPage1.Controls.Add(this.label1);
-            this.tabPage1.Controls.Add(this.txtErorDetalle);
             this.tabPage1.Controls.Add(this.label4);
-            this.tabPage1.Controls.Add(this.txtErrorTipoCambio);
             this.tabPage1.Controls.Add(this.btnAgregarTransa);
             this.tabPage1.Controls.Add(this.label3);
             this.tabPage1.Controls.Add(this.label13);
@@ -600,7 +534,7 @@
             this.tabPage1.Controls.Add(this.label5);
             this.tabPage1.Controls.Add(this.rCreditos);
             this.tabPage1.Controls.Add(this.label6);
-            this.tabPage1.Controls.Add(this.fechaFactura);
+            this.tabPage1.Controls.Add(this.txtBoxFechaFactura);
             this.tabPage1.Location = new System.Drawing.Point(4, 29);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
@@ -626,7 +560,7 @@
             this.txtBoxDetalle.Size = new System.Drawing.Size(240, 22);
             this.txtBoxDetalle.TabIndex = 2;
             this.txtBoxDetalle.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.UsuarioKeyPress);
-            this.txtBoxDetalle.Leave += new System.EventHandler(this.txtBoxDetalle_Leave);
+            this.txtBoxDetalle.Validating += new System.ComponentModel.CancelEventHandler(this.txtBoxDetalle_Validating);
             // 
             // txtBoxReferencia
             // 
@@ -637,7 +571,7 @@
             this.txtBoxReferencia.Size = new System.Drawing.Size(240, 22);
             this.txtBoxReferencia.TabIndex = 1;
             this.txtBoxReferencia.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.UsuarioKeyPress);
-            this.txtBoxReferencia.Leave += new System.EventHandler(this.txtBoxReferencia_Leave);
+            this.txtBoxReferencia.Validating += new System.ComponentModel.CancelEventHandler(this.txtBoxReferencia_Validating);
             // 
             // btnSeleccionarCuenta
             // 
@@ -667,19 +601,19 @@
             this.txtTipoCambio.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.txtTipoCambio.TextChanged += new System.EventHandler(this.txtTipoCambio_TextChanged);
             this.txtTipoCambio.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.maskedTextBox1_KeyPress);
-            this.txtTipoCambio.Leave += new System.EventHandler(this.txtTipoCambio_Leave);
+            this.txtTipoCambio.Validating += new System.ComponentModel.CancelEventHandler(this.txtTipoCambio_Validating);
             // 
-            // textBox1
+            // txtMontoTotalTransaccion
             // 
-            this.textBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBox1.Location = new System.Drawing.Point(105, 258);
-            this.textBox1.MaxLength = 16;
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(240, 22);
-            this.textBox1.TabIndex = 6;
-            this.textBox1.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.textBox1.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.maskedTextBox1_KeyPress);
-            this.textBox1.Leave += new System.EventHandler(this.txtBoxMonto_Leave);
+            this.txtMontoTotalTransaccion.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtMontoTotalTransaccion.Location = new System.Drawing.Point(105, 258);
+            this.txtMontoTotalTransaccion.MaxLength = 16;
+            this.txtMontoTotalTransaccion.Name = "txtMontoTotalTransaccion";
+            this.txtMontoTotalTransaccion.Size = new System.Drawing.Size(240, 22);
+            this.txtMontoTotalTransaccion.TabIndex = 6;
+            this.txtMontoTotalTransaccion.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.txtMontoTotalTransaccion.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.maskedTextBox1_KeyPress);
+            this.txtMontoTotalTransaccion.Validating += new System.ComponentModel.CancelEventHandler(this.TxtBoxMontoTotal_Validating);
             // 
             // txtBoxNombreCuenta
             // 
@@ -751,6 +685,7 @@
             this.txtDiferenciaSaldo.Size = new System.Drawing.Size(41, 21);
             this.txtDiferenciaSaldo.TabIndex = 70;
             this.txtDiferenciaSaldo.Text = "0.00";
+            this.txtDiferenciaSaldo.Visible = false;
             // 
             // labelDiferencia
             // 
@@ -761,6 +696,7 @@
             this.labelDiferencia.Size = new System.Drawing.Size(86, 17);
             this.labelDiferencia.TabIndex = 69;
             this.labelDiferencia.Text = "DIFERENCIA:";
+            this.labelDiferencia.Visible = false;
             // 
             // txtPathCuenta
             // 
@@ -924,11 +860,16 @@
             this.groupBox4.TabIndex = 1;
             this.groupBox4.TabStop = false;
             // 
+            // AppErrorProvider
+            // 
+            this.AppErrorProvider.ContainerControl = this;
+            // 
             // FrameAsientos
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.AutoValidate = System.Windows.Forms.AutoValidate.EnableAllowFocusChange;
             this.BackColor = System.Drawing.SystemColors.Control;
             this.ClientSize = new System.Drawing.Size(1264, 531);
             this.Controls.Add(this.groupBox4);
@@ -957,6 +898,7 @@
             this.groupBox3.ResumeLayout(false);
             this.flowLayoutPanel1.ResumeLayout(false);
             this.groupBox4.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.AppErrorProvider)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -968,7 +910,7 @@
         private System.Windows.Forms.Label txtTotalCreditos;
         private System.Windows.Forms.Label txtTotalDebitos;
         private System.Windows.Forms.Label label12;
-        private System.Windows.Forms.MaskedTextBox fechaFactura;
+        private System.Windows.Forms.MaskedTextBox txtBoxFechaFactura;
         private System.Windows.Forms.Label label13;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label4;
@@ -988,11 +930,6 @@
         private System.Windows.Forms.Button btnAgregarTransa;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.Label txtErrorFecha;
-        private System.Windows.Forms.Label txtErrorMonto;
-        private System.Windows.Forms.Label txtErrorTipoCambio;
-        private System.Windows.Forms.Label txtErrorReferencia;
-        private System.Windows.Forms.Label txtErorDetalle;
         private System.Windows.Forms.Button btnNuevoAsiento;
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabPage1;
@@ -1009,7 +946,7 @@
         private System.Windows.Forms.Label txtBoxNombreCuenta;
         private System.Windows.Forms.Label txtPathCuenta;
         private System.Windows.Forms.Panel panel2;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.TextBox txtMontoTotalTransaccion;
         private System.Windows.Forms.TextBox txtTipoCambio;
         private System.Windows.Forms.Button btnSeleccionarCuenta;
         private System.Windows.Forms.ToolTip txtCuentaToolT;
@@ -1029,5 +966,6 @@
         private System.Windows.Forms.Label labelRutaNuevaCuenta;
         private System.Windows.Forms.Label txtDiferenciaSaldo;
         private System.Windows.Forms.Label labelDiferencia;
+        private System.Windows.Forms.ErrorProvider AppErrorProvider;
     }
 }

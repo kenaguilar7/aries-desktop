@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -23,13 +24,15 @@ namespace CapaPresentacion.FrameCuentas
         private AsientoCL _asientoCL = new AsientoCL();
         private FechaTransaccionCL _fechaTransaccion = new FechaTransaccionCL();
         private TransaccionCL _transaccionCL = new TransaccionCL();
+        private int PreventMesesAbiertosIndex = 0;
+        private int ProventAsientoIndex = 0; 
         public FrameAsientos()
         {
             InitializeComponent();
             AgregarEventos();
             CargarDatos();
             //txtValido.TextChanged += new EventHandler(tb_TextChanged);
-            textBox1.TextChanged += new EventHandler(tb_TextChanged);
+            txtMontoTotalTransaccion.TextChanged += new EventHandler(tb_TextChanged);
             //Controls.Add(maskedmaskedTextBox1);
 
         }
@@ -38,9 +41,9 @@ namespace CapaPresentacion.FrameCuentas
         /// </summary>
         private void AgregarEventos()
         {
-            this.lstMesesAbiertos.SelectedIndexChanged += new System.EventHandler(this.LstMesesAbiertos_SelectedIndexChanged);
-            this.lstNumeroAsientos.SelectedIndexChanged += new System.EventHandler(this.LstNumeroAsientos_SelectedIndexChanged);
-            this.textBox1.KeyPress += UsuarioKeyPress;
+            //this.lstMesesAbiertos.SelectedIndexChanged += new System.EventHandler(this.LstMesesAbiertos_SelectedIndexChanged);
+            //this.lstNumeroAsientos.SelectedIndexChanged += new System.EventHandler(this.LstNumeroAsientos_SelectedIndexChanged);
+            this.txtMontoTotalTransaccion.KeyPress += UsuarioKeyPress;
             this.txtTipoCambio.KeyPress += UsuarioKeyPress;
 
         }
@@ -215,7 +218,7 @@ namespace CapaPresentacion.FrameCuentas
 
             #region Aqui verificamos la fecha de la factura
 
-            if (DateTime.TryParse(fechaFactura.Text, out DateTime dateTime))
+            if (DateTime.TryParse(txtBoxFechaFactura.Text, out DateTime dateTime))
             {
                 if (dateTime.Year < 1000 || dateTime.Year > 9999)
                 {
@@ -231,7 +234,7 @@ namespace CapaPresentacion.FrameCuentas
             else
             {
                 MessageBox.Show("Ingrese una fecha valida", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                fechaFactura.Focus();
+                txtBoxFechaFactura.Focus();
                 return false;
             }
 
@@ -251,14 +254,14 @@ namespace CapaPresentacion.FrameCuentas
             {
                 tr.TipoCambio = TipoCambio.Colones;
                 tr.MontoTipoCambio = 1.00m;
-                tr.Monto = Convert.ToDecimal(textBox1.Text);
+                tr.Monto = Convert.ToDecimal(txtMontoTotalTransaccion.Text);
 
             }
             else
             {
                 tr.TipoCambio = TipoCambio.Dolares;
                 tr.MontoTipoCambio = Convert.ToDecimal(txtTipoCambio.Text);
-                tr.Monto = Convert.ToDecimal(textBox1.Text) * tr.MontoTipoCambio; ///pasamos los dolares a colones
+                tr.Monto = Convert.ToDecimal(txtMontoTotalTransaccion.Text) * tr.MontoTipoCambio; ///pasamos los dolares a colones
 
             }
 
@@ -276,7 +279,7 @@ namespace CapaPresentacion.FrameCuentas
             }
             #endregion
 
-            var monto = Convert.ToDecimal(textBox1.Text) * Convert.ToDecimal(txtTipoCambio.Text);
+            var monto = Convert.ToDecimal(txtMontoTotalTransaccion.Text) * Convert.ToDecimal(txtTipoCambio.Text);
 
             if (monto > 9999999999999999.99m)
             {
@@ -294,7 +297,7 @@ namespace CapaPresentacion.FrameCuentas
             //this.txtBoxReferencia.Clear();
             //this.txtBoxDetalle.Clear();
             //this.fechaFactura.Clear();
-            this.textBox1.Clear();
+            this.txtMontoTotalTransaccion.Clear();
             this.btnAgregarTransa.Text = "Agregar";
         }
         /// <summary>
@@ -353,6 +356,7 @@ namespace CapaPresentacion.FrameCuentas
 
             }
             SetColorBalance();
+            SetDiferenciaLabel();
         }
         /// <summary>
         /// Establece los colores de los textos del panelbalance
@@ -379,13 +383,20 @@ namespace CapaPresentacion.FrameCuentas
             {
                 txtTotalCreditos.ForeColor = Color.Black;
                 txtTotalDebitos.ForeColor = Color.Black;
+            }
+        }
 
+        private void SetDiferenciaLabel()
+        {
+            var diferencia = _asiento?.DebitosColones - _asiento?.CreditosColones;
+            if (diferencia != null && diferencia != 0)
+            { 
                 this.labelDiferencia.Visible = true;
                 this.txtDiferenciaSaldo.Visible = true;
-                var diferencia = _asiento.DebitosColones - _asiento.CreditosColones;
                 this.txtDiferenciaSaldo.Text = string.Format("{0:₡###,###,###,##0.00}", diferencia);
             }
         }
+
         /// <summary>
         /// Evento que ocurre cuando se sale del control de fecha, este valida que la fecha se correcta
         /// </summary>
@@ -400,11 +411,20 @@ namespace CapaPresentacion.FrameCuentas
         /// <param name="e"></param>
         private void LstMesesAbiertos_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (VerificarAsientoCuadrado())
+            if (AsientoCuadrado())
             {
                 List<Asiento> lst = _asientoCL.GetPorFecha((FechaTransaccion)lstMesesAbiertos.SelectedItem, GlobalConfig.Compañia);
                 lstNumeroAsientos.DataSource = lst;
+                this.PreventMesesAbiertosIndex = lstMesesAbiertos.SelectedIndex;
             }
+            else
+            {
+                this.lstMesesAbiertos.SelectedIndexChanged -= new System.EventHandler(this.LstMesesAbiertos_SelectedIndexChanged);
+                 lstMesesAbiertos.SelectedIndex = this.PreventMesesAbiertosIndex;
+                this.lstMesesAbiertos.SelectedIndexChanged += new System.EventHandler(this.LstMesesAbiertos_SelectedIndexChanged);
+
+            }
+
         }
         /// <summary>
         /// Evento que ocurre cuando cambiamos el indice de la lista de asientos
@@ -415,12 +435,21 @@ namespace CapaPresentacion.FrameCuentas
         /// <param name="e"></param>
         private void LstNumeroAsientos_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (VerificarAsientoCuadrado())
+            if (AsientoCuadrado())
             {
-                _asiento = (Asiento)lstNumeroAsientos.SelectedItem;
+                _asiento = (Asiento) lstNumeroAsientos.SelectedItem;
                 _asiento.Transaccions = _transaccionCL.GetCompleto(_asiento);
                 UpdateView();
+                this.ProventAsientoIndex = lstNumeroAsientos.SelectedIndex;
             }
+            else
+            {
+                this.lstNumeroAsientos.SelectedIndexChanged -= new System.EventHandler(this.LstNumeroAsientos_SelectedIndexChanged);
+                lstNumeroAsientos.SelectedIndex = ProventAsientoIndex;
+                this.lstNumeroAsientos.SelectedIndexChanged += new System.EventHandler(this.LstNumeroAsientos_SelectedIndexChanged);
+
+            }
+
         }
         /// <summary>
         /// Se limpia el panel
@@ -429,21 +458,16 @@ namespace CapaPresentacion.FrameCuentas
         /// <param name="e"></param>
         private void BtnLimpiar_Click(object sender, EventArgs e)
         {
-            if (VerificarAsientoCuadrado())
+            if (AsientoCuadrado())
             {
                 this.GridDatos.Rows.Clear();
                 this.SetColorBalance();
+                this.SetDiferenciaLabel();
                 this.txtBoxReferencia.Clear();
                 this.txtBoxDetalle.Clear();
                 this.lstTipoCambio.SelectedIndex = 0;
-                this.textBox1.Clear();
+                this.txtMontoTotalTransaccion.Clear();
                 this.labelRutaNuevaCuenta.Text = "Ruta:";
-                ///labels de error
-                txtErorDetalle.Visible = false;
-                txtErrorFecha.Visible = false;
-                txtErrorMonto.Visible = false;
-                txtErrorReferencia.Visible = false;
-                txtErrorTipoCambio.Visible = false;
                 lstNumeroAsientos.SelectedIndex = 0;
                 txtBoxNombreCuenta.Text = "";
                 txtBoxNombreCuenta.Tag = null;
@@ -465,28 +489,24 @@ namespace CapaPresentacion.FrameCuentas
             {
                 if (_asiento.Id == 0)
                 {
-                    MessageBox.Show("No se puede eliminar este asiento porque aun no ha sido registrado", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    MessageBox.Show("No se puede eliminar este asiento porque aun no ha sido registrado",
+                        TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 }
-                else
-                if (MessageBox.Show("Se eliminara este asiento desea continuar", TextoGeneral.NombreApp, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                else if (MessageBox.Show("Se eliminara este asiento desea continuar", TextoGeneral.NombreApp,
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
-
-
-                    if (_asientoCL.Delete(_asiento, GlobalConfig.Usuario, out String mensaje))
-                    {
-                        MessageBox.Show("Asiento eliminado correctamente", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        _asiento = null;
-                        CargarDatos();
-                    }
-                    else
-                    {
-                        MessageBox.Show("No se pudo eliminar este asiento", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                    }
+                    _asientoCL.Delete(_asiento, GlobalConfig.Usuario);
+                    MessageBox.Show("Asiento eliminado correctamente", TextoGeneral.NombreApp, MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                    _asiento = null;
+                    SetDiferenciaLabel();
+                    CargarDatos();
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, TextoGeneral.MensajeBannerError, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                MessageBox.Show(ex.Message, TextoGeneral.MensajeBannerError, MessageBoxButtons.OK,
+                    MessageBoxIcon.Exclamation);
             }
         }
         /// <summary>
@@ -511,17 +531,17 @@ namespace CapaPresentacion.FrameCuentas
 
             txtBoxReferencia.Text = dummy.Referencia;
             txtBoxDetalle.Text = dummy.Detalle;
-            fechaFactura.Text = dummy.FechaFactura.ToShortDateString();
+            txtBoxFechaFactura.Text = dummy.FechaFactura.ToShortDateString();
 
             if (dummy.TipoCambio == TipoCambio.Dolares)
             {
-                textBox1.Text = (dummy.Monto / dummy.MontoTipoCambio).ToString();
+                txtMontoTotalTransaccion.Text = (dummy.Monto / dummy.MontoTipoCambio).ToString();
                 lstTipoCambio.SelectedIndex = 1;
                 txtTipoCambio.Text = dummy.MontoTipoCambio.ToString();
             }
             else
             {
-                textBox1.Text = dummy.Monto.ToString();
+                txtMontoTotalTransaccion.Text = dummy.Monto.ToString();
                 lstTipoCambio.SelectedIndex = 0;
             }
         }
@@ -593,117 +613,6 @@ namespace CapaPresentacion.FrameCuentas
         //    n.ShowDialog();
         //}
 
-        #region
-        private void txtBoxDetalle_Leave(object sender, EventArgs e)
-        {
-            if (this.Visible)
-            {
-                if (String.IsNullOrWhiteSpace(txtBoxDetalle.Text))
-                {
-                    MessageBox.Show("Este campo no puede ir vacio", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Hand);
-                    txtErorDetalle.Visible = true;
-                }
-                else
-                {
-                    txtErorDetalle.Visible = false;
-                }
-            }
-        }
-        private void txtBoxReferencia_Leave(object sender, EventArgs e)
-        {
-            ///el siguiente if resuelve el problme
-            ///de que si el control tenia el  foco y la ventana se cerraba iba 
-            ///tirando alertas de que este campo no puede ser nulo
-            ///con este if primero pregunta si la ventana esta activa y si no no valide nada
-            if (this.Visible)
-            {
-                ///Regunta si el texto es nulo o tiene espacios en blanco
-                if (String.IsNullOrEmpty(txtBoxReferencia.Text))
-                {
-                    MessageBox.Show("Este campo no puede ir vacio", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Hand);
-                    txtErrorReferencia.Visible = true;
-                }
-                else
-                {
-                    txtErrorReferencia.Visible = false;
-                }
-            }
-        }
-        private void txtTipoCambio_Leave(object sender, EventArgs e)
-        {
-            ////var rsldo = false;
-            ////if (txtTipoCambio.Text.Length == 0 || !(rsldo = decimal.TryParse(txtTipoCambio.Text, out decimal tpCambio)) || tpCambio == 0.00)
-            ////{
-            if (this.Visible)
-            {
-                if (decimal.TryParse(txtTipoCambio.Text, out decimal dummy))
-                {
-                    ////Buscar para que con el tipo de cambio se defina la cantidad de numeros 
-                    if (dummy <= 0)
-                    {
-                        MessageBox.Show("El tipo de cambio no puede ser cero o menor a cero", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                        txtErrorTipoCambio.Visible = true;
-                    }
-                    else
-                    {
-                        txtErrorTipoCambio.Visible = false;
-                    }
-                }
-                else
-                {
-                    MessageBox.Show("El tipo de cambio no puede ser cero o menor a cero", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                    txtErrorTipoCambio.Visible = true;
-                }
-            }
-
-        }
-        private void txtBoxMonto_Leave(object sender, EventArgs e)
-        {
-            if (this.Visible)
-            {
-                if (textBox1.Text.Length == 0)
-                {
-                    textBox1.TextChanged -= tb_TextChanged;
-                    textBox1.Text = "0.00";
-                    textBox1.TextChanged += tb_TextChanged;
-                }
-                if (decimal.TryParse(textBox1.Text, out decimal dummys))
-                {
-                    txtErrorMonto.Visible = false;
-                }
-                else
-                {
-                    MessageBox.Show("Formato de monto incorrecto", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                    txtErrorMonto.Visible = true;
-                }
-            }
-
-        }
-        private void FechaFactura_Leave(object sender, EventArgs e)
-        {
-            if (this.Visible)
-            {
-                if (DateTime.TryParse(fechaFactura.Text, out DateTime sr))
-                {
-                    if (sr.Year < 1000 || sr.Year > 9999)
-                    {
-                        MessageBox.Show("Formato de fecha incorrecto", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                        txtErrorFecha.Visible = true;
-                    }
-                    else
-                    {
-                        txtErrorFecha.Visible = false;
-                    }
-
-                }
-                else
-                {
-                    MessageBox.Show("Formato de fecha incorrecto", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                    txtErrorFecha.Visible = true;
-                }
-            }
-        }
-        #endregion
         private void btnNuevoAsiento_Click(object sender, EventArgs e)
         {
             try
@@ -827,11 +736,11 @@ namespace CapaPresentacion.FrameCuentas
         {
             ///si se llega a este punto es porque si era un numero o un . (punto)
 
-            string value = textBox1.Text.Replace(",", "");
+            string value = txtMontoTotalTransaccion.Text.Replace(",", "");
             value = (value == ".") ? "0." : value;
             if (decimal.TryParse(value, out decimal ul))
             {
-                textBox1.TextChanged -= tb_TextChanged;
+                txtMontoTotalTransaccion.TextChanged -= tb_TextChanged;
 
                 ///Primero todo lo que hace si comienza con cero
 
@@ -839,27 +748,27 @@ namespace CapaPresentacion.FrameCuentas
                 {
                     if (value.StartsWith("."))
                     {
-                        textBox1.Text = string.Format("{0:0.}", ul);
-                        textBox1.Text += ".";
-                        textBox1.SelectionStart = textBox1.Text.Length;
+                        txtMontoTotalTransaccion.Text = string.Format("{0:0.}", ul);
+                        txtMontoTotalTransaccion.Text += ".";
+                        txtMontoTotalTransaccion.SelectionStart = txtMontoTotalTransaccion.Text.Length;
                     }
                     else if (value.EndsWith("."))
                     {
-                        textBox1.Text = string.Format("{0:0.}", ul);
-                        textBox1.Text += ".";
-                        textBox1.SelectionStart = textBox1.Text.Length;
+                        txtMontoTotalTransaccion.Text = string.Format("{0:0.}", ul);
+                        txtMontoTotalTransaccion.Text += ".";
+                        txtMontoTotalTransaccion.SelectionStart = txtMontoTotalTransaccion.Text.Length;
                     }
                     else if (value.IndexOf('.') != 1 && ul == 0)
                     {
-                        textBox1.Text = string.Format("{0:0}", ul);
-                        textBox1.SelectionStart = textBox1.Text.Length;
+                        txtMontoTotalTransaccion.Text = string.Format("{0:0}", ul);
+                        txtMontoTotalTransaccion.SelectionStart = txtMontoTotalTransaccion.Text.Length;
                     }
 
                 }
                 else if (!value.Contains("."))
                 {
-                    textBox1.Text = string.Format("{0:#,#}", ul);
-                    textBox1.SelectionStart = textBox1.Text.Length;
+                    txtMontoTotalTransaccion.Text = string.Format("{0:#,#}", ul);
+                    txtMontoTotalTransaccion.SelectionStart = txtMontoTotalTransaccion.Text.Length;
                 }
                 else
                 {
@@ -867,16 +776,16 @@ namespace CapaPresentacion.FrameCuentas
                     if (value.IndexOf(".") + 2 < value.Length - 1)
                     {
                         var ss = value.IndexOf('.');
-                        textBox1.Text = string.Format("{0:#,#.##}", Convert.ToDecimal(value.Substring(0, value.Length - 1)));
+                        txtMontoTotalTransaccion.Text = string.Format("{0:#,#.##}", Convert.ToDecimal(value.Substring(0, value.Length - 1)));
                         //if (value.EndsWith("0"))
                         //{
                         //    textBox1.Text += ".00";
                         //}
 
-                        textBox1.SelectionStart = textBox1.Text.Length;
+                        txtMontoTotalTransaccion.SelectionStart = txtMontoTotalTransaccion.Text.Length;
                     }
                 }
-                textBox1.TextChanged += tb_TextChanged;
+                txtMontoTotalTransaccion.TextChanged += tb_TextChanged;
             }
         }
         private void txtTipoCambio_TextChanged(object sender, EventArgs e)
@@ -942,9 +851,9 @@ namespace CapaPresentacion.FrameCuentas
         }
         private void FrameAsientos_FormClosing(object sender, FormClosingEventArgs e)
         {
-            e.Cancel = !VerificarAsientoCuadrado();
+            e.Cancel = !AsientoCuadrado();
         }
-        private Boolean VerificarAsientoCuadrado()
+        private bool AsientoCuadrado()
         {
             if (_asiento != null && _asiento.Id != 0 && !_asiento.Cuadrado)
             {
@@ -957,5 +866,99 @@ namespace CapaPresentacion.FrameCuentas
                 return true;
             }
         }
+
+        #region Validations
+        private void txtBoxReferencia_Validating(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (string.IsNullOrEmpty(txtBoxReferencia.Text))
+            {
+                SetErrorMessage(txtBoxReferencia, "Referencia no puede ir en blanco!", ref e, true);
+            }
+            else
+            {
+                SetErrorMessage(txtBoxReferencia, string.Empty, ref e, false);
+            }
+        }
+
+
+        private void SetErrorMessage(Control control, string message, ref CancelEventArgs e, bool cancel)
+        {
+            e.Cancel = cancel;
+            AppErrorProvider.SetError(control, message);
+        }
+        #endregion
+
+        private void txtBoxDetalle_Validating(object sender, CancelEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(txtBoxDetalle.Text))
+            {
+                SetErrorMessage(txtBoxDetalle, "Detalle no puede ir en blanco!", ref e, true);
+            }
+            else
+            {
+                SetErrorMessage(txtBoxDetalle, string.Empty, ref e, false);
+            }
+        }
+
+        private void fechaFactura_Validating(object sender, CancelEventArgs e)
+        {
+            if (DateTime.TryParse(txtBoxFechaFactura.Text, out DateTime sr))
+            {
+                if (sr.Year < 1000 || sr.Year > 9999)
+                {
+                    SetErrorMessage(txtBoxFechaFactura, "Formato de fecha incorrecto", ref e, true);
+                }
+                else
+                {
+                    SetErrorMessage(txtBoxFechaFactura, string.Empty, ref e, false);
+                }
+            }
+            else
+            {
+                SetErrorMessage(txtBoxFechaFactura, "Formato de fecha incorrecto", ref e, true);
+            }
+        }
+
+        private void txtTipoCambio_Validating(object sender, CancelEventArgs e)
+        {
+            var tipoCambioString = txtTipoCambio.Text;
+            var canParse = decimal.TryParse(tipoCambioString, out decimal tipoCambio);
+
+            if (canParse)
+            {
+                ////Buscar para que con el tipo de cambio se defina la cantidad de numeros 
+                if (tipoCambio <= 0)
+                {
+                    SetErrorMessage(txtTipoCambio, "El tipo de cambio no puede ser cero o menor a cero", ref e, true);
+                }
+                else
+                {
+                    SetErrorMessage(txtTipoCambio, string.Empty, ref e, false);
+                }
+            }
+            else
+            {
+                SetErrorMessage(txtTipoCambio, "El tipo de cambio no puede ser cero o menor a cero", ref e, true);
+            }
+        }
+
+        private void TxtBoxMontoTotal_Validating(object sender, CancelEventArgs e)
+        {
+            if (txtMontoTotalTransaccion.Text.Length == 0)
+            {
+                txtMontoTotalTransaccion.TextChanged -= tb_TextChanged;
+                txtMontoTotalTransaccion.Text = "0.00";
+                txtMontoTotalTransaccion.TextChanged += tb_TextChanged;
+            }
+            if (decimal.TryParse(txtMontoTotalTransaccion.Text, out decimal dummys))
+            {
+                SetErrorMessage(txtMontoTotalTransaccion, string.Empty, ref e, false);
+            }
+            else
+            {
+                SetErrorMessage(txtMontoTotalTransaccion, "Formato de monto incorrecto", ref e, true);
+            }
+        }
+
     }
 }
