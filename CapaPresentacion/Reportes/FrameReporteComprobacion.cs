@@ -40,8 +40,8 @@ namespace CapaPresentacion.Reportes
         /// </summary>
         private void CargarDatos()
         {
-            _lstCuentas = _cuentaCL.GetAll(GlobalConfig.Compañia);
-            this.lstMesesAbiertos.DataSource = _fechaTransaccionCL.GetAllActive(GlobalConfig.Compañia, GlobalConfig.Usuario);
+            _lstCuentas = _cuentaCL.GetAll(GlobalConfig.Company);
+            this.lstMesesAbiertos.DataSource = _fechaTransaccionCL.GetAllActive(GlobalConfig.Company, GlobalConfig.Usuario);
         }
         /// <summary>
         /// Actualiza la vista del grid
@@ -52,7 +52,7 @@ namespace CapaPresentacion.Reportes
             {
                 var nuevalst = _lstCuentas;
 
-                _cuentaCL.LLenarConSaldos(((FechaTransaccion)lstMesesAbiertos.Items[lstMesesAbiertos.Items.Count - 1]).Fecha, ((FechaTransaccion)lstMesesAbiertos.SelectedItem).Fecha,  nuevalst, GlobalConfig.Compañia);
+                _cuentaCL.LLenarConSaldos(((FechaTransaccion)lstMesesAbiertos.Items[lstMesesAbiertos.Items.Count - 1]).Fecha, ((FechaTransaccion)lstMesesAbiertos.SelectedItem).Fecha,  nuevalst, GlobalConfig.Company);
 
                 ///Imprimir solo cuentas con saldo 
                 ///quitar las cuentas que no tienen saldo
@@ -180,11 +180,11 @@ namespace CapaPresentacion.Reportes
 
                 if (_lstCuentas != null)
                 {
-                    using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "Excel|*.xlsx", FileName = $"REPORTE DE COMPROBACIÓN {GlobalConfig.Compañia.ToString()}" })
+                    using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "Excel|*.xlsx", FileName = $"REPORTE DE COMPROBACIÓN {GlobalConfig.Company.ToString()}" })
                     {
                         if (sfd.ShowDialog() == DialogResult.OK)
                         {
-                            ReporteBalanceComprobacion.GenerarReporte(_lstExcel, GlobalConfig.Compañia, GlobalConfig.Usuario, GlobalConfig.Compañia.TipoMoneda, sfd.FileName);
+                            ReporteBalanceComprobacion.GenerarReporte(_lstExcel, GlobalConfig.Company, GlobalConfig.Usuario, GlobalConfig.Company.TipoMoneda, sfd.FileName);
                         }
                     }
                 }

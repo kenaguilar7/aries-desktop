@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
-
+using Microsoft.Extensions.DependencyInjection;
 namespace CapaPresentacion
 {
     static class Program
@@ -13,7 +13,17 @@ namespace CapaPresentacion
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            GlobalConfig globalConfig = new GlobalConfig(); 
+            GlobalConfig globalConfig = new GlobalConfig();
+
+            //var services = new ServiceCollection();
+
+            //ConfigureServices(services);
+
+            //using (ServiceProvider serviceProvider = services.BuildServiceProvider())
+            //{
+            //    var form1 = serviceProvider.GetRequiredService<FrameMenu>();
+            //    Application.Run(form1);
+            //}
             Application.Run(new FrameMenu());
         }
 

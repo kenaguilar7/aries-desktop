@@ -44,8 +44,8 @@ namespace CapaPresentacion.FrameCuentas
         {
             _lstCuentas.Clear();
             //_lstCuentas = await Task.Run(() => _cuentaCL.GetAll(GlobalConfig.Compañia            
-            _lstCuentas = await Task.Run(() => _cuentaCL.GetAll(GlobalConfig.Compañia));
-            _lstCuentas = _cuentaCL.GetAll(GlobalConfig.Compañia);
+            _lstCuentas = await Task.Run(() => _cuentaCL.GetAll(GlobalConfig.Company));
+            _lstCuentas = _cuentaCL.GetAll(GlobalConfig.Company);
             treeCuentas.Nodes.AddRange(TreeViewCuentas.CrearTreeView(_lstCuentas));
             // CargarDatosAListas();
         }
@@ -54,7 +54,7 @@ namespace CapaPresentacion.FrameCuentas
             AFechaFinal.SelectedIndexChanged -= this.AFechaFinalSelectedIndexChanged;
             BFechaFinal.SelectedIndexChanged -= this.BFechaFinalSelectedIndexChanged;
 
-            _lstFechas = _fechaTransaccionCL.GetAllActive(GlobalConfig.Compañia, GlobalConfig.Usuario);
+            _lstFechas = _fechaTransaccionCL.GetAllActive(GlobalConfig.Company, GlobalConfig.Usuario);
             ///Se añaden interfaces / copias (las interfaces no son copias) 
             ///la idea con eso es que cada item y de cada combo box tenga diferente hash
             var lstBfchFnl = new List<FechaTransaccion> { (from c1 in _lstFechas select c1).OrderByDescending(x => x.Fecha).LastOrDefault() };
@@ -108,7 +108,7 @@ namespace CapaPresentacion.FrameCuentas
 
             // var lstcntshjs = TreeViewCuentas.GetCuentasHIjas(CuentaActual, _lstCuentas);
 
-            _cuentaCL.LLenarConSaldos(par1, par2, _lstCuentas, GlobalConfig.Compañia);
+            _cuentaCL.LLenarConSaldos(par1, par2, _lstCuentas, GlobalConfig.Company);
             //TreeCuentasAfterSelect(null, null);
             CargarGridA();
         }
@@ -127,7 +127,7 @@ namespace CapaPresentacion.FrameCuentas
             par2 = (par2.AddMonths(1)).AddDays(-1);
             #endregion
             // var lstcntshjs = TreeViewCuentas.GetCuentasHIjas(CuentaActual, _lstCuentas);
-            _cuentaCL.LLenarConSaldos(par1, par2, _lstCuentas, GlobalConfig.Compañia);
+            _cuentaCL.LLenarConSaldos(par1, par2, _lstCuentas, GlobalConfig.Company);
 
             CargarGridB();
 
@@ -208,7 +208,7 @@ namespace CapaPresentacion.FrameCuentas
 
                 cEdita.Detalle = this.txtBoxDetalle.Text;
 
-                if (_cuentaCL.Update(ref cEdita, GlobalConfig.Usuario, txtNombreInfo.Text, GlobalConfig.Compañia, txtBoxDetalle.Text, out String mensaje))
+                if (_cuentaCL.Update(ref cEdita, GlobalConfig.Usuario, txtNombreInfo.Text, GlobalConfig.Company, txtBoxDetalle.Text, out String mensaje))
                 {
                     MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
                     treeCuentas.SelectedNode.Text = cEdita.Nombre;
@@ -300,7 +300,7 @@ namespace CapaPresentacion.FrameCuentas
         /// <param name="e"></param>
         private void Listar(object sender, EventArgs e)
         {
-            ReporteCuenta reporte = new ReporteCuenta(GlobalConfig.Compañia, GlobalConfig.Usuario);
+            ReporteCuenta reporte = new ReporteCuenta(GlobalConfig.Company, GlobalConfig.Usuario);
             reporte.MdiParent = this.MdiParent;
             reporte.Show();
 

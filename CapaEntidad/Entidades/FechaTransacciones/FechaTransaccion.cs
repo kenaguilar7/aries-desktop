@@ -1,4 +1,4 @@
-﻿using CapaEntidad.Entidades.Asientos;
+﻿using CapaEntidad.Entidades.JournalEntries;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -10,15 +10,20 @@ namespace CapaEntidad.Entidades.FechaTransacciones
 {
     public class FechaTransaccion
     {
-        public decimal Id { get; set; }
+        public int Id { get; set; }
         public DateTime Fecha { get; set; }
         public Boolean Cerrada { get; set; }
-        public List<Asiento> Asientos {get; set; }
-        public FechaTransaccion(DateTime fecha, bool cerrada = false, decimal id = 0)
+        public List<JournalEntry> Asientos {get; set; }
+        public FechaTransaccion(DateTime fecha, int id, bool cerrada = false)
         {
             Id = id;
             Fecha = fecha;
             Cerrada = cerrada;
+        }
+
+        public FechaTransaccion()
+        {
+            
         }
         public override string ToString()
         {

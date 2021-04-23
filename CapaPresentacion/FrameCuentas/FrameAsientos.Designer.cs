@@ -74,6 +74,8 @@
             this.panel2 = new System.Windows.Forms.Panel();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.flowLayoutPanel2 = new System.Windows.Forms.FlowLayoutPanel();
+            this.btnUpdateJELine = new System.Windows.Forms.Button();
             this.labelRutaNuevaCuenta = new System.Windows.Forms.Label();
             this.txtBoxDetalle = new System.Windows.Forms.TextBox();
             this.txtBoxReferencia = new System.Windows.Forms.TextBox();
@@ -105,6 +107,7 @@
             this.groupBox1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
+            this.flowLayoutPanel2.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.panel1.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -407,7 +410,7 @@
             this.btnAgregarTransa.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnAgregarTransa.Image = global::CapaPresentacion.Properties.Resources.icons8_añadir_25;
             this.btnAgregarTransa.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnAgregarTransa.Location = new System.Drawing.Point(262, 289);
+            this.btnAgregarTransa.Location = new System.Drawing.Point(3, 3);
             this.btnAgregarTransa.Name = "btnAgregarTransa";
             this.btnAgregarTransa.Size = new System.Drawing.Size(83, 30);
             this.btnAgregarTransa.TabIndex = 7;
@@ -514,6 +517,7 @@
             // tabPage1
             // 
             this.tabPage1.BackColor = System.Drawing.SystemColors.Control;
+            this.tabPage1.Controls.Add(this.flowLayoutPanel2);
             this.tabPage1.Controls.Add(this.labelRutaNuevaCuenta);
             this.tabPage1.Controls.Add(this.txtBoxDetalle);
             this.tabPage1.Controls.Add(this.txtBoxReferencia);
@@ -525,7 +529,6 @@
             this.tabPage1.Controls.Add(this.label9);
             this.tabPage1.Controls.Add(this.label1);
             this.tabPage1.Controls.Add(this.label4);
-            this.tabPage1.Controls.Add(this.btnAgregarTransa);
             this.tabPage1.Controls.Add(this.label3);
             this.tabPage1.Controls.Add(this.label13);
             this.tabPage1.Controls.Add(this.label7);
@@ -541,6 +544,33 @@
             this.tabPage1.Size = new System.Drawing.Size(362, 334);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Asientos";
+            // 
+            // flowLayoutPanel2
+            // 
+            this.flowLayoutPanel2.Controls.Add(this.btnUpdateJELine);
+            this.flowLayoutPanel2.Controls.Add(this.btnAgregarTransa);
+            this.AppErrorProvider.SetIconAlignment(this.flowLayoutPanel2, System.Windows.Forms.ErrorIconAlignment.TopRight);
+            this.flowLayoutPanel2.Location = new System.Drawing.Point(155, 286);
+            this.flowLayoutPanel2.Name = "flowLayoutPanel2";
+            this.flowLayoutPanel2.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.flowLayoutPanel2.Size = new System.Drawing.Size(189, 36);
+            this.flowLayoutPanel2.TabIndex = 4;
+            // 
+            // btnUpdateJELine
+            // 
+            this.btnUpdateJELine.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnUpdateJELine.Image = global::CapaPresentacion.Properties.Resources.icons8_añadir_25;
+            this.btnUpdateJELine.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnUpdateJELine.Location = new System.Drawing.Point(92, 3);
+            this.btnUpdateJELine.Name = "btnUpdateJELine";
+            this.btnUpdateJELine.Size = new System.Drawing.Size(94, 30);
+            this.btnUpdateJELine.TabIndex = 8;
+            this.btnUpdateJELine.Text = "Actualizar";
+            this.btnUpdateJELine.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.txtCuentaToolT.SetToolTip(this.btnUpdateJELine, "CTRL + A");
+            this.btnUpdateJELine.UseVisualStyleBackColor = true;
+            this.btnUpdateJELine.Visible = false;
+            this.btnUpdateJELine.Click += new System.EventHandler(this.btnUpdateJELine_Click);
             // 
             // labelRutaNuevaCuenta
             // 
@@ -612,6 +642,7 @@
             this.txtMontoTotalTransaccion.Size = new System.Drawing.Size(240, 22);
             this.txtMontoTotalTransaccion.TabIndex = 6;
             this.txtMontoTotalTransaccion.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.txtMontoTotalTransaccion.TextChanged += new System.EventHandler(this.tb_TextChanged);
             this.txtMontoTotalTransaccion.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.maskedTextBox1_KeyPress);
             this.txtMontoTotalTransaccion.Validating += new System.ComponentModel.CancelEventHandler(this.TxtBoxMontoTotal_Validating);
             // 
@@ -848,7 +879,7 @@
             this.BtbEliminar.Text = "E&liminar Linea";
             this.BtbEliminar.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.BtbEliminar.UseVisualStyleBackColor = true;
-            this.BtbEliminar.Click += new System.EventHandler(this.BtbEliminar_Click);
+            this.BtbEliminar.Click += new System.EventHandler(this.DeleteJournalEntryLine_Event_Click);
             // 
             // groupBox4
             // 
@@ -885,6 +916,7 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Maestro de Asientos";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FrameAsientos_FormClosing);
+            this.Load += new System.EventHandler(this.FrameAsientos_Load);
             this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.FrameAsientos_KeyPress);
             ((System.ComponentModel.ISupportInitialize)(this.GridDatos)).EndInit();
             this.groupBox1.ResumeLayout(false);
@@ -892,6 +924,7 @@
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
             this.tabPage1.PerformLayout();
+            this.flowLayoutPanel2.ResumeLayout(false);
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
             this.panel1.ResumeLayout(false);
@@ -967,5 +1000,7 @@
         private System.Windows.Forms.Label txtDiferenciaSaldo;
         private System.Windows.Forms.Label labelDiferencia;
         private System.Windows.Forms.ErrorProvider AppErrorProvider;
+        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel2;
+        private System.Windows.Forms.Button btnUpdateJELine;
     }
 }

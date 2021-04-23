@@ -141,25 +141,31 @@ namespace CapaDatos.Daos
             {
                 Object[] vs = item.ItemArray;
 
-               retorno.Add(new Usuario(
-                    myID: Convert.ToString(vs[0]),                                       ///"user_id, " +            ///0   
-                    username: Convert.ToString(vs[1]),                                   ///"user_name, " +          ///1
-                    tipoUsuario: (TipoUsuario)Convert.ToInt16(vs[2]),                    ///"user_type+0, " +        ///2
-                    myCedula: Convert.ToString(vs[3]),                                   ///"number_id, " +          ///3
-                    myNombre: Convert.ToString(vs[4]),                                   ///"name, " +               ///4
-                    myApellidoPaterno: Convert.ToString(vs[5]),                          ///"lastname_p, " +         ///5
-                    myApellidoMaterno: Convert.ToString(vs[6]),                          ///"lastname_m, " +         ///6
-                    myTelefono: Convert.ToString(vs[7]),                                 ///"phone_number, " +       ///7
-                    myMail: Convert.ToString(vs[8]),                                     ///"mail, " +               ///8
-                    myNotas: Convert.ToString(vs[9]),                                    ///"notes, " +              ///9
-                   /* myAdmin: Convert.ToBoolean(vs[10]),            */                      ///"admin, " +              ///10
-                    myFechaCreacion: Convert.ToDateTime(vs[10]),                         ///"created_at, " +         ///11
-                    myFechaActualizacion: Convert.ToDateTime(Convert.ToString(vs[11])),  ///"updated_at, " +         ///12
-                    myUpdated: Convert.ToString(Convert.ToString(vs[12])),               ///"updated_by ," +         ///13
-                    myActivo: Convert.ToBoolean(vs[13]),                                 ///"active, "+              ///14
-                    myClave: Convert.ToString(vs[14])                                    ///"password "+             ///15
-                                       ));
-            }
+                var user = new Usuario()
+                {
+
+                    Id = Convert.ToInt32(vs[0]),
+                    UsuarioId = Convert.ToString(vs[0]), ///"user_id, " +            ///0   
+                    UserName = Convert.ToString(vs[1]), ///"user_name, " +          ///1
+                    TipoUsuario = (TipoUsuario) Convert.ToInt16(vs[2]), ///"user_type+0, " +        ///2
+                    MyCedula = Convert.ToString(vs[3]), ///"number_id, " +          ///3
+                    MyNombre = Convert.ToString(vs[4]), ///"name, " +               ///4
+                    MyApellidoPaterno = Convert.ToString(vs[5]), ///"lastname_p, " +         ///5
+                    MyApellidoMaterno = Convert.ToString(vs[6]), ///"lastname_m, " +         ///6
+                    MyTelefono = Convert.ToString(vs[7]), ///"phone_number, " +       ///7
+                    MyMail = Convert.ToString(vs[8]), ///"mail, " +               ///8
+                    MyNotas = Convert.ToString(vs[9]), ///"notes, " +              ///9
+                    /* myAdmin= Convert.ToBoolean(vs[10]),            */ ///"admin, " +              ///10
+                    MyFechaCreacion = Convert.ToDateTime(vs[10]), ///"created_at, " +         ///11
+                    MyFechaActualizacion = Convert.ToDateTime(
+                       Convert.ToString(vs[11])), ///"updated_at, " +         ///12
+                    MyUpdated = Convert.ToString(Convert.ToString(vs[12])), ///"updated_by ," +         ///13
+                    MyActivo = Convert.ToBoolean(vs[13]), ///"active, "+              ///14
+                    MyClave = Convert.ToString(vs[14]) ///"password "+             ///15
+                };
+                retorno.Add(user);
+            };
+            
 
             return retorno;
         }

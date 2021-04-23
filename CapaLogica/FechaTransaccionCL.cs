@@ -85,13 +85,16 @@ namespace CapaLogica
 
 
 
-                FechaTransaccion pasado = new FechaTransaccion(
-                    fecha: ultimopasado.Fecha.AddMonths(-1)
-                    );
+                FechaTransaccion pasado = new FechaTransaccion()
+                {
+                    Fecha = ultimopasado.Fecha.AddMonths(-1)
+                };
 
-                FechaTransaccion presente = new FechaTransaccion(
-                    fecha: ultimoprente.Fecha.AddMonths(1)
-                    );
+                FechaTransaccion presente = new FechaTransaccion()
+                {
+                    Fecha = ultimoprente.Fecha.AddMonths(1)
+                };
+                    
 
                 retorno.Add(pasado);
                 retorno.Add(presente);
@@ -157,9 +160,9 @@ namespace CapaLogica
             {
                 foreach (var item in Lstretorno)
                 {
-                    var lstAsiento = _asientoCL.GetPorFecha(item, t, traerInfoCompleta: true, traerNuevo: false);
+                    //var lstAsiento = _asientoCL.GetPorFecha(item, t, traerInfoCompleta: true, traerNuevo: false);
 
-                    item.Asientos = lstAsiento;
+                    //item.Asientos = lstAsiento;
                 }
 
             }
@@ -220,25 +223,26 @@ namespace CapaLogica
 
             var asientCL = new AsientoCL();
 
-            var lstCuentasPedientes = asientCL.ListadoAsientosDescuadrados(compañia, fechaTransaccion);
-            if (lstCuentasPedientes.Rows.Count > 0)
-            {
-                mensaje = "Faltan asientos por cuadrar: \n";
-                mensaje += $"Mes contable: {fechaTransaccion.ToString()} \n";
-                foreach (DataRow item in lstCuentasPedientes.Rows)
-                {
-                    object[] vs = item.ItemArray;
-                    mensaje += $"Asiento: {vs[1]}- Debitos: {vs[2]} Creditos: {vs[3]} \n";
-                }
+            //var lstCuentasPedientes = asientCL.ListadoAsientosDescuadrados(compañia, fechaTransaccion);
+            //if (lstCuentasPedientes.Rows.Count > 0)
+            //{
+            //    mensaje = "Faltan asientos por cuadrar: \n";
+            //    mensaje += $"Mes contable: {fechaTransaccion.ToString()} \n";
+            //    foreach (DataRow item in lstCuentasPedientes.Rows)
+            //    {
+            //        object[] vs = item.ItemArray;
+            //        mensaje += $"Asiento: {vs[1]}- Debitos: {vs[2]} Creditos: {vs[3]} \n";
+            //    }
 
-                return true;
-            }
-            else
-            {
-                mensaje = "tbd";
-                return false;
-            }
-
+            //    return true;
+            //}
+            //else
+            //{
+            //    mensaje = "tbd";
+            //    return false;
+            //}
+            mensaje = "";
+            return true;
 
         }
 

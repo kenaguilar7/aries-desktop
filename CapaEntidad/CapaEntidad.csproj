@@ -88,8 +88,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Entidades\Asientos\Asiento.cs" />
-    <Compile Include="Entidades\Asientos\Transaccion.cs" />
+    <Compile Include="BaseModel.cs" />
+    <Compile Include="Entidades\JournalEntries\JournalEntry.cs" />
+    <Compile Include="Entidades\JournalEntries\JournalEntryHeader.cs" />
+    <Compile Include="Entidades\JournalEntries\JournalEntryReport.cs" />
+    <Compile Include="Entidades\JournalEntries\JournalEntryStatus.cs" />
+    <Compile Include="Entidades\JournalEntries\JournalEntryLine.cs" />
     <Compile Include="Entidades\Compañias\Compañia.cs" />
     <Compile Include="Entidades\Compañias\PersonaFisica.cs" />
     <Compile Include="Entidades\Compañias\PersonaJuridica.cs" />
@@ -114,7 +118,6 @@
     <Compile Include="Enumeradores\EstadoAsiento.cs" />
     <Compile Include="Enumeradores\EstadoUltimoEnvio.cs" />
     <Compile Include="Enumeradores\IndicadorCuenta.cs" />
-    <Compile Include="Enumeradores\TipoCambio.cs" />
     <Compile Include="Enumeradores\TipoCuenta.cs" />
     <Compile Include="Enumeradores\TipoID.cs" />
     <Compile Include="Enumeradores\TipoMonedaCompañia.cs" />
@@ -134,6 +137,8 @@
     <Compile Include="Reportes\ReportePerdidasGanancias.cs" />
     <Compile Include="Textos\TextoGeneral.cs" />
     <Compile Include="Textos\TextoSQL.cs" />
+    <Compile Include="Utils\Currency.cs" />
+    <Compile Include="Utils\DebOrCred.cs" />
     <Compile Include="Verificaciones\VerificaString.cs" />
   </ItemGroup>
   <ItemGroup>

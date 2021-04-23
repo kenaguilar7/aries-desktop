@@ -28,8 +28,8 @@ namespace CapaPresentacion.Reportes
         }
         private void CargarDatos()
         {
-            var lst = CuentaCL.GetAll(GlobalConfig.Compañia);
-            var lstDts = new FechaTransaccionCL().GetAllActive(GlobalConfig.Compañia, GlobalConfig.Usuario);
+            var lst = CuentaCL.GetAll(GlobalConfig.Company);
+            var lstDts = new FechaTransaccionCL().GetAllActive(GlobalConfig.Company, GlobalConfig.Usuario);
             _lstExcel = from c in lst where c.TipoCuenta.TipoCuenta == TipoCuenta.Ingreso || c.TipoCuenta.TipoCuenta == TipoCuenta.Egreso || c.TipoCuenta.TipoCuenta == TipoCuenta.Costo_Venta select c;
             AFechaFinal.DataSource = lstDts;
 
@@ -50,7 +50,7 @@ namespace CapaPresentacion.Reportes
 
 
             var ss = _lstExcel.ToList();
-            CuentaCL.LLenarConSaldos(par1, par2, ss, GlobalConfig.Compañia);
+            CuentaCL.LLenarConSaldos(par1, par2, ss, GlobalConfig.Company);
             //if (!checkCuentasConSaldo.Checked)
             //{
             //    ss = new CuentaCL().QuitarCuentasSinSaldos(ss);
@@ -156,7 +156,7 @@ namespace CapaPresentacion.Reportes
         {
             try
             {
-                using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "Excel|*.xlsx", FileName = $"REPORTE DE PERDIDAS Y GANANCIAS {GlobalConfig.Compañia.ToString()}" })
+                using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "Excel|*.xlsx", FileName = $"REPORTE DE PERDIDAS Y GANANCIAS {GlobalConfig.Company.ToString()}" })
                 {
                     if (sfd.ShowDialog() == DialogResult.OK)
                     {
@@ -200,7 +200,7 @@ namespace CapaPresentacion.Reportes
 
             return new string[]{
 
-                $"{GlobalConfig.Compañia}",
+                $"{GlobalConfig.Company}",
                 $"REPORTE DE PERDIDAS Y GANANCIAS AL MES {(((FechaTransaccion)AFechaFinal.SelectedItem).ToString().ToUpper())}",
                 $"EMITIDO POR {GlobalConfig.Usuario} ", 
             }; 
