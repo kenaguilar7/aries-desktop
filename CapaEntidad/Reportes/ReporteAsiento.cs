@@ -1,4 +1,4 @@
-﻿using CapaEntidad.Entidades.Asientos;
+﻿using CapaEntidad.Entidades.JournalEntries;
 using CapaEntidad.Entidades.Compañias;
 using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Entidades.Usuarios;
@@ -11,12 +11,13 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CapaEntidad.Utils;
 
 namespace CapaEntidad.Reportes
 {
     public class ReporteAsiento
     {
-        public static void GenerarReporte(List<Asiento> list, Compañia compañia, Usuario usuario,
+        public static void GenerarReporte(List<JournalEntry> list, Compañia compañia, Usuario usuario,
                                   TipoMonedaCompañia tipoMoneda, String direccion, DataTable dataTable)
         {
 
@@ -59,30 +60,30 @@ namespace CapaEntidad.Reportes
             }
 
         }
-        private static void LlenarSaldoCuentasColones(ref IXLWorksheet worksheet, int row, int column, List<Asiento> list)
+        private static void LlenarSaldoCuentasColones(ref IXLWorksheet worksheet, int row, int column, List<JournalEntry> list)
         {
             row = 5;
             foreach (var item in list)
             {
-                for (int i = 0; i < item.Transaccions.Count; i++)
+                for (int i = 0; i < item.JournalEntryLines.Count; i++)
                 {
 
                     //Fecha/mes
-                    worksheet.Cell(i + row, column).Value = item.FechaAsiento;
+                    worksheet.Cell(i + row, column).Value = item.PostingPeriodId;
                     ///Número de asiento
-                    worksheet.Cell(i + row, column + 1).Value = item.NumeroAsiento;
+                    worksheet.Cell(i + row, column + 1).Value = item.Number;
                     ///Cuenta 
-                    worksheet.Cell(i + row, column + 2).Value = item.Transaccions[i].CuentaDeAsiento;
+                    worksheet.Cell(i + row, column + 2).Value = item.JournalEntryLines[i].AccountId;
                     ///Referencia
-                    worksheet.Cell(i + row, column + 3).Value = item.Transaccions[i].Referencia;
+                    worksheet.Cell(i + row, column + 3).Value = item.JournalEntryLines[i].Reference;
                     ///Detalle
-                    worksheet.Cell(i + row, column + 4).Value = item.Transaccions[i].Detalle;
+                    worksheet.Cell(i + row, column + 4).Value = item.JournalEntryLines[i].Memo;
                     ///fecha factura
-                    worksheet.Cell(i + row, column + 5).Value = item.Transaccions[i].FechaFactura;
+                    worksheet.Cell(i + row, column + 5).Value = item.JournalEntryLines[i].Date;
                     ///debitos
-                    worksheet.Cell(i + row, column + 6).Value = (item.Transaccions[i].ComportamientoCuenta == Comportamiento.Debito) ? item.Transaccions[i].Monto : 0.00m;
+                    worksheet.Cell(i + row, column + 6).Value = (item.JournalEntryLines[i].DebOrCred == DebOrCred.Debito) ? item.JournalEntryLines[i].Monto : 0.00m;
                     ///Creditos
-                    worksheet.Cell(i + row, column + 7).Value = (item.Transaccions[i].ComportamientoCuenta == Comportamiento.Credito) ? item.Transaccions[i].Monto : 0.00m;
+                    worksheet.Cell(i + row, column + 7).Value = (item.JournalEntryLines[i].DebOrCred == DebOrCred.Credito) ? item.JournalEntryLines[i].Monto : 0.00m;
                     ///Como vamos a usar solo colones estos campos no apareceran
                     //worksheet.Cell(i + row, column + 8).Value = item.Transaccions[i].TipoCambio.ToString();
                     //worksheet.Cell(i + row, column + 9).Value = (item.Transaccions[i].TipoCambio == TipoCambio.Colones) ? " " : $"{item.Transaccions[i].MontoTipoCambio}";
@@ -99,9 +100,9 @@ namespace CapaEntidad.Reportes
 
                 }
 
-                if (item.Transaccions.Count != 0)
+                if (item.JournalEntryLines.Count != 0)
                 {
-                    row += item.Transaccions.Count();
+                    row += item.JournalEntryLines.Count();
                     ///Totales
                     worksheet.Cell(row, 1).Value = "Totales";
                     worksheet.Cell(row, 7).Value = item.DebitosColones;
@@ -116,26 +117,26 @@ namespace CapaEntidad.Reportes
                 }
             }
         }
-        private static void LlenarSaldoAsientosColonesDolares(ref IXLWorksheet worksheet, int row, int column, List<Asiento> list)
+        private static void LlenarSaldoAsientosColonesDolares(ref IXLWorksheet worksheet, int row, int column, List<JournalEntry> list)
         {
             row = 5;
             foreach (var item in list)
             {
-                for (int i = 0; i < item.Transaccions.Count; i++)
+                for (int i = 0; i < item.JournalEntryLines.Count; i++)
                 {
 
                     //Saldo Anterior
-                    worksheet.Cell(i + row, column).Value = item.FechaAsiento;
-                    worksheet.Cell(i + row, column + 1).Value = item.NumeroAsiento;
-                    worksheet.Cell(i + row, column + 2).Value = item.Transaccions[i].CuentaDeAsiento;
-                    worksheet.Cell(i + row, column + 3).Value = item.Transaccions[i].Referencia;
-                    worksheet.Cell(i + row, column + 4).Value = item.Transaccions[i].Detalle;
-                    worksheet.Cell(i + row, column + 5).Value = item.Transaccions[i].FechaFactura;
-                    worksheet.Cell(i + row, column + 6).Value = (item.Transaccions[i].ComportamientoCuenta == Comportamiento.Debito) ? item.Transaccions[i].Monto : 0.00m;
-                    worksheet.Cell(i + row, column + 7).Value = (item.Transaccions[i].ComportamientoCuenta == Comportamiento.Credito) ? item.Transaccions[i].Monto : 0.00m;
-                    worksheet.Cell(i + row, column + 8).Value = item.Transaccions[i].TipoCambio.ToString();
-                    worksheet.Cell(i + row, column + 9).Value = (item.Transaccions[i].TipoCambio == TipoCambio.Colones) ? " " : $"{item.Transaccions[i].MontoTipoCambio}";
-                    worksheet.Cell(i + row, column + 10).Value = (item.Transaccions[i].TipoCambio == TipoCambio.Dolares) ? item.Transaccions[i].Monto / item.Transaccions[i].MontoTipoCambio : 0.00m;
+                    worksheet.Cell(i + row, column).Value = item.PostingPeriodId;
+                    worksheet.Cell(i + row, column + 1).Value = item.Number;
+                    worksheet.Cell(i + row, column + 2).Value = item.JournalEntryLines[i].AccountId;
+                    worksheet.Cell(i + row, column + 3).Value = item.JournalEntryLines[i].Reference;
+                    worksheet.Cell(i + row, column + 4).Value = item.JournalEntryLines[i].Memo;
+                    worksheet.Cell(i + row, column + 5).Value = item.JournalEntryLines[i].Date;
+                    worksheet.Cell(i + row, column + 6).Value = (item.JournalEntryLines[i].DebOrCred == DebOrCred.Debito) ? item.JournalEntryLines[i].Monto : 0.00m;
+                    worksheet.Cell(i + row, column + 7).Value = (item.JournalEntryLines[i].DebOrCred == DebOrCred.Credito) ? item.JournalEntryLines[i].Monto : 0.00m;
+                    worksheet.Cell(i + row, column + 8).Value = item.JournalEntryLines[i].Currency.ToString();
+                    worksheet.Cell(i + row, column + 9).Value = (item.JournalEntryLines[i].Currency == Currency.colones) ? " " : $"{item.JournalEntryLines[i].RateAmount}";
+                    worksheet.Cell(i + row, column + 10).Value = (item.JournalEntryLines[i].Currency == Currency.dolares) ? item.JournalEntryLines[i].Monto / item.JournalEntryLines[i].RateAmount : 0.00m;
 
 
                     worksheet.Cell(i + row, column).Style.NumberFormat.Format = "MMM yyyy";
@@ -148,9 +149,9 @@ namespace CapaEntidad.Reportes
 
                 }
 
-                if (item.Transaccions.Count != 0)
+                if (item.JournalEntryLines.Count != 0)
                 {
-                    row += item.Transaccions.Count();
+                    row += item.JournalEntryLines.Count();
                     ///Totales
                     worksheet.Cell(row, 1).Value = "Totales";
                     worksheet.Cell(row, 7).Value = item.DebitosColones;

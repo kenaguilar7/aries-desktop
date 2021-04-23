@@ -29,7 +29,7 @@ namespace CapaPresentacion.Reportes
         private void CargarDatos()
         {
 
-            var lstMeses = fechaTransaccionCL.GetAll(GlobalConfig.Compañia, GlobalConfig.Usuario);
+            var lstMeses = fechaTransaccionCL.GetAll(GlobalConfig.Company, GlobalConfig.Usuario);
             fechaTransaccions = lstMeses;
             this.lstMesInicio.DataSource = lstMeses;
         }
@@ -48,7 +48,7 @@ namespace CapaPresentacion.Reportes
 
 
                 var lstCuentas = new Dictionary<FechaTransaccion, List<Cuenta>>();
-                var cuentas = cuentaCL.GetAll(GlobalConfig.Compañia);
+                var cuentas = cuentaCL.GetAll(GlobalConfig.Company);
 
                 //cuentaCL.LLenarConSaldoB(((FechaTransaccion)lstMesInicio.SelectedItem).Fecha, ((FechaTransaccion)lstMesInicio.SelectedItem).Fecha, cuentas, GlobalConfig.Compañia); 
                 foreach (var item in fechaTransaccions)
@@ -62,7 +62,7 @@ namespace CapaPresentacion.Reportes
                             cuentasClonadas.Add(Cuenta.DeepCopy());
                         });
 
-                        new CuentaCL().LLenarConSaldos(item.Fecha, item.Fecha, cuentasClonadas, GlobalConfig.Compañia);
+                        new CuentaCL().LLenarConSaldos(item.Fecha, item.Fecha, cuentasClonadas, GlobalConfig.Company);
 
                         cuentasClonadas = cuentaCL.QuitarCuentasSinSaldos(cuentasClonadas);
 
@@ -70,11 +70,11 @@ namespace CapaPresentacion.Reportes
                     }
                 }
 
-                using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "Excel|*.xlsx", Title = "Reporte auxiliares", FileName = $"REPORTE DE AUXILIARES {GlobalConfig.Compañia.ToString()} - {GlobalConfig.Compañia.NumeroCedula}" })
+                using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "Excel|*.xlsx", Title = "Reporte auxiliares", FileName = $"REPORTE DE AUXILIARES {GlobalConfig.Company.ToString()} - {GlobalConfig.Company.NumeroCedula}" })
                 {
                     if (sfd.ShowDialog() == DialogResult.OK)
                     {
-                        ReporteAuxiliares.GenerarReporte(lstCuentas, GlobalConfig.Compañia, GlobalConfig.Usuario, GlobalConfig.Compañia.TipoMoneda, sfd.FileName);
+                        ReporteAuxiliares.GenerarReporte(lstCuentas, GlobalConfig.Company, GlobalConfig.Usuario, GlobalConfig.Company.TipoMoneda, sfd.FileName);
                     }
                 }
 

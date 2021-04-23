@@ -31,8 +31,8 @@ namespace CapaPresentacion.Reportes
 
         private void CargarDatos()
         {
-            ListaCuentas = CuentaCL.GetAll(GlobalConfig.Compañia);
-            var lstDts = new FechaTransaccionCL().GetAllActive(GlobalConfig.Compañia, GlobalConfig.Usuario);
+            ListaCuentas = CuentaCL.GetAll(GlobalConfig.Company);
+            var lstDts = new FechaTransaccionCL().GetAllActive(GlobalConfig.Company, GlobalConfig.Usuario);
 
             AFechaFinal.DataSource = lstDts;
 
@@ -60,7 +60,7 @@ namespace CapaPresentacion.Reportes
 
             //var cuentasSitucaion = ListaCuentas.;
             //var cuentasPerdida = lstPerdidas;
-            CuentaCL.LLenarConSaldos(fch1, fch2, ListaCuentas, GlobalConfig.Compañia);
+            CuentaCL.LLenarConSaldos(fch1, fch2, ListaCuentas, GlobalConfig.Company);
             //CuentaCL.LLenarConSaldoB(par1, par2, cuentasPerdida, GlobalConfig.Compañia);
             //if (!checkCuentasConSaldo.Checked)
             //{
@@ -195,7 +195,7 @@ namespace CapaPresentacion.Reportes
         {
             try
             {
-                using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "Excel|*.xlsx", FileName = $"REPORTE BALANCE DE SITUACIÓN {GlobalConfig.Compañia.ToString()}" })
+                using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "Excel|*.xlsx", FileName = $"REPORTE BALANCE DE SITUACIÓN {GlobalConfig.Company.ToString()}" })
                 {
                     if (sfd.ShowDialog() == DialogResult.OK)
                     {
@@ -260,7 +260,7 @@ namespace CapaPresentacion.Reportes
 
             return new string[]{
 
-                $"{GlobalConfig.Compañia}",
+                $"{GlobalConfig.Company}",
                 $"BALANCE DE SITUACION AL MES {(((FechaTransaccion)AFechaFinal.SelectedItem).ToString().ToUpper())}",
                 $"EMITIDO POR {GlobalConfig.Usuario} ",
             };

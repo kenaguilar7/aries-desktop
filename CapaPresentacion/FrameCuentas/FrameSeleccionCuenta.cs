@@ -29,7 +29,7 @@ namespace CapaPresentacion.FrameCuentas
         }
         private void CargarCuentas()
         {
-            LstCuentas = new CuentaCL().GetAll(GlobalConfig.Compañia);
+            LstCuentas = new CuentaCL().GetAll(GlobalConfig.Company);
             treeCuentas.Nodes.AddRange(TreeViewCuentas.CrearTreeView(LstCuentas));
         }
         private void SeleccionaCuentaEnTreeView(object sender, EventArgs e)

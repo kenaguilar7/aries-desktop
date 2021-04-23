@@ -1,0 +1,95 @@
+﻿using AriesContador.Core.Models.Accounts;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace AriesContador.Core.Models.Utils
+{
+    public static class ManageAccountListExtension
+    {
+        public static IEnumerable<Account> GetLowLevelAccounts(this IEnumerable<Account> cuentas, int accountId)
+        {
+
+            List<Account> retorno = GetListWithMainAccount(cuentas, accountId);
+            List<Account> auxList1 = retorno;
+            List<Account> auxList2 = new List<Account>();
+
+            do
+            {
+                foreach (Account cuenta in auxList1)
+                {
+                    auxList2.AddRange(GetAllChildAccounts(cuentas, cuenta));
+                }
+                retorno.AddRange(auxList2);
+                auxList1 = auxList2.ToList();
+                auxList2.Clear();
+
+            } while (auxList1.Count() != 0);
+
+            return retorno;
+        }
+
+        private static IEnumerable<Account> GetAllChildAccounts(IEnumerable<Account> cuentas, Account cuenta)
+            => cuentas.Where(cnt => cnt.FatherAccount == cuenta.Id);
+
+        private static List<Account> GetListWithMainAccount(IEnumerable<Account> cuentas, int accountId)
+            => new List<Account> { cuentas.FirstOrDefault(cuenta => cuenta.Id == accountId) };
+
+        public static IEnumerable<Account> GetHightLevelAccounts(this IEnumerable<Account> cuentas, double accountId)
+        {
+            List<Account> retorno = new List<Account>();
+            var cuentaPrincipal = cuentas.First(row => row.Id == accountId);
+
+            var lstaccounts = cuentas.Where(x => x.Id == cuentaPrincipal.FatherAccount || x.Id == accountId);
+
+            retorno.AddRange(lstaccounts);
+
+            foreach (Account cuenta in lstaccounts)
+            {
+                if (cuenta.Id != accountId)
+                {
+                    var upLevelOfAccountList = cuentas.Where(x => x.Id == cuenta.FatherAccount);
+                    retorno.AddRange(GetLowLevelAccounts(upLevelOfAccountList, cuenta.Id));
+                }
+            }
+
+            return retorno;
+        }
+
+        public static IEnumerable<Account> BuildAccountsBalance(this IEnumerable<Account> cuentas)
+        {
+            var lstLowerLevel = cuentas.Where(row => row.AccountType == AccountType.Cuenta_Auxiliar);
+
+            foreach (Account lowAccount in lstLowerLevel)
+            {
+                GetAndSumAllAccountsFromLowerToHigherLevel(cuentas, lowAccount);
+            }
+
+            return cuentas;
+        }
+
+        private static void GetAndSumAllAccountsFromLowerToHigherLevel(IEnumerable<Account> cuentas,
+                                                                                      Account cuentaConSaldo)
+        {
+            Account cuentaAux = cuentaConSaldo;
+
+            do
+            {
+                cuentaAux = cuentas.FirstOrDefault(x => x.Id == cuentaAux.FatherAccount);
+
+                if (cuentaAux != null)
+                    SumBalance(cuentaConSaldo, cuentaAux);
+
+            } while (cuentaAux != null);
+
+        }
+        private static void SumBalance(Account cuentaSumFrom, Account cuentaSumTo)
+        {
+            cuentaSumTo.JournalEntryLines.AddRange(cuentaSumFrom.JournalEntryLines);
+            //cuentaSumTo.CreditosColones += cuentaSumFrom.CreditosColones;
+            //cuentaSumTo.DebitosDolares += cuentaSumFrom.DebitosDolares;
+            //cuentaSumTo.CreditosDolares += cuentaSumFrom.CreditosDolares;
+        }
+    }
+}

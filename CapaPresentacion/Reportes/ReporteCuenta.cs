@@ -167,11 +167,11 @@ namespace CapaPresentacion.Reportes
                 {
                     throw new Exception("La lista se encuentra vacia!");
                 }
-                using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "Excel|*.xlsx", FileName = $"MAESTRO DE CUENTAS DE {GlobalConfig.Compañia.ToString()}"  })
+                using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "Excel|*.xlsx", FileName = $"MAESTRO DE CUENTAS DE {GlobalConfig.Company.ToString()}"  })
                 {
                     if (sfd.ShowDialog() == DialogResult.OK)
                     {
-                        ReporteMaestroCuenta.GenerarReporte(_lstCuentasFiltradas, sfd.FileName, GlobalConfig.Compañia, GlobalConfig.Usuario,  (FechaTransaccion)lstMesesAbiertos.SelectedItem, checkImprimirSaldo.Checked);
+                        ReporteMaestroCuenta.GenerarReporte(_lstCuentasFiltradas, sfd.FileName, GlobalConfig.Company, GlobalConfig.Usuario,  (FechaTransaccion)lstMesesAbiertos.SelectedItem, checkImprimirSaldo.Checked);
 
 
                     }
@@ -204,7 +204,7 @@ namespace CapaPresentacion.Reportes
 
             var mesFinal = lstFechas.OrderBy(x => x.Fecha).ToList()[0];
 
-            _cuentaCL.LLenarConSaldos(mesFinal.Fecha, mes.Fecha, _lstCuentas, GlobalConfig.Compañia);
+            _cuentaCL.LLenarConSaldos(mesFinal.Fecha, mes.Fecha, _lstCuentas, GlobalConfig.Company);
 
             LlenarTabla(ConSaldo: true);
         }

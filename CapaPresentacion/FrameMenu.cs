@@ -52,7 +52,7 @@ namespace CapaPresentacion
         }
         private void CargarCompañia()
         {
-            this.txtCompaniaNombre.Text = GlobalConfig.Compañia.ToString();
+            this.txtCompaniaNombre.Text = GlobalConfig.Company.ToString();
         }
         private void MaestroDeCompañiasToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -62,7 +62,7 @@ namespace CapaPresentacion
         }
         private void MaestroDeCuentasToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (GlobalConfig.Compañia != null)
+            if (GlobalConfig.Company != null)
             {
                 FrameMaestroCuenta n = new FrameMaestroCuenta();
                 n.MdiParent = this;
@@ -78,7 +78,7 @@ namespace CapaPresentacion
         {
             try
             {
-                if (GlobalConfig.Compañia != null)
+                if (GlobalConfig.Company != null)
                 {
                     if (!CheckForDuplicate(VentanaInfo.FormAsientos))
                     {
@@ -119,7 +119,7 @@ namespace CapaPresentacion
         private void MaestroDeMeses(object sender, EventArgs e)
         {
 
-            if (GlobalConfig.Compañia != null)
+            if (GlobalConfig.Company != null)
             {
                 FrameAdministrarMeses n = new FrameAdministrarMeses();
                 n.MdiParent = this;
@@ -146,7 +146,7 @@ namespace CapaPresentacion
         {
             try
             {
-                if (GlobalConfig.Compañia != null)
+                if (GlobalConfig.Company != null)
                 {
                     FrameReporteComprobacion n = new FrameReporteComprobacion();
                     n.MdiParent = this;
@@ -168,7 +168,7 @@ namespace CapaPresentacion
         {
             try
             {
-                if (GlobalConfig.Compañia != null)
+                if (GlobalConfig.Company != null)
                 {
                     FrameReporteAuxiliares frame = new FrameReporteAuxiliares();
                     frame.MdiParent = this;
@@ -257,7 +257,7 @@ namespace CapaPresentacion
         private void movimientosDeCuentaToolStripMenuItem_Click(object sender, EventArgs e)
         {
 
-            if (GlobalConfig.Compañia != null)
+            if (GlobalConfig.Company != null)
             {
                 ReporteMovimientosCuenta form = new ReporteMovimientosCuenta
                 {
@@ -273,7 +273,7 @@ namespace CapaPresentacion
         }
         private void perdiasYGananciasToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (GlobalConfig.Compañia != null)
+            if (GlobalConfig.Company != null)
             {
                 ReportePedidasGanacias form = new ReportePedidasGanacias
                 {
@@ -289,7 +289,7 @@ namespace CapaPresentacion
         private void balanceDeSituaciónToolStripMenuItem_Click(object sender, EventArgs e)
         {
 
-            if (GlobalConfig.Compañia != null)
+            if (GlobalConfig.Company != null)
             {
                 ReporteBalanceSituacion form = new ReporteBalanceSituacion
                 {
@@ -318,7 +318,7 @@ namespace CapaPresentacion
         }
         private void cierreDePeriodoToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (GlobalConfig.Compañia != null)
+            if (GlobalConfig.Company != null)
             {
                 FrameAsientoCierre form = new FrameAsientoCierre
                 {

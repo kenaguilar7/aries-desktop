@@ -22,7 +22,7 @@ namespace CapaPresentacion.Reportes
         private void CargarDatos()
         {
 
-            if (GlobalConfig.Compañia.TipoMoneda == TipoMonedaCompañia.Solo_Colones)
+            if (GlobalConfig.Company.TipoMoneda == TipoMonedaCompañia.Solo_Colones)
             {
                 chckBxMostarDolares.Checked = false;
                 chckBxMostarDolares.Enabled = false;
@@ -109,12 +109,12 @@ namespace CapaPresentacion.Reportes
 
                 if ((Cuenta)txtBoxCuentaSeleccionada.Tag != null)
                 {
-                    using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "Excel|*.xlsx", FileName = $"REPORTE MOVIMIENTOS DE CUENTA {GlobalConfig.Compañia.ToString()}" })
+                    using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "Excel|*.xlsx", FileName = $"REPORTE MOVIMIENTOS DE CUENTA {GlobalConfig.Company.ToString()}" })
                     {
                         if (sfd.ShowDialog() == DialogResult.OK)
                         {
                             ReporteMovimientoCuenta.GenerarReporte(sfd.FileName, chckBxMostarDolares.Checked,
-                                (DataTable)GridDatos.DataSource, GlobalConfig.Compañia, GlobalConfig.Usuario, (Cuenta)txtBoxCuentaSeleccionada.Tag);
+                                (DataTable)GridDatos.DataSource, GlobalConfig.Company, GlobalConfig.Usuario, (Cuenta)txtBoxCuentaSeleccionada.Tag);
 
                         }
                     }

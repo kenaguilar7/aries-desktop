@@ -96,23 +96,26 @@ namespace CapaLogica
 
                 //GetAllModules
 
-                    var retorno = new Usuario(
-                    myID: Convert.ToString(vs[0]),
-                    username: Convert.ToString(vs[1]),
-                    tipoUsuario: (TipoUsuario)Convert.ToInt16(vs[2]),
-                    myCedula: Convert.ToString(vs[3]),
-                    myNombre: Convert.ToString(vs[4]),
-                    myApellidoPaterno: Convert.ToString(vs[5]),
-                    myApellidoMaterno: Convert.ToString(vs[6]),
-                    myTelefono: Convert.ToString(vs[7]),
-                    myMail: Convert.ToString(vs[8]),
-                    myNotas: Convert.ToString(vs[9]),
-                    //myAdmin: Convert.ToBoolean(vs[10]),
-                    myFechaCreacion: Convert.ToDateTime(vs[10]),
-                    myFechaActualizacion: Convert.ToDateTime(Convert.ToString(vs[11])),
-                    myUpdated: Convert.ToString(Convert.ToString(vs[12])),
-                    myActivo: Convert.ToBoolean(vs[13]),
-                    myClave: Convert.ToString(vs[14]));
+                var retorno = new Usuario()
+                {
+                    Id = Convert.ToInt32(vs[0]),
+                    UsuarioId = Convert.ToString(vs[0]),
+                    UserName = Convert.ToString(vs[1]),
+                    TipoUsuario= (TipoUsuario) Convert.ToInt16(vs[2]),
+                    MyCedula= Convert.ToString(vs[3]),
+                    MyNombre= Convert.ToString(vs[4]),
+                    MyApellidoPaterno= Convert.ToString(vs[5]),
+                    MyApellidoMaterno= Convert.ToString(vs[6]),
+                    MyTelefono= Convert.ToString(vs[7]),
+                    MyMail= Convert.ToString(vs[8]),
+                    MyNotas= Convert.ToString(vs[9]),
+                    //myAdmin= Convert.ToBoolean(vs[10]),
+                    MyFechaCreacion= Convert.ToDateTime(vs[10]),
+                    MyFechaActualizacion= Convert.ToDateTime(Convert.ToString(vs[11])),
+                    MyUpdated= Convert.ToString(Convert.ToString(vs[12])),
+                    MyActivo= Convert.ToBoolean(vs[13]),
+                    MyClave= Convert.ToString(vs[14])
+                };
 
                retorno.Modulos = new PermisoCL().GetAllModules(retorno); 
 

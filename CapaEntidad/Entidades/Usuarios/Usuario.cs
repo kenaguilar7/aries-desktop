@@ -9,9 +9,10 @@ using System.Threading.Tasks;
 
 namespace CapaEntidad.Entidades.Usuarios
 {
-    public class Usuario
+    public class Usuario : BaseModel
     {
         // public String UsuarioId { get; set;  }
+        
         public String UsuarioId { get; set; }///Cambiar a decimal
         public String UserName { get; set; }
         public TipoUsuario TipoUsuario { get; set; }

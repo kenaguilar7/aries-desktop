@@ -44,7 +44,7 @@ namespace CapaPresentacion
 
                     ///TODO si hay ventanas abiertas deberian de cerrarse
 
-                    GlobalConfig.Compañia = c;
+                    GlobalConfig.Company = c;
                     fm.comParametro = true;
                     this.Close();
                 }

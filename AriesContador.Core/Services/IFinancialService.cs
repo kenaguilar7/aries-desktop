@@ -1,0 +1,50 @@
+﻿using AriesContador.Core.Models.Accounts;
+using AriesContador.Core.Models.PostingPeriods;
+using CapaEntidad.Entidades.JournalEntries;
+using System;
+using System.Collections.Generic;
+
+namespace AriesContador.Core.Services
+{
+    public interface IFinancialService
+    {
+        #region Account
+        void DeleteAccount(Account account);
+        Account FindAccount(int id);
+        Account GetAccountBalance(Account account, IEnumerable<PostingPeriod> postingPeriods);
+        IEnumerable<Account> GetDefaultAccounts();
+        void CreateAccount(Account account);
+        void UpdateAccount(Account account);
+        IEnumerable<Account> GetAccounts(string companyId);
+        #endregion
+
+        #region Posting Periods
+        void CreatePostingPeriod(PostingPeriod postingPeriod);
+        void DeletePostingPeriod(PostingPeriod postingPeriod);
+        IEnumerable<PostingPeriod> GetPostingPeriods(string companyId);
+        IEnumerable<PostingPeriod> GetAvailablePostingPeriodsForBeCreated(string companyId); 
+        void UpdatePostingPeriod(PostingPeriod postingPeriod);
+        void ClosePostingPeriod(PostingPeriod postingPeriod);
+
+        #endregion
+
+        #region Journal Entry
+        int CreateJournalEntryConsecutive(int postingPeriodId); 
+        void DeleteJournalEntry(JournalEntry journalEntry);
+        IEnumerable<JournalEntry> GetJournalEntries(int postingPeriodId);
+        JournalEntry GetJournalEntryById(int id);
+        void CreateJournalEntry(JournalEntry journalEntry);
+        void UpdateJournalEntry(JournalEntry journalEntry);
+
+        #endregion
+
+        #region JournalEntryLine
+        JournalEntryLine GetJournalEntryLineById(int id);
+        void DeleteJournalEntryLine(JournalEntryLine journalEntryLine);
+        IEnumerable<JournalEntryLine> GetJournalEntryLineByJournalEntryId(int journalEntryId);
+        void CreateJournalEntryLine(JournalEntryLine journalEntryLine);
+        void UpdateJournalEntryLine(JournalEntryLine journalEntryLine);
+
+        #endregion
+    }
+}

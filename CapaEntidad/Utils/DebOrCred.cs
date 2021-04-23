@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CapaEntidad.Enumeradores
+namespace CapaEntidad.Utils
 {
-    public enum TipoCambio
+    public enum DebOrCred
     {
-        Colones = 1,
-        Dolares = 2,
+        Debito = 1,
+        Credito = 2,
     }
 }

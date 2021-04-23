@@ -45,9 +45,9 @@ namespace CapaPresentacion.AdminAsientos
         private void CargarDatos()
         {
             //List<FechaTransaccion> lst = fechaCL.GetAll(compania, usuario);
-            DataTable dt = fechaCL.GetDataTable(GlobalConfig.Compañia, GlobalConfig.Usuario);
+            DataTable dt = fechaCL.GetDataTable(GlobalConfig.Company, GlobalConfig.Usuario);
             dtRegistros.DataSource = dt;
-            fechaTransaccions = fechaCL.GetAllActive(GlobalConfig.Compañia, GlobalConfig.Usuario);
+            fechaTransaccions = fechaCL.GetAllActive(GlobalConfig.Company, GlobalConfig.Usuario);
             lstAbrirMes.DataSource = fechaTransaccions;
         }
 
@@ -114,7 +114,7 @@ namespace CapaPresentacion.AdminAsientos
                 using (new CursorWait(applicationCursor: true, appStarting: true))
                 {
                     var meses = ((IEnumerable<FechaTransaccion>)e.Argument);
-                    _lstFinal = fechaCL.AsientoDeCierre(GlobalConfig.Compañia, GlobalConfig.Usuario, meses, _CuentaFinal);
+                    _lstFinal = fechaCL.AsientoDeCierre(GlobalConfig.Company, GlobalConfig.Usuario, meses, _CuentaFinal);
                }
             }
             catch (Exception ex)

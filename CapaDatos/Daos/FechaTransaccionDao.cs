@@ -1,5 +1,5 @@
 ﻿using CapaDatos.Conexion;
-using CapaEntidad.Entidades.Asientos;
+using CapaEntidad.Entidades.JournalEntries;
 using CapaEntidad.Entidades.Compañias;
 using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Entidades.FechaTransacciones;
@@ -35,7 +35,7 @@ namespace CapaDatos.Daos
                     object[] vs = item.ItemArray;
 
                     retorno.Add(new FechaTransaccion(
-                            id: Convert.ToDecimal(vs[0]),
+                            id: Convert.ToInt32(vs[0]),
                             fecha: Convert.ToDateTime(vs[1]),
                             cerrada: Convert.ToBoolean(vs[2])
                         ));

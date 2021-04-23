@@ -33,13 +33,13 @@ namespace CapaPresentacion.FrameCuentas
         {
 
             //List<FechaTransaccion> lst = fechaCL.GetAll(compania, usuario);
-            DataTable dt = fechaCL.GetDataTable(GlobalConfig.Compañia, GlobalConfig.Usuario);
-            Cuentas = _cuentaCL.GetAll(GlobalConfig.Compañia);
+            DataTable dt = fechaCL.GetDataTable(GlobalConfig.Company, GlobalConfig.Usuario);
+            Cuentas = _cuentaCL.GetAll(GlobalConfig.Company);
 
             dtRegistros.DataSource = dt;
 
-            lstAbrirMes.DataSource = fechaCL.FechaAbrirMes(GlobalConfig.Compañia, GlobalConfig.Usuario);
-            lstCerrarMes.DataSource = fechaCL.GetAllActive(GlobalConfig.Compañia, GlobalConfig.Usuario);
+            lstAbrirMes.DataSource = fechaCL.FechaAbrirMes(GlobalConfig.Company, GlobalConfig.Usuario);
+            lstCerrarMes.DataSource = fechaCL.GetAllActive(GlobalConfig.Company, GlobalConfig.Usuario);
         }
 
         private void BtnGuardar_Click(object sender, EventArgs e)
@@ -48,7 +48,7 @@ namespace CapaPresentacion.FrameCuentas
             {
                 if (MessageBox.Show("Se abrira un mes ¿Desea continuar?", TextoGeneral.NombreApp, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
-                    if (fechaCL.Insert((FechaTransaccion)lstAbrirMes.SelectedItem, GlobalConfig.Compañia, GlobalConfig.Usuario, out String mensaje))
+                    if (fechaCL.Insert((FechaTransaccion)lstAbrirMes.SelectedItem, GlobalConfig.Company, GlobalConfig.Usuario, out String mensaje))
                     {
                         MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
                         CargarDatos();
@@ -75,7 +75,7 @@ namespace CapaPresentacion.FrameCuentas
                     FechaTransaccion fechaTransaccion = (FechaTransaccion)lstCerrarMes.SelectedItem;
                     fechaTransaccion.Cerrada = true;
 
-                    if (fechaCL.CerrarMes(fechaTransaccion, GlobalConfig.Compañia, GlobalConfig.Usuario, out string mensaje))
+                    if (fechaCL.CerrarMes(fechaTransaccion, GlobalConfig.Company, GlobalConfig.Usuario, out string mensaje))
                     {
                         MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
                         CargarDatos();
