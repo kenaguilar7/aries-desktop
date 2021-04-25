@@ -35,11 +35,11 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.GridDatos = new System.Windows.Forms.DataGridView();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.lstEndPeriod = new System.Windows.Forms.ComboBox();
+            this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.lstStarPeriod = new System.Windows.Forms.ComboBox();
-            this.checkBox1 = new System.Windows.Forms.CheckBox();
-            this.label2 = new System.Windows.Forms.Label();
-            this.lstEndPeriod = new System.Windows.Forms.ComboBox();
+            this.CheckBoxShowAllPeriods = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.GridDatos)).BeginInit();
             this.groupBox2.SuspendLayout();
@@ -57,7 +57,7 @@
             this.btnCerrar.Text = "Cerrar";
             this.btnCerrar.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.btnCerrar.UseVisualStyleBackColor = true;
-            this.btnCerrar.Click += new System.EventHandler(this.CerrarVentana);
+            this.btnCerrar.Click += new System.EventHandler(this.CloseWindows);
             // 
             // btnExcel
             // 
@@ -71,7 +71,7 @@
             this.btnExcel.Text = "Exportar";
             this.btnExcel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.btnExcel.UseVisualStyleBackColor = true;
-            this.btnExcel.Click += new System.EventHandler(this.btnExcel_Click);
+            this.btnExcel.Click += new System.EventHandler(this.BtnExportToExcel_Click);
             // 
             // groupBox1
             // 
@@ -116,7 +116,7 @@
             this.groupBox2.Controls.Add(this.btnCerrar);
             this.groupBox2.Controls.Add(this.lstStarPeriod);
             this.groupBox2.Controls.Add(this.btnExcel);
-            this.groupBox2.Controls.Add(this.checkBox1);
+            this.groupBox2.Controls.Add(this.CheckBoxShowAllPeriods);
             this.groupBox2.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.groupBox2.Location = new System.Drawing.Point(13, 11);
             this.groupBox2.Name = "groupBox2";
@@ -124,6 +124,26 @@
             this.groupBox2.TabIndex = 10;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "HERRAMIENTAS";
+            // 
+            // lstEndPeriod
+            // 
+            this.lstEndPeriod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.lstEndPeriod.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lstEndPeriod.FormattingEnabled = true;
+            this.lstEndPeriod.Location = new System.Drawing.Point(327, 27);
+            this.lstEndPeriod.Name = "lstEndPeriod";
+            this.lstEndPeriod.Size = new System.Drawing.Size(130, 24);
+            this.lstEndPeriod.TabIndex = 16;
+            this.lstEndPeriod.SelectedIndexChanged += new System.EventHandler(this.LstEndPostingPeriod_SelectedIndexChanged);
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(253, 32);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(68, 17);
+            this.label2.TabIndex = 15;
+            this.label2.Text = "Mes Final:";
             // 
             // label1
             // 
@@ -143,38 +163,18 @@
             this.lstStarPeriod.Name = "lstStarPeriod";
             this.lstStarPeriod.Size = new System.Drawing.Size(130, 24);
             this.lstStarPeriod.TabIndex = 13;
-            this.lstStarPeriod.SelectedIndexChanged += new System.EventHandler(this.lstMesesAbiertos_SelectedIndexChanged);
+            this.lstStarPeriod.SelectedIndexChanged += new System.EventHandler(this.LstFirstPostingPeriod_SelectedIndexChanged);
             // 
-            // checkBox1
+            // CheckBoxShowAllPeriods
             // 
-            this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(476, 28);
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(159, 21);
-            this.checkBox1.TabIndex = 0;
-            this.checkBox1.Text = "Traer todos los meses";
-            this.checkBox1.UseVisualStyleBackColor = true;
-            this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(253, 32);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(68, 17);
-            this.label2.TabIndex = 15;
-            this.label2.Text = "Mes Final:";
-            // 
-            // lstEndPeriod
-            // 
-            this.lstEndPeriod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.lstEndPeriod.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lstEndPeriod.FormattingEnabled = true;
-            this.lstEndPeriod.Location = new System.Drawing.Point(327, 27);
-            this.lstEndPeriod.Name = "lstEndPeriod";
-            this.lstEndPeriod.Size = new System.Drawing.Size(130, 24);
-            this.lstEndPeriod.TabIndex = 16;
-            this.lstEndPeriod.SelectedIndexChanged += new System.EventHandler(this.lstEndPeriod_SelectedIndexChanged);
+            this.CheckBoxShowAllPeriods.AutoSize = true;
+            this.CheckBoxShowAllPeriods.Location = new System.Drawing.Point(476, 28);
+            this.CheckBoxShowAllPeriods.Name = "CheckBoxShowAllPeriods";
+            this.CheckBoxShowAllPeriods.Size = new System.Drawing.Size(159, 21);
+            this.CheckBoxShowAllPeriods.TabIndex = 0;
+            this.CheckBoxShowAllPeriods.Text = "Traer todos los meses";
+            this.CheckBoxShowAllPeriods.UseVisualStyleBackColor = true;
+            this.CheckBoxShowAllPeriods.CheckedChanged += new System.EventHandler(this.CheckBoxShowAllPeriods_Checked);
             // 
             // ReporteAsientos
             // 
@@ -203,7 +203,7 @@
         private System.Windows.Forms.Button btnExcel;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.CheckBox checkBox1;
+        private System.Windows.Forms.CheckBox CheckBoxShowAllPeriods;
         private System.Windows.Forms.ComboBox lstStarPeriod;
         private System.Windows.Forms.DataGridView GridDatos;
         private System.Windows.Forms.Label label1;
