@@ -75,7 +75,7 @@ namespace CapaPresentacion.Reportes
             }
 
             GridDatos.Columns[nameof(JournalEntryReport.RateAmount)].DefaultCellStyle.Format = "₡#,0.00";
-            GridDatos.Columns[nameof(JournalEntryReport.ForeignAmount)].DefaultCellStyle.Format = "#,0.00";
+            GridDatos.Columns[nameof(JournalEntryReport.ForeignAmount)].DefaultCellStyle.Format = "$#,0.00";
 
             if (companyMoneyType == TipoMonedaCompañia.Solo_Colones)
             {

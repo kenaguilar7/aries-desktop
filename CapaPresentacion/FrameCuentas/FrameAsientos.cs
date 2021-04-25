@@ -586,7 +586,7 @@ namespace CapaPresentacion.FrameCuentas
                 row.Cells[7].Value = tr.RateAmount;
                 if (tr.Currency == Currency.dolares)
                 {
-                    row.Cells[8].Value = tr.Amount / tr.RateAmount;
+                    row.Cells[8].Value = tr.ForeignAmount;
                 }
                 else
                 {
