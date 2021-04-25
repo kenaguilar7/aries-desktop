@@ -16,28 +16,8 @@ namespace CapaEntidad.Entidades.JournalEntries
         public DateTime Date { get; set; }
         public Currency Currency { get; set; }
         public decimal RateAmount { get; set; } = 1.00m; 
-
-        private decimal _monto;
-        public decimal Monto {
-            get { return _monto; }
-            ///Todo número se almacenara siempre con dos decimales
-            set { _monto = Decimal.Truncate(value * 100) / 100; ; }
-        }
-
         public decimal Amount { get; set; }
-
-        public decimal ForeignAmount
-        {
-            get { return (Currency == Currency.dolares) ? Amount / RateAmount : 0; }
-            set { }
-        }
-
+        public decimal ForeignAmount { get; set; }
         public DebOrCred DebOrCred { get; set; }
-
-        public JournalEntryLine() {
-            
-        }
-
-        
     }
 }
