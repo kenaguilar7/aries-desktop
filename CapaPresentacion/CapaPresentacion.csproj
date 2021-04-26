@@ -304,6 +304,12 @@
     <Compile Include="Reportes\ReportePedidasGanacias.Designer.cs">
       <DependentUpon>ReportePedidasGanacias.cs</DependentUpon>
     </Compile>
+    <Compile Include="Restore\RestoreJournalEntry.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Restore\RestoreJournalEntry.Designer.cs">
+      <DependentUpon>RestoreJournalEntry.cs</DependentUpon>
+    </Compile>
     <Compile Include="Seguridad\FormPermisoUsuario.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -349,6 +355,7 @@
     <Compile Include="Reportes\ReporteCuenta.Designer.cs">
       <DependentUpon>ReporteCuenta.cs</DependentUpon>
     </Compile>
+    <Compile Include="Utils\INeedValidatedForClose.cs" />
     <EmbeddedResource Include="AdminAsientos\FrameAsientoCierre.resx">
       <DependentUpon>FrameAsientoCierre.cs</DependentUpon>
     </EmbeddedResource>
@@ -360,6 +367,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FrameCuentas\FrameAsientos.resx">
       <DependentUpon>FrameAsientos.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FrameCuentas\FrameMaestroCuenta.resx">
       <DependentUpon>FrameMaestroCuenta.cs</DependentUpon>
@@ -390,6 +398,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Reportes\ReportePedidasGanacias.resx">
       <DependentUpon>ReportePedidasGanacias.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Restore\RestoreJournalEntry.resx">
+      <DependentUpon>RestoreJournalEntry.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Seguridad\FormPermisoUsuario.resx">
       <DependentUpon>FormPermisoUsuario.cs</DependentUpon>
