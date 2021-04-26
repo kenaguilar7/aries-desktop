@@ -10,6 +10,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using CapaEntidad.Textos;
+using CapaPresentacion.Utils;
 
 namespace CapaPresentacion
 {
@@ -42,8 +44,7 @@ namespace CapaPresentacion
                 if (c != null)
                 {
 
-                    ///TODO si hay ventanas abiertas deberian de cerrarse
-
+                    if(!IsAvalibleToChangeCompany())return;
                     GlobalConfig.Company = c;
                     fm.comParametro = true;
                     this.Close();
@@ -58,6 +59,32 @@ namespace CapaPresentacion
             {
                 MessageBox.Show(ex.Message, "", MessageBoxButtons.OK, MessageBoxIcon.Hand);
             }
+        }
+
+        public bool IsAvalibleToChangeCompany()
+        {
+            var isAvalibleToChangeCompany = true; 
+            foreach (Form form in Application.OpenForms)
+            {
+                
+                if (form is INeedValidatedForClose && !((INeedValidatedForClose) form).IsAvalibleToClose())
+                isAvalibleToChangeCompany = false;
+            }
+
+            if (isAvalibleToChangeCompany)
+            {
+                for (int i = Application.OpenForms.Count - 1; i >= 0; i--)
+                {
+                    if (Application.OpenForms[i].Name != "FrameMenu")
+                        Application.OpenForms[i].Close();
+                }
+            }
+            else
+            {
+                MessageBox.Show("Ha ocurrido un error al tratar de cambiar de compañia \nAlgunas ventanas que no se pudieron cerrar. ", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Hand);
+            }
+
+            return isAvalibleToChangeCompany; 
         }
 
         private void CargarCompaniaFormulario(Compañia compañia)

@@ -18,11 +18,12 @@ using CapaEntidad.Textos;
 using CapaEntidad.Utils;
 using CapaLogica;
 using CapaPresentacion.Reportes;
+using CapaPresentacion.Utils;
 
 
-namespace CapaPresentacion.FrameCuentas
+namespace CapaPresentacion.FrameCuentas 
 {
-    public partial class FrameAsientos : Form, ICallingForm
+    public partial class FrameAsientos : Form, ICallingForm, INeedValidatedForClose
     {
 
         private JournalEntry _journalEntry;
@@ -135,7 +136,7 @@ namespace CapaPresentacion.FrameCuentas
 
         private void LstMesesAbiertos_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (AsientoCuadrado())
+            if (EqualDebAndCredONJournalEntry())
             {
                 //List<JournalEntry> lst = _asientoCL.GetPorFecha((FechaTransaccion)lstMesesAbiertos.SelectedItem, GlobalConfig.Compañia);
                 var pstP = (FechaTransaccion) lstMesesAbiertos.SelectedItem;
@@ -323,7 +324,7 @@ namespace CapaPresentacion.FrameCuentas
 
         private void LstNumeroAsientos_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (AsientoCuadrado())
+            if (EqualDebAndCredONJournalEntry())
             {
                 _journalEntry = (JournalEntry) lstNumeroAsientos.SelectedItem;
                 _journalEntry.JournalEntryLines = _financialSercie.GetJournalEntryLineByJournalEntryId(_journalEntry.Id).ToList();
@@ -637,7 +638,7 @@ namespace CapaPresentacion.FrameCuentas
         }
         private void BtnLimpiar_Click(object sender, EventArgs e)
         {
-            if (AsientoCuadrado())
+            if (EqualDebAndCredONJournalEntry())
             {
                 this.GridDatos.Rows.Clear();
                 this.SetColorBalance();
@@ -793,9 +794,9 @@ namespace CapaPresentacion.FrameCuentas
         }
         private void FrameAsientos_FormClosing(object sender, FormClosingEventArgs e)
         {
-            e.Cancel = !AsientoCuadrado();
+            e.Cancel = !EqualDebAndCredONJournalEntry();
         }
-        private bool AsientoCuadrado()
+        private bool EqualDebAndCredONJournalEntry()
         {
             if (_journalEntry != null && _journalEntry.Id != 0 && !_journalEntry.Cuadrado)
             {
@@ -1012,5 +1013,9 @@ namespace CapaPresentacion.FrameCuentas
         #endregion
 
 
+        public bool IsAvalibleToClose()
+        {
+            return EqualDebAndCredONJournalEntry(); 
+        }
     }
 }
