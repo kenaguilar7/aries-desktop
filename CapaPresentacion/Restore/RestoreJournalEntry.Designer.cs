@@ -29,10 +29,10 @@ namespace CapaPresentacion.Restore
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle7 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle8 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.lstEndPeriod = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
@@ -65,7 +65,7 @@ namespace CapaPresentacion.Restore
             this.groupBox2.Size = new System.Drawing.Size(1252, 65);
             this.groupBox2.TabIndex = 11;
             this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "HERRAMIENTAS";
+            this.groupBox2.Text = "FILTROS";
             // 
             // lstEndPeriod
             // 
@@ -112,8 +112,8 @@ namespace CapaPresentacion.Restore
             this.JournalEntryLineGrid.AllowUserToAddRows = false;
             this.JournalEntryLineGrid.AllowUserToDeleteRows = false;
             this.JournalEntryLineGrid.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.JournalEntryLineGrid.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle5;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.JournalEntryLineGrid.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
             this.JournalEntryLineGrid.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.JournalEntryLineGrid.BackgroundColor = System.Drawing.SystemColors.ControlLightLight;
             this.JournalEntryLineGrid.BorderStyle = System.Windows.Forms.BorderStyle.None;
@@ -126,8 +126,8 @@ namespace CapaPresentacion.Restore
             this.JournalEntryLineGrid.Name = "JournalEntryLineGrid";
             this.JournalEntryLineGrid.ReadOnly = true;
             this.JournalEntryLineGrid.RowHeadersVisible = false;
-            dataGridViewCellStyle6.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.JournalEntryLineGrid.RowsDefaultCellStyle = dataGridViewCellStyle6;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.JournalEntryLineGrid.RowsDefaultCellStyle = dataGridViewCellStyle2;
             this.JournalEntryLineGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.JournalEntryLineGrid.Size = new System.Drawing.Size(1238, 469);
             this.JournalEntryLineGrid.TabIndex = 4;
@@ -175,8 +175,8 @@ namespace CapaPresentacion.Restore
             this.JournalEntryGrid.AllowUserToAddRows = false;
             this.JournalEntryGrid.AllowUserToDeleteRows = false;
             this.JournalEntryGrid.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle7.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.JournalEntryGrid.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle7;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.JournalEntryGrid.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle3;
             this.JournalEntryGrid.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.JournalEntryGrid.BackgroundColor = System.Drawing.SystemColors.ControlLightLight;
             this.JournalEntryGrid.BorderStyle = System.Windows.Forms.BorderStyle.None;
@@ -189,8 +189,8 @@ namespace CapaPresentacion.Restore
             this.JournalEntryGrid.Name = "JournalEntryGrid";
             this.JournalEntryGrid.ReadOnly = true;
             this.JournalEntryGrid.RowHeadersVisible = false;
-            dataGridViewCellStyle8.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.JournalEntryGrid.RowsDefaultCellStyle = dataGridViewCellStyle8;
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.JournalEntryGrid.RowsDefaultCellStyle = dataGridViewCellStyle4;
             this.JournalEntryGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.JournalEntryGrid.Size = new System.Drawing.Size(1238, 469);
             this.JournalEntryGrid.TabIndex = 5;
