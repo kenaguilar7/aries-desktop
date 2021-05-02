@@ -91,6 +91,7 @@
     <Compile Include="BaseModel.cs" />
     <Compile Include="Entidades\JournalEntries\JournalEntry.cs" />
     <Compile Include="Entidades\JournalEntries\JournalEntryHeader.cs" />
+    <Compile Include="Entidades\JournalEntries\JournalEntryDeletedReport.cs" />
     <Compile Include="Entidades\JournalEntries\JournalEntryReport.cs" />
     <Compile Include="Entidades\JournalEntries\JournalEntryStatus.cs" />
     <Compile Include="Entidades\JournalEntries\JournalEntryLine.cs" />

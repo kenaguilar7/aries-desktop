@@ -49,6 +49,8 @@
             this.nbalanceDeComprobaciónToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sistemaToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.PermisosDeUsuarioToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.gestionDeCorreosToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.elementosEliminadosToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.salirToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
@@ -58,7 +60,6 @@
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.ProgressBar = new System.Windows.Forms.ToolStripProgressBar();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.gestionDeCorreosToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -215,6 +216,7 @@
             this.sistemaToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.PermisosDeUsuarioToolStripMenuItem,
             this.gestionDeCorreosToolStripMenuItem,
+            this.elementosEliminadosToolStripMenuItem,
             this.salirToolStripMenuItem});
             this.sistemaToolStripMenuItem.Name = "sistemaToolStripMenuItem";
             this.sistemaToolStripMenuItem.Size = new System.Drawing.Size(60, 20);
@@ -223,14 +225,28 @@
             // PermisosDeUsuarioToolStripMenuItem
             // 
             this.PermisosDeUsuarioToolStripMenuItem.Name = "PermisosDeUsuarioToolStripMenuItem";
-            this.PermisosDeUsuarioToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.PermisosDeUsuarioToolStripMenuItem.Size = new System.Drawing.Size(190, 22);
             this.PermisosDeUsuarioToolStripMenuItem.Text = "Permisos de usuario";
             this.PermisosDeUsuarioToolStripMenuItem.Click += new System.EventHandler(this.gestorDeVentanasToolStripMenuItem_Click);
+            // 
+            // gestionDeCorreosToolStripMenuItem
+            // 
+            this.gestionDeCorreosToolStripMenuItem.Name = "gestionDeCorreosToolStripMenuItem";
+            this.gestionDeCorreosToolStripMenuItem.Size = new System.Drawing.Size(190, 22);
+            this.gestionDeCorreosToolStripMenuItem.Text = "Gestion de correos";
+            this.gestionDeCorreosToolStripMenuItem.Click += new System.EventHandler(this.gestionDeCorreosToolStripMenuItem_Click);
+            // 
+            // elementosEliminadosToolStripMenuItem
+            // 
+            this.elementosEliminadosToolStripMenuItem.Name = "elementosEliminadosToolStripMenuItem";
+            this.elementosEliminadosToolStripMenuItem.Size = new System.Drawing.Size(190, 22);
+            this.elementosEliminadosToolStripMenuItem.Text = "Elementos eliminados";
+            this.elementosEliminadosToolStripMenuItem.Click += new System.EventHandler(this.elementosEliminadosToolStripMenuItem_Click);
             // 
             // salirToolStripMenuItem
             // 
             this.salirToolStripMenuItem.Name = "salirToolStripMenuItem";
-            this.salirToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.salirToolStripMenuItem.Size = new System.Drawing.Size(190, 22);
             this.salirToolStripMenuItem.Text = "Salir";
             this.salirToolStripMenuItem.Click += new System.EventHandler(this.SalirToolStripMenuItem_Click);
             // 
@@ -301,13 +317,6 @@
             this.toolStripSeparator2.Name = "toolStripSeparator2";
             this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
             // 
-            // gestionDeCorreosToolStripMenuItem
-            // 
-            this.gestionDeCorreosToolStripMenuItem.Name = "gestionDeCorreosToolStripMenuItem";
-            this.gestionDeCorreosToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.gestionDeCorreosToolStripMenuItem.Text = "Gestion de correos";
-            this.gestionDeCorreosToolStripMenuItem.Click += new System.EventHandler(this.gestionDeCorreosToolStripMenuItem_Click);
-            // 
             // FrameMenu
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -363,5 +372,6 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripMenuItem nbalanceDeComprobaciónToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem gestionDeCorreosToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem elementosEliminadosToolStripMenuItem;
     }
 }

@@ -222,6 +222,22 @@ namespace AriesContador.Services
         {
             _unitOfWork.JournalEntryRepository.Update(journalEntry);
         }
+
+        public IEnumerable<JournalEntryDeletedReport> GetAllJournalEntryDeleted(JournalEntryReportParam reportParam)
+        {
+            return _unitOfWork.JournalEntryRepository.GetDeletedItemByDateRange(reportParam); 
+        }
+
+        public IEnumerable<JournalEntryLineDeletedReport> GetAllJournalEntryLineDeleted(JournalEntryReportParam reportParam)
+        {
+            return  _unitOfWork.JournalEntryLineRepository.GetDeletedItemByDateRange(reportParam);
+        }
+
+        public void RestoreJournalEntry(JournalEntry journalEntry)
+        {
+            _unitOfWork.JournalEntryRepository.RestoreJournalEntry(journalEntry);
+        }
+
         public void DeleteJournalEntry(JournalEntry journalEntry)
         {
             _unitOfWork.JournalEntryRepository.Remove(journalEntry);
@@ -251,6 +267,12 @@ namespace AriesContador.Services
         {
             _unitOfWork.JournalEntryLineRepository.Update(journalEntryLine);
         }
+
+        public void RestoreJournalEntryLine(JournalEntryLine journalEntryLine)
+        {
+            _unitOfWork.JournalEntryLineRepository.RestoreJournalEntryLine(journalEntryLine);
+        }
+
         public void DeleteJournalEntryLine(JournalEntryLine journalEntryLine)
         {
             _unitOfWork.JournalEntryLineRepository.Remove(journalEntryLine);
