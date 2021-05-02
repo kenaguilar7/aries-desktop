@@ -413,8 +413,8 @@ namespace CapaPresentacion.FrameCuentas
                 MessageBox.Show("Seleccione una cuenta valida", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Hand);
             }
         }
-        #endregion
 
+        #endregion
 
     }
 }
