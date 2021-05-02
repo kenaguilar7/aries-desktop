@@ -264,7 +264,9 @@ namespace CapaPresentacion.FrameCuentas
                 jELine.Currency = Currency.dolares;
                 jELine.RateAmount = Convert.ToDecimal(txtTipoCambio.Text);
                 jELine.ForeignAmount = Convert.ToDecimal(txtMontoTotalTransaccion.Text);
-                jELine.Amount = jELine.ForeignAmount * jELine.RateAmount;
+
+                var foreignAmount = jELine.ForeignAmount * jELine.RateAmount;
+                jELine.Amount = Math.Truncate(100 * foreignAmount) / 100;
             }
 
             jELine.DebOrCred = (rDebitos.Checked) ? DebOrCred.Debito : DebOrCred.Credito;
