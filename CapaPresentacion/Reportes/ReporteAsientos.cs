@@ -17,7 +17,6 @@ using AriesContador.Core.Models.PostingPeriods;
 using AriesContador.Core.Services;
 using AriesContador.Data;
 using AriesContador.Services;
-using CapaEntidad.Utils;
 using ClosedXML.Excel;
 
 namespace CapaPresentacion.Reportes
