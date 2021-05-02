@@ -8,8 +8,10 @@ using CapaPresentacion.FrameCuentas;
 using CapaPresentacion.Seguridad;
 using CapaPresentacion.Reportes;
 using CapaEntidad.Entidades.Compañias;
+using CapaEntidad.Entidades.Usuarios;
 using CapaPresentacion.AdminAsientos;
 using CapaPresentacion.FrameUsuarios;
+using CapaPresentacion.Restore;
 
 namespace CapaPresentacion
 {
@@ -31,6 +33,14 @@ namespace CapaPresentacion
                     Application.Exit();
                 }
             }
+
+            //GlobalConfig.Usuario = new Usuario()
+            //{
+            //    Id = 1, 
+            //    MyNombre = "Kenneth DEV"
+            //}; 
+
+
             CargarDatos();
 
         }
@@ -196,7 +206,7 @@ namespace CapaPresentacion
             if (GlobalConfig.Usuario.TipoUsuario == CapaEntidad.Enumeradores.TipoUsuario.Usuario)
             {
 
-
+                elementosEliminadosToolStripMenuItem.Enabled = false; 
 
                 if ((GlobalConfig.Usuario.Modulos.Find(x => x.Codigo == 1) is var mConta) && mConta == null || !mConta.TienePermiso)
                 {
@@ -351,6 +361,21 @@ namespace CapaPresentacion
             Correo n = new Correo();
             n.MdiParent = this;
             n.Show(); 
+        }
+
+        private void elementosEliminadosToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+            if (GlobalConfig.Company != null)
+            {
+                var n = new RestoreJournalEntry();
+                n.MdiParent = this;
+                n.Show();
+            }
+            else
+            {
+                MessageBox.Show("Seleccione una compañia", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            }
         }
     }
 }

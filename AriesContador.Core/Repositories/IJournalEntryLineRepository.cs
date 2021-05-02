@@ -10,5 +10,7 @@ namespace AriesContador.Core.Repositories
         JournalEntryLine GetById(int id);
         IEnumerable<JournalEntryLine> FindByJournalEntryId(int journalEntryId);
         IEnumerable<JournalEntryLine> FindByAccountIdAndPostingPeriodId(int accountId, int postingPeriodId);
+        IEnumerable<JournalEntryLineDeletedReport> GetDeletedItemByDateRange(JournalEntryReportParam reportParam);
+        void RestoreJournalEntryLine(JournalEntryLine entryLine); 
     }
 }
