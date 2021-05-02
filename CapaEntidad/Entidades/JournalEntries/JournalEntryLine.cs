@@ -19,5 +19,6 @@ namespace CapaEntidad.Entidades.JournalEntries
         public decimal Amount { get; set; }
         public decimal ForeignAmount { get; set; }
         public DebOrCred DebOrCred { get; set; }
+        
     }
 }

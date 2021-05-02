@@ -46,8 +46,8 @@ namespace CapaEntidad.Entidades.JournalEntries
         [DisplayName("Monto Tipo Cambio")]
         public decimal RateAmount { get; set; }
 
-        [XLColumn(Header = "Monto Dolares")]
-        [DisplayName("Monto Dolares")]
+        [XLColumn(Header = "Monto Dólares ")]
+        [DisplayName("Monto Dólares ")]
         public decimal ForeignAmount { get; set; }
     }
 
