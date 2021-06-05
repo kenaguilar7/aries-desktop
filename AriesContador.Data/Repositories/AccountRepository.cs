@@ -34,7 +34,8 @@ namespace AriesContador.Data.Repositories
         public IEnumerable<Account> FindByCompanyId(string companyId)
         {
             MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            var output = dataAccess.LoadData<Account, dynamic>("SP_GetAccountsByCompanyId", new { CompanyId = companyId });
+            var output =
+                dataAccess.LoadData<Account, dynamic>("SP_GetAccountsByCompanyId", new {CompanyId = companyId});
             return output;
         }
 

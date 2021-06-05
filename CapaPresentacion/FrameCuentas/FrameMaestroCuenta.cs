@@ -12,6 +12,11 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using AriesContador.Core;
+using AriesContador.Core.Models.Accounts;
+using AriesContador.Core.Services;
+using AriesContador.Data;
+using AriesContador.Services;
 
 namespace CapaPresentacion.FrameCuentas
 {
@@ -22,13 +27,28 @@ namespace CapaPresentacion.FrameCuentas
         private List<Cuenta> _lstCuentas { get; set; } = new List<Cuenta>();
         private List<FechaTransaccion> _lstFechas { get; set; } = new List<FechaTransaccion>();
         private Cuenta CuentaActual { get; set; }
+
+
+
+        private Account CurrentAccount { get; set; }
+        private List<Account> CompanyAccounts { get; set; }
+        private readonly IFinancialService _financialService;
         public FrameMaestroCuenta()
         {
             InitializeComponent();
-            CargarDatos();
+
+            IUnitOfWork unit = new UnitOfWork(GlobalConfig.ConnectionString);
+            _financialService = new FinancialService(unit);
+        }
+
+        private void FrameMaestroCuenta_Load(object sender, EventArgs e)
+        {
+            LoadAccounts();
             CargarDatosAListas();
             //treeCuentas.ExpandAll(); 
         }
+
+
         public bool TransferirCuenta(Cuenta cuenta)
         {
             if (cuenta != null)
@@ -40,15 +60,21 @@ namespace CapaPresentacion.FrameCuentas
         }
 
         #region Carga de datos
-        private async Task CargarDatos()
+        private void LoadAccounts() // refactored
         {
-            _lstCuentas.Clear();
-            //_lstCuentas = await Task.Run(() => _cuentaCL.GetAll(GlobalConfig.Compañia            
-            _lstCuentas = await Task.Run(() => _cuentaCL.GetAll(GlobalConfig.Company));
-            _lstCuentas = _cuentaCL.GetAll(GlobalConfig.Company);
-            treeCuentas.Nodes.AddRange(TreeViewCuentas.CrearTreeView(_lstCuentas));
+            //_lstCuentas.Clear();
+            ////_lstCuentas = await Task.Run(() => _cuentaCL.GetAll(GlobalConfig.Compañia
+            //_lstCuentas = await Task.Run(() => _cuentaCL.GetAll(GlobalConfig.Company));
+            //_lstCuentas = _cuentaCL.GetAll(GlobalConfig.Company);
+            //treeCuentas.Nodes.AddRange(TreeViewCuentas.CrearTreeView(_lstCuentas));
             // CargarDatosAListas();
+            //---------------------------------
+            
+            CompanyAccounts?.Clear();
+            CompanyAccounts = _financialService.GetAccounts(GlobalConfig.Company.Codigo).ToList(); 
+            treeCuentas.Nodes.AddRange(CompanyAccounts.BuildTreeView());
         }
+
         private void CargarDatosAListas()
         {
             AFechaFinal.SelectedIndexChanged -= this.AFechaFinalSelectedIndexChanged;
@@ -70,21 +96,23 @@ namespace CapaPresentacion.FrameCuentas
             BFechaFinal.SelectedIndexChanged += this.BFechaFinalSelectedIndexChanged;
 
         }
-        private void CargarDatosAlPanelDeInformacion()
+
+        private void LoadAccountInfoToDashboard()// refactored
         {
             try
             {
-                this.txtNombreInfo.Text = CuentaActual.Nombre;
-                this.txtTipoInfo.Text = CuentaActual.TipoCuenta.TipoCuenta.ToString().Replace('_', ' ');
-                this.txtIndicadorInfo.Text = CuentaActual.Indicador.ToString().Replace('_', ' ');
-                this.txtBoxDetalle.Text = CuentaActual.Detalle;
-                this.infoPanel.Tag = CuentaActual;
+                this.txtNombreInfo.Text = CurrentAccount.Name;
+                this.txtTipoInfo.Text = CurrentAccount.AccountTag.ToString().Replace('_', ' ');
+                this.txtIndicadorInfo.Text = CurrentAccount.AccountType.ToString().Replace('_', ' ');
+                this.txtBoxDetalle.Text = CurrentAccount.Memo;
+                this.infoPanel.Tag = CurrentAccount;
             }
             catch (Exception e)
             {
-                MessageBox.Show(e.Message);
+                MessageBox.Show(e.Message ,TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
         private void CargarDatosPanelA()
         {
 
@@ -180,8 +208,8 @@ namespace CapaPresentacion.FrameCuentas
             this.txtBoxDetalle.ReadOnly = true;
             this.btnGuardarNuevoNombre.Enabled = false;
             this.btnGuardarNuevoNombre.Visible = false;
-            CuentaActual = (Cuenta)e.Node.Tag;
-            CargarDatosAlPanelDeInformacion();
+            CurrentAccount = (Account)e.Node.Tag;
+            LoadAccountInfoToDashboard();
 
             if (tabControlGeneral.SelectedIndex == 0)
             {
@@ -305,33 +333,26 @@ namespace CapaPresentacion.FrameCuentas
             reporte.Show();
 
         }
-        private void CrearNuevaCuenta(object sender, EventArgs e)
+        private void CrearNuevaCuenta(object sender, EventArgs e) //Refactored
         {
             try
             {
+                var selectedAccountOnNode = treeCuentas.SelectedNode?.Tag as Account;
 
-                if (treeCuentas.SelectedNode is null)
+                if (selectedAccountOnNode != null && selectedAccountOnNode.Editable)
                 {
-                    MessageBox.Show("Seleccione una cuenta ", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                    return;
-                }
-                else if (!(treeCuentas.SelectedNode.Tag is Cuenta cuenta) || cuenta.Indicador == IndicadorCuenta.Cuenta_Titulo)
-                {
-                    MessageBox.Show("No se puede crear cuentas en este nivel", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                    return;
+                    FrameNuevaCuenta nv = new FrameNuevaCuenta(this, selectedAccountOnNode);
+                    nv.ShowDialog();
                 }
                 else
                 {
-                    FrameNuevaCuenta nv = new FrameNuevaCuenta(this, cuenta);
-                    nv.lstCuentas = _lstCuentas;
-                    nv.ShowDialog();
+                    MessageBox.Show("Esta cuenta no puede ser editada.", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
         }
         /// <summary>
         /// Evento que ocurre cuando se presiona el boton de editar una cuenta
@@ -415,6 +436,7 @@ namespace CapaPresentacion.FrameCuentas
         }
 
         #endregion
+
 
     }
 }

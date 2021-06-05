@@ -6,23 +6,30 @@ using CapaLogica;
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using AriesContador.Core;
+using AriesContador.Core.Models.Accounts;
+using AriesContador.Core.Services;
+using AriesContador.Data;
+using AriesContador.Services;
 
 namespace CapaPresentacion.FrameCuentas
 {
     public partial class FrameNuevaCuenta : Form
     {
-        private CuentaCL cuentaCL = new CuentaCL();
-        private Cuenta CuentaPadre { get; set; } = new Cuenta();
-        public List<Cuenta> lstCuentas = new List<Cuenta>();
+        private Account CuentaPadre { get; set; } = new Account();
         private ICallingForm FormParaEnviarCuenta = null;
-        public FrameNuevaCuenta(ICallingForm callingFrom, Cuenta cuenta)
+        private readonly IFinancialService _financialService;
+        public FrameNuevaCuenta(ICallingForm callingFrom, Account cuenta)
         {
             FormParaEnviarCuenta = callingFrom as ICallingForm;
             CuentaPadre = cuenta;
             InitializeComponent();
-            txtCuentaPadre.Text = CuentaPadre.Nombre;
+            txtCuentaPadre.Text = CuentaPadre.Name;
 
+            IUnitOfWork unit = new UnitOfWork(GlobalConfig.ConnectionString);
+            _financialService = new FinancialService(unit);
         }
+
         private void UsuarioKeyPress(object sender, KeyPressEventArgs e)
         {
             if ((Keys)e.KeyChar == Keys.Enter)
@@ -35,48 +42,29 @@ namespace CapaPresentacion.FrameCuentas
         {
             try
             {
-                Cuenta nuevaCuenta = new Cuenta
+                Account nuevaCuenta = new Account
                 {
-                    Nombre = txtBoxNombre.Text,
-                    Indicador = IndicadorCuenta.Cuenta_Auxiliar,
-                    MyCompania = CuentaPadre.MyCompania,
-                    TipoCuenta = CuentaPadre.TipoCuenta,
-                    Detalle = txtBoxDetalle.Text,
-                    Padre = CuentaPadre.Id,
+                    Name = txtBoxNombre.Text,
+                    AccountType = AccountType.Cuenta_Auxiliar,
+                    CompanyId = CuentaPadre.CompanyId,
+                    AccountTag = CuentaPadre.AccountTag,
+                    DebOCred = CuentaPadre.DebOCred,
+                    Memo = txtBoxDetalle.Text,
+                    FatherAccount = CuentaPadre.Id,
                     Editable = true
                 };
-
-                    if (!cuentaCL.VerificarSiEsApta(CuentaPadre, out String Mensaje))
-                    {
-                        if (MessageBox.Show(Mensaje, TextoGeneral.NombreApp, MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) == DialogResult.No)
-                        {
-                            return;
-                        }
-
-                    }
-
-                    if (cuentaCL.Insert(ref nuevaCuenta, CuentaPadre, out String mensaje, GlobalConfig.Usuario))
-                    {
-                        MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                        if (FormParaEnviarCuenta != null)
-                        {
-                            FormParaEnviarCuenta.TransferirCuenta(nuevaCuenta);
-                        }
-
-                        this.Close();
-                    }
-                    else
-                    {
-                        MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                    }
+                
+                _financialService.CreateAccount(nuevaCuenta);
+                MessageBox.Show("Cuenta creada exitosamente", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                //FormParaEnviarCuenta?.TransferirCuenta(nuevaCuenta);
+                this.Close();
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, TextoGeneral.MensajeBannerError, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
         }
+
         private void CerrarClick(object sender, EventArgs e)
         {
             this.Close();
