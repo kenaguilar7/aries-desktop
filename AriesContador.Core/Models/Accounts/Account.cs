@@ -2,6 +2,7 @@
 using AriesContador.Core.Models.Utils;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using CapaEntidad.Entidades.JournalEntries;
 using CapaEntidad.Utils;
 
@@ -9,8 +10,8 @@ namespace AriesContador.Core.Models.Accounts
 {
     public class Account : BaseAccount
     {
-        public List<JournalEntryLine> JournalEntryLines { get; set; }
-            = new List<JournalEntryLine>();
+        //public List<JournalEntryLine> JournalEntryLines { get; set; }
+        //    = new List<JournalEntryLine>();
 
         public int? FatherAccount { get; set; }
 
@@ -21,14 +22,22 @@ namespace AriesContador.Core.Models.Accounts
         public decimal PriorBalanceForeign { get; set; }
 
         public decimal CurrentBalance
-            => BalanceBehavier
-            .CurrentBalance(PriorBalance, GetDebitBalance(), GetCreditBalance());
+            => BalanceBehavior
+            .CurrentBalance(PriorBalance, DebitBalance, CreditBalance);
+
+        public decimal CurrentBalanceForeign
+            => BalanceBehavior
+                .CurrentBalance(PriorBalanceForeign, DebitBalanceForeign, CreditBalanceForeign);
 
         public decimal MontlyBalance
-            => BalanceBehavier
-            .MontlyBalance(GetDebitBalance(), GetCreditBalance());
+            => BalanceBehavior
+            .MontlyBalance(DebitBalance, CreditBalance);
 
-        private IBalanceBehavior BalanceBehavier
+        public decimal MontlyBalanceForeign
+            => BalanceBehavior
+                .MontlyBalance(DebitBalanceForeign, CreditBalanceForeign);
+
+        private IBalanceBehavior BalanceBehavior
         {
             get
             {
@@ -38,23 +47,20 @@ namespace AriesContador.Core.Models.Accounts
             }
         }
 
-        public decimal GetDebitBalance()
-        {
-            var output = JournalEntryLines.Where
-                (x => x.DebOrCred == DebOrCred.Debito)
-                .Sum(x => x.Amount);
+        public decimal DebitBalance { get; set;  }
+        public decimal DebitBalanceForeign { get; set; }
+        public decimal CreditBalance { get; set; }
+        public decimal CreditBalanceForeign { get; set; }
 
-            return output;
-        }
 
-        public decimal GetCreditBalance()
-        {
-            var output = JournalEntryLines.Where
-                (x => x.DebOrCred == DebOrCred.Credito)
-                .Sum(x => x.Amount);
+        //public decimal GetCreditBalance()
+        //{
+        //    var output = JournalEntryLines.Where
+        //        (x => x.DebOrCred == DebOrCred.Credito)
+        //        .Sum(x => x.Amount);
 
-            return output;
-        }
+        //    return output;
+        //}
 
     }
 }
