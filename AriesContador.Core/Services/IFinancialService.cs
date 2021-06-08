@@ -35,7 +35,7 @@ namespace AriesContador.Core.Services
         JournalEntry GetJournalEntryById(int id);
         void CreateJournalEntry(JournalEntry journalEntry);
         void UpdateJournalEntry(JournalEntry journalEntry);
-        IEnumerable<JournalEntryDeletedReport> GetAllJournalEntryDeleted(JournalEntryReportParam reportParam);
+        IEnumerable<JournalEntryDeletedReport> GetAllJournalEntryDeleted(BasicReportParam reportParam);
         void RestoreJournalEntry(JournalEntry journalEntry);
 
 
@@ -47,7 +47,7 @@ namespace AriesContador.Core.Services
         IEnumerable<JournalEntryLine> GetJournalEntryLineByJournalEntryId(int journalEntryId);
         void CreateJournalEntryLine(JournalEntryLine journalEntryLine);
         void UpdateJournalEntryLine(JournalEntryLine journalEntryLine);
-        IEnumerable<JournalEntryLineDeletedReport> GetAllJournalEntryLineDeleted(JournalEntryReportParam reportParam);
+        IEnumerable<JournalEntryLineDeletedReport> GetAllJournalEntryLineDeleted(BasicReportParam reportParam);
         void RestoreJournalEntryLine(JournalEntryLine journalEntryLine); 
 
         #endregion

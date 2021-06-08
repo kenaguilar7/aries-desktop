@@ -7,6 +7,6 @@ namespace AriesContador.Core.Repositories
 {
     public interface IFinancialReportRepository
     {
-        IEnumerable<JournalEntryReport> JournalEntryReport(JournalEntryReportParam jEParams);
+        IEnumerable<JournalEntryReport> JournalEntryReport(BasicReportParam jEParams);
     }
 }

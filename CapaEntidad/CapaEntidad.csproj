@@ -106,6 +106,7 @@
     <Compile Include="Entidades\Cuentas\Pasivo.cs" />
     <Compile Include="Entidades\Cuentas\Patrimonio.cs" />
     <Compile Include="Entidades\FechaTransacciones\FechaTransaccion.cs" />
+    <Compile Include="Entidades\Reports\BalanceComprobacionReport.cs" />
     <Compile Include="Entidades\Seguridad\CRUDItem.cs" />
     <Compile Include="Entidades\Seguridad\CRUDName.cs" />
     <Compile Include="Entidades\Seguridad\IPermiso.cs" />
@@ -140,6 +141,7 @@
     <Compile Include="Textos\TextoSQL.cs" />
     <Compile Include="Utils\Currency.cs" />
     <Compile Include="Utils\DebOrCred.cs" />
+    <Compile Include="Utils\TableExtensions.cs" />
     <Compile Include="Verificaciones\VerificaString.cs" />
   </ItemGroup>
   <ItemGroup>
