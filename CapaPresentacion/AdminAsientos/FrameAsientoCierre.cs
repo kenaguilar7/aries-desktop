@@ -156,9 +156,9 @@ namespace CapaPresentacion.AdminAsientos
 
         private void btnReporte_Click(object sender, EventArgs e)
         {
-            FrameReporteComprobacion n = new FrameReporteComprobacion(_lstFinal, UltimoMes);
-            n.MdiParent = this.MdiParent;
-            n.Show(); 
+            //FrameReporteComprobacion n = new FrameReporteComprobacion(_lstFinal, UltimoMes);
+            //n.MdiParent = this.MdiParent;
+            //n.Show(); 
         }
     }
 }

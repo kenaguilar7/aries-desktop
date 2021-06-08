@@ -86,10 +86,40 @@ namespace AriesContador.Core.Models.Utils
         }
         private static void SumBalance(Account cuentaSumFrom, Account cuentaSumTo)
         {
-            cuentaSumTo.JournalEntryLines.AddRange(cuentaSumFrom.JournalEntryLines);
-            //cuentaSumTo.CreditosColones += cuentaSumFrom.CreditosColones;
-            //cuentaSumTo.DebitosDolares += cuentaSumFrom.DebitosDolares;
-            //cuentaSumTo.CreditosDolares += cuentaSumFrom.CreditosDolares;
+            //cuentaSumTo.JournalEntryLines.AddRange(cuentaSumFrom.JournalEntryLines);
+            
+            cuentaSumTo.CreditBalance += cuentaSumFrom.CreditBalance;
+            cuentaSumTo.DebitBalance += cuentaSumFrom.DebitBalance;
+            cuentaSumTo.CreditBalanceForeign += cuentaSumFrom.CreditBalanceForeign;
+            cuentaSumTo.DebitBalanceForeign += cuentaSumFrom.DebitBalanceForeign;
+        }
+
+
+        public static IEnumerable<Account> OrderByTree(this IEnumerable<Account> lst)
+        {
+            
+            List<Account> retorno = new List<Account>();
+
+            foreach (Account item in lst)
+            {
+                if (item.AccountType == AccountType.Cuenta_Titulo)
+                {
+                    CargarNodos(item);
+                }
+            }
+            
+            void CargarNodos(Account cuenta)
+            {
+                retorno.Add(cuenta);
+                var sql = from c in lst where c.FatherAccount == cuenta.Id select c;
+                var cueHijas = sql.ToArray<Account>();
+                foreach (Account item in cueHijas)
+                {
+                    CargarNodos(item);
+                }
+            }
+
+            return retorno;
         }
     }
 }

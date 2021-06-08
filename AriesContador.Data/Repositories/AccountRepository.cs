@@ -8,7 +8,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Json;
 using System.Text;
-using System.Linq; 
+using System.Linq;
+using AriesContador.Core.Models.Utils;
+using CapaEntidad.Entidades.JournalEntries;
 
 namespace AriesContador.Data.Repositories
 {
@@ -67,6 +69,14 @@ namespace AriesContador.Data.Repositories
                 List<Account> accounts = (List<Account>)deserializer.ReadObject(ms);
                 return accounts;
             }
+        }
+
+        public IEnumerable<Account> AccountsWithBalanceByDateRange(BasicReportParam reportParam)
+        {
+            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
+            var output = dataAccess.LoadData<Account, BasicReportParam>("SP_AuxiliaryAccountsWithBalanceByDateRange", reportParam);
+            output.BuildAccountsBalance();
+            return output.OrderByTree();
         }
     }
 }
