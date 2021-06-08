@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using CapaEntidad.Entidades.JournalEntries;
 
 namespace AriesContador.Core.Repositories
 {
@@ -10,5 +11,6 @@ namespace AriesContador.Core.Repositories
         Account GetById(int id); 
         IEnumerable<Account> FindByCompanyId(string companyId);
         IEnumerable<Account> GetDefaultAccounts();
+        IEnumerable<Account> AccountsWithBalanceByDateRange(BasicReportParam reportParam); 
     }
 }

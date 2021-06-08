@@ -107,7 +107,7 @@ namespace CapaPresentacion.Restore
             var firstDate = (PostingPeriod)lstStarPeriod.SelectedItem;
             var endDate = (PostingPeriod)lstEndPeriod.SelectedItem;
 
-            var reportParamns = new JournalEntryReportParam()
+            var reportParamns = new BasicReportParam()
             {
                 CompanyId = GlobalConfig.Company.Codigo,
                 FirstDate = $"{firstDate.Date.Year}{string.Format("{0, 0:D2}", firstDate.Date.Month)}",
@@ -123,7 +123,7 @@ namespace CapaPresentacion.Restore
             var firstDate = (PostingPeriod)lstStarPeriod.SelectedItem;
             var endDate = (PostingPeriod)lstEndPeriod.SelectedItem;
 
-            var reportParamns = new JournalEntryReportParam()
+            var reportParamns = new BasicReportParam()
             {
                 CompanyId = GlobalConfig.Company.Codigo,
                 FirstDate = $"{firstDate.Date.Year}{string.Format("{0, 0:D2}", firstDate.Date.Month)}",

@@ -10,7 +10,7 @@ namespace AriesContador.Core.Repositories
         JournalEntry GetById(int jEntryId); 
         IEnumerable<JournalEntry> FindByPostingPeriodId(int postPeriodId);
         int GetConsecutiveNumber(int postingPeriodId);
-        IEnumerable<JournalEntryDeletedReport> GetDeletedItemByDateRange(JournalEntryReportParam reportParam);
+        IEnumerable<JournalEntryDeletedReport> GetDeletedItemByDateRange(BasicReportParam reportParam);
         void RestoreJournalEntry(JournalEntry entryLine);
     }
 }

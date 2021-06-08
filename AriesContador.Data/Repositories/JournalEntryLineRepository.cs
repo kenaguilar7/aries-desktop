@@ -57,7 +57,7 @@ namespace AriesContador.Data.Repositories
 
         }
 
-        public IEnumerable<JournalEntryLineDeletedReport> GetDeletedItemByDateRange(JournalEntryReportParam reportParam)
+        public IEnumerable<JournalEntryLineDeletedReport> GetDeletedItemByDateRange(BasicReportParam reportParam)
         {
             MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
             var jEntryLines = dataAccess.LoadData<JournalEntryLineDeletedReport, dynamic>
@@ -70,5 +70,6 @@ namespace AriesContador.Data.Repositories
             MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
             dataAccess.SaveData("SP_RestoreJournalEntryLine", entryLine);
         }
+
     }
 }

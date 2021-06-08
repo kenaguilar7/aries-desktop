@@ -51,7 +51,7 @@ namespace CapaEntidad.Entidades.JournalEntries
         public decimal ForeignAmount { get; set; }
     }
 
-    public class JournalEntryReportParam
+    public class BasicReportParam
     {
         public string CompanyId { get; set; }
         public string FirstDate { get; set; }
