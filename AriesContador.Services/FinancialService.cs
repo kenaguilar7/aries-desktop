@@ -57,37 +57,39 @@ namespace AriesContador.Services
 
         public IEnumerable<Account> GetAccountBalance(string companyId, IEnumerable<PostingPeriod> postingPeriods)
         {
-            var accounts = _unitOfWork.AccountRepository.FindByCompanyId(companyId);
-            var filledAccountsBalance = BuildAccountBalance(accounts, postingPeriods);
-            return filledAccountsBalance;
+            //var accounts = _unitOfWork.AccountRepository.FindByCompanyId(companyId);
+            //var filledAccountsBalance = BuildAccountBalance(accounts, postingPeriods);
+            //return filledAccountsBalance;
+            throw new NotImplementedException();
         }
 
         public Account GetAccountBalance(Account account, IEnumerable<PostingPeriod> postingPeriods)
         {
-            var accounts = GetAccounts(account.CompanyId).ToList().GetLowLevelAccounts(account.Id); 
-            var filledAccountsBalance = BuildAccountBalance(accounts, postingPeriods);
-            return filledAccountsBalance.First(x=>x.Id == account.Id);
+            //var accounts = GetAccounts(account.CompanyId).ToList().GetLowLevelAccounts(account.Id); 
+            //var filledAccountsBalance = BuildAccountBalance(accounts, postingPeriods);
+            //return filledAccountsBalance.First(x=>x.Id == account.Id);
+            throw new NotImplementedException(); 
         }
 
-        private IEnumerable<Account> BuildAccountBalance(IEnumerable<Account> accounts, IEnumerable<PostingPeriod> postingPeriods)
-        {
-            foreach (var months in postingPeriods)
-            {
-                FillAccountWithJournalEntryLineByMonthId(accounts, months);
-            }
-            return accounts.BuildAccountsBalance();
-        }
+        //private IEnumerable<Account> BuildAccountBalance(IEnumerable<Account> accounts, IEnumerable<PostingPeriod> postingPeriods)
+        //{
+        //    foreach (var months in postingPeriods)
+        //    {
+        //        FillAccountWithJournalEntryLineByMonthId(accounts, months);
+        //    }
+        //    return accounts.BuildAccountsBalance();
+        //}
 
-        private void FillAccountWithJournalEntryLineByMonthId(IEnumerable<Account> accounts, PostingPeriod months)
-        {
-            var searhAccounts = accounts.Where(x => x.AccountType == AccountType.Cuenta_Auxiliar); 
-            foreach (var account in searhAccounts)
-            {
-                var jEnLines = _unitOfWork.JournalEntryLineRepository
-                                            .FindByAccountIdAndPostingPeriodId(account.Id, months.Id);
-                account.JournalEntryLines.AddRange(jEnLines);
-            }
-        }
+        //private void FillAccountWithJournalEntryLineByMonthId(IEnumerable<Account> accounts, PostingPeriod months)
+        //{
+        //    var searhAccounts = accounts.Where(x => x.AccountType == AccountType.Cuenta_Auxiliar); 
+        //    foreach (var account in searhAccounts)
+        //    {
+        //        var jEnLines = _unitOfWork.JournalEntryLineRepository
+        //                                    .FindByAccountIdAndPostingPeriodId(account.Id, months.Id);
+        //        account.JournalEntryLines.AddRange(jEnLines);
+        //    }
+        //}
 
 
         #endregion
@@ -223,12 +225,12 @@ namespace AriesContador.Services
             _unitOfWork.JournalEntryRepository.Update(journalEntry);
         }
 
-        public IEnumerable<JournalEntryDeletedReport> GetAllJournalEntryDeleted(JournalEntryReportParam reportParam)
+        public IEnumerable<JournalEntryDeletedReport> GetAllJournalEntryDeleted(BasicReportParam reportParam)
         {
             return _unitOfWork.JournalEntryRepository.GetDeletedItemByDateRange(reportParam); 
         }
 
-        public IEnumerable<JournalEntryLineDeletedReport> GetAllJournalEntryLineDeleted(JournalEntryReportParam reportParam)
+        public IEnumerable<JournalEntryLineDeletedReport> GetAllJournalEntryLineDeleted(BasicReportParam reportParam)
         {
             return  _unitOfWork.JournalEntryLineRepository.GetDeletedItemByDateRange(reportParam);
         }

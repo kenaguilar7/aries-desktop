@@ -36,9 +36,9 @@ namespace CapaPresentacion
 
             //GlobalConfig.Usuario = new Usuario()
             //{
-            //    Id = 1, 
+            //    Id = 1,
             //    MyNombre = "Kenneth DEV"
-            //}; 
+            //};
 
 
             CargarDatos();
@@ -158,7 +158,7 @@ namespace CapaPresentacion
             {
                 if (GlobalConfig.Company != null)
                 {
-                    FrameReporteComprobacion n = new FrameReporteComprobacion();
+                    FrameReporteComprobación n = new FrameReporteComprobación();
                     n.MdiParent = this;
                     n.Show();
 

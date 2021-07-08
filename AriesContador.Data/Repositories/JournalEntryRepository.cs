@@ -56,10 +56,10 @@ namespace AriesContador.Data.Repositories
             return newNumber.First();
         }
 
-        public IEnumerable<JournalEntryDeletedReport> GetDeletedItemByDateRange(JournalEntryReportParam reportParam)
+        public IEnumerable<JournalEntryDeletedReport> GetDeletedItemByDateRange(BasicReportParam reportParam)
         {
             MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            return dataAccess.LoadData<JournalEntryDeletedReport, JournalEntryReportParam>("SP_GetJournalEntryDeletedBydDateRange", reportParam); 
+            return dataAccess.LoadData<JournalEntryDeletedReport, BasicReportParam>("SP_GetJournalEntryDeletedBydDateRange", reportParam); 
         }
 
         public void RestoreJournalEntry(JournalEntry entryLine)

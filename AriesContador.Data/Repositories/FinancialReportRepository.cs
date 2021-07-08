@@ -17,10 +17,10 @@ namespace AriesContador.Data.Repositories
         }
 
 
-        public IEnumerable<JournalEntryReport> JournalEntryReport(JournalEntryReportParam jEParams)
+        public IEnumerable<JournalEntryReport> JournalEntryReport(BasicReportParam jEParams)
         {
             MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            IEnumerable<JournalEntryReport> output = dataAccess.LoadData<JournalEntryReport, JournalEntryReportParam>("SP_JournalEntryReportByDateRange", jEParams);
+            IEnumerable<JournalEntryReport> output = dataAccess.LoadData<JournalEntryReport, BasicReportParam>("SP_JournalEntryReportByDateRange", jEParams);
             return output;
         }
     }
