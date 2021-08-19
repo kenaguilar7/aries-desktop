@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using AriesContador.Core;
+using AriesContador.Core.Models.Accounts;
 using AriesContador.Core.Services;
 using AriesContador.Data;
 using AriesContador.Services;
@@ -667,12 +668,12 @@ namespace CapaPresentacion.FrameCuentas
 
             var account = _financialSercie.FindAccount(dummy.AccountId);
 
-            var accountDTO = new Cuenta()
+            var accountDTO = new Account()
             {
                 Id = account.Id,
-                Nombre = account.Name,
+                Name = account.Name,
                 PathDirection = account.PathDirection,
-                Indicador =  (IndicadorCuenta)(int)account.AccountType
+                AccountType =  account.AccountType
             };
 
             TransferirCuenta(accountDTO);
@@ -736,12 +737,12 @@ namespace CapaPresentacion.FrameCuentas
         {
             this.Close();
         }
-        public bool TransferirCuenta(Cuenta cuenta)
+        public bool TransferirCuenta(Account cuenta)
         {
-            if (cuenta.Indicador == IndicadorCuenta.Cuenta_Auxiliar)
+            if (cuenta.AccountType == AccountType.Cuenta_Auxiliar)
             {
                 this.txtBoxNombreCuenta.Tag = cuenta;
-                this.txtBoxNombreCuenta.Text = cuenta.Nombre;
+                this.txtBoxNombreCuenta.Text = cuenta.Name;
 
                 var cuentaPath = txtPathCuenta.Text = $"Ruta: {cuenta.PathDirection}";
                 this.labelRutaNuevaCuenta.Text = cuentaPath.Substring(0, 40) + ((cuentaPath.Length > 40 )?"...":"");

@@ -94,10 +94,10 @@ namespace CapaPresentacion.cods
 
             return list;
         }
-        public static void CargarCuentaAlTreeView(Cuenta cuenta, ref TreeView treeCuentas, List<Cuenta> LstCuentas)
+        public static void CargarCuentaAlTreeView(Account cuenta, ref TreeView treeCuentas, List<Account> LstCuentas)
         {
 
-            TreeNode node = new TreeNode(cuenta.Nombre)
+            TreeNode node = new TreeNode(cuenta.Name)
             {
                 Tag = cuenta
             };
@@ -105,18 +105,18 @@ namespace CapaPresentacion.cods
             LstCuentas.Add(cuenta);
             BuscarCuentaPadre(cuenta);
 
-            void BuscarCuentaPadre(Cuenta cuentaHija)
+            void BuscarCuentaPadre(Account cuentaHija)
             {
                 if (LstCuentas.Count != 0)
                 {
-                    foreach (Cuenta item in LstCuentas)
+                    foreach (Account item in LstCuentas)
                     {
-                        if (item.Id == cuentaHija.Padre)
+                        if (item.Id == cuentaHija.FatherAccount)
                         {
                             //item.SaldoAnteriorColones += cuenta.SaldoAnteriorColones;
-                            if (item.Indicador != IndicadorCuenta.Cuenta_Titulo)
+                            if (item.AccountType != AccountType.Cuenta_Titulo)
                             {
-                                item.Indicador = IndicadorCuenta.Cuenta_De_Mayor;
+                                item.AccountType = AccountType.Cuenta_De_Mayor;
                             }
                             BuscarCuentaPadre(item);
                             return;

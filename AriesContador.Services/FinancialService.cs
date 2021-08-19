@@ -65,9 +65,7 @@ namespace AriesContador.Services
 
         public Account GetAccountBalance(Account account, IEnumerable<PostingPeriod> postingPeriods)
         {
-            //var accounts = GetAccounts(account.CompanyId).ToList().GetLowLevelAccounts(account.Id); 
-            //var filledAccountsBalance = BuildAccountBalance(accounts, postingPeriods);
-            //return filledAccountsBalance.First(x=>x.Id == account.Id);
+   
             throw new NotImplementedException(); 
         }
 
@@ -82,7 +80,7 @@ namespace AriesContador.Services
 
         //private void FillAccountWithJournalEntryLineByMonthId(IEnumerable<Account> accounts, PostingPeriod months)
         //{
-        //    var searhAccounts = accounts.Where(x => x.AccountType == AccountType.Cuenta_Auxiliar); 
+        //    var searhAccounts = accounts.Where(x => x.AccountType == AccountType.Cuenta_Auxiliar);
         //    foreach (var account in searhAccounts)
         //    {
         //        var jEnLines = _unitOfWork.JournalEntryLineRepository

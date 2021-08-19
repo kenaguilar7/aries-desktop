@@ -84,7 +84,7 @@
             this.btnCerrar.Text = "&Cerrar";
             this.btnCerrar.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.btnCerrar.UseVisualStyleBackColor = true;
-            this.btnCerrar.Click += new System.EventHandler(this.btnCerrar_Click);
+            //this.btnCerrar.Click += new System.EventHandler(this.btnCerrar_Click);
             // 
             // btnCerrarPeriodo
             // 
@@ -98,7 +98,7 @@
             this.btnCerrarPeriodo.Text = "Cerrar Periodo";
             this.btnCerrarPeriodo.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.btnCerrarPeriodo.UseVisualStyleBackColor = true;
-            this.btnCerrarPeriodo.Click += new System.EventHandler(this.btnCerrarPeriodo_Click);
+            //this.btnCerrarPeriodo.Click += new System.EventHandler(this.btnCerrarPeriodo_Click);
             // 
             // groupBox2
             // 
@@ -155,7 +155,7 @@
             this.btnSeleccionarCuenta.Text = "...";
             this.btnSeleccionarCuenta.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             this.btnSeleccionarCuenta.UseVisualStyleBackColor = true;
-            this.btnSeleccionarCuenta.Click += new System.EventHandler(this.btnSeleccionarCuenta_Click);
+            //this.btnSeleccionarCuenta.Click += new System.EventHandler(this.btnSeleccionarCuenta_Click);
             // 
             // txtBoxNombreCuenta
             // 
@@ -200,9 +200,9 @@
             // 
             // backgroundWorker
             // 
-            this.backgroundWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker_DoWork);
-            this.backgroundWorker.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.backgroundWorker_ProgressChanged);
-            this.backgroundWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorker_RunWorkerCompleted);
+            //this.backgroundWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker_DoWork);
+            //this.backgroundWorker.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.backgroundWorker_ProgressChanged);
+            //this.backgroundWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorker_RunWorkerCompleted);
             // 
             // btnReporte
             // 
@@ -216,7 +216,7 @@
             this.btnReporte.Text = "Ver reporte";
             this.btnReporte.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.btnReporte.UseVisualStyleBackColor = true;
-            this.btnReporte.Click += new System.EventHandler(this.btnReporte_Click);
+            //this.btnReporte.Click += new System.EventHandler(this.btnReporte_Click);
             // 
             // FrameAsientoCierre
             // 

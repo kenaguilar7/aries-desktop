@@ -221,6 +221,7 @@
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Cuentas";
+            this.Load += new System.EventHandler(this.FrameSeleccionCuenta_Load);
             this.panelCuentas.ResumeLayout(false);
             this.groupBox1.ResumeLayout(false);
             this.flowLayoutPanel1.ResumeLayout(false);

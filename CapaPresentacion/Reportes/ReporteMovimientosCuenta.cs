@@ -8,6 +8,8 @@ using CapaPresentacion.FrameCuentas;
 using System;
 using System.Data;
 using System.Windows.Forms;
+using AriesContador.Core.Models.Accounts;
+using CapaPresentacion.Utils;
 
 namespace CapaPresentacion.Reportes
 {
@@ -28,7 +30,7 @@ namespace CapaPresentacion.Reportes
                 chckBxMostarDolares.Enabled = false;
                 chckBxMostarDolares.Visible = false;
             }
-            CargarDatosAlGrid(new Cuenta());
+            CargarDatosAlGrid(new Account());
 
 
         }
@@ -37,7 +39,7 @@ namespace CapaPresentacion.Reportes
         /// Metodo usado para traer la cuenta desde la ventana que las lista
         /// </summary>
         /// <param name="cuenta"></param>
-        public bool TransferirCuenta(Cuenta cuenta)
+        public bool TransferirCuenta(Account cuenta)
         {
             if (cuenta != null)
             {
@@ -49,11 +51,11 @@ namespace CapaPresentacion.Reportes
             else
                 return false;
         }
-        private void CargarDatosAlGrid(Cuenta cuenta)
+        private void CargarDatosAlGrid(Account cuenta)
         {
 
             GridDatos.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.ColumnHeader;
-            GridDatos.DataSource = _cuentaCL.GetInfoCompleta(cuenta);
+            //GridDatos.DataSource = _cuentaCL.GetInfoCompleta(cuenta);
             SetEstilosDataDrid();
             AjustarColumnaDolares();
             GridDatos.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;

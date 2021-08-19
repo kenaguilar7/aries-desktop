@@ -22,23 +22,23 @@ namespace CapaPresentacion
         {
             InitializeComponent();
 
-            FrameLoginUsuario n = new FrameLoginUsuario();
-            n.FormClosing += N_FormClosing;
+            //FrameLoginUsuario n = new FrameLoginUsuario();
+            //n.FormClosing += N_FormClosing;
 
-            n.ShowDialog();
-            void N_FormClosing(object sender, FormClosingEventArgs e)
-            {
-                if (GlobalConfig.Usuario == null)
-                {
-                    Application.Exit();
-                }
-            }
-
-            //GlobalConfig.Usuario = new Usuario()
+            //n.ShowDialog();
+            //void N_FormClosing(object sender, FormClosingEventArgs e)
             //{
-            //    Id = 1,
-            //    MyNombre = "Kenneth DEV"
-            //};
+            //    if (GlobalConfig.Usuario == null)
+            //    {
+            //        Application.Exit();
+            //    }
+            //}
+
+            GlobalConfig.Usuario = new Usuario()
+            {
+                Id = 1,
+                MyNombre = "Kenneth DEV"
+            };
 
 
             CargarDatos();

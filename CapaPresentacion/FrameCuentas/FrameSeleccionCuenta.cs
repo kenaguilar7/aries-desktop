@@ -14,24 +14,33 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using AriesContador.Core;
+using AriesContador.Core.Models.Accounts;
+using AriesContador.Core.Services;
+using AriesContador.Data;
+using AriesContador.Services;
+using CapaPresentacion.Utils;
 
 namespace CapaPresentacion.FrameCuentas
 {
     public partial class FrameSeleccionCuenta : Form, ICallingForm
     {
-        private List<Cuenta> LstCuentas { get; set; }
+        private List<Account> LstCuentas { get; set; }
         private ICallingForm _getCuenta;
+        private readonly IFinancialService _financialService;
         public FrameSeleccionCuenta(ICallingForm callingForm)
         {
+            IUnitOfWork unit = new UnitOfWork(GlobalConfig.ConnectionString);
+            _financialService = new FinancialService(unit);
             _getCuenta = callingForm as ICallingForm;
             InitializeComponent();
-            CargarCuentas();
         }
-        private void CargarCuentas()
+
+        private void FrameSeleccionCuenta_Load(object sender, EventArgs e)
         {
-            LstCuentas = new CuentaCL().GetAll(GlobalConfig.Company);
-            treeCuentas.Nodes.AddRange(TreeViewCuentas.CrearTreeView(LstCuentas));
+            LstCuentas = _financialService.GetAccounts(GlobalConfig.Company.Codigo).ToList(); 
         }
+
         private void SeleccionaCuentaEnTreeView(object sender, EventArgs e)
         {
             DevolverCuenta();
@@ -40,7 +49,7 @@ namespace CapaPresentacion.FrameCuentas
         {
             try
             {
-                Cuenta sele = (Cuenta)treeCuentas.SelectedNode.Tag;
+                Account sele = (Account)treeCuentas.SelectedNode.Tag;
                 sele.PathDirection = treeCuentas.SelectedNode.FullPath;
 
                 if (_getCuenta.TransferirCuenta(sele))
@@ -90,7 +99,7 @@ namespace CapaPresentacion.FrameCuentas
                     return;
 
                 }
-                else if (!(treeCuentas.SelectedNode.Tag is Cuenta cuenta) || cuenta.Indicador == IndicadorCuenta.Cuenta_Titulo)
+                else if (!(treeCuentas.SelectedNode.Tag is Account cuenta) || cuenta.AccountType == AccountType.Cuenta_Titulo)
                 {
                     MessageBox.Show("No se puede crear cuentas en este nivel", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                     return;
@@ -98,7 +107,7 @@ namespace CapaPresentacion.FrameCuentas
                 else
                 {
                     FrameNuevaCuenta nv = new FrameNuevaCuenta(this, cuenta);
-                    nv.lstCuentas = LstCuentas;
+                    //nv.lstCuentas = LstCuentas;
                     nv.ShowDialog();
                 }
 
@@ -132,7 +141,7 @@ namespace CapaPresentacion.FrameCuentas
             }
         }
 
-        public bool TransferirCuenta(Cuenta cuenta)
+        public bool TransferirCuenta(Account cuenta)
         {
             if (cuenta != null)
             {
@@ -141,5 +150,6 @@ namespace CapaPresentacion.FrameCuentas
             }
             else { return false; }
         }
+
     }
 }

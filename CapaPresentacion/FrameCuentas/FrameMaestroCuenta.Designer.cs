@@ -480,7 +480,7 @@
             this.tabSaldos.Padding = new System.Windows.Forms.Padding(3);
             this.tabSaldos.Size = new System.Drawing.Size(484, 171);
             this.tabSaldos.TabIndex = 1;
-            this.tabSaldos.Text = "Saldos Mensual";
+            this.tabSaldos.Text = "Saldo Mensual";
             this.tabSaldos.UseVisualStyleBackColor = true;
             // 
             // panel1
