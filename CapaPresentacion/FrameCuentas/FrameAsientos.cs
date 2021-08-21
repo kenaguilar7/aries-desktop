@@ -743,8 +743,13 @@ namespace CapaPresentacion.FrameCuentas
                 this.txtBoxNombreCuenta.Tag = cuenta;
                 this.txtBoxNombreCuenta.Text = cuenta.Nombre;
 
-                var cuentaPath = txtPathCuenta.Text = $"Ruta: {cuenta.PathDirection}";
-                this.labelRutaNuevaCuenta.Text = cuentaPath.Substring(0, 40) + ((cuentaPath.Length > 40 )?"...":"");
+                var accountPath = txtPathCuenta.Text = $"Ruta: {cuenta.PathDirection}";
+
+                accountPath = (accountPath.Length < 40)
+                    ? accountPath
+                    : string.Concat(accountPath.Substring(0, 40), "...");
+
+                this.labelRutaNuevaCuenta.Text = accountPath; 
 
                 ToolTip toolTip1 = new ToolTip();
                 toolTip1.AutoPopDelay = 5000;
@@ -752,7 +757,7 @@ namespace CapaPresentacion.FrameCuentas
                 toolTip1.ReshowDelay = 500;
                 toolTip1.ShowAlways = true;
 
-                toolTip1.SetToolTip(this.labelRutaNuevaCuenta, cuentaPath);
+                toolTip1.SetToolTip(this.labelRutaNuevaCuenta, accountPath);
 
                 this.rDebitos.Focus();
                 return true;
