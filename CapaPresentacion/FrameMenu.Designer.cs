@@ -194,7 +194,7 @@
             // 
             this.perdiasYGananciasToolStripMenuItem.Name = "perdiasYGananciasToolStripMenuItem";
             this.perdiasYGananciasToolStripMenuItem.Size = new System.Drawing.Size(223, 22);
-            this.perdiasYGananciasToolStripMenuItem.Text = "Perdidas y Ganancias";
+            this.perdiasYGananciasToolStripMenuItem.Text = "Estado de resultado integral";
             this.perdiasYGananciasToolStripMenuItem.Click += new System.EventHandler(this.perdiasYGananciasToolStripMenuItem_Click);
             // 
             // balanceDeSituaciónToolStripMenuItem

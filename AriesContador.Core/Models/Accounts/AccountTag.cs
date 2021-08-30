@@ -9,8 +9,8 @@ namespace AriesContador.Core.Models.Accounts
         Activo = 1, 
         Pasivo = 2, 
         Patrimonio = 3, 
-        CostoVenta = 4, 
-        Ingreso = 5, 
+        Ingreso = 4, 
+        CostoVenta = 5, 
         Egreso = 6
     }
 }
