@@ -26,7 +26,7 @@ namespace CapaEntidad.Entidades.Reports
         public bool IsMainAccount { get; set; }
 
         [XLColumn(Header = "Saldo")]
-        [DisplayName("Saldo Actual")]
+        [DisplayName("Saldo")]
         public decimal SaldoActual { get; set; }
     }
 

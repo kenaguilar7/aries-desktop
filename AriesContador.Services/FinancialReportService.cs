@@ -89,14 +89,20 @@ namespace AriesContador.Services
 
             foreach (var account in accountsReport)
             {
-                var rLine = new EstadoResultadoIntegralReport
+                var auxAccountWithOutMoves = account.AccountType == AccountType.Cuenta_Auxiliar &&
+                                                 account.Editable == true && account.CurrentBalance == 0; 
+
+                if (!auxAccountWithOutMoves)
                 {
-                    Account = (account.AccountType == AccountType.Cuenta_Titulo)?$"TOTAL {account.Name}":account.Name,
-                    AccountPath = account.PathDirection,
-                    SaldoActual = account.CurrentBalance,
-                    IsMainAccount = account.AccountType == AccountType.Cuenta_Titulo
-                };
-                report.Add(rLine);
+                    var rLine = new EstadoResultadoIntegralReport
+                    {
+                        Account = (account.AccountType == AccountType.Cuenta_Titulo)?$"TOTAL {account.Name}":account.Name,
+                        AccountPath = account.PathDirection,
+                        SaldoActual = account.CurrentBalance,
+                        IsMainAccount = account.AccountType == AccountType.Cuenta_Titulo
+                    };
+                    report.Add(rLine);
+                }
             }
 
             var resultAmount = accountsReport.GetTotalPeridasYGanancias();
