@@ -121,5 +121,32 @@ namespace AriesContador.Core.Models.Utils
 
             return retorno;
         }
+
+        public static IEnumerable<Account> OrderByDescTree(this IEnumerable<Account> lst)
+        {
+
+            List<Account> retorno = new List<Account>();
+
+            foreach (Account item in lst)
+            {
+                if (item.AccountType == AccountType.Cuenta_Titulo)
+                {
+                    CargarNodos(item);
+                }
+            }
+
+            void CargarNodos(Account cuenta)
+            {
+                var sql = from c in lst where c.FatherAccount == cuenta.Id select c;
+                var cueHijas = sql.ToArray<Account>();
+                foreach (Account item in cueHijas)
+                {
+                    CargarNodos(item);
+                }
+                retorno.Add(cuenta);
+            }
+
+            return retorno;
+        }
     }
 }

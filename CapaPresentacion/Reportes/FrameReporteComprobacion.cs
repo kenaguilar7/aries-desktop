@@ -27,17 +27,10 @@ namespace CapaPresentacion.Reportes
 {
     public partial class FrameReporteComprobación : Form
     {
-        //private int cont = 0;
-        //private List<Cuenta> _lstCuentas { get; set; } = new List<Cuenta>();
-        //private List<Cuenta> _lstExcel { get; set; } = new List<Cuenta>(); 
-        //private FechaTransaccionCL _fechaTransaccionCL = new FechaTransaccionCL();
-        //private CuentaCL _cuentaCL = new CuentaCL();
-
-        public List<PostingPeriod> PostingPeriods { get; set; } = new List<PostingPeriod>();
-
+        private List<PostingPeriod> PostingPeriods { get; set; } = new List<PostingPeriod>();
         private readonly IFinancialReportService _financialReportService;
         private readonly IFinancialService _financialService;
-        private int AccountTreeDeep = 0; 
+        private int _accountTreeDeep = 0; 
 
         public FrameReporteComprobación()
         {
@@ -83,7 +76,7 @@ namespace CapaPresentacion.Reportes
 
             
             var deepTree = data.Max(x=> x.AccountPath.Split(new char[] { '¡' }, StringSplitOptions.RemoveEmptyEntries).Length);
-            AccountTreeDeep = deepTree; 
+            _accountTreeDeep = deepTree; 
             for (int i = 0; i < deepTree; i++)
             {
                 var col = new DataColumn();
@@ -153,19 +146,19 @@ namespace CapaPresentacion.Reportes
         private void ConfigSheetHeaders(IXLWorksheet ws)
         {
 
-            var range2 = ws.Range(ws.Cell(4, 1).Address, ws.Cell(4, AccountTreeDeep).Address);
+            var range2 = ws.Range(ws.Cell(4, 1).Address, ws.Cell(4, _accountTreeDeep).Address);
             range2.Value = "Cuentas";
             range2.Merge();
             range2.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-            ws.Cell(4, AccountTreeDeep + 1).Value = "Saldo Anterior Débitos";
-            ws.Cell(4, AccountTreeDeep + 2).Value = "Saldo Anterior Créditos";
-            ws.Cell(4, AccountTreeDeep + 3).Value = "Saldo Mensual Débitos";
-            ws.Cell(4, AccountTreeDeep + 4).Value = "Saldo Mensual Créditos";
-            ws.Cell(4, AccountTreeDeep + 5).Value = "Saldo Cuenta Débitos";
-            ws.Cell(4, AccountTreeDeep + 6).Value = "Saldo Cuenta Créditos";
+            ws.Cell(4, _accountTreeDeep + 1).Value = "Saldo Anterior Débitos";
+            ws.Cell(4, _accountTreeDeep + 2).Value = "Saldo Anterior Créditos";
+            ws.Cell(4, _accountTreeDeep + 3).Value = "Saldo Mensual Débitos";
+            ws.Cell(4, _accountTreeDeep + 4).Value = "Saldo Mensual Créditos";
+            ws.Cell(4, _accountTreeDeep + 5).Value = "Saldo Cuenta Débitos";
+            ws.Cell(4, _accountTreeDeep + 6).Value = "Saldo Cuenta Créditos";
 
-            for (int i = 1; i < AccountTreeDeep; i++)
+            for (int i = 1; i < _accountTreeDeep; i++)
             {
                 ws.Column(i).Width = 3; 
             }
@@ -191,20 +184,20 @@ namespace CapaPresentacion.Reportes
 
         private void SetColumnsFormatExcelReport(IXLWorksheet worksheet)
         {
-            worksheet.Column(AccountTreeDeep + 1).Style.NumberFormat.Format = "₡#,##0.00";
-            worksheet.Column(AccountTreeDeep + 2).Style.NumberFormat.Format = "₡#,##0.00";
+            worksheet.Column(_accountTreeDeep + 1).Style.NumberFormat.Format = "₡#,##0.00";
+            worksheet.Column(_accountTreeDeep + 2).Style.NumberFormat.Format = "₡#,##0.00";
 
-            worksheet.Column(AccountTreeDeep + 3).Style.NumberFormat.Format = "₡#,##0.00";
-            worksheet.Column(AccountTreeDeep + 4).Style.NumberFormat.Format = "₡#,##0.00";
+            worksheet.Column(_accountTreeDeep + 3).Style.NumberFormat.Format = "₡#,##0.00";
+            worksheet.Column(_accountTreeDeep + 4).Style.NumberFormat.Format = "₡#,##0.00";
 
-            worksheet.Column(AccountTreeDeep + 5).Style.NumberFormat.Format = "₡#,##0.00";
-            worksheet.Column(AccountTreeDeep + 6).Style.NumberFormat.Format = "₡#,##0.00";
+            worksheet.Column(_accountTreeDeep + 5).Style.NumberFormat.Format = "₡#,##0.00";
+            worksheet.Column(_accountTreeDeep + 6).Style.NumberFormat.Format = "₡#,##0.00";
         }
 
         private void RemoveColumnsExcelReport(IXLWorksheet worksheet)
         {
-            worksheet.Column(AccountTreeDeep + 1).Delete();
-            worksheet.Column(AccountTreeDeep + 1).Delete();
+            worksheet.Column(_accountTreeDeep + 1).Delete();
+            worksheet.Column(_accountTreeDeep + 1).Delete();
         }
 
         private IEnumerable<BalanceComprobacionReport> JournalEntryReports()

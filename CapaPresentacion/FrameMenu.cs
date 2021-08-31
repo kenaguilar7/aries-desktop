@@ -285,7 +285,7 @@ namespace CapaPresentacion
         {
             if (GlobalConfig.Company != null)
             {
-                ReportePedidasGanacias form = new ReportePedidasGanacias
+                ReporteEstadoResultadoIntegral form = new ReporteEstadoResultadoIntegral
                 {
                     MdiParent = this
                 };
