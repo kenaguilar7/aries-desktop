@@ -78,5 +78,6 @@ namespace AriesContador.Data.Repositories
             output.BuildAccountsBalance();
             return output.OrderByTree();
         }
+
     }
 }
