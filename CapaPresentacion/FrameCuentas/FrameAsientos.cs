@@ -6,13 +6,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using AriesContador.Core;
+using AriesContador.Core.Models.PostingPeriods;
 using AriesContador.Core.Models.Accounts;
 using AriesContador.Core.Services;
 using AriesContador.Data;
 using AriesContador.Services;
 using CapaEntidad.Entidades.JournalEntries;
 using CapaEntidad.Entidades.Cuentas;
-using CapaEntidad.Entidades.FechaTransacciones;
 using CapaEntidad.Enumeradores;
 using CapaEntidad.Interfaces;
 using CapaEntidad.Textos;
@@ -26,13 +26,11 @@ namespace CapaPresentacion.FrameCuentas
 {
     public partial class FrameAsientos : Form, ICallingForm, INeedValidatedForClose
     {
-
         private JournalEntry _journalEntry;
         private JournalEntryLine _journalEntryLineOnEdit = new JournalEntryLine();
-        //private AsientoCL _asientoCL = new AsientoCL();
         private readonly IFinancialService _financialSercie;
-        private FechaTransaccionCL _fechaTransaccion = new FechaTransaccionCL();
-        private TransaccionCL _transaccionCL = new TransaccionCL();
+
+        
         private int PreventMesesAbiertosIndex = 0;
         private int ProventAsientoIndex = 0;
         private Cuenta AccountInTxtBoxNombreCuenta
@@ -44,10 +42,7 @@ namespace CapaPresentacion.FrameCuentas
             }
         }
 
-        private FechaTransaccion currentFechaTransaccion
-        {
-            get { return (FechaTransaccion) lstMesesAbiertos.SelectedItem; }
-        }
+        private PostingPeriod PostingPeriodSelected => (PostingPeriod) lstMesesAbiertos.SelectedItem;
 
         public FrameAsientos()
         {
@@ -58,20 +53,13 @@ namespace CapaPresentacion.FrameCuentas
 
         private void FrameAsientos_Load(object sender, EventArgs e)
         {
-            
-            //this.txtMontoTotalTransaccion.KeyPress += UsuarioKeyPress;
-            //this.txtTipoCambio.KeyPress += UsuarioKeyPress;
-            
-            //txtMontoTotalTransaccion.TextChanged += new EventHandler(tb_TextChanged);
-            
-
             ConfigExchangeController(GlobalConfig.Company.TipoMoneda);
             LoadAccountingPeriodList();
         }
 
-        private async Task LoadAccountingPeriodList()
+        private void LoadAccountingPeriodList()
         {
-            lstMesesAbiertos.DataSource =  _fechaTransaccion.GetAllActive(GlobalConfig.Company, GlobalConfig.Usuario);
+            lstMesesAbiertos.DataSource =  _financialSercie.GetPostingPeriods(GlobalConfig.Company.Codigo).ToList(); 
             lstTipoCambio.SelectedIndex = 0;
             lstTipoCambio.SelectedIndex = 0;
             
@@ -117,12 +105,12 @@ namespace CapaPresentacion.FrameCuentas
 
         private IEnumerable<JournalEntry> ConfigAsientoBorrador(IEnumerable<JournalEntry> asientos)
         {
-            var newEntryNum = _financialSercie.CreateJournalEntryConsecutive(currentFechaTransaccion.Id);
+            var newEntryNum = _financialSercie.CreateJournalEntryConsecutive(PostingPeriodSelected.Id);
 
             var newJEnt = new JournalEntry()
             {
                 Number = newEntryNum,
-                PostingPeriodId = currentFechaTransaccion.Id,
+                PostingPeriodId = PostingPeriodSelected.Id,
                 JournalEntryStatus = JournalEntryStatus.Progress,
                 UpdatedBy = GlobalConfig.Usuario.Id,
                 CreatedBy = GlobalConfig.Usuario.Id,
@@ -139,9 +127,7 @@ namespace CapaPresentacion.FrameCuentas
         {
             if (EqualDebAndCredONJournalEntry())
             {
-                //List<JournalEntry> lst = _asientoCL.GetPorFecha((FechaTransaccion)lstMesesAbiertos.SelectedItem, GlobalConfig.Compañia);
-                var pstP = (FechaTransaccion) lstMesesAbiertos.SelectedItem;
-                var lst = _financialSercie.GetJournalEntries(currentFechaTransaccion.Id);
+                var lst = _financialSercie.GetJournalEntries(PostingPeriodSelected.Id);
                 lstNumeroAsientos.DataSource = ConfigAsientoBorrador(lst);
                 this.PreventMesesAbiertosIndex = lstMesesAbiertos.SelectedIndex;
             }
@@ -152,7 +138,6 @@ namespace CapaPresentacion.FrameCuentas
                 this.lstMesesAbiertos.SelectedIndexChanged += new System.EventHandler(this.LstMesesAbiertos_SelectedIndexChanged);
 
             }
-
         }
 
 
@@ -166,12 +151,6 @@ namespace CapaPresentacion.FrameCuentas
                 if (_journalEntry.Id == 0)
                 {
                     _financialSercie.CreateJournalEntry(_journalEntry);
-
-                    //if ((_journalEntry = _asientoCL.Insert(_journalEntry, GlobalConfig.Usuario, out String mensaje)).Id == 0)
-                    //{
-//                    MessageBox.Show("Asiento Creado Exitosamente", TextoGeneral.MensajeBannerError, MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    //    return;
-                    //}
                 }
                 LstMesesAbiertos_SelectedIndexChanged(null, null);
 
@@ -194,48 +173,59 @@ namespace CapaPresentacion.FrameCuentas
         #endregion
 
         #region JournalEntryLine
+
         private void DeleteJournalEntryLine_Event_Click(object sender, EventArgs e)
+        {
+            var selectedRows = this.GridDatos.SelectedRows;
+
+            if (selectedRows.Count > 0)
+            {
+                if (MessageBox.Show($"Se van a eliminar {selectedRows.Count} elementos ¿Desea continuar?",
+                    TextoGeneral.NombreApp, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                {
+                    DeleteTransactions(selectedRows);
+                    ValidateEqualDebAndCred();
+                    UpdateView();
+                    RemoveAccountOnEdit();
+                }
+            }
+            else
+            {
+                MessageBox.Show("Seleccione una entrada de asiento", TextoGeneral.NombreApp, MessageBoxButtons.OK,
+                    MessageBoxIcon.Exclamation);
+            }
+        }
+
+        private void ValidateEqualDebAndCred()
+        {
+            if (_journalEntry.Cuadrado)
+            {
+                _journalEntry.JournalEntryStatus =
+                    JournalEntryStatus.Approved; 
+                _financialSercie.UpdateJournalEntry(_journalEntry);
+            }
+            else
+            {
+                _journalEntry.JournalEntryStatus =
+                    JournalEntryStatus.Progress; 
+                _financialSercie.UpdateJournalEntry(_journalEntry);
+            }
+        }
+
+        private void DeleteTransactions(DataGridViewSelectedRowCollection selectedRows)
         {
             try
             {
-                var adummy = this.GridDatos.SelectedRows;
-                if ((adummy.Count > 0) && MessageBox.Show($"Se van a eliminar {adummy.Count} elementos ¿Desea continuar?", TextoGeneral.NombreApp, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                for (int i = 0; i < selectedRows.Count; i++)
                 {
-
-                    var dummy = this.GridDatos.SelectedRows;
-
-                    for (int i = 0; i < dummy.Count; i++)
-                    {
-                        var jEnL = (JournalEntryLine) dummy[i].Tag;
-                        _financialSercie.DeleteJournalEntryLine(jEnL);
-
-                        //_transaccionCL.Delete(new List<JournalEntryLine> { (JournalEntryLine)dummy[i].Tag }, _journalEntry.Id, GlobalConfig.Usuario);
-                        _journalEntry.JournalEntryLines.Remove((JournalEntryLine)dummy[i].Tag);
-                    }
-
-
-                    if (_journalEntry.Cuadrado)
-                    {
-                        _journalEntry.JournalEntryStatus = JournalEntryStatus.Approved;//se cambia a proceso dentro del if. 
-                        _financialSercie.UpdateJournalEntry(_journalEntry);
-                        //_asientoCL.Update(_journalEntry, GlobalConfig.Usuario, out string mensaje);
-                    }
-                    else
-                    {
-                        _journalEntry.JournalEntryStatus = JournalEntryStatus.Progress;//se cambia a proceso dentro del if. 
-                        _financialSercie.UpdateJournalEntry(_journalEntry);
-                        //_asientoCL.Update(_journalEntry, GlobalConfig.Usuario, out string mensaje);
-                    }
-                    this.UpdateView();
-                }
-                else if (adummy.Count == 0)
-                {
-                    MessageBox.Show("Seleccione una transacción", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    var jEnL = (JournalEntryLine) selectedRows[i].Tag;
+                    _financialSercie.DeleteJournalEntryLine(jEnL);
+                    _journalEntry.JournalEntryLines.Remove(jEnL);
                 }
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                MessageBox.Show(ex.Message, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(e.Message, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Error); 
             }
         }
 
@@ -428,136 +418,13 @@ namespace CapaPresentacion.FrameCuentas
         #endregion
 
         #region Dashoboard Events
-        private Boolean VerificarYAsignarCampos(ref JournalEntryLine tr)
-        {
-
-            ////tr = new Transaccion();
-
-            //#region Aqui verificamos la cuenta
-
-            /////Extraemos la cuenta de la lista 
-            /////Este casteo se puede hacer mejor
-            //tr.AccountId = (txtBoxNombreCuenta.Tag != null) ? (Cuenta)txtBoxNombreCuenta.Tag : null;
-
-            //if (tr.AccountId == null || tr.AccountId.Indicador != IndicadorCuenta.Cuenta_Auxiliar)
-            //{
-            //    MessageBox.Show($"Seleccione un cuenta valida", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Error);
-            //    return false;
-            //}
-
-            //#endregion
-
-            //#region Aqui verificamos la referencia que no este vacia
-
-            /////Si la asignacion es nula o la cadena esta en blanco
-            //if ((tr.Reference = txtBoxReferencia.Text) == null || String.IsNullOrWhiteSpace(tr.Reference))
-            //{
-            //    MessageBox.Show("Referencia no puede ir en blanco", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-            //    return false;
-            //}
-
-            //#endregion
-
-            //#region Aqui verificamos el detalle, que no este vacio
-
-
-            //if ((tr.Memo = txtBoxDetalle.Text) == null || String.IsNullOrWhiteSpace(tr.Memo))
-            //{
-            //    MessageBox.Show("Detalle no puede ir en blanco", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-            //    return false;
-            //}
-
-
-
-            //#endregion
-
-            //#region Aqui verificamos la fecha de la factura
-
-            //if (DateTime.TryParse(txtBoxFechaFactura.Text, out DateTime dateTime))
-            //{
-            //    if (dateTime.Year < 1000 || dateTime.Year > 9999)
-            //    {
-            //        MessageBox.Show("Ingrese una fecha valida", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-            //        return false;
-            //    }
-            //    else
-            //    {
-            //        tr.Date = dateTime;
-
-            //    }
-            //}
-            //else
-            //{
-            //    MessageBox.Show("Ingrese una fecha valida", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-            //    txtBoxFechaFactura.Focus();
-            //    return false;
-            //}
-
-            //#endregion
-
-            //#region Aqui vamos a verificar el tipo de cambio
-
-
-            //var rsldo = false;
-            //if (txtTipoCambio.Text.Length == 0 || !(rsldo = decimal.TryParse(txtTipoCambio.Text, out decimal tpCambio)) || tpCambio == 0.00m)
-            //{
-            //    MessageBox.Show(((!rsldo) ? "Formato tipo cambio incorrecto" : "El tipo de cambio no puede ser cero"), TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-            //    return false;
-            //}
-
-            //if (lstTipoCambio.SelectedIndex == 0)
-            //{
-            //    tr.Currency = TipoCambio.Colones;
-            //    tr.RateAmount = 1.00m;
-            //    tr.Monto = Convert.ToDecimal(txtMontoTotalTransaccion.Text);
-
-            //}
-            //else
-            //{
-            //    tr.Currency = TipoCambio.Dolares;
-            //    tr.RateAmount = Convert.ToDecimal(txtTipoCambio.Text);
-            //    tr.Monto = Convert.ToDecimal(txtMontoTotalTransaccion.Text) * tr.RateAmount; ///pasamos los dolares a colones
-
-            //}
-
-
-            //#endregion
-
-            //#region Aqui vamos a verificar el comportamiento de la cuenta
-            //if (rDebitos.Checked)
-            //{
-            //    tr.DebOrCred = Comportamiento.Debito;
-            //}
-            //else if (rCreditos.Checked)
-            //{
-            //    tr.DebOrCred = Comportamiento.Credito;
-            //}
-            //#endregion
-
-            //var monto = Convert.ToDecimal(txtMontoTotalTransaccion.Text) * Convert.ToDecimal(txtTipoCambio.Text);
-
-            //if (monto > 9999999999999999.99m)
-            //{
-            //    MessageBox.Show("Longitud de monto muy larga", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-            //    return false;
-            //}
-
-            return true;
-        }
         private void LimpiarPanelDatosAsiento()
         {
-            //this.txtBoxReferencia.Clear();
-            //this.txtBoxDetalle.Clear();
-            //this.fechaFactura.Clear();
             this.txtMontoTotalTransaccion.Clear();
             this.btnAgregarTransa.Text = "Agregar";
         }
-        private void CuentaLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            FrameSeleccionCuenta n = new FrameSeleccionCuenta(this);
 
-            n.ShowDialog();
-        }
+
         private void UpdateView()
         {
             GridDatos.Rows.Clear();
@@ -661,6 +528,19 @@ namespace CapaPresentacion.FrameCuentas
                 }
             }
         }
+
+        private void RemoveAccountOnEdit()
+        {
+            this.txtBoxReferencia.Clear();
+            this.txtBoxDetalle.Clear();
+            this.lstTipoCambio.SelectedIndex = 0;
+            this.txtMontoTotalTransaccion.Clear();
+            this.labelRutaNuevaCuenta.Text = "Ruta:";
+            txtBoxNombreCuenta.Text = "";
+            txtBoxNombreCuenta.Tag = null;
+            btnAgregarTransa.Text = "Agregar";
+        }
+
         private void CargarDatosPanelTransaction(JournalEntryLine dummy)
         {
 
@@ -744,8 +624,13 @@ namespace CapaPresentacion.FrameCuentas
                 this.txtBoxNombreCuenta.Tag = cuenta;
                 this.txtBoxNombreCuenta.Text = cuenta.Name;
 
-                var cuentaPath = txtPathCuenta.Text = $"Ruta: {cuenta.PathDirection}";
-                this.labelRutaNuevaCuenta.Text = cuentaPath.Substring(0, 40) + ((cuentaPath.Length > 40 )?"...":"");
+                var accountPath = txtPathCuenta.Text = $"Ruta: {cuenta.PathDirection}";
+
+                accountPath = (accountPath.Length < 40)
+                    ? accountPath
+                    : string.Concat(accountPath.Substring(0, 40), "...");
+
+                this.labelRutaNuevaCuenta.Text = accountPath; 
 
                 ToolTip toolTip1 = new ToolTip();
                 toolTip1.AutoPopDelay = 5000;
@@ -753,7 +638,7 @@ namespace CapaPresentacion.FrameCuentas
                 toolTip1.ReshowDelay = 500;
                 toolTip1.ShowAlways = true;
 
-                toolTip1.SetToolTip(this.labelRutaNuevaCuenta, cuentaPath);
+                toolTip1.SetToolTip(this.labelRutaNuevaCuenta, accountPath);
 
                 this.rDebitos.Focus();
                 return true;

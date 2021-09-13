@@ -1,6 +1,6 @@
 ﻿namespace CapaPresentacion.Reportes
 {
-    partial class ReportePedidasGanacias
+    partial class ReporteEstadoResultadoIntegral
     {
         /// <summary>
         /// Required designer variable.
@@ -28,18 +28,15 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle9 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle10 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle11 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle12 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.groupBoxSeleccionCuenta = new System.Windows.Forms.GroupBox();
             this.btnExcel = new System.Windows.Forms.Button();
             this.label10 = new System.Windows.Forms.Label();
-            this.AFechaFinal = new System.Windows.Forms.ComboBox();
+            this.lstEndPeriod = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
-            this.AFechaInicio = new System.Windows.Forms.ComboBox();
+            this.lstStarPeriod = new System.Windows.Forms.ComboBox();
             this.tbnSalir = new System.Windows.Forms.Button();
-            this.btnCalcular = new System.Windows.Forms.Button();
             this.groupBoxListado = new System.Windows.Forms.GroupBox();
             this.GridDatos = new System.Windows.Forms.DataGridView();
             this.groupBoxSeleccionCuenta.SuspendLayout();
@@ -49,13 +46,14 @@
             // 
             // groupBoxSeleccionCuenta
             // 
+            this.groupBoxSeleccionCuenta.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBoxSeleccionCuenta.Controls.Add(this.btnExcel);
             this.groupBoxSeleccionCuenta.Controls.Add(this.label10);
-            this.groupBoxSeleccionCuenta.Controls.Add(this.AFechaFinal);
+            this.groupBoxSeleccionCuenta.Controls.Add(this.lstEndPeriod);
             this.groupBoxSeleccionCuenta.Controls.Add(this.label2);
-            this.groupBoxSeleccionCuenta.Controls.Add(this.AFechaInicio);
+            this.groupBoxSeleccionCuenta.Controls.Add(this.lstStarPeriod);
             this.groupBoxSeleccionCuenta.Controls.Add(this.tbnSalir);
-            this.groupBoxSeleccionCuenta.Controls.Add(this.btnCalcular);
             this.groupBoxSeleccionCuenta.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.groupBoxSeleccionCuenta.Location = new System.Drawing.Point(7, 6);
             this.groupBoxSeleccionCuenta.Name = "groupBoxSeleccionCuenta";
@@ -67,7 +65,7 @@
             // 
             this.btnExcel.Image = global::CapaPresentacion.Properties.Resources.icons8_ms_excel_25;
             this.btnExcel.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnExcel.Location = new System.Drawing.Point(574, 24);
+            this.btnExcel.Location = new System.Drawing.Point(453, 24);
             this.btnExcel.Name = "btnExcel";
             this.btnExcel.Size = new System.Drawing.Size(80, 30);
             this.btnExcel.TabIndex = 54;
@@ -86,15 +84,16 @@
             this.label10.TabIndex = 50;
             this.label10.Text = "Ver Saldos desde:";
             // 
-            // AFechaFinal
+            // lstEndPeriod
             // 
-            this.AFechaFinal.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.AFechaFinal.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.AFechaFinal.FormattingEnabled = true;
-            this.AFechaFinal.Location = new System.Drawing.Point(319, 27);
-            this.AFechaFinal.Name = "AFechaFinal";
-            this.AFechaFinal.Size = new System.Drawing.Size(128, 25);
-            this.AFechaFinal.TabIndex = 51;
+            this.lstEndPeriod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.lstEndPeriod.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lstEndPeriod.FormattingEnabled = true;
+            this.lstEndPeriod.Location = new System.Drawing.Point(319, 27);
+            this.lstEndPeriod.Name = "lstEndPeriod";
+            this.lstEndPeriod.Size = new System.Drawing.Size(128, 25);
+            this.lstEndPeriod.TabIndex = 51;
+            this.lstEndPeriod.SelectedIndexChanged += new System.EventHandler(this.lstEndPeriod_SelectedIndexChanged);
             // 
             // label2
             // 
@@ -106,18 +105,20 @@
             this.label2.TabIndex = 53;
             this.label2.Text = "Hasta:";
             // 
-            // AFechaInicio
+            // lstStarPeriod
             // 
-            this.AFechaInicio.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.AFechaInicio.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.AFechaInicio.FormattingEnabled = true;
-            this.AFechaInicio.Location = new System.Drawing.Point(129, 27);
-            this.AFechaInicio.Name = "AFechaInicio";
-            this.AFechaInicio.Size = new System.Drawing.Size(128, 25);
-            this.AFechaInicio.TabIndex = 52;
+            this.lstStarPeriod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.lstStarPeriod.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lstStarPeriod.FormattingEnabled = true;
+            this.lstStarPeriod.Location = new System.Drawing.Point(129, 27);
+            this.lstStarPeriod.Name = "lstStarPeriod";
+            this.lstStarPeriod.Size = new System.Drawing.Size(128, 25);
+            this.lstStarPeriod.TabIndex = 52;
+            this.lstStarPeriod.SelectedIndexChanged += new System.EventHandler(this.LstFirstPostingPeriod_SelectedIndexChanged);
             // 
             // tbnSalir
             // 
+            this.tbnSalir.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.tbnSalir.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
             this.tbnSalir.FlatAppearance.BorderColor = System.Drawing.Color.White;
             this.tbnSalir.FlatAppearance.BorderSize = 0;
@@ -135,26 +136,16 @@
             this.tbnSalir.UseVisualStyleBackColor = true;
             this.tbnSalir.Click += new System.EventHandler(this.tbnSalir_Click);
             // 
-            // btnCalcular
-            // 
-            this.btnCalcular.Image = global::CapaPresentacion.Properties.Resources.icons8_calculadora_25;
-            this.btnCalcular.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnCalcular.Location = new System.Drawing.Point(466, 24);
-            this.btnCalcular.Name = "btnCalcular";
-            this.btnCalcular.Size = new System.Drawing.Size(94, 30);
-            this.btnCalcular.TabIndex = 3;
-            this.btnCalcular.Text = "C&alcular";
-            this.btnCalcular.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.btnCalcular.UseVisualStyleBackColor = true;
-            this.btnCalcular.Click += new System.EventHandler(this.BtnCalcular);
-            // 
             // groupBoxListado
             // 
+            this.groupBoxListado.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBoxListado.Controls.Add(this.GridDatos);
             this.groupBoxListado.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.groupBoxListado.Location = new System.Drawing.Point(7, 80);
             this.groupBoxListado.Name = "groupBoxListado";
-            this.groupBoxListado.Size = new System.Drawing.Size(1076, 393);
+            this.groupBoxListado.Size = new System.Drawing.Size(1076, 482);
             this.groupBoxListado.TabIndex = 2;
             this.groupBoxListado.TabStop = false;
             // 
@@ -163,55 +154,40 @@
             this.GridDatos.AllowUserToAddRows = false;
             this.GridDatos.AllowUserToDeleteRows = false;
             this.GridDatos.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle9.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.GridDatos.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle9;
+            this.GridDatos.AllowUserToResizeRows = false;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.GridDatos.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
             this.GridDatos.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.GridDatos.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.DisplayedCells;
-            this.GridDatos.BackgroundColor = System.Drawing.SystemColors.Control;
+            this.GridDatos.BackgroundColor = System.Drawing.SystemColors.ControlLightLight;
             this.GridDatos.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            dataGridViewCellStyle10.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            dataGridViewCellStyle10.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle10.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle10.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle10.SelectionBackColor = System.Drawing.SystemColors.ControlLightLight;
-            dataGridViewCellStyle10.SelectionForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle10.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.GridDatos.DefaultCellStyle = dataGridViewCellStyle10;
+            this.GridDatos.ClipboardCopyMode = System.Windows.Forms.DataGridViewClipboardCopyMode.EnableAlwaysIncludeHeaderText;
+            this.GridDatos.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.GridDatos.Dock = System.Windows.Forms.DockStyle.Fill;
             this.GridDatos.EnableHeadersVisualStyles = false;
             this.GridDatos.GridColor = System.Drawing.SystemColors.ControlLight;
             this.GridDatos.Location = new System.Drawing.Point(3, 21);
             this.GridDatos.Name = "GridDatos";
             this.GridDatos.ReadOnly = true;
-            dataGridViewCellStyle11.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle11.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle11.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle11.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle11.SelectionBackColor = System.Drawing.SystemColors.ControlLightLight;
-            dataGridViewCellStyle11.SelectionForeColor = System.Drawing.SystemColors.Desktop;
-            dataGridViewCellStyle11.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.GridDatos.RowHeadersDefaultCellStyle = dataGridViewCellStyle11;
             this.GridDatos.RowHeadersVisible = false;
-            dataGridViewCellStyle12.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.GridDatos.RowsDefaultCellStyle = dataGridViewCellStyle12;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.GridDatos.RowsDefaultCellStyle = dataGridViewCellStyle2;
             this.GridDatos.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.GridDatos.Size = new System.Drawing.Size(1070, 369);
-            this.GridDatos.TabIndex = 39;
+            this.GridDatos.Size = new System.Drawing.Size(1070, 458);
+            this.GridDatos.TabIndex = 4;
             this.GridDatos.TabStop = false;
             // 
-            // ReportePedidasGanacias
+            // ReporteEstadoResultadoIntegral
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1091, 483);
+            this.ClientSize = new System.Drawing.Size(1091, 572);
             this.Controls.Add(this.groupBoxListado);
             this.Controls.Add(this.groupBoxSeleccionCuenta);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.MaximizeBox = false;
-            this.Name = "ReportePedidasGanacias";
+            this.Name = "ReporteEstadoResultadoIntegral";
             this.ShowIcon = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Reporte Pedidas y Ganacias";
+            this.Text = "Estado de resultado integral";
+            this.Load += new System.EventHandler(this.ReporteEstadoResultadoIntegral_Load);
             this.groupBoxSeleccionCuenta.ResumeLayout(false);
             this.groupBoxSeleccionCuenta.PerformLayout();
             this.groupBoxListado.ResumeLayout(false);
@@ -224,13 +200,12 @@
 
         private System.Windows.Forms.GroupBox groupBoxSeleccionCuenta;
         private System.Windows.Forms.GroupBox groupBoxListado;
-        private System.Windows.Forms.Button btnCalcular;
         private System.Windows.Forms.Button tbnSalir;
         private System.Windows.Forms.DataGridView GridDatos;
         private System.Windows.Forms.Label label10;
-        private System.Windows.Forms.ComboBox AFechaFinal;
+        private System.Windows.Forms.ComboBox lstEndPeriod;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.ComboBox AFechaInicio;
+        private System.Windows.Forms.ComboBox lstStarPeriod;
         private System.Windows.Forms.Button btnExcel;
     }
 }

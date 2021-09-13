@@ -301,11 +301,11 @@
     <Compile Include="Reportes\ReporteMovimientosCuenta.Designer.cs">
       <DependentUpon>ReporteMovimientosCuenta.cs</DependentUpon>
     </Compile>
-    <Compile Include="Reportes\ReportePedidasGanacias.cs">
+    <Compile Include="Reportes\ReporteEstadoResultadoIntegral.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Reportes\ReportePedidasGanacias.Designer.cs">
-      <DependentUpon>ReportePedidasGanacias.cs</DependentUpon>
+    <Compile Include="Reportes\ReporteEstadoResultadoIntegral.Designer.cs">
+      <DependentUpon>ReporteEstadoResultadoIntegral.cs</DependentUpon>
     </Compile>
     <Compile Include="Restore\RestoreJournalEntry.cs">
       <SubType>Form</SubType>
@@ -400,8 +400,8 @@
     <EmbeddedResource Include="Reportes\ReporteMovimientosCuenta.resx">
       <DependentUpon>ReporteMovimientosCuenta.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Reportes\ReportePedidasGanacias.resx">
-      <DependentUpon>ReportePedidasGanacias.cs</DependentUpon>
+    <EmbeddedResource Include="Reportes\ReporteEstadoResultadoIntegral.resx">
+      <DependentUpon>ReporteEstadoResultadoIntegral.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Restore\RestoreJournalEntry.resx">
       <DependentUpon>RestoreJournalEntry.cs</DependentUpon>
