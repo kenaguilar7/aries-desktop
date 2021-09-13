@@ -15,7 +15,7 @@ namespace CapaLogica
     public class FechaTransaccionCL
     {
         private FechaTransaccionDao _fechaDao = new FechaTransaccionDao();
-        private AsientoCL _asientoCL = new AsientoCL();
+        //private AsientoCL _asientoCL = new AsientoCL();
 
         public List<FechaTransaccion> GetAll(Compañia t, Usuario user)
         {
@@ -221,7 +221,7 @@ namespace CapaLogica
         public Boolean BuscarAsientosDescuadrados(Compañia compañia, FechaTransaccion fechaTransaccion, out String mensaje)
         {
 
-            var asientCL = new AsientoCL();
+            //var asientCL = new AsientoCL();
 
             //var lstCuentasPedientes = asientCL.ListadoAsientosDescuadrados(compañia, fechaTransaccion);
             //if (lstCuentasPedientes.Rows.Count > 0)

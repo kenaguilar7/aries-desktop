@@ -9,9 +9,11 @@ using System.Windows.Forms;
 using AriesContador.Core;
 using AriesContador.Core.Models.Accounts;
 using AriesContador.Core.Models.PostingPeriods;
+using AriesContador.Core.Models.Utils;
 using AriesContador.Core.Services;
 using AriesContador.Data;
 using AriesContador.Services;
+using CapaEntidad.Entidades.JournalEntries;
 using CapaPresentacion.Utils;
 
 namespace CapaPresentacion.FrameCuentas
@@ -21,7 +23,9 @@ namespace CapaPresentacion.FrameCuentas
         private List<PostingPeriod> PostingPeriods { get; set; } 
         private Account CurrentAccount { get; set; }
         private List<Account> CompanyAccounts { get; set; }
+        private IEnumerable<Account> AccountsWithBalance { get; set;  }
         private readonly IFinancialService _financialService;
+        
         public FrameMaestroCuenta()
         {
             InitializeComponent();
@@ -58,24 +62,16 @@ namespace CapaPresentacion.FrameCuentas
 
         private void CargarDatosAListas()
         {
-            AFechaFinal.SelectedIndexChanged -= this.AFechaFinalSelectedIndexChanged;
-            BFechaFinal.SelectedIndexChanged -= this.BFechaFinalSelectedIndexChanged;
+            AFechaInicio.SelectedIndexChanged -= this.AFechaInicio_SelectedIndexChanged;
+            AFechaFinal.SelectedIndexChanged -= this.AFechaFinalSelectedIndexChanged; 
 
             PostingPeriods = _financialService.GetPostingPeriods(GlobalConfig.Company.Codigo).ToList(); 
-
-            var lstBfchFnl = new List<PostingPeriod> { (from c1 in PostingPeriods select c1).OrderByDescending(x => x.Date).LastOrDefault() };
-            AFechaInicio.DataSource = lstBfchFnl;
-            AFechaFinal.DataSource = (from c1 in PostingPeriods select c1).ToList();
+            AFechaInicio.DataSource = PostingPeriods.DeepClone();
+            AFechaFinal.DataSource = PostingPeriods.DeepClone();
             AFechaFinal.SelectedIndex = -1;
 
-            BFechaInicio.DataSource = (from c1 in PostingPeriods select c1).ToList();
-            BFechaFinal.DataSource = (from c1 in PostingPeriods where c1.Date >= ((PostingPeriod)BFechaInicio.SelectedItem).Date select c1).ToList();
-            BFechaFinal.SelectedIndex = -1;
-
-            
+            AFechaInicio.SelectedIndexChanged += this.AFechaInicio_SelectedIndexChanged;
             AFechaFinal.SelectedIndexChanged += this.AFechaFinalSelectedIndexChanged;
-            BFechaFinal.SelectedIndexChanged += this.BFechaFinalSelectedIndexChanged;
-
         }
 
         private void LoadAccountInfoToDashboard()// refactored
@@ -96,118 +92,29 @@ namespace CapaPresentacion.FrameCuentas
 
         private void BuildAccountBalanceInformationDashboard()
         {
-            var startMonth = GetSeletedMonthStartDate(); 
-            var endMonth = GetSelectedMonthEndDate();
+            var startMonth = AFechaInicio.SelectedItem as PostingPeriod ?? null;
+            var endMonth = AFechaFinal.SelectedItem as PostingPeriod ?? null;
 
-            try
+            if (startMonth != null && endMonth != null && CurrentAccount != null)
             {
-                if (startMonth != null && endMonth != null && CurrentAccount != null)
+                var requestParam = new BasicReportParam()
                 {
-                    var accountWithAmount = _financialService.
-                }
+                    CompanyId = GlobalConfig.Company.Codigo,
+                    FirstDate = startMonth.Date.BuildDateToParts(),
+                    EndDate = endMonth.Date.BuildDateToParts(),
+                };
 
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
+                AccountsWithBalance = _financialService.GetAccountsBalance(requestParam);
             }
         }
-
-        private PostingPeriod GetSeletedMonthStartDate()
-        {
-            if(gridDatosA.Visible) return AFechaInicio.SelectedItem as PostingPeriod ?? null;
-            return BFechaInicio.SelectedItem as PostingPeriod ?? null;
-        }
-
-        private PostingPeriod GetSelectedMonthEndDate()
-        {
-            if (gridDatosA.Visible) return AFechaFinal.SelectedItem as PostingPeriod;
-            return BFechaFinal.SelectedItem as PostingPeriod;
-        }
-
-        private void CargarDatosPanelA()
-        {
-
-            //if (AFechaFinal.SelectedIndex == -1)
-            //{
-            //    return;
-            //}
-            //#region Obtenemos las Fechas
-            //DateTime fch1 = ((FechaTransaccion)AFechaInicio.SelectedItem).Fecha;
-            //DateTime fch2 = ((FechaTransaccion)AFechaFinal.SelectedItem).Fecha;
-            //DateTime par1 = new DateTime(fch1.Year, fch1.Month, 1);
-            //DateTime par2 = new DateTime(fch2.Year, fch2.Month, 1);
-            /////Ponemos el ultimo dia del mes en la fecha final
-            //par2 = (par2.AddMonths(1)).AddDays(-1);
-            //#endregion
-            /////vamos a hacer un metodo que solo mande la cuenta con sus hijas y los datos de la cuenta que devulva 
-            /////van a ser los utilizados
-
-            ////Solo vamos a llenar las cuentas que se seleccione, de esta manera evitamos traer
-            ////todos los datos t mejoramos rendimiento
-
-            //// var lstcntshjs = TreeViewCuentas.GetCuentasHIjas(CuentaActual, _lstCuentas);
-
-            ////_cuentaCL.LLenarConSaldos(par1, par2, _lstCuentas, GlobalConfig.Company);
-            ////TreeCuentasAfterSelect(null, null);
-            //CargarGridA();
-        }
-        private void CargarDatosPanelB()
-        {
-            //if (BFechaFinal.SelectedIndex == -1)
-            //{
-            //    return;
-            //}
-            //#region Obtenemos las Fechas
-            //DateTime fch1 = ((FechaTransaccion)BFechaInicio.SelectedItem).Fecha;
-            //DateTime fch2 = ((FechaTransaccion)BFechaFinal.SelectedItem).Fecha;
-            //DateTime par1 = new DateTime(fch1.Year, fch1.Month, 1);
-            //DateTime par2 = new DateTime(fch2.Year, fch2.Month, 1);
-            /////Ponemos el ultimo dia del mes en la fecha final
-            //par2 = (par2.AddMonths(1)).AddDays(-1);
-            //#endregion
-            //// var lstcntshjs = TreeViewCuentas.GetCuentasHIjas(CuentaActual, _lstCuentas);
-            ////_cuentaCL.LLenarConSaldos(par1, par2, _lstCuentas, GlobalConfig.Company);
-
-            //CargarGridB();
-
-        }
-
-        private void CargarGridA()
-        {
-            //if (CuentaActual is null)
-            //{
-            //    return;
-            //}
-            //gridDatosA.Rows.Clear();
-            //DataGridViewRow row = new DataGridViewRow();
-            //row.CreateCells(gridDatosA);
-            //row.Cells[0].Value = CuentaActual.SaldoAnteriorColones;
-            //row.Cells[1].Value = CuentaActual.DebitosColones;
-            //row.Cells[2].Value = CuentaActual.CreditosColones;
-            //row.Cells[3].Value = CuentaActual.SaldoActualColones;
-            //gridDatosA.Rows.Add(row);
-        }
-        private void CargarGridB()
-        {
-            //if (CuentaActual is null)
-            //{
-            //    return;
-            //}
-            //gridDatosB.Rows.Clear();
-            //DataGridViewRow row = new DataGridViewRow();
-            //row.CreateCells(gridDatosB);
-
-            //row.Cells[0].Value = CuentaActual.DebitosColones;
-            //row.Cells[1].Value = CuentaActual.CreditosColones;
-            //row.Cells[2].Value = CuentaActual.SaldoMensualColones;
-
-            //gridDatosB.Rows.Add(row);
-        }
-    
 
         #region Eventos
+
+        private void AFechaInicio_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if(AFechaInicio.SelectedItem is PostingPeriod selectedPostingP)
+                AFechaFinal.DataSource = PostingPeriods.GetOlder(selectedPostingP.Date); 
+        }
 
         private void TreeCuentasAfterSelect(object sender, TreeViewEventArgs e)
         {
@@ -217,16 +124,27 @@ namespace CapaPresentacion.FrameCuentas
             this.btnGuardarNuevoNombre.Visible = false;
             CurrentAccount = (Account)e.Node.Tag;
             LoadAccountInfoToDashboard();
-            BuildAccountBalanceInformationDashboard(); 
-            //if (tabControlGeneral.SelectedIndex == 0)
-            //{
-            //    CargarGridA();
-            //}
-            //else
-            //{
-            //    CargarGridB();
-            //}
+            LoadAccountBalanceToDashBoard();
         }
+
+        private void LoadAccountBalanceToDashBoard()
+        {
+            var accountWithBalance = AccountsWithBalance?.FirstOrDefault(a => a.Id == CurrentAccount.Id);
+            if (accountWithBalance != null)
+            {
+                gridDatosA.Rows.Clear();
+                DataGridViewRow row = new DataGridViewRow();
+                row.CreateCells(gridDatosA);
+                row.Cells[0].Value = accountWithBalance.PriorBalance;
+                row.Cells[1].Value = accountWithBalance.DebitBalance;
+                row.Cells[2].Value = accountWithBalance.CreditBalance;
+                row.Cells[3].Value = accountWithBalance.MontlyBalance;
+                row.Cells[4].Value = accountWithBalance.CurrentBalance;
+
+                gridDatosA.Rows.Add(row);
+            }
+        }
+
         /// <summary>
         /// Actualiza el nombre a de la cuenta
         /// </summary>
@@ -265,30 +183,13 @@ namespace CapaPresentacion.FrameCuentas
             //    MessageBox.Show(ex.Message, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Error);
             //}
         }
-        private void LstMesInicioSelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (tabControlGeneral.SelectedIndex == 1)
-            {
 
-                BFechaFinal.DataSource = (from n in PostingPeriods where n.Date >= ((PostingPeriod)BFechaInicio.SelectedItem).Date select n).ToList<PostingPeriod>();
-            }
-        }
 
-        private void TabControlGeneralSelectedIndexChanged(object sender, EventArgs e)
-        {
-            BuildAccountBalanceInformationDashboard(); 
-        }
 
         private void AFechaFinalSelectedIndexChanged(object sender, EventArgs e)
         {
-            BuildAccountBalanceInformationDashboard(); 
-            //CargarDatosPanelA();
-        }
-
-        private void BFechaFinalSelectedIndexChanged(object sender, EventArgs e)
-        {
             BuildAccountBalanceInformationDashboard();
-            //CargarDatosPanelB();
+            LoadAccountBalanceToDashBoard();
         }
 
         private void Eliminar_Click(object sender, EventArgs e)
@@ -355,11 +256,7 @@ namespace CapaPresentacion.FrameCuentas
                 MessageBox.Show(ex.Message, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        /// <summary>
-        /// Evento que ocurre cuando se presiona el boton de editar una cuenta
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+
         private void EditarCuenta(object sender, EventArgs e)
         {
             //try
@@ -435,6 +332,7 @@ namespace CapaPresentacion.FrameCuentas
                 MessageBox.Show("Seleccione una cuenta valida", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Hand);
             }
         }
+
 
         #endregion
 

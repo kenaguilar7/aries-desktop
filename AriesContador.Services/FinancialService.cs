@@ -4,10 +4,12 @@ using AriesContador.Core.Models.PostingPeriods;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AriesContador.Core.Models;
 using AriesContador.Core.Services;
 using AriesContador.Core.Models.Companies;
 using AriesContador.Core.Models.Utils;
 using CapaEntidad.Entidades.JournalEntries;
+using CapaEntidad.Entidades.Reports;
 
 namespace AriesContador.Services
 {
@@ -54,12 +56,37 @@ namespace AriesContador.Services
             _unitOfWork.AccountRepository.Remove(account);
         }
 
-        public IEnumerable<Account> GetAccountBalance(string companyId, IEnumerable<PostingPeriod> postingPeriods)
+        public IEnumerable<Account> GetAccountsBalance(BasicReportParam reportParam)
         {
-            //var accounts = _unitOfWork.AccountRepository.FindByCompanyId(companyId);
-            //var filledAccountsBalance = BuildAccountBalance(accounts, postingPeriods);
-            //return filledAccountsBalance;
-            throw new NotImplementedException();
+            IEnumerable<Account> accountsReport = new List<Account>();
+            var postingPeriods = _unitOfWork.PostingPeriodRepository.FindByCompanyId(reportParam.CompanyId).OrderBy(p => p.Date);
+
+            var firstPeriod = postingPeriods.FirstOrDefault();
+            var firstPeriodString = firstPeriod.Date.ParseToYearMonthStringFromDate();
+
+            //don't create the previous balance. 
+            if (firstPeriodString.Equals(reportParam.FirstDate))
+            {
+                accountsReport = _unitOfWork.AccountRepository.AccountsWithBalanceByDateRange(reportParam);
+            }
+            else
+            {
+                var stringToDate = reportParam.FirstDate.ParseToDateTimeWithFromMimFormat();
+
+                var previusBalanceReportParam = new BasicReportParam()
+                {
+                    CompanyId = reportParam.CompanyId,
+                    FirstDate = firstPeriodString,
+                    EndDate = stringToDate.AddMonths(-1).ParseToYearMonthStringFromDate()
+                };
+
+                var accountForPreviewsBalance = _unitOfWork.AccountRepository.AccountsWithBalanceByDateRange(previusBalanceReportParam);
+                accountsReport = _unitOfWork.AccountRepository.AccountsWithBalanceByDateRange(reportParam);
+
+                accountsReport.FillPriorBalance(accountForPreviewsBalance);
+            }
+
+            return accountsReport;
         }
 
         public Account GetAccountBalance(Account account, IEnumerable<PostingPeriod> postingPeriods)

@@ -12,6 +12,7 @@ namespace AriesContador.Core.Services
         void DeleteAccount(Account account);
         Account FindAccount(int id);
         Account GetAccountBalance(Account account, IEnumerable<PostingPeriod> postingPeriods);
+        IEnumerable<Account> GetAccountsBalance(BasicReportParam reportParam); 
         IEnumerable<Account> GetDefaultAccounts();
         void CreateAccount(Account account);
         void UpdateAccount(Account account);

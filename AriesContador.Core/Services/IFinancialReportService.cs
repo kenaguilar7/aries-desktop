@@ -10,6 +10,6 @@ namespace AriesContador.Core.Services
     {
         IEnumerable<JournalEntryReport> JournalEntryReport(BasicReportParam jEParams);
         IEnumerable<BalanceComprobacionReport> BalanceComprobacionReport(BasicReportParam reportParam);
-        ResultReportEstadoResultadoIntegral EstadoResultadoIntegral(BasicReportParam reportParam); 
+        ResultReportEstadoResultadoIntegral EstadoResultadoIntegral(BasicReportParam reportParam);
     }
 }

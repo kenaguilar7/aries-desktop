@@ -10,8 +10,8 @@ namespace AriesContador.Core.Models.PostingPeriods
 
         public static List<PostingPeriod> GetOlder(this List<PostingPeriod> postingPeriods, DateTime cutPeriod)
         {
-            var output = postingPeriods.Where(p => p.Date >= cutPeriod);
-            return output.ToList().DeepClone(); 
+            var output = postingPeriods.DeepClone().Where(p => p.Date >= cutPeriod);
+            return output.ToList(); 
         }
 
         public static PostingPeriod GetOlderAccountPeriod(this IEnumerable<PostingPeriod> postingP)
