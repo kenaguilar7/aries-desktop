@@ -3,7 +3,6 @@ using AriesContador.Core.Models.Accounts;
 using AriesContador.Core.Models.PostingPeriods;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Linq;
 using AriesContador.Core.Services;
 using AriesContador.Core.Models.Companies;
