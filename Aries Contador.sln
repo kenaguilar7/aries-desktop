@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AriesContador.Data", "Aries
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AriesContador.Services", "AriesContador.Services\AriesContador.Services.csproj", "{2A11D985-3D8E-43FC-9A49-E3618C709075}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AriesContador.Tests", "AriesContador.Tests\AriesContador.Tests.csproj", "{A54B5E12-4470-4FFF-9E22-6C17BAF5F26C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -111,6 +113,18 @@ Global
 		{2A11D985-3D8E-43FC-9A49-E3618C709075}.Release|x64.Build.0 = Release|Any CPU
 		{2A11D985-3D8E-43FC-9A49-E3618C709075}.Release|x86.ActiveCfg = Release|Any CPU
 		{2A11D985-3D8E-43FC-9A49-E3618C709075}.Release|x86.Build.0 = Release|Any CPU
+		{A54B5E12-4470-4FFF-9E22-6C17BAF5F26C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A54B5E12-4470-4FFF-9E22-6C17BAF5F26C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A54B5E12-4470-4FFF-9E22-6C17BAF5F26C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A54B5E12-4470-4FFF-9E22-6C17BAF5F26C}.Debug|x64.Build.0 = Debug|Any CPU
+		{A54B5E12-4470-4FFF-9E22-6C17BAF5F26C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A54B5E12-4470-4FFF-9E22-6C17BAF5F26C}.Debug|x86.Build.0 = Debug|Any CPU
+		{A54B5E12-4470-4FFF-9E22-6C17BAF5F26C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A54B5E12-4470-4FFF-9E22-6C17BAF5F26C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A54B5E12-4470-4FFF-9E22-6C17BAF5F26C}.Release|x64.ActiveCfg = Release|Any CPU
+		{A54B5E12-4470-4FFF-9E22-6C17BAF5F26C}.Release|x64.Build.0 = Release|Any CPU
+		{A54B5E12-4470-4FFF-9E22-6C17BAF5F26C}.Release|x86.ActiveCfg = Release|Any CPU
+		{A54B5E12-4470-4FFF-9E22-6C17BAF5F26C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
