@@ -40,11 +40,11 @@ namespace CapaPresentacion.FrameCuentas
         }
 
         #region Carga de datos
-        private async Task CargarDatos()
+        private void CargarDatos()
         {
             _lstCuentas.Clear();
             //_lstCuentas = await Task.Run(() => _cuentaCL.GetAll(GlobalConfig.Compañia            
-            _lstCuentas = await Task.Run(() => _cuentaCL.GetAll(GlobalConfig.Company));
+            //_lstCuentas = await Task.Run(() => _cuentaCL.GetAll(GlobalConfig.Company));
             _lstCuentas = _cuentaCL.GetAll(GlobalConfig.Company);
             treeCuentas.Nodes.AddRange(TreeViewCuentas.CrearTreeView(_lstCuentas));
             // CargarDatosAListas();
