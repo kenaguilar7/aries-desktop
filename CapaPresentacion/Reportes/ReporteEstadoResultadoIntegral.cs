@@ -1,28 +1,20 @@
-﻿using CapaEntidad.Entidades.Cuentas;
-using CapaEntidad.Entidades.FechaTransacciones;
-using CapaEntidad.Enumeradores;
-using CapaEntidad.Reportes;
-using CapaEntidad.Textos;
-using CapaLogica;
+﻿using CapaEntidad.Textos;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using AriesContador.Core;
 using AriesContador.Core.Models.PostingPeriods;
+using AriesContador.Core.Models.Utils;
 using AriesContador.Core.Services;
 using AriesContador.Data;
 using AriesContador.Services;
 using CapaEntidad.Entidades.JournalEntries;
 using CapaEntidad.Entidades.Reports;
 using ClosedXML.Excel;
-using ClosedXML.Report.Utils;
 
 namespace CapaPresentacion.Reportes
 {
@@ -43,18 +35,14 @@ namespace CapaPresentacion.Reportes
 
         private void ReporteEstadoResultadoIntegral_Load(object sender, EventArgs e)
         {
-            var lstPostingPe = _financialService.GetPostingPeriods(GlobalConfig.Company.Codigo).ToList();
-            this.PostingPeriods = lstPostingPe;
-            var lstP = lstPostingPe.OrderBy(p => p.Date);
-            this.lstStarPeriod.DataSource = (from mm in lstP select mm).ToArray();
+            this.PostingPeriods = _financialService.GetPostingPeriods(GlobalConfig.Company.Codigo).ToList();
+            this.lstStarPeriod.DataSource = PostingPeriods.DeepClone(); 
         }
 
         private void LstFirstPostingPeriod_SelectedIndexChanged(object sender, EventArgs e)
         {
             var starMonth = (PostingPeriod)lstStarPeriod.SelectedItem;
-            lstEndPeriod.SelectedItem = this.lstEndPeriod.DataSource = (from mm in PostingPeriods
-                where mm.Year >= starMonth.Year && mm.Month >= starMonth.Month
-                select mm).ToArray();
+            lstEndPeriod.DataSource = PostingPeriods.GetOlder(starMonth.Date); 
         }
 
         private void lstEndPeriod_SelectedIndexChanged(object sender, EventArgs e)

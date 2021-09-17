@@ -14,6 +14,7 @@ using System.Reflection;
 using System.Windows.Forms;
 using AriesContador.Core;
 using AriesContador.Core.Models.PostingPeriods;
+using AriesContador.Core.Models.Utils;
 using AriesContador.Core.Services;
 using AriesContador.Data;
 using AriesContador.Services;
@@ -38,18 +39,14 @@ namespace CapaPresentacion.Reportes
 
         private void ReporteAsientos_Load(object sender, EventArgs e)
         {
-            var lstPostingPe = _financialService.GetPostingPeriods(GlobalConfig.Company.Codigo).ToList();
-            this.PostingPeriods = lstPostingPe;
-            var lstP = lstPostingPe.OrderBy(p => p.Date);
-            this.lstStarPeriod.DataSource = (from mm in lstP select mm).ToArray();
+            this.PostingPeriods = _financialService.GetPostingPeriods(GlobalConfig.Company.Codigo).ToList();
+            this.lstStarPeriod.DataSource = this.PostingPeriods.DeepClone(); 
         }
 
         private void LstFirstPostingPeriod_SelectedIndexChanged(object sender, EventArgs e)
         {
             var starMonth = (PostingPeriod) lstStarPeriod.SelectedItem;
-            lstEndPeriod.SelectedItem = this.lstEndPeriod.DataSource = (from mm in PostingPeriods
-                where mm.Year >= starMonth.Year && mm.Month >= starMonth.Month
-                select mm).ToArray();
+            lstEndPeriod.DataSource = PostingPeriods.GetOlder(starMonth.Date); 
         }
 
         private void LstEndPostingPeriod_SelectedIndexChanged(object sender, EventArgs e)
