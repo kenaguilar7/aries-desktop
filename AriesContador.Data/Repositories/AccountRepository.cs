@@ -60,6 +60,12 @@ namespace AriesContador.Data.Repositories
             dataAccess.SaveData<Account>("SP_UpdateAccount", entity);
         }
 
+        public void UpdatePartlyAccount(Account account)
+        {
+            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
+            dataAccess.SaveData<Account>("SP_UpdatePartlyAccount", account);
+        }
+
         public IEnumerable<Account> GetDefaultAccounts()
         {
             var jsonString = System.IO.File.ReadAllText("defaultaccounts.json");
@@ -78,6 +84,19 @@ namespace AriesContador.Data.Repositories
             var output = dataAccess.LoadData<Account, BasicReportParam>("SP_AuxiliaryAccountsWithBalanceByDateRange", reportParam);
             output.BuildAccountsBalance();
             return output.OrderByTree();
+        }
+
+        public bool HasMovements(int accountId, string companyId)
+        {
+            var sqlParam = new
+            {
+                accountId, 
+                companyId
+            }; 
+
+            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
+            var output = dataAccess.LoadData<bool, dynamic>("SP_AccountHasMovements", sqlParam).FirstOrDefault();
+            return output; 
         }
 
     }

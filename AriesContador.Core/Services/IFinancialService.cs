@@ -16,6 +16,7 @@ namespace AriesContador.Core.Services
         IEnumerable<Account> GetDefaultAccounts();
         void CreateAccount(Account account);
         void UpdateAccount(Account account);
+        void UpdateAccountName(Account account); 
         IEnumerable<Account> GetAccounts(string companyId);
         #endregion
 

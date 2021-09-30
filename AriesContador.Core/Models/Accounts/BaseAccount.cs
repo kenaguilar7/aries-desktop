@@ -19,6 +19,8 @@ namespace AriesContador.Core.Models.Accounts
             set { this.Editable = Convert.ToBoolean(value); }
         }
 
+        public string NameMySql => Name;
+
         public AccountTag AccountTag { get; set; }
 
         public AccountType AccountType { get; set; }

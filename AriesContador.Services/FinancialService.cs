@@ -51,9 +51,40 @@ namespace AriesContador.Services
             _unitOfWork.AccountRepository.Update(account);
         }
 
+        public void UpdateAccountName(Account account)
+        {
+            _unitOfWork.AccountRepository.UpdatePartlyAccount(account);
+        }
+
         public void DeleteAccount(Account account)
         {
+            var accountTree = _unitOfWork.AccountRepository.FindByCompanyId(account.CompanyId).ToList();
+            var accountVerify = accountTree.First(a => a.Id == account.Id); 
+
+
+            if (accountVerify.AccountType == AccountType.Cuenta_Titulo ||
+                accountVerify.AccountType == AccountType.Cuenta_De_Mayor)
+            {
+                throw new Exception($"No se pueden eliminar cuentas de tipo {accountVerify.AccountType.ToString().Replace('_',' ')}");
+            }
+
+            var accountHasMovements = _unitOfWork.AccountRepository.HasMovements(account.Id, account.CompanyId);
+            if (accountHasMovements)
+            {
+                throw new Exception("Esta cuenta no se puede eliminar porque tiene movimientos asociados"); 
+            }
+
             _unitOfWork.AccountRepository.Remove(account);
+            //Account deleted successful, then if the father account doesn't have more child mark as auxiliar account
+            accountTree.Remove(accountVerify); 
+            var brothersAccounts = accountTree.Where(a => a.FatherAccount == accountVerify.FatherAccount);
+            if (!brothersAccounts.Any())
+            {
+                //Update father account
+                var fatherAccount = accountTree.Find(a => a.Id == accountVerify.FatherAccount);
+                fatherAccount.AccountType = AccountType.Cuenta_Auxiliar; 
+                _unitOfWork.AccountRepository.Update(fatherAccount);
+            }
         }
 
         public IEnumerable<Account> GetAccountsBalance(BasicReportParam reportParam)

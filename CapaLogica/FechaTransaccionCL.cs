@@ -246,46 +246,46 @@ namespace CapaLogica
 
         }
 
-        public List<Cuenta> AsientoDeCierre(Compañia compañia, Usuario usuario, IEnumerable<FechaTransaccion> fechaTransaccions, Cuenta cuenta)
-        {
-            var meses = this.FechaCerrarMes(compañia, usuario);
+        //public List<Cuenta> AsientoDeCierre(Compañia compañia, Usuario usuario, IEnumerable<FechaTransaccion> fechaTransaccions, Cuenta cuenta)
+        //{
+        //    var meses = this.FechaCerrarMes(compañia, usuario);
 
-            var mensaje = "";
-            var firstMont = fechaTransaccions.OrderBy(x => x.Fecha).LastOrDefault();
-            //var lst = fechaTransaccions.OrderByDescending(x => x.Fecha).ToList(); 
-            //var lst2 = fechaTransaccions.OrderBy(x => x.Fecha); 
-            foreach (FechaTransaccion item in fechaTransaccions.OrderBy(x => x.Fecha))
+        //    var mensaje = "";
+        //    var firstMont = fechaTransaccions.OrderBy(x => x.Fecha).LastOrDefault();
+        //    //var lst = fechaTransaccions.OrderByDescending(x => x.Fecha).ToList(); 
+        //    //var lst2 = fechaTransaccions.OrderBy(x => x.Fecha); 
+        //    foreach (FechaTransaccion item in fechaTransaccions.OrderBy(x => x.Fecha))
 
-            {
-                item.Cerrada = true;
-                if (!CerrarMes(item, compañia, usuario, out mensaje))
-                {
-                    throw new Exception(mensaje);
-                }
+        //    {
+        //        item.Cerrada = true;
+        //        if (!CerrarMes(item, compañia, usuario, out mensaje))
+        //        {
+        //            throw new Exception(mensaje);
+        //        }
 
-            }
-            ///Una vez cerrado todos los mese debemos 
-            ///1- sacar el saldo del balance de comprobacion. 
-            ///   para esto usamos el ultimo mes en la lista
-            ///2- Actualizar todas las cuentas en saldo cero y
-            ///   poner el saldo en una cuenta
-            ///   
-            ///  ***Guardar una copia de las cuentas para retornarla y generar el balance de 
-            ///  comprobación y que este pueda ser impreso
-            CuentaCL _cuentaCL = new CuentaCL();
-            var cuentas = _cuentaCL.GetAll(compañia);
-            _cuentaCL.LLenarConSaldos(meses[0].Fecha, firstMont.Fecha, cuentas, compañia);
-            var _cuenta = SaldoReporComprobacion(cuentas, cuenta);
+        //    }
+        //    ///Una vez cerrado todos los mese debemos 
+        //    ///1- sacar el saldo del balance de comprobacion. 
+        //    ///   para esto usamos el ultimo mes en la lista
+        //    ///2- Actualizar todas las cuentas en saldo cero y
+        //    ///   poner el saldo en una cuenta
+        //    ///   
+        //    ///  ***Guardar una copia de las cuentas para retornarla y generar el balance de 
+        //    ///  comprobación y que este pueda ser impreso
+        //    CuentaCL _cuentaCL = new CuentaCL();
+        //    var cuentas = _cuentaCL.GetAll(compañia);
+        //    _cuentaCL.LLenarConSaldos(meses[0].Fecha, firstMont.Fecha, cuentas, compañia);
+        //    var _cuenta = SaldoReporComprobacion(cuentas, cuenta);
 
-            var rsl = _cuentaCL.GenerarSaldosEnCeroParaCierreDeAsieto(_cuenta, compañia, usuario, cuentas.Count);
-            if (!rsl)
-            {
-                throw new Exception("error al guardar el saldo");
-            }
+        //    var rsl = _cuentaCL.GenerarSaldosEnCeroParaCierreDeAsieto(_cuenta, compañia, usuario, cuentas.Count);
+        //    if (!rsl)
+        //    {
+        //        throw new Exception("error al guardar el saldo");
+        //    }
 
 
-            return cuentas;
-        }
+        //    return cuentas;
+        //}
         /// <summary>
         /// Este metodo no se puede quedar aqui cambiar, cambiar!!!
         /// </summary>

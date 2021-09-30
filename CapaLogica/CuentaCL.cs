@@ -17,135 +17,135 @@ namespace CapaLogica
     {
         CuentaDao cuentaDao = new CuentaDao();
         FechaTransaccionCL _fechaTransaccionCL = new FechaTransaccionCL();
-        public Boolean Deleted(Cuenta cuenta, Usuario usuario, out String mensaje)
-        {
-            if (!cuenta.Editable || cuenta.Indicador != IndicadorCuenta.Cuenta_Auxiliar)
-            {
-                mensaje = (cuenta.Editable) ? $"Cuentas con la propiedad: {cuenta.Indicador.ToString().Replace('_', ' ') } \n No pueden ser eliminadas" : $"Cuentas del sistema no pueden ser eliminadas.";  ;
-                return false;
-            }
-            return cuentaDao.Deleted(cuenta, usuario, out mensaje);
-        }
+        //public Boolean Deleted(Cuenta cuenta, Usuario usuario, out String mensaje)
+        //{
+        //    if (!cuenta.Editable || cuenta.Indicador != IndicadorCuenta.Cuenta_Auxiliar)
+        //    {
+        //        mensaje = (cuenta.Editable) ? $"Cuentas con la propiedad: {cuenta.Indicador.ToString().Replace('_', ' ') } \n No pueden ser eliminadas" : $"Cuentas del sistema no pueden ser eliminadas.";  ;
+        //        return false;
+        //    }
+        //    return cuentaDao.Deleted(cuenta, usuario, out mensaje);
+        //}
         public List<Cuenta> GetAll(Compañia t)
         {
             var cuentas = cuentaDao.GetAll(t);
             return Ordernar(cuentas);
         }
-        public Boolean Insert(ref Cuenta nuevaCuenta, Cuenta cuentaPadre, out String Mensaje, Usuario user)
-        {
+        //public Boolean Insert(ref Cuenta nuevaCuenta, Cuenta cuentaPadre, out String Mensaje, Usuario user)
+        //{
 
-            if (VerificarNombre(nuevaCuenta, nuevaCuenta.Nombre, out Mensaje, nuevaCuenta.MyCompania))
-            {
+        //    if (VerificarNombre(nuevaCuenta, nuevaCuenta.Nombre, out Mensaje, nuevaCuenta.MyCompania))
+        //    {
 
-                ///Reglas de negocio para heredar saldo
-                /// Si la cuenta es auxiliar tiene que heredar el saldo de la anterior
-                /// en el siguiente codigo estamos heredandole los debitos y credito y saldos anteriores
-                /// aunque esos saldos no se vayan a insertar en la base de datos, lo jacemos para retornarla
-                /// y el callingform pueda ver reflejada esos movimientos
-                ///
-                if (cuentaPadre.Indicador == IndicadorCuenta.Cuenta_Auxiliar)
-                {
-                    nuevaCuenta.SaldoAnteriorColones = cuentaPadre.SaldoAnteriorColones;
-                    nuevaCuenta.SaldoAnteriorDolares = cuentaPadre.SaldoAnteriorDolares;
-                    nuevaCuenta.DebitosColones = cuentaPadre.DebitosColones;
-                    nuevaCuenta.CreditosColones = cuentaPadre.CreditosColones;
-                    nuevaCuenta.DebitosDolares = cuentaPadre.DebitosDolares;
-                    nuevaCuenta.CreditosDolares = cuentaPadre.CreditosDolares;
-                    //cambiarle el estado despues de insertar en la base de datos
-                    //cuentaPadre.Indicador = IndicadorCuenta.Cuenta_De_Mayor; 
-                }
+        //        ///Reglas de negocio para heredar saldo
+        //        /// Si la cuenta es auxiliar tiene que heredar el saldo de la anterior
+        //        /// en el siguiente codigo estamos heredandole los debitos y credito y saldos anteriores
+        //        /// aunque esos saldos no se vayan a insertar en la base de datos, lo jacemos para retornarla
+        //        /// y el callingform pueda ver reflejada esos movimientos
+        //        ///
+        //        if (cuentaPadre.Indicador == IndicadorCuenta.Cuenta_Auxiliar)
+        //        {
+        //            nuevaCuenta.SaldoAnteriorColones = cuentaPadre.SaldoAnteriorColones;
+        //            nuevaCuenta.SaldoAnteriorDolares = cuentaPadre.SaldoAnteriorDolares;
+        //            nuevaCuenta.DebitosColones = cuentaPadre.DebitosColones;
+        //            nuevaCuenta.CreditosColones = cuentaPadre.CreditosColones;
+        //            nuevaCuenta.DebitosDolares = cuentaPadre.DebitosDolares;
+        //            nuevaCuenta.CreditosDolares = cuentaPadre.CreditosDolares;
+        //            //cambiarle el estado despues de insertar en la base de datos
+        //            //cuentaPadre.Indicador = IndicadorCuenta.Cuenta_De_Mayor; 
+        //        }
 
-                if (cuentaDao.Insert(ref nuevaCuenta, cuentaPadre, user, out Mensaje))
-                {
-                    Mensaje = "Cuenta guardada exitosamente";
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                return false;
-            }
-        }
-        public DataTable GetInfoCompleta(Cuenta cuenta)
-        {
-            var retorno = new DataTable();
-            if (cuenta.Indicador == IndicadorCuenta.Cuenta_Auxiliar)
-            {
-                retorno = cuentaDao.GetInfoCompletaCuentaAux(cuenta);
-            }
-            else
-            {
-                retorno = cuentaDao.GetInforCompletaCuentaMayor(cuenta);
-            }
-
-
-            //decimal acumulado = 0;
-
-            decimal lastSaldoActual = 0m;
-            foreach (DataRow item in retorno.Rows)
-            {
-                var rw = item["Saldo Actual"];
-                decimal debito = String.IsNullOrWhiteSpace(item["Debito"].ToString()) ? 0m : Convert.ToDecimal(item["Debito"]);
-                ITipoCuenta tpcnta = Cuenta.GenerarTipoCuenta(Convert.ToInt32(rw));
-                lastSaldoActual = tpcnta.SaldoActual(saldo: lastSaldoActual, debito: debito, credito: string.IsNullOrWhiteSpace(item["Credito"].ToString()) ? 0m : Convert.ToDecimal(item["Credito"]));
-                //acumulado += lastSaldoActual;
-
-                item["Saldo Actual"] = string.Format("{0:n}", lastSaldoActual);
+        //        if (cuentaDao.Insert(ref nuevaCuenta, cuentaPadre, user, out Mensaje))
+        //        {
+        //            Mensaje = "Cuenta guardada exitosamente";
+        //            return true;
+        //        }
+        //        else
+        //        {
+        //            return false;
+        //        }
+        //    }
+        //    else
+        //    {
+        //        return false;
+        //    }
+        //}
+        //public DataTable GetInfoCompleta(Cuenta cuenta)
+        //{
+        //    var retorno = new DataTable();
+        //    if (cuenta.Indicador == IndicadorCuenta.Cuenta_Auxiliar)
+        //    {
+        //        retorno = cuentaDao.GetInfoCompletaCuentaAux(cuenta);
+        //    }
+        //    else
+        //    {
+        //        retorno = cuentaDao.GetInforCompletaCuentaMayor(cuenta);
+        //    }
 
 
-            }
+        //    //decimal acumulado = 0;
+
+        //    decimal lastSaldoActual = 0m;
+        //    foreach (DataRow item in retorno.Rows)
+        //    {
+        //        var rw = item["Saldo Actual"];
+        //        decimal debito = String.IsNullOrWhiteSpace(item["Debito"].ToString()) ? 0m : Convert.ToDecimal(item["Debito"]);
+        //        ITipoCuenta tpcnta = Cuenta.GenerarTipoCuenta(Convert.ToInt32(rw));
+        //        lastSaldoActual = tpcnta.SaldoActual(saldo: lastSaldoActual, debito: debito, credito: string.IsNullOrWhiteSpace(item["Credito"].ToString()) ? 0m : Convert.ToDecimal(item["Credito"]));
+        //        //acumulado += lastSaldoActual;
+
+        //        item["Saldo Actual"] = string.Format("{0:n}", lastSaldoActual);
+
+
+        //    }
 
 
 
 
-            return retorno;
-        }
-        public Boolean Update(ref Cuenta cuenta, Usuario user, String nuevoNombre, Compañia compañia, String nuevaDesc, out String mensaje)
-        {
-            try
-            {
-                if (String.IsNullOrWhiteSpace(nuevoNombre))
-                {
-                    mensaje = "INGRESE UN NOMBRE VALIDO";
-                    return false;
-                }
-                else
-                {
-                    mensaje = "";
+        //    return retorno;
+        //}
+        //public Boolean Update(ref Cuenta cuenta, Usuario user, String nuevoNombre, Compañia compañia, String nuevaDesc, out String mensaje)
+        //{
+        //    try
+        //    {
+        //        if (String.IsNullOrWhiteSpace(nuevoNombre))
+        //        {
+        //            mensaje = "INGRESE UN NOMBRE VALIDO";
+        //            return false;
+        //        }
+        //        else
+        //        {
+        //            mensaje = "";
 
-                    if (cuentaDao.VerificarNombre(cuenta, nuevoNombre, compañia))
-                    {
-                        cuenta.Nombre = nuevoNombre;
-                        cuenta.Detalle = nuevaDesc;
-
-
-                        return cuentaDao.UpdateNameInfo(cuenta, user, out mensaje);
+        //            if (cuentaDao.VerificarNombre(cuenta, nuevoNombre, compañia))
+        //            {
+        //                cuenta.Nombre = nuevoNombre;
+        //                cuenta.Detalle = nuevaDesc;
 
 
-                    }
-                    else
-                    {
-                        mensaje = "Ya existe otra cuenta con este nombre, intente uno diferente";
-                        return false;
-                    }
+        //                return cuentaDao.UpdateNameInfo(cuenta, user, out mensaje);
 
 
-                }
-            }
-            catch (Exception ex)
-            {
-                mensaje = ex.Message;
-                return false;
-            }
-        }
-        public Boolean UpdatesettInfo(Cuenta t, Usuario user, out String mensaje)
-        {
-            return cuentaDao.UpdatesettInfo(t, user, out mensaje); 
-        }
+        //            }
+        //            else
+        //            {
+        //                mensaje = "Ya existe otra cuenta con este nombre, intente uno diferente";
+        //                return false;
+        //            }
+
+
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        mensaje = ex.Message;
+        //        return false;
+        //    }
+        //}
+        //public Boolean UpdatesettInfo(Cuenta t, Usuario user, out String mensaje)
+        //{
+        //    return cuentaDao.UpdatesettInfo(t, user, out mensaje); 
+        //}
 
         /// <summary>
         /// Vefica que no hayan mas cuentas con el mismo nombre 
@@ -155,30 +155,30 @@ namespace CapaLogica
         /// <param name="mensaje"></param>
         /// <param name="lst"></param>
         /// <returns></returns>
-        public Boolean VerificarNombre(Cuenta cuenta, String nombre, out String mensaje, Compañia compañia)///mejorar 
-        {
-            if (String.IsNullOrWhiteSpace(nombre))
-            {
-                mensaje = "INGRESE UN NOMBRE VALIDO";
-                return false;
-            }
-            else
-            {
+        //public Boolean VerificarNombre(Cuenta cuenta, String nombre, out String mensaje, Compañia compañia)///mejorar 
+        //{
+        //    if (String.IsNullOrWhiteSpace(nombre))
+        //    {
+        //        mensaje = "INGRESE UN NOMBRE VALIDO";
+        //        return false;
+        //    }
+        //    else
+        //    {
 
-                if (cuentaDao.VerificarNombre(cuenta, nombre, compañia))
-                {
-                    mensaje = "El nombre puede ser utilizado";
-                    return true;
-                }
-                else
-                {
-                    mensaje = "El nombre no puede ser utilizado";
-                    return false;
-                }
+        //        if (cuentaDao.VerificarNombre(cuenta, nombre, compañia))
+        //        {
+        //            mensaje = "El nombre puede ser utilizado";
+        //            return true;
+        //        }
+        //        else
+        //        {
+        //            mensaje = "El nombre no puede ser utilizado";
+        //            return false;
+        //        }
 
 
-            }
-        }
+        //    }
+        //}
         public void LLenarConSaldos(DateTime fechaInicio, DateTime fechaFinal, List<Cuenta> lst, Compañia compañia)
         {
             lst.ForEach(delegate (Cuenta c)
@@ -279,40 +279,34 @@ namespace CapaLogica
 
             return retorno;
         }
-        public Boolean VerificarSiEsApta(Cuenta cuentaPadre, out String Mensaje)
-        {
-            List<FechaTransaccion> meses = _fechaTransaccionCL.GetAllActive(cuentaPadre.MyCompania, null);
+        //public Boolean VerificarSiEsApta(Cuenta cuentaPadre, out String Mensaje)
+        //{
+        //    List<FechaTransaccion> meses = _fechaTransaccionCL.GetAllActive(cuentaPadre.MyCompania, null);
 
-            if (meses.Count != 0)
-            {
-                var cuentaDummy = cuentaPadre.DeepCopy();
-                var dummy = new List<Cuenta> { cuentaDummy };
+        //    if (meses.Count != 0)
+        //    {
+        //        var cuentaDummy = cuentaPadre.DeepCopy();
+        //        var dummy = new List<Cuenta> { cuentaDummy };
 
-                LLenarConSaldos(meses.Last().Fecha, meses[0].Fecha, dummy, cuentaPadre.MyCompania);
+        //        LLenarConSaldos(meses.Last().Fecha, meses[0].Fecha, dummy, cuentaPadre.MyCompania);
 
-                if (cuentaDummy.Indicador == IndicadorCuenta.Cuenta_Auxiliar && cuentaDummy.CuentaConMovientos())
-                {
-                    Mensaje = $"Esta cuenta posee movimientos, si continua estos seran heredados a la nueva cuenta\n" +
-                               $"Saldo Anterior      {string.Format("{0:₡###,###,###,##0.00##}", cuentaDummy.SaldoAnteriorColones)}\n" +
-                               $"Debitos             {string.Format("{0:₡###,###,###,##0.00##}", cuentaDummy.DebitosColones)}\n" +
-                               $"Creditos            {string.Format("{0:₡###,###,###,##0.00##}", cuentaDummy.CreditosColones)}\n" +
-                               $"¿Desea continuar y crear una cuenta nueva?";
-                    return false;
-                }
-            }
+        //        if (cuentaDummy.Indicador == IndicadorCuenta.Cuenta_Auxiliar && cuentaDummy.CuentaConMovientos())
+        //        {
+        //            Mensaje = $"Esta cuenta posee movimientos, si continua estos seran heredados a la nueva cuenta\n" +
+        //                       $"Saldo Anterior      {string.Format("{0:₡###,###,###,##0.00##}", cuentaDummy.SaldoAnteriorColones)}\n" +
+        //                       $"Debitos             {string.Format("{0:₡###,###,###,##0.00##}", cuentaDummy.DebitosColones)}\n" +
+        //                       $"Creditos            {string.Format("{0:₡###,###,###,##0.00##}", cuentaDummy.CreditosColones)}\n" +
+        //                       $"¿Desea continuar y crear una cuenta nueva?";
+        //            return false;
+        //        }
+        //    }
 
-            Mensaje = "";
-            return true;
+        //    Mensaje = "";
+        //    return true;
 
 
-        }
-        /// <summary>
-        /// Retorna una copia de la lista 
-        /// sin las cuentas que no tienen saldos
-        /// segun la logica de negocio
-        /// </summary>
-        /// <param name="lis"></param>
-        /// <returns></returns>
+        //}
+
         public List<Cuenta> QuitarCuentasSinSaldos(List<Cuenta> lis)
         {
 
@@ -329,9 +323,9 @@ namespace CapaLogica
             return retorno;
         }
 
-        public Boolean GenerarSaldosEnCeroParaCierreDeAsieto(Cuenta cuentaSaldoAsiento, Compañia compañia, Usuario usuario, int limitSec) {
-            return cuentaDao.GenerarSaldosEnCeroParaCierreDeAsieto(cuentaSaldoAsiento, compañia, usuario, limitSec);
-        }
+        //public Boolean GenerarSaldosEnCeroParaCierreDeAsieto(Cuenta cuentaSaldoAsiento, Compañia compañia, Usuario usuario, int limitSec) {
+        //    return cuentaDao.GenerarSaldosEnCeroParaCierreDeAsieto(cuentaSaldoAsiento, compañia, usuario, limitSec);
+        //}
 
     }
 

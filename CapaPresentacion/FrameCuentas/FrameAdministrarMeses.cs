@@ -19,7 +19,7 @@ namespace CapaPresentacion.FrameCuentas
 {
     public partial class FrameAdministrarMeses : Form
     {
-        private CuentaCL _cuentaCL = new CuentaCL();
+        //private CuentaCL _cuentaCL = new CuentaCL();
         private FechaTransaccionCL fechaCL = new FechaTransaccionCL();
         private IEnumerable<Cuenta> Cuentas { get; set; }
 
@@ -34,7 +34,7 @@ namespace CapaPresentacion.FrameCuentas
 
             //List<FechaTransaccion> lst = fechaCL.GetAll(compania, usuario);
             DataTable dt = fechaCL.GetDataTable(GlobalConfig.Company, GlobalConfig.Usuario);
-            Cuentas = _cuentaCL.GetAll(GlobalConfig.Company);
+            //Cuentas = _cuentaCL.GetAll(GlobalConfig.Company);
 
             dtRegistros.DataSource = dt;
 

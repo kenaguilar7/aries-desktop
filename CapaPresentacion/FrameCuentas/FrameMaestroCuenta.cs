@@ -4,6 +4,7 @@ using CapaPresentacion.cods;
 using CapaPresentacion.Reportes;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using AriesContador.Core;
@@ -15,6 +16,7 @@ using AriesContador.Data;
 using AriesContador.Services;
 using CapaEntidad.Entidades.JournalEntries;
 using CapaPresentacion.Utils;
+using ClosedXML.Report.Utils;
 
 namespace CapaPresentacion.FrameCuentas
 {
@@ -40,8 +42,7 @@ namespace CapaPresentacion.FrameCuentas
             CargarDatosAListas();
             //treeCuentas.ExpandAll(); 
         }
-
-
+       
         public bool TransferirCuenta(Account cuenta)
         {
             if (cuenta != null)
@@ -51,12 +52,12 @@ namespace CapaPresentacion.FrameCuentas
             }
             return false;
         }
-
     
-        private void LoadAccounts() // refactored
+        private void LoadAccounts()
         {
             CompanyAccounts?.Clear();
             CompanyAccounts = _financialService.GetAccounts(GlobalConfig.Company.Codigo).ToList(); 
+            treeCuentas.Nodes?.Clear();
             treeCuentas.Nodes.AddRange(CompanyAccounts.BuildTreeView());
         }
 
@@ -74,11 +75,11 @@ namespace CapaPresentacion.FrameCuentas
             AFechaFinal.SelectedIndexChanged += this.AFechaFinalSelectedIndexChanged;
         }
 
-        private void LoadAccountInfoToDashboard()// refactored
+        private void LoadAccountInfoToDashboard()
         {
             try
             {
-                this.txtNombreInfo.Text = CurrentAccount.Name;
+                this.txtAccountName.Text = CurrentAccount.Name;
                 this.txtTipoInfo.Text = CurrentAccount.AccountTag.ToString().Replace('_', ' ');
                 this.txtIndicadorInfo.Text = CurrentAccount.AccountType.ToString().Replace('_', ' ');
                 this.txtBoxDetalle.Text = CurrentAccount.Memo;
@@ -108,8 +109,7 @@ namespace CapaPresentacion.FrameCuentas
             }
         }
 
-        #region Eventos
-
+        #region Events
         private void AFechaInicio_SelectedIndexChanged(object sender, EventArgs e)
         {
             if(AFechaInicio.SelectedItem is PostingPeriod selectedPostingP)
@@ -118,7 +118,7 @@ namespace CapaPresentacion.FrameCuentas
 
         private void TreeCuentasAfterSelect(object sender, TreeViewEventArgs e)
         {
-            this.txtNombreInfo.ReadOnly = true;
+            this.txtAccountName.ReadOnly = true;
             this.txtBoxDetalle.ReadOnly = true;
             this.btnGuardarNuevoNombre.Enabled = false;
             this.btnGuardarNuevoNombre.Visible = false;
@@ -145,46 +145,33 @@ namespace CapaPresentacion.FrameCuentas
             }
         }
 
-        /// <summary>
-        /// Actualiza el nombre a de la cuenta
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void GuardarNuevoNombre(object sender, EventArgs e)
+        private void UpdateAccountName(object sender, EventArgs e)
         {
-            //try
-            //{
+            try
+            {
+                var account = this.CurrentAccount.DeepClone();
+                account.Name = this.txtAccountName.Text;
+                account.Memo = this.txtBoxDetalle.Text;
+                account.UpdatedBy = GlobalConfig.Usuario.Id;
+                account.UpdateAt = DateTime.Now;
 
-
-            //    Cuenta cEdita = ((Cuenta)treeCuentas.SelectedNode.Tag);
-
-
-            //    cEdita.Detalle = this.txtBoxDetalle.Text;
-
-            //    if (_cuentaCL.Update(ref cEdita, GlobalConfig.Usuario, txtNombreInfo.Text, GlobalConfig.Company, txtBoxDetalle.Text, out String mensaje))
-            //    {
-            //        MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
-            //        treeCuentas.SelectedNode.Text = cEdita.Nombre;
-
-            //        this.btnGuardarNuevoNombre.Enabled = false;
-            //        this.btnGuardarNuevoNombre.Visible = false;
-
-            //        this.txtNombreInfo.ReadOnly = true;
-            //        this.txtBoxDetalle.ReadOnly = true;
-
-            //    }
-            //    else
-            //    {
-            //        MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-            //    }
-            //}
-            //catch (Exception ex)
-            //{
-            //    MessageBox.Show(ex.Message, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Error);
-            //}
+                if (ValidateChildren())
+                {
+                    _financialService.UpdateAccountName(account);
+                    LoadAccounts();
+                    this.treeCuentas.ExpandAll();
+                    var selectedNode = treeCuentas.Nodes.Find(account.Name, true);
+                    this.treeCuentas.SelectedNode = selectedNode.FirstOrDefault();
+                    //this.txtAccountName.ReadOnly = true;
+                    //this.txtBoxDetalle.ReadOnly = true;
+                    ActivateEditAccountNameOptions(false);
+                }
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Error); 
+            }
         }
-
-
 
         private void AFechaFinalSelectedIndexChanged(object sender, EventArgs e)
         {
@@ -194,40 +181,36 @@ namespace CapaPresentacion.FrameCuentas
 
         private void Eliminar_Click(object sender, EventArgs e)
         {
-            //if (CuentaActual is null)
-            //{
-            //    MessageBox.Show("Seleccione una cuenta", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Hand);
-            //    return;
-            //}
-
-            //if (MessageBox.Show("Esta acción no se puede deshacer ¿desea continuar de todos modos?", TextoGeneral.NombreApp, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-            //{
-
-            //    if (_cuentaCL.Deleted(CuentaActual, GlobalConfig.Usuario, out String mensaje))
-            //    {
-            //        MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
-            //        CompanyAccounts.Remove(CuentaActual);
-            //        var padre = treeCuentas.SelectedNode.Parent;
-            //        treeCuentas.Nodes.Remove(treeCuentas.SelectedNode);
-            //        treeCuentas.SelectedNode = padre;
-            //    }
-            //    else
-            //    {
-            //        MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-
-            //    }
-            //}
-
+            if (CurrentAccount == null)
+            {
+                //Don't do nothing
+            }
+            else if (!CurrentAccount.Editable)
+            {
+                MessageBox.Show("Las cuentas primarias no se pueden eliminar", TextoGeneral.NombreApp,
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else
+            {
+                try
+                {
+                    var fatherAccount = CompanyAccounts.Find(a => a.Id == CurrentAccount.FatherAccount);
+                    _financialService.DeleteAccount(CurrentAccount);
+                    LoadAccounts();
+                    this.treeCuentas.ExpandAll();
+                    var selectedNode = treeCuentas.Nodes.Find(fatherAccount.Name, true);
+                    this.treeCuentas.SelectedNode = selectedNode.FirstOrDefault();
+                }
+                catch (Exception exception)
+                {
+                    MessageBox.Show(exception.Message, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
         }
 
         #endregion
 
         #region Llamada a otras ventanas
-        /// <summary>
-        /// Abre la ventana para listar las cuentas
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void Listar(object sender, EventArgs e)
         {
             ReporteCuenta reporte = new ReporteCuenta(GlobalConfig.Company, GlobalConfig.Usuario);
@@ -235,7 +218,8 @@ namespace CapaPresentacion.FrameCuentas
             reporte.Show();
 
         }
-        private void CrearNuevaCuenta(object sender, EventArgs e) //Refactored
+
+        private void CrearNuevaCuenta(object sender, EventArgs e)
         {
             try
             {
@@ -259,58 +243,50 @@ namespace CapaPresentacion.FrameCuentas
 
         private void EditarCuenta(object sender, EventArgs e)
         {
-            //try
-            //{
-            //    if (CuentaActual != null && CuentaActual.Editable)
-            //    {
-            //        // var cuenta = (Cuenta)infoPanel.Tag;
-            //        this.txtNombreInfo.ReadOnly = false;
-            //        this.txtNombreInfo.Focus();
-            //        this.txtBoxDetalle.ReadOnly = false;
-            //        VisualizarOpcionesDeEdicion();
-            //    }
-            //    else
-            //    {
-            //        MessageBox.Show("Esta cuenta no puede ser editada", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-
-            //    }
-            //}
-            //catch (Exception ex)
-            //{
-            //    MessageBox.Show(ex.Message, "", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            //}
+            try
+            {
+                if (CurrentAccount != null && CurrentAccount.Editable)
+                {
+                    this.txtAccountName.Focus();
+                    ActivateEditAccountNameOptions(true);
+                }
+                else
+                {
+                    MessageBox.Show("Esta cuenta no puede ser editada", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         #endregion
 
-        #region Metodos poco importante
         private void CerrarVentana(object sender, EventArgs e)
         {
             this.Close();
         }
+        
         private void ExpandirArbol(object sender, EventArgs e)
         {
             treeCuentas.ExpandAll();
         }
+        
         private void ColapsarArbol(object sender, EventArgs e)
         {
             treeCuentas.CollapseAll();
         }
-        /// <summary>
-        /// Metodo para establecer los valores de los controles del panel editar cuenta
-        /// </summary>
-        /// <param name="tag"></param>
-        private void VisualizarOpcionesDeEdicion()
-        {
 
-            btnGuardarNuevoNombre.Enabled = true;
-            btnGuardarNuevoNombre.Visible = true;
+        private void ActivateEditAccountNameOptions(bool enable)
+        {
+            btnGuardarNuevoNombre.Enabled = enable;
+            btnGuardarNuevoNombre.Visible = enable;
+
+            this.txtAccountName.ReadOnly = !enable;
+            this.txtBoxDetalle.ReadOnly = !enable;
         }
-        /// <summary>
-        /// Si el usuario presiona enter el sistema lo convierte en tap
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        
         private void UsuarioKeyPress(object sender, KeyPressEventArgs e)
         {
             if ((Keys)e.KeyChar == Keys.Enter)
@@ -319,7 +295,8 @@ namespace CapaPresentacion.FrameCuentas
                 SendKeys.Send("{TAB}");
             }
         }
-        private void btnMovimientosCuenta_Click(object sender, EventArgs e)
+
+        private void BtnMovimientosCuenta_Click(object sender, EventArgs e)
         {
             ReporteMovimientosCuenta frame = new ReporteMovimientosCuenta();
             if (frame.TransferirCuenta(CurrentAccount))
@@ -333,9 +310,28 @@ namespace CapaPresentacion.FrameCuentas
             }
         }
 
+        private void TxtAccountName_Validating(object sender, CancelEventArgs e)
+        {
+            var newAccountName = txtAccountName.Text; 
+            var isRepetitive = CompanyAccounts.Exists(a =>
+                a.AccountTag == CurrentAccount.AccountTag &&
+                a.Name.Equals(newAccountName.Replace(" ", string.Empty), StringComparison.OrdinalIgnoreCase)); 
 
-        #endregion
-
-
+            if (string.IsNullOrEmpty(txtAccountName.Text))
+            {
+                e.Cancel = true;
+                accountsErrorProviders.SetError(this.txtAccountName, "Agregue un nombre");
+            }
+            else if (isRepetitive && newAccountName != CurrentAccount.Name)
+            {
+                e.Cancel = true;
+                accountsErrorProviders.SetError(this.txtAccountName, "Ya existe una cuenta con este nombre");
+            }
+            else
+            {
+                e.Cancel = false;
+                accountsErrorProviders.SetError(this.txtAccountName, string.Empty);
+            }
+        }
     }
 }
