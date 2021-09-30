@@ -58,13 +58,20 @@ namespace CapaPresentacion.FrameCuentas
 
         private void LoadAccountingPeriodList()
         {
-            lstMesesAbiertos.DataSource =  _financialSercie.GetPostingPeriods(GlobalConfig.Company.Codigo).ToList(); 
-            lstTipoCambio.SelectedIndex = 0;
-            lstTipoCambio.SelectedIndex = 0;
-            
-            if (lstMesesAbiertos.Items.Count == 0)
+            try
             {
-                btnAgregarTransa.Enabled = false;
+                lstMesesAbiertos.DataSource =  _financialSercie.GetPostingPeriods(GlobalConfig.Company.Codigo).ToList(); 
+                lstTipoCambio.SelectedIndex = 0;
+                lstTipoCambio.SelectedIndex = 0;
+            
+                if (lstMesesAbiertos.Items.Count == 0)
+                {
+                    btnAgregarTransa.Enabled = false;
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Error); 
             }
         }
 
@@ -903,6 +910,14 @@ namespace CapaPresentacion.FrameCuentas
         public bool IsAvalibleToClose()
         {
             return EqualDebAndCredONJournalEntry(); 
+        }
+
+        private void BtnRefreshGrid(object sender, EventArgs e)
+        {
+            _journalEntry = (JournalEntry)lstNumeroAsientos.SelectedItem;
+            if(_journalEntry != null)
+                _journalEntry.JournalEntryLines = _financialSercie.GetJournalEntryLineByJournalEntryId(_journalEntry.Id).ToList();
+            UpdateView();
         }
     }
 }
