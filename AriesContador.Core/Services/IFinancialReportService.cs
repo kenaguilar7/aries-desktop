@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using AriesContador.Core.Models.PostingPeriods;
 using CapaEntidad.Entidades.JournalEntries;
 using CapaEntidad.Entidades.Reports;
 
@@ -10,6 +11,7 @@ namespace AriesContador.Core.Services
     {
         IEnumerable<JournalEntryReport> JournalEntryReport(BasicReportParam jEParams);
         IEnumerable<BalanceComprobacionReport> BalanceComprobacionReport(BasicReportParam reportParam);
-        ResultReportEstadoResultadoIntegral EstadoResultadoIntegral(BasicReportParam reportParam); 
+        ResultReportEstadoResultadoIntegral EstadoResultadoIntegral(BasicReportParam reportParam);
+        ClosurePostingPeriodBalance PreviousClosurePostingPeriodBalance(BasicReportParam reportParam); 
     }
 }

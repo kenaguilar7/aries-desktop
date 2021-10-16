@@ -5,6 +5,7 @@ using System.Text;
 using AriesContador.Core;
 using AriesContador.Core.Models;
 using AriesContador.Core.Models.Accounts;
+using AriesContador.Core.Models.PostingPeriods;
 using AriesContador.Core.Models.Utils;
 using AriesContador.Core.Services;
 using CapaEntidad.Entidades.JournalEntries;
@@ -107,6 +108,12 @@ namespace AriesContador.Services
 
             var resultAmount = accountsReport.GetTotalPeridasYGanancias();
             return new ResultReportEstadoResultadoIntegral() {Results = report, TotalPeridaGanancia = resultAmount}; 
+        }
+
+        public ClosurePostingPeriodBalance PreviousClosurePostingPeriodBalance(BasicReportParam reportParam)
+        {
+            var accountsReport = _unitOfWork.FinancialReportRepository.EstadoResultadoIntegralAccounts(reportParam);
+            return new ClosurePostingPeriodBalance(){Amount = accountsReport.GetTotalPeridasYGanancias()}; 
         }
     }
 }
