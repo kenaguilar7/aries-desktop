@@ -60,33 +60,36 @@ namespace AriesContador.Services
         {
             var report = new List<EstadoResultadoIntegralReport>();
             IEnumerable<Account> accountsReport = new List<Account>();
-            var postingPeriods = _unitOfWork.PostingPeriodRepository.FindByCompanyId(reportParam.CompanyId).OrderBy(p=>p.Date);
+            //var postingPeriods = _unitOfWork.PostingPeriodRepository.FindByCompanyId(reportParam.CompanyId).OrderBy(p=>p.Date);
 
-            var firstPeriod = postingPeriods.FirstOrDefault();
-            var firstPeriodString = firstPeriod.Date.ParseToYearMonthStringFromDate();
+            //var firstPeriod = postingPeriods.FirstOrDefault();
+            //var firstPeriodString = firstPeriod.Date.ParseToYearMonthStringFromDate();
 
             //don't create the previous balance. 
-            if (firstPeriodString.Equals(reportParam.FirstDate))
-            {
-                accountsReport = _unitOfWork.FinancialReportRepository.EstadoResultadoIntegralAccounts(reportParam);
-            }
-            else
-            {
-                var stringToDate = reportParam.FirstDate.ParseToDateTimeWithFromMimFormat(); 
+            //if (firstPeriodString.Equals(reportParam.FirstDate))
+            //{
+            //    accountsReport = _unitOfWork.FinancialReportRepository.EstadoResultadoIntegralAccounts(reportParam);
+            //}
+            //else
+            //{
+            //    //var stringToDate = reportParam.FirstDate.ParseToDateTimeWithFromMimFormat(); 
 
-                var previusBalanceReportParam = new BasicReportParam()
-                {
-                    CompanyId = reportParam.CompanyId, 
-                    FirstDate = firstPeriodString, 
-                    EndDate = stringToDate.AddMonths(-1).ParseToYearMonthStringFromDate()
-                }; 
+            //    //var previusBalanceReportParam = new BasicReportParam()
+            //    //{
+            //    //    CompanyId = reportParam.CompanyId, 
+            //    //    FirstDate = firstPeriodString, 
+            //    //    EndDate = stringToDate.AddMonths(-1).ParseToYearMonthStringFromDate()
+            //    //}; 
 
-                var accountForPreviewsBalance = _unitOfWork.FinancialReportRepository.EstadoResultadoIntegralAccounts(previusBalanceReportParam);
-                accountsReport = _unitOfWork.FinancialReportRepository.EstadoResultadoIntegralAccounts(reportParam);
+            //    //var accountForPreviewsBalance = _unitOfWork.FinancialReportRepository.EstadoResultadoIntegralAccounts(previusBalanceReportParam);
+            //    accountsReport = _unitOfWork.FinancialReportRepository.EstadoResultadoIntegralAccounts(reportParam);
 
-                accountsReport.FillPriorBalance(accountForPreviewsBalance);
+            //    //accountsReport.FillPriorBalance(accountForPreviewsBalance);
 
-            }
+            //}
+
+
+            accountsReport = _unitOfWork.FinancialReportRepository.EstadoResultadoIntegralAccounts(reportParam);
 
             foreach (var account in accountsReport)
             {

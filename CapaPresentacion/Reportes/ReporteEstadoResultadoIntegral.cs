@@ -49,7 +49,7 @@ namespace CapaPresentacion.Reportes
         {
             var report = ReporteEstadoResultadoIntegralData();
             var dt = ToDataTable(report.Results, report.TotalPeridaGanancia);
-
+            
             GridDatos.DataSource = dt;
             foreach (DataGridViewColumn col in GridDatos.Columns)
             {
@@ -143,6 +143,13 @@ namespace CapaPresentacion.Reportes
 
         private void ConfigGridColumns()
         {
+            //Order columns
+            for (int i = 0; i < _accountTreeDeep; i++)
+            {
+                var accountColumnName = $"AccountName{i}"; 
+                GridDatos.Columns[accountColumnName].DisplayIndex = i; 
+            }
+
             GridDatos.Columns[nameof(EstadoResultadoIntegralReport.SaldoActual)].DefaultCellStyle.Format = "#,0.00";
             GridDatos.Columns[nameof(EstadoResultadoIntegralReport.AccountPath)].Visible = false;
             GridDatos.Columns[nameof(EstadoResultadoIntegralReport.Account)].Visible = false;
