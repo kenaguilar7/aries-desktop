@@ -108,6 +108,7 @@
     <Compile Include="Entidades\FechaTransacciones\FechaTransaccion.cs" />
     <Compile Include="Entidades\Reports\BalanceComprobacionReport.cs" />
     <Compile Include="Entidades\Reports\EstadoResultadoIntegralReport.cs" />
+    <Compile Include="Entidades\Reports\PostingPeriodInfoReport.cs" />
     <Compile Include="Entidades\Seguridad\CRUDItem.cs" />
     <Compile Include="Entidades\Seguridad\CRUDName.cs" />
     <Compile Include="Entidades\Seguridad\IPermiso.cs" />

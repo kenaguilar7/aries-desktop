@@ -1,19 +1,11 @@
 ﻿using AriesContador.Core;
-using CapaEntidad.Entidades.Compañias;
-using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Entidades.FechaTransacciones;
-using CapaEntidad.Entidades.Usuarios;
-using CapaEntidad.Enumeradores;
 using CapaEntidad.Textos;
 using CapaLogica;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using AriesContador.Core.Models.PostingPeriods;
 using AriesContador.Core.Models.Utils;
@@ -26,7 +18,6 @@ namespace CapaPresentacion.FrameCuentas
 {
     public partial class FrameAdministrarMeses : Form
     {
-        private CuentaCL _cuentaCL = new CuentaCL();
         private FechaTransaccionCL fechaCL = new FechaTransaccionCL();
         //private IEnumerable<Cuenta> Cuentas { get; set; }
 
@@ -39,10 +30,24 @@ namespace CapaPresentacion.FrameCuentas
             IUnitOfWork unit = new UnitOfWork(GlobalConfig.ConnectionString);
             _financialService = new FinancialService(unit);
             _financialReportService = new FinancialReportService(unit); 
-            CargarDatos();
+            //CargarDatos();
         }
 
         private void FrameAdministrarMeses_Load(object sender, EventArgs e)
+        {
+            LoadDropDowns();
+            LoadDataGrids();
+            dtRegistros.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dtRegistros.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None;
+
+        }
+
+        private void LoadDataGrids()
+        {
+            dtRegistros.DataSource = _financialReportService.PostingPeriodInfo(GlobalConfig.Company.Codigo);
+        }
+
+        private void LoadDropDowns()
         {
             var postingPeriods = _financialService.GetPostingPeriods(GlobalConfig.Company.Codigo);
             var toList = new List<PostingPeriod>()
@@ -50,22 +55,17 @@ namespace CapaPresentacion.FrameCuentas
                 postingPeriods.FirstOrDefault().DeepClone()
             };
 
-            lstFromPeriod.DataSource = toList; 
+            lstFromPeriod.DataSource = toList;
             lstToPeriod.DataSource = postingPeriods.DeepClone();
+
+            var availiblePostingPeriods =
+                _financialService.GetAvailablePostingPeriodsForBeCreated(GlobalConfig.Company.Codigo);
+            lstAbrirMes.DataSource = new List<PostingPeriod>() {availiblePostingPeriods.StartPostingPeriod};
+
+            if (availiblePostingPeriods.EndPostingPeriod != null)
+                lstToPeriod.DataSource = new List<PostingPeriod>() {availiblePostingPeriods.EndPostingPeriod};
         }
 
-        private void CargarDatos()
-        {
-
-            //List<FechaTransaccion> lst = fechaCL.GetAll(compania, usuario);
-            DataTable dt = fechaCL.GetDataTable(GlobalConfig.Company, GlobalConfig.Usuario);
-            //Cuentas = _cuentaCL.GetAll(GlobalConfig.Company);
-
-            dtRegistros.DataSource = dt;
-
-            lstAbrirMes.DataSource = fechaCL.FechaAbrirMes(GlobalConfig.Company, GlobalConfig.Usuario);
-            lstToPeriod.DataSource = fechaCL.GetAllActive(GlobalConfig.Company, GlobalConfig.Usuario);
-        }
 
         private void BtnGuardar_Click(object sender, EventArgs e)
         {
@@ -76,7 +76,7 @@ namespace CapaPresentacion.FrameCuentas
                     if (fechaCL.Insert((FechaTransaccion)lstAbrirMes.SelectedItem, GlobalConfig.Company, GlobalConfig.Usuario, out String mensaje))
                     {
                         MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        CargarDatos();
+                        //CargarDatos();
                     }
                     else
                     {
@@ -99,7 +99,7 @@ namespace CapaPresentacion.FrameCuentas
             {
                 ///Create new account
                 /// Mark Posting period as closed
-            } 
+            }
 
 
             //try

@@ -131,18 +131,24 @@ namespace AriesContador.Services
             throw new NotImplementedException();
         }
 
-        public IEnumerable<PostingPeriod> GetAvailablePostingPeriodsForBeCreated(string companyId)
+        public CreatePostingPeriodOption GetAvailablePostingPeriodsForBeCreated(string companyId)
         {
             var postingPeriods = this.GetPostingPeriods(companyId);
+            var output = new CreatePostingPeriodOption();
 
             if (postingPeriods.Count() > 0)
             {
-                return CreateAvailablePostingPeriodsForBeCreate(postingPeriods);
+                var accountList = CreateAvailablePostingPeriodsForBeCreate(postingPeriods);
+                output.StartPostingPeriod = accountList.GetOlderAccountPeriod();
+                output.EndPostingPeriod = accountList.GetNewerAccountPeriod();
             }
             else
             {
-                return CreatePreEntityPostingPeriod(DateTime.Now);
+                var accountList = CreatePreEntityPostingPeriod(DateTime.Now);
+                output.StartPostingPeriod = accountList.GetOlderAccountPeriod();
             }
+
+            return output; 
         }
 
         private IEnumerable<PostingPeriod> CreateAvailablePostingPeriodsForBeCreate(IEnumerable<PostingPeriod> postingPeriods)
