@@ -11,6 +11,7 @@ using AriesContador.Core.Services;
 using CapaEntidad.Entidades.JournalEntries;
 using CapaEntidad.Entidades.Reports;
 using AriesContador.Core.Models.Utils;
+using CapaEntidad.Entidades.Seguridad;
 using CapaEntidad.Enumeradores;
 
 namespace AriesContador.Services
@@ -117,6 +118,26 @@ namespace AriesContador.Services
         {
             var accountsReport = _unitOfWork.FinancialReportRepository.EstadoResultadoIntegralAccounts(reportParam);
             return new ClosurePostingPeriodBalance(){Amount = accountsReport.GetTotalPeridasYGanancias()}; 
+        }
+
+        public IEnumerable<PostingPeriodInfoReport> PostingPeriodInfo(string companyId)
+        {
+            var postingPeriods = _unitOfWork.FinancialReportRepository.PostingPeriodReport(companyId);
+            var returnList = new List<PostingPeriodInfoReport>();
+
+            foreach (var postingPeriod in postingPeriods)
+            {
+                var item = new PostingPeriodInfoReport
+                {
+                    AccountPeriodName = postingPeriod.PostingPeriodDateString,
+                    Status = postingPeriod.Status, 
+                    CreatedDate = postingPeriod.CreatedDateString,
+                    ClosedDate = postingPeriod.ClosedDateString, 
+                    UserName = postingPeriod.UserName
+                }; 
+                returnList.Add(item);
+            }
+            return returnList; 
         }
     }
 }

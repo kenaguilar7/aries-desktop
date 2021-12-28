@@ -12,6 +12,7 @@ namespace AriesContador.Core.Services
         IEnumerable<JournalEntryReport> JournalEntryReport(BasicReportParam jEParams);
         IEnumerable<BalanceComprobacionReport> BalanceComprobacionReport(BasicReportParam reportParam);
         ResultReportEstadoResultadoIntegral EstadoResultadoIntegral(BasicReportParam reportParam);
-        ClosurePostingPeriodBalance PreviousClosurePostingPeriodBalance(BasicReportParam reportParam); 
+        ClosurePostingPeriodBalance PreviousClosurePostingPeriodBalance(BasicReportParam reportParam);
+        IEnumerable<PostingPeriodInfoReport> PostingPeriodInfo(string companyId); 
     }
 }

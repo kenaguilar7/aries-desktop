@@ -38,4 +38,19 @@ namespace AriesContador.Core.Models.PostingPeriods
             return dtinfo.GetMonthName(month);
         }
     }
+
+    public class CreatePostingPeriodOption
+    {
+        public PostingPeriod StartPostingPeriod { get; set; }
+        public PostingPeriod EndPostingPeriod { get; set; }
+    }
+
+    public class PostingPeriodInfo
+    {
+        public string PostingPeriodDateString { get; set; }
+        public string Status { get; set; }
+        public string CreatedDateString { get; set; }
+        public string ClosedDateString { get; set; }
+        public string UserName { get; set; }
+    }
 }
