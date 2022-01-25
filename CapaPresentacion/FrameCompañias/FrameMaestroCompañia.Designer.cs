@@ -36,6 +36,7 @@
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnListado = new System.Windows.Forms.Button();
             this.maestro = new System.Windows.Forms.GroupBox();
+            this.txtBoxObservaciones = new System.Windows.Forms.TextBox();
             this.label7 = new System.Windows.Forms.Label();
             this.lstCopiarMaestroCuentas = new System.Windows.Forms.ComboBox();
             this.label6 = new System.Windows.Forms.Label();
@@ -78,7 +79,6 @@
             this.btnGuardar = new System.Windows.Forms.Button();
             this.btnActualizar = new System.Windows.Forms.Button();
             this.btnLimpiar = new System.Windows.Forms.Button();
-            this.txtBoxObservaciones = new System.Windows.Forms.TextBox();
             this.groupBox2.SuspendLayout();
             this.maestro.SuspendLayout();
             this.groupCodigo.SuspendLayout();
@@ -210,6 +210,16 @@
             this.maestro.Size = new System.Drawing.Size(1098, 304);
             this.maestro.TabIndex = 1;
             this.maestro.TabStop = false;
+            // 
+            // txtBoxObservaciones
+            // 
+            this.txtBoxObservaciones.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtBoxObservaciones.Location = new System.Drawing.Point(720, 156);
+            this.txtBoxObservaciones.MaxLength = 100;
+            this.txtBoxObservaciones.Multiline = true;
+            this.txtBoxObservaciones.Name = "txtBoxObservaciones";
+            this.txtBoxObservaciones.Size = new System.Drawing.Size(351, 50);
+            this.txtBoxObservaciones.TabIndex = 11;
             // 
             // label7
             // 
@@ -578,7 +588,7 @@
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(219, 21);
             this.label5.TabIndex = 11;
-            this.label5.Text = "Código Proxima Compañia:";
+            this.label5.Text = "Código Próxima Compañia:";
             // 
             // groupBox3
             // 
@@ -691,16 +701,6 @@
             this.btnLimpiar.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.btnLimpiar.UseVisualStyleBackColor = true;
             this.btnLimpiar.Click += new System.EventHandler(this.BtnLimpiar);
-            // 
-            // txtBoxObservaciones
-            // 
-            this.txtBoxObservaciones.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtBoxObservaciones.Location = new System.Drawing.Point(720, 156);
-            this.txtBoxObservaciones.MaxLength = 100;
-            this.txtBoxObservaciones.Multiline = true;
-            this.txtBoxObservaciones.Name = "txtBoxObservaciones";
-            this.txtBoxObservaciones.Size = new System.Drawing.Size(351, 50);
-            this.txtBoxObservaciones.TabIndex = 11;
             // 
             // FrameMaestroCompañia
             // 

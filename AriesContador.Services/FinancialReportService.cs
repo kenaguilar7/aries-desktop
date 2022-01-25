@@ -5,11 +5,13 @@ using System.Text;
 using AriesContador.Core;
 using AriesContador.Core.Models;
 using AriesContador.Core.Models.Accounts;
+using AriesContador.Core.Models.PostingPeriods;
 using AriesContador.Core.Models.Utils;
 using AriesContador.Core.Services;
 using CapaEntidad.Entidades.JournalEntries;
 using CapaEntidad.Entidades.Reports;
 using AriesContador.Core.Models.Utils;
+using CapaEntidad.Entidades.Seguridad;
 using CapaEntidad.Enumeradores;
 
 namespace AriesContador.Services
@@ -110,6 +112,37 @@ namespace AriesContador.Services
 
             var resultAmount = accountsReport.GetTotalPeridasYGanancias();
             return new ResultReportEstadoResultadoIntegral() {Results = report, TotalPeridaGanancia = resultAmount}; 
+        }
+
+        public ClosurePostingPeriodBalance PreviousClosurePostingPeriodBalance(BasicReportParam reportParam)
+        {
+            var accountsReport = _unitOfWork.FinancialReportRepository.EstadoResultadoIntegralAccounts(reportParam);
+            return new ClosurePostingPeriodBalance(){Amount = accountsReport.GetTotalPeridasYGanancias()}; 
+        }
+
+        public IEnumerable<PostingPeriodInfoReport> PostingPeriodInfo(string companyId)
+        {
+            var postingPeriods = _unitOfWork.FinancialReportRepository.PostingPeriodReport(companyId);
+            var returnList = new List<PostingPeriodInfoReport>();
+
+            foreach (var postingPeriod in postingPeriods)
+            {
+                var item = new PostingPeriodInfoReport
+                {
+                    AccountPeriodName = postingPeriod.PostingPeriodDateString,
+                    Status = postingPeriod.Status, 
+                    CreatedDate = postingPeriod.CreatedDateString,
+                    ClosedDate = postingPeriod.ClosedDateString, 
+                    UserName = postingPeriod.UserName
+                }; 
+                returnList.Add(item);
+            }
+            return returnList; 
+        }
+
+        public IEnumerable<ClosingPostingPeriodReport> ClosingPostingPeriodReport(string companyId)
+        {
+            return _unitOfWork.FinancialReportRepository.ClosingPostingPeriodReport(companyId); 
         }
     }
 }
