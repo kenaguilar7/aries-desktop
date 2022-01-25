@@ -8,6 +8,6 @@ namespace AriesContador.Core.Repositories
     public interface IPostingPeriodRepository : IRepository<PostingPeriod>
     {
         IEnumerable<PostingPeriod> FindByCompanyId(string companyId);
-        void ClosePostingPeriod(PostingPeriod postingPeriod); 
+        void ClosePostingPeriod(PostingPeriodEndClosing postingPeriod); 
     }
 }

@@ -32,54 +32,55 @@
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.btnGuardar = new System.Windows.Forms.Button();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.dtRegistros = new System.Windows.Forms.DataGridView();
             this.lstAbrirMes = new System.Windows.Forms.ComboBox();
             this.txtSeleccione = new System.Windows.Forms.Label();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.txtBoxUserNotes = new System.Windows.Forms.TextBox();
+            this.label16 = new System.Windows.Forms.Label();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.dtGridClosingPeriodsReport = new System.Windows.Forms.DataGridView();
             this.label1 = new System.Windows.Forms.Label();
             this.lstFromPeriod = new System.Windows.Forms.ComboBox();
             this.btnCerrarMes = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
             this.lstToPeriod = new System.Windows.Forms.ComboBox();
-            this.btnCerrar = new System.Windows.Forms.Button();
-            this.groupBoxOptions = new System.Windows.Forms.GroupBox();
-            this.groupBoxSalir = new System.Windows.Forms.GroupBox();
-            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
-            this.dtRegistros = new System.Windows.Forms.DataGridView();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
-            this.tabPage2.SuspendLayout();
-            this.groupBoxOptions.SuspendLayout();
-            this.groupBoxSalir.SuspendLayout();
-            this.flowLayoutPanel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dtRegistros)).BeginInit();
             this.groupBox2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dtRegistros)).BeginInit();
+            this.tabPage2.SuspendLayout();
+            this.groupBox1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dtGridClosingPeriodsReport)).BeginInit();
             this.SuspendLayout();
             // 
             // tabControl1
             // 
-            this.tabControl1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.tabControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tabControl1.Appearance = System.Windows.Forms.TabAppearance.FlatButtons;
             this.tabControl1.Controls.Add(this.tabPage1);
             this.tabControl1.Controls.Add(this.tabPage2);
             this.tabControl1.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tabControl1.Location = new System.Drawing.Point(5, 11);
+            this.tabControl1.Location = new System.Drawing.Point(10, 12);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(1126, 88);
+            this.tabControl1.Size = new System.Drawing.Size(1119, 553);
             this.tabControl1.TabIndex = 2;
             // 
             // tabPage1
             // 
             this.tabPage1.BackColor = System.Drawing.SystemColors.Control;
             this.tabPage1.Controls.Add(this.btnGuardar);
+            this.tabPage1.Controls.Add(this.groupBox2);
             this.tabPage1.Controls.Add(this.lstAbrirMes);
             this.tabPage1.Controls.Add(this.txtSeleccione);
             this.tabPage1.Location = new System.Drawing.Point(4, 29);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(1118, 55);
+            this.tabPage1.Size = new System.Drawing.Size(1111, 520);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Abrir";
             // 
@@ -96,7 +97,39 @@
             this.btnGuardar.Text = "Abrir mes";
             this.btnGuardar.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.btnGuardar.UseVisualStyleBackColor = true;
-            this.btnGuardar.Click += new System.EventHandler(this.BtnGuardar_Click);
+            this.btnGuardar.Click += new System.EventHandler(this.Btn_Create_PostingPeriod);
+            // 
+            // groupBox2
+            // 
+            this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox2.Controls.Add(this.dtRegistros);
+            this.groupBox2.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.groupBox2.Location = new System.Drawing.Point(6, 73);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Size = new System.Drawing.Size(1099, 441);
+            this.groupBox2.TabIndex = 1;
+            this.groupBox2.TabStop = false;
+            // 
+            // dtRegistros
+            // 
+            this.dtRegistros.AllowUserToAddRows = false;
+            this.dtRegistros.AllowUserToDeleteRows = false;
+            this.dtRegistros.AllowUserToOrderColumns = true;
+            this.dtRegistros.BackgroundColor = System.Drawing.SystemColors.Control;
+            this.dtRegistros.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.dtRegistros.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dtRegistros.EnableHeadersVisualStyles = false;
+            this.dtRegistros.GridColor = System.Drawing.SystemColors.ControlLight;
+            this.dtRegistros.Location = new System.Drawing.Point(3, 18);
+            this.dtRegistros.Name = "dtRegistros";
+            this.dtRegistros.ReadOnly = true;
+            this.dtRegistros.RowHeadersVisible = false;
+            this.dtRegistros.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.AutoSizeToFirstHeader;
+            this.dtRegistros.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dtRegistros.Size = new System.Drawing.Size(1093, 420);
+            this.dtRegistros.TabIndex = 0;
             // 
             // lstAbrirMes
             // 
@@ -120,6 +153,9 @@
             // tabPage2
             // 
             this.tabPage2.BackColor = System.Drawing.SystemColors.Control;
+            this.tabPage2.Controls.Add(this.txtBoxUserNotes);
+            this.tabPage2.Controls.Add(this.label16);
+            this.tabPage2.Controls.Add(this.groupBox1);
             this.tabPage2.Controls.Add(this.label1);
             this.tabPage2.Controls.Add(this.lstFromPeriod);
             this.tabPage2.Controls.Add(this.btnCerrarMes);
@@ -128,9 +164,60 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 29);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(550, 55);
+            this.tabPage2.Size = new System.Drawing.Size(1111, 520);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Cerrar";
+            // 
+            // txtBoxUserNotes
+            // 
+            this.txtBoxUserNotes.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtBoxUserNotes.Location = new System.Drawing.Point(74, 67);
+            this.txtBoxUserNotes.MaxLength = 100;
+            this.txtBoxUserNotes.Multiline = true;
+            this.txtBoxUserNotes.Name = "txtBoxUserNotes";
+            this.txtBoxUserNotes.Size = new System.Drawing.Size(347, 50);
+            this.txtBoxUserNotes.TabIndex = 54;
+            // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.Location = new System.Drawing.Point(24, 67);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(44, 17);
+            this.label16.TabIndex = 55;
+            this.label16.Text = "Notas";
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox1.Controls.Add(this.dtGridClosingPeriodsReport);
+            this.groupBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.groupBox1.Location = new System.Drawing.Point(6, 148);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(1099, 333);
+            this.groupBox1.TabIndex = 12;
+            this.groupBox1.TabStop = false;
+            // 
+            // dtGridClosingPeriodsReport
+            // 
+            this.dtGridClosingPeriodsReport.AllowUserToAddRows = false;
+            this.dtGridClosingPeriodsReport.AllowUserToDeleteRows = false;
+            this.dtGridClosingPeriodsReport.AllowUserToOrderColumns = true;
+            this.dtGridClosingPeriodsReport.BackgroundColor = System.Drawing.SystemColors.Control;
+            this.dtGridClosingPeriodsReport.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.dtGridClosingPeriodsReport.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dtGridClosingPeriodsReport.EnableHeadersVisualStyles = false;
+            this.dtGridClosingPeriodsReport.GridColor = System.Drawing.SystemColors.ControlLight;
+            this.dtGridClosingPeriodsReport.Location = new System.Drawing.Point(3, 18);
+            this.dtGridClosingPeriodsReport.Name = "dtGridClosingPeriodsReport";
+            this.dtGridClosingPeriodsReport.ReadOnly = true;
+            this.dtGridClosingPeriodsReport.RowHeadersVisible = false;
+            this.dtGridClosingPeriodsReport.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.AutoSizeToFirstHeader;
+            this.dtGridClosingPeriodsReport.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dtGridClosingPeriodsReport.Size = new System.Drawing.Size(1093, 312);
+            this.dtGridClosingPeriodsReport.TabIndex = 0;
             // 
             // label1
             // 
@@ -150,6 +237,7 @@
             this.lstFromPeriod.Name = "lstFromPeriod";
             this.lstFromPeriod.Size = new System.Drawing.Size(152, 24);
             this.lstFromPeriod.TabIndex = 10;
+            this.lstFromPeriod.SelectedIndexChanged += new System.EventHandler(this.lstFromPeriod_SelectedIndexChanged);
             // 
             // btnCerrarMes
             // 
@@ -159,9 +247,9 @@
             this.btnCerrarMes.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.btnCerrarMes.Location = new System.Drawing.Point(439, 16);
             this.btnCerrarMes.Name = "btnCerrarMes";
-            this.btnCerrarMes.Size = new System.Drawing.Size(105, 23);
+            this.btnCerrarMes.Size = new System.Drawing.Size(130, 23);
             this.btnCerrarMes.TabIndex = 9;
-            this.btnCerrarMes.Text = "Cerrar mes";
+            this.btnCerrarMes.Text = "Cerrar Período";
             this.btnCerrarMes.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.btnCerrarMes.UseVisualStyleBackColor = true;
             this.btnCerrarMes.Click += new System.EventHandler(this.BtnCerrarMes_Click);
@@ -185,94 +273,12 @@
             this.lstToPeriod.Size = new System.Drawing.Size(124, 24);
             this.lstToPeriod.TabIndex = 5;
             // 
-            // btnCerrar
-            // 
-            this.btnCerrar.FlatAppearance.BorderSize = 0;
-            this.btnCerrar.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnCerrar.Image = global::CapaPresentacion.Properties.Resources.icons8_cerrar_ventana_25;
-            this.btnCerrar.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnCerrar.Location = new System.Drawing.Point(1052, 3);
-            this.btnCerrar.Name = "btnCerrar";
-            this.btnCerrar.Size = new System.Drawing.Size(76, 30);
-            this.btnCerrar.TabIndex = 2;
-            this.btnCerrar.Text = "&Cerrar";
-            this.btnCerrar.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.btnCerrar.UseVisualStyleBackColor = true;
-            this.btnCerrar.Click += new System.EventHandler(this.BtnCerrar_Click);
-            // 
-            // groupBoxOptions
-            // 
-            this.groupBoxOptions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBoxOptions.Controls.Add(this.tabControl1);
-            this.groupBoxOptions.Controls.Add(this.groupBox2);
-            this.groupBoxOptions.Location = new System.Drawing.Point(7, 14);
-            this.groupBoxOptions.Name = "groupBoxOptions";
-            this.groupBoxOptions.Size = new System.Drawing.Size(1137, 492);
-            this.groupBoxOptions.TabIndex = 3;
-            this.groupBoxOptions.TabStop = false;
-            // 
-            // groupBoxSalir
-            // 
-            this.groupBoxSalir.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBoxSalir.Controls.Add(this.flowLayoutPanel1);
-            this.groupBoxSalir.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.groupBoxSalir.Location = new System.Drawing.Point(7, 512);
-            this.groupBoxSalir.Name = "groupBoxSalir";
-            this.groupBoxSalir.Size = new System.Drawing.Size(1137, 55);
-            this.groupBoxSalir.TabIndex = 12;
-            this.groupBoxSalir.TabStop = false;
-            // 
-            // flowLayoutPanel1
-            // 
-            this.flowLayoutPanel1.Controls.Add(this.btnCerrar);
-            this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 18);
-            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(1131, 34);
-            this.flowLayoutPanel1.TabIndex = 3;
-            // 
-            // dtRegistros
-            // 
-            this.dtRegistros.AllowUserToAddRows = false;
-            this.dtRegistros.AllowUserToDeleteRows = false;
-            this.dtRegistros.AllowUserToOrderColumns = true;
-            this.dtRegistros.BackgroundColor = System.Drawing.SystemColors.Control;
-            this.dtRegistros.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dtRegistros.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dtRegistros.EnableHeadersVisualStyles = false;
-            this.dtRegistros.GridColor = System.Drawing.SystemColors.ControlLight;
-            this.dtRegistros.Location = new System.Drawing.Point(3, 18);
-            this.dtRegistros.Name = "dtRegistros";
-            this.dtRegistros.ReadOnly = true;
-            this.dtRegistros.RowHeadersVisible = false;
-            this.dtRegistros.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.AutoSizeToFirstHeader;
-            this.dtRegistros.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dtRegistros.Size = new System.Drawing.Size(1112, 351);
-            this.dtRegistros.TabIndex = 0;
-            // 
-            // groupBox2
-            // 
-            this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox2.Controls.Add(this.dtRegistros);
-            this.groupBox2.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.groupBox2.Location = new System.Drawing.Point(9, 114);
-            this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(1118, 372);
-            this.groupBox2.TabIndex = 1;
-            this.groupBox2.TabStop = false;
-            // 
             // FrameAdministrarMeses
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1156, 577);
-            this.Controls.Add(this.groupBoxSalir);
-            this.Controls.Add(this.groupBoxOptions);
+            this.ClientSize = new System.Drawing.Size(1141, 577);
+            this.Controls.Add(this.tabControl1);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "FrameAdministrarMeses";
@@ -283,13 +289,12 @@
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
             this.tabPage1.PerformLayout();
+            this.groupBox2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dtRegistros)).EndInit();
             this.tabPage2.ResumeLayout(false);
             this.tabPage2.PerformLayout();
-            this.groupBoxOptions.ResumeLayout(false);
-            this.groupBoxSalir.ResumeLayout(false);
-            this.flowLayoutPanel1.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dtRegistros)).EndInit();
-            this.groupBox2.ResumeLayout(false);
+            this.groupBox1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dtGridClosingPeriodsReport)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -306,13 +311,13 @@
         private System.Windows.Forms.ComboBox lstToPeriod;
         private System.Windows.Forms.ComboBox lstAbrirMes;
         private System.Windows.Forms.Button btnGuardar;
-        private System.Windows.Forms.Button btnCerrar;
-        private System.Windows.Forms.GroupBox groupBoxOptions;
-        private System.Windows.Forms.GroupBox groupBoxSalir;
-        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ComboBox lstFromPeriod;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.DataGridView dtRegistros;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.DataGridView dtGridClosingPeriodsReport;
+        private System.Windows.Forms.TextBox txtBoxUserNotes;
+        private System.Windows.Forms.Label label16;
     }
 }
