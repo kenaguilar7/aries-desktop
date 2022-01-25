@@ -13,16 +13,15 @@ using AriesContador.Core.Services;
 using AriesContador.Data;
 using AriesContador.Services;
 using CapaEntidad.Entidades.JournalEntries;
+using CapaEntidad.Entidades.Reports;
 
 namespace CapaPresentacion.FrameCuentas
 {
     public partial class FrameAdministrarMeses : Form
     {
-        private FechaTransaccionCL fechaCL = new FechaTransaccionCL();
-        //private IEnumerable<Cuenta> Cuentas { get; set; }
-
         private readonly IFinancialService _financialService;
-        private readonly IFinancialReportService _financialReportService; 
+        private readonly IFinancialReportService _financialReportService;
+        private List<PostingPeriod> _postingPeriods = new List<PostingPeriod>(); 
 
         public FrameAdministrarMeses()
         {
@@ -30,7 +29,6 @@ namespace CapaPresentacion.FrameCuentas
             IUnitOfWork unit = new UnitOfWork(GlobalConfig.ConnectionString);
             _financialService = new FinancialService(unit);
             _financialReportService = new FinancialReportService(unit); 
-            //CargarDatos();
         }
 
         private void FrameAdministrarMeses_Load(object sender, EventArgs e)
@@ -40,93 +38,133 @@ namespace CapaPresentacion.FrameCuentas
             dtRegistros.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dtRegistros.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None;
 
+            dtGridClosingPeriodsReport.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dtGridClosingPeriodsReport.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None;
+
+            dtGridClosingPeriodsReport.Columns[nameof(ClosingPostingPeriodReport.Amount)].DefaultCellStyle.Format = "#,0.00";
+
         }
 
         private void LoadDataGrids()
         {
             dtRegistros.DataSource = _financialReportService.PostingPeriodInfo(GlobalConfig.Company.Codigo);
+            dtGridClosingPeriodsReport.DataSource =
+                _financialReportService.ClosingPostingPeriodReport(GlobalConfig.Company.Codigo); 
         }
 
         private void LoadDropDowns()
         {
-            var postingPeriods = _financialService.GetPostingPeriods(GlobalConfig.Company.Codigo);
-            var toList = new List<PostingPeriod>()
-            {
-                postingPeriods.FirstOrDefault().DeepClone()
-            };
+            _postingPeriods = _financialService.GetPostingPeriods(GlobalConfig.Company.Codigo).ToList();
+            var olderPeriod = _postingPeriods.Where(x => !x.Closed)
+                                             .OrderBy(x => x.Date)
+                                             .ToList()
+                                             .FirstOrDefault().DeepClone();
 
-            lstFromPeriod.DataSource = toList;
-            lstToPeriod.DataSource = postingPeriods.DeepClone();
+            this.lstFromPeriod.DataSource = new List<PostingPeriod>() { olderPeriod };
 
-            var availiblePostingPeriods =
+            var availablePostingPeriods =
                 _financialService.GetAvailablePostingPeriodsForBeCreated(GlobalConfig.Company.Codigo);
-            lstAbrirMes.DataSource = new List<PostingPeriod>() {availiblePostingPeriods.StartPostingPeriod};
-
-            if (availiblePostingPeriods.EndPostingPeriod != null)
-                lstToPeriod.DataSource = new List<PostingPeriod>() {availiblePostingPeriods.EndPostingPeriod};
+            lstAbrirMes.DataSource = availablePostingPeriods;
         }
 
 
-        private void BtnGuardar_Click(object sender, EventArgs e)
+        private void Btn_Create_PostingPeriod(object sender, EventArgs e)
         {
             try
             {
-                if (MessageBox.Show("Se abrira un mes ¿Desea continuar?", TextoGeneral.NombreApp, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-                {
-                    if (fechaCL.Insert((FechaTransaccion)lstAbrirMes.SelectedItem, GlobalConfig.Company, GlobalConfig.Usuario, out String mensaje))
-                    {
-                        MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        //CargarDatos();
-                    }
-                    else
-                    {
-                        MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                    }
-                }
+                btnGuardar.Enabled = false;
+                CreateNewPostingPeriod();
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             }
+            finally
+            {
+                FrameAdministrarMeses_Load(null, null); 
+                btnGuardar.Enabled = true;
+            }
+        }
+
+        private void CreateNewPostingPeriod()
+        {
+            var selectedItem = lstAbrirMes.SelectedItem as PostingPeriod;
+            var selectedDate = selectedItem.Date; 
+
+            var postingPeriod = new PostingPeriod()
+            {
+                Date = new DateTime(selectedDate.Year, selectedDate.Month, 1, 0, 0, 0, 0), 
+                Closed = false, 
+                CompanyId = GlobalConfig.Company.Codigo, 
+                UpdatedBy = GlobalConfig.Usuario.Id
+            }; 
+
+            _financialService.CreatePostingPeriod(postingPeriod);
+        }
+
+        private void lstFromPeriod_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var startMonth = lstFromPeriod.SelectedItem as PostingPeriod;
+            lstToPeriod.DataSource = _postingPeriods.Where(x => !x.Closed).ToList()
+                                                    .GetOlder(startMonth.Date);
         }
 
         private void BtnCerrarMes_Click(object sender, EventArgs e)
         {
             var amount = ReporteEstadoResultadoIntegralData();
 
-            if (MessageBox.Show($"Se creará una cuenta con un saldo de {amount.Amount}", TextoGeneral.NombreApp,
-                MessageBoxButtons.YesNo) == DialogResult.Yes)
+            if (MessageBox.Show($@"Se creará un cierre contable por {String.Format("{0:n}", amount.Amount)}", TextoGeneral.NombreApp,
+                MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) == DialogResult.Yes)
             {
-                ///Create new account
-                /// Mark Posting period as closed
+                ClosePeriodProcess(amount.Amount);
+            }
+        }
+
+        private void ClosePeriodProcess(decimal amount)
+        {
+            var fromDatePeriod = lstFromPeriod.SelectedItem as PostingPeriod;
+            var toDatePeriod = lstToPeriod.SelectedItem as PostingPeriod;
+
+            var postingPeriod = _postingPeriods.GetByRange(fromDatePeriod.Date, toDatePeriod.Date);
+
+            foreach (var period in postingPeriod)
+            {
+                period.Closed = true;
+                period.UpdatedBy = GlobalConfig.Usuario.Id; 
             }
 
+            var savedModel = new PostingPeriodEndClosing()
+            {
+                CompanyId = GlobalConfig.Company.Codigo,
+                FromPeriodId = fromDatePeriod.Id, 
+                ToPeriodId = toDatePeriod.Id, 
+                FromPeriod = fromDatePeriod.ToString(), 
+                ToPeriod = toDatePeriod.ToString(), 
+                Amount = amount, 
+                UserNotes = txtBoxUserNotes.Text, 
+                PostingPeriods = postingPeriod, 
+                UpdatedBy = GlobalConfig.Usuario.Id
+            }; 
 
-            //try
-            //{
+            try
+            {
+                btnCerrarMes.Enabled = false;
+                _financialService.ClosePostingPeriod(savedModel);
+                CreateNewPostingPeriod();
+                txtBoxUserNotes.Text = string.Empty;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            }
+            finally
+            {
+                FrameAdministrarMeses_Load(null, null);
+                btnCerrarMes.Enabled = true;
+            }
 
-            //    if ((lstFromPeriod.Items.Count > 0) && MessageBox.Show("¿Desea cerrar este mes?", TextoGeneral.NombreApp, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-            //    {
-            //        FechaTransaccion fechaTransaccion = (FechaTransaccion)lstFromPeriod.SelectedItem;
-            //        fechaTransaccion.Cerrada = true;
-
-            //        if (fechaCL.CerrarMes(fechaTransaccion, GlobalConfig.Company, GlobalConfig.Usuario, out string mensaje))
-            //        {
-            //            MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
-            //            CargarDatos();
-            //        }
-            //        else
-            //        {
-            //            MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-            //        }
-
-            //    }
-            //}
-            //catch (Exception ex)
-            //{
-            //    MessageBox.Show(ex.Message, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-            //}
         }
+        
 
         private ClosurePostingPeriodBalance ReporteEstadoResultadoIntegralData()
         {
@@ -141,11 +179,6 @@ namespace CapaPresentacion.FrameCuentas
             };
 
             return  _financialReportService.PreviousClosurePostingPeriodBalance(reportParamns);
-        }
-
-        private void BtnCerrar_Click(object sender, EventArgs e)
-        {
-            this.Close();
         }
 
 

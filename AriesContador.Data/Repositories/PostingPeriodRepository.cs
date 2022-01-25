@@ -24,36 +24,32 @@ namespace AriesContador.Data.Repositories
             entity.Id = dataAccess.SaveData<PostingPeriod, int>("SP_InsertPostingPeriod", entity);
         }
 
-        public void ClosePostingPeriod(PostingPeriod postingPeriod)
+        public void ClosePostingPeriod(PostingPeriodEndClosing postingPeriod)
         {
-            using (MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString))
+            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
+            var saveMyPostingPeriod = postingPeriod.PostingPeriods;
+            try
             {
-                try
+                dataAccess.StartTransaction();
+                foreach (var period in saveMyPostingPeriod)
                 {
-
-                    dataAccess.StartTransaction();
-                    // Traer el saldo a ese mes - traer todos los asientos 
-                    // Actualizar el saldo de las cuentas
-
-                    var accounts = dataAccess.LoadData<IEnumerable<Account>>("SP_GetAllAccounts");
-
-                    var entries = dataAccess.LoadData<IEnumerable<JournalEntry>>("");
-
-                    foreach (var accout in accounts)
-                    {
-
-                    }
-
-                    dataAccess.SaveDataInTransaction<PostingPeriod>("SP_ClosePeriod", postingPeriod);
-
+                    dataAccess.SaveDataInTransaction<PostingPeriod>("SP_ClosePeriod", period);
                 }
-                catch (Exception)
-                {
-                    dataAccess.RollBackTransaction();
-                    throw;
-                }
+
+                postingPeriod.PostingPeriods = null;
+                postingPeriod.Id = dataAccess.SaveDataInTransaction<PostingPeriodEndClosing, int>(
+                    "SP_InsertClosingPostingPeriod",
+                    postingPeriod);
+                postingPeriod.PostingPeriods = saveMyPostingPeriod;
+
+                dataAccess.CommitTransaction();
             }
-
+            catch (Exception)
+            {
+                postingPeriod.PostingPeriods = saveMyPostingPeriod;
+                dataAccess.RollBackTransaction();
+                throw;
+            }
 
         }
 

@@ -139,6 +139,11 @@ namespace AriesContador.Services
             }
             return returnList; 
         }
+
+        public IEnumerable<ClosingPostingPeriodReport> ClosingPostingPeriodReport(string companyId)
+        {
+            return _unitOfWork.FinancialReportRepository.ClosingPostingPeriodReport(companyId); 
+        }
     }
 }
 

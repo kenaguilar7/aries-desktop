@@ -22,9 +22,9 @@ namespace AriesContador.Core.Services
         void CreatePostingPeriod(PostingPeriod postingPeriod);
         void DeletePostingPeriod(PostingPeriod postingPeriod);
         IEnumerable<PostingPeriod> GetPostingPeriods(string companyId);
-        CreatePostingPeriodOption GetAvailablePostingPeriodsForBeCreated(string companyId); 
+        List<PostingPeriod> GetAvailablePostingPeriodsForBeCreated(string companyId); 
         void UpdatePostingPeriod(PostingPeriod postingPeriod);
-        void ClosePostingPeriod(PostingPeriod postingPeriod);
+        void ClosePostingPeriod(PostingPeriodEndClosing postingPeriod);
 
         #endregion
 
