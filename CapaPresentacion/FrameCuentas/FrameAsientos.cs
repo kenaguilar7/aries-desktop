@@ -60,7 +60,7 @@ namespace CapaPresentacion.FrameCuentas
         {
             try
             {
-                lstMesesAbiertos.DataSource =  _financialSercie.GetPostingPeriods(GlobalConfig.Company.Codigo).Where(p=>!p.Closed).ToList(); 
+                lstMesesAbiertos.DataSource =  _financialSercie.GetPostingPeriods(GlobalConfig.Company.Codigo).OrderByDescending(p=>p.Date).ToList(); 
                 lstTipoCambio.SelectedIndex = 0;
                 lstTipoCambio.SelectedIndex = 0;
             
@@ -329,6 +329,7 @@ namespace CapaPresentacion.FrameCuentas
                 _journalEntry.JournalEntryLines = _financialSercie.GetJournalEntryLineByJournalEntryId(_journalEntry.Id).ToList();
 
                 //_journalEntry.Transaccions = _transaccionCL.GetCompleto(_journalEntry);
+                ValidatePostingPeriodStatus(); 
                 UpdateView();
                 this.ProventAsientoIndex = lstNumeroAsientos.SelectedIndex;
             }
@@ -341,6 +342,32 @@ namespace CapaPresentacion.FrameCuentas
             }
 
         }
+
+        private void ValidatePostingPeriodStatus()
+        {
+            var postigPeriod = lstMesesAbiertos.SelectedItem as PostingPeriod;
+            if (postigPeriod.Closed)
+            {
+                this.BtnEliminarLinea.Enabled = false;
+                this.btnEditarLinea.Enabled = false;
+                this.btnNuevoAsiento.Enabled = false;
+                this.btnEliminar.Enabled = false;
+                this.btnLimpiar.Enabled = false;
+                this.layoutSaveTransaction.Enabled = false;
+                this.labelPeriodoCerrado.Visible = true; 
+            }
+            else
+            {
+                this.BtnEliminarLinea.Enabled = true;
+                this.btnEditarLinea.Enabled = true;
+                this.btnNuevoAsiento.Enabled = true;
+                this.btnEliminar.Enabled = true;
+                this.btnLimpiar.Enabled = true;
+                this.layoutSaveTransaction.Enabled = true;
+                this.labelPeriodoCerrado.Visible = false;
+            }
+        }
+
         private void BtnEliminar_Click(object sender, EventArgs e)
         {
             try

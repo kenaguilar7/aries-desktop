@@ -27,7 +27,7 @@ namespace CapaDatos.Daos
             try
             {
                 List<FechaTransaccion> retorno = new List<FechaTransaccion>();
-                var sql = "SELECT accounting_months_id, month_report, closed FROM accounting_months WHERE company_id = @company_id AND active = 1 ";
+                var sql = "SELECT accounting_months_id, month_report, closed FROM accounting_months WHERE company_id = @company_id";
                 DataTable dt = manejador.Listado(sql, new Parametro("@company_id", t.Codigo), CommandType.Text);
 
                 foreach (DataRow item in dt.Rows)
