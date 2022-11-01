@@ -63,6 +63,16 @@ namespace CapaPresentacion.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap _21133968216276585063773_128 {
+            get {
+                object obj = ResourceManager.GetObject("21133968216276585063773-128", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap guardar25 {
             get {
                 object obj = ResourceManager.GetObject("guardar25", resourceCulture);
@@ -246,6 +256,16 @@ namespace CapaPresentacion.Properties {
         internal static System.Drawing.Bitmap icons8_enviar_32 {
             get {
                 object obj = ResourceManager.GetObject("icons8-enviar-32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap icons8_exhange_24 {
+            get {
+                object obj = ResourceManager.GetObject("icons8-exhange-24", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

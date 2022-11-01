@@ -70,11 +70,10 @@
             this.label4 = new System.Windows.Forms.Label();
             this.txtBoxFechaFactura = new System.Windows.Forms.MaskedTextBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.labelPeriodoCerrado = new System.Windows.Forms.Label();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.layoutSaveTransaction = new System.Windows.Forms.FlowLayoutPanel();
-            this.btnUpdateJELine = new System.Windows.Forms.Button();
-            this.btnAgregarTransa = new System.Windows.Forms.Button();
             this.labelRutaNuevaCuenta = new System.Windows.Forms.Label();
             this.txtBoxDetalle = new System.Windows.Forms.TextBox();
             this.txtBoxReferencia = new System.Windows.Forms.TextBox();
@@ -92,6 +91,11 @@
             this.panel1 = new System.Windows.Forms.Panel();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
+            this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.txtCuentaToolT = new System.Windows.Forms.ToolTip(this.components);
+            this.AppErrorProvider = new System.Windows.Forms.ErrorProvider(this.components);
+            this.btnUpdateJELine = new System.Windows.Forms.Button();
+            this.btnAgregarTransa = new System.Windows.Forms.Button();
             this.btnCerrar = new System.Windows.Forms.Button();
             this.btnRefreshDashboard = new System.Windows.Forms.Button();
             this.btnReporte = new System.Windows.Forms.Button();
@@ -100,10 +104,7 @@
             this.btnNuevoAsiento = new System.Windows.Forms.Button();
             this.btnEditarLinea = new System.Windows.Forms.Button();
             this.BtnEliminarLinea = new System.Windows.Forms.Button();
-            this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.txtCuentaToolT = new System.Windows.Forms.ToolTip(this.components);
-            this.AppErrorProvider = new System.Windows.Forms.ErrorProvider(this.components);
-            this.labelPeriodoCerrado = new System.Windows.Forms.Label();
+            this.btnSwitchPeriod = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.GridDatos)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.tabControl1.SuspendLayout();
@@ -478,6 +479,16 @@
             this.groupBox1.TabIndex = 2;
             this.groupBox1.TabStop = false;
             // 
+            // labelPeriodoCerrado
+            // 
+            this.labelPeriodoCerrado.AutoSize = true;
+            this.labelPeriodoCerrado.Location = new System.Drawing.Point(508, 29);
+            this.labelPeriodoCerrado.Name = "labelPeriodoCerrado";
+            this.labelPeriodoCerrado.Size = new System.Drawing.Size(107, 17);
+            this.labelPeriodoCerrado.TabIndex = 11;
+            this.labelPeriodoCerrado.Text = "Periodo Cerrado";
+            this.labelPeriodoCerrado.Visible = false;
+            // 
             // tabControl1
             // 
             this.tabControl1.Appearance = System.Windows.Forms.TabAppearance.FlatButtons;
@@ -531,38 +542,6 @@
             this.layoutSaveTransaction.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
             this.layoutSaveTransaction.Size = new System.Drawing.Size(190, 36);
             this.layoutSaveTransaction.TabIndex = 7;
-            // 
-            // btnUpdateJELine
-            // 
-            this.btnUpdateJELine.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnUpdateJELine.Image = global::CapaPresentacion.Properties.Resources.icons8_añadir_25;
-            this.btnUpdateJELine.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnUpdateJELine.Location = new System.Drawing.Point(93, 3);
-            this.btnUpdateJELine.Name = "btnUpdateJELine";
-            this.btnUpdateJELine.Size = new System.Drawing.Size(94, 30);
-            this.btnUpdateJELine.TabIndex = 8;
-            this.btnUpdateJELine.Text = "Actualizar";
-            this.btnUpdateJELine.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.txtCuentaToolT.SetToolTip(this.btnUpdateJELine, "CTRL + A");
-            this.btnUpdateJELine.UseVisualStyleBackColor = true;
-            this.btnUpdateJELine.Visible = false;
-            this.btnUpdateJELine.Click += new System.EventHandler(this.btnUpdateJELine_Click);
-            // 
-            // btnAgregarTransa
-            // 
-            this.btnAgregarTransa.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnAgregarTransa.Image = global::CapaPresentacion.Properties.Resources.icons8_añadir_25;
-            this.btnAgregarTransa.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnAgregarTransa.Location = new System.Drawing.Point(4, 3);
-            this.btnAgregarTransa.Name = "btnAgregarTransa";
-            this.btnAgregarTransa.Size = new System.Drawing.Size(83, 30);
-            this.btnAgregarTransa.TabIndex = 8;
-            this.btnAgregarTransa.Text = "Agregar";
-            this.btnAgregarTransa.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.txtCuentaToolT.SetToolTip(this.btnAgregarTransa, "CTRL + A");
-            this.btnAgregarTransa.UseVisualStyleBackColor = true;
-            this.btnAgregarTransa.Click += new System.EventHandler(this.BtnAgregarTransaccion);
-            this.btnAgregarTransa.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.UsuarioKeyPress);
             // 
             // labelRutaNuevaCuenta
             // 
@@ -762,12 +741,59 @@
             this.flowLayoutPanel1.Controls.Add(this.btnNuevoAsiento);
             this.flowLayoutPanel1.Controls.Add(this.btnEditarLinea);
             this.flowLayoutPanel1.Controls.Add(this.BtnEliminarLinea);
+            this.flowLayoutPanel1.Controls.Add(this.btnSwitchPeriod);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
             this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 18);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Size = new System.Drawing.Size(1234, 34);
             this.flowLayoutPanel1.TabIndex = 8;
+            // 
+            // groupBox4
+            // 
+            this.groupBox4.Controls.Add(this.tabControl1);
+            this.groupBox4.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.groupBox4.Location = new System.Drawing.Point(11, 79);
+            this.groupBox4.Name = "groupBox4";
+            this.groupBox4.Size = new System.Drawing.Size(380, 390);
+            this.groupBox4.TabIndex = 1;
+            this.groupBox4.TabStop = false;
+            // 
+            // AppErrorProvider
+            // 
+            this.AppErrorProvider.ContainerControl = this;
+            // 
+            // btnUpdateJELine
+            // 
+            this.btnUpdateJELine.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnUpdateJELine.Image = global::CapaPresentacion.Properties.Resources.icons8_añadir_25;
+            this.btnUpdateJELine.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnUpdateJELine.Location = new System.Drawing.Point(93, 3);
+            this.btnUpdateJELine.Name = "btnUpdateJELine";
+            this.btnUpdateJELine.Size = new System.Drawing.Size(94, 30);
+            this.btnUpdateJELine.TabIndex = 8;
+            this.btnUpdateJELine.Text = "Actualizar";
+            this.btnUpdateJELine.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.txtCuentaToolT.SetToolTip(this.btnUpdateJELine, "CTRL + A");
+            this.btnUpdateJELine.UseVisualStyleBackColor = true;
+            this.btnUpdateJELine.Visible = false;
+            this.btnUpdateJELine.Click += new System.EventHandler(this.btnUpdateJELine_Click);
+            // 
+            // btnAgregarTransa
+            // 
+            this.btnAgregarTransa.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnAgregarTransa.Image = global::CapaPresentacion.Properties.Resources.icons8_añadir_25;
+            this.btnAgregarTransa.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnAgregarTransa.Location = new System.Drawing.Point(4, 3);
+            this.btnAgregarTransa.Name = "btnAgregarTransa";
+            this.btnAgregarTransa.Size = new System.Drawing.Size(83, 30);
+            this.btnAgregarTransa.TabIndex = 8;
+            this.btnAgregarTransa.Text = "Agregar";
+            this.btnAgregarTransa.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.txtCuentaToolT.SetToolTip(this.btnAgregarTransa, "CTRL + A");
+            this.btnAgregarTransa.UseVisualStyleBackColor = true;
+            this.btnAgregarTransa.Click += new System.EventHandler(this.BtnAgregarTransaccion);
+            this.btnAgregarTransa.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.UsuarioKeyPress);
             // 
             // btnCerrar
             // 
@@ -889,29 +915,19 @@
             this.BtnEliminarLinea.UseVisualStyleBackColor = true;
             this.BtnEliminarLinea.Click += new System.EventHandler(this.DeleteJournalEntryLine_Event_Click);
             // 
-            // groupBox4
+            // btnSwitchPeriod
             // 
-            this.groupBox4.Controls.Add(this.tabControl1);
-            this.groupBox4.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.groupBox4.Location = new System.Drawing.Point(11, 79);
-            this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(380, 390);
-            this.groupBox4.TabIndex = 1;
-            this.groupBox4.TabStop = false;
-            // 
-            // AppErrorProvider
-            // 
-            this.AppErrorProvider.ContainerControl = this;
-            // 
-            // labelPeriodoCerrado
-            // 
-            this.labelPeriodoCerrado.AutoSize = true;
-            this.labelPeriodoCerrado.Location = new System.Drawing.Point(508, 29);
-            this.labelPeriodoCerrado.Name = "labelPeriodoCerrado";
-            this.labelPeriodoCerrado.Size = new System.Drawing.Size(107, 17);
-            this.labelPeriodoCerrado.TabIndex = 11;
-            this.labelPeriodoCerrado.Text = "Periodo Cerrado";
-            this.labelPeriodoCerrado.Visible = false;
+            this.btnSwitchPeriod.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold);
+            this.btnSwitchPeriod.Image = global::CapaPresentacion.Properties.Resources.icons8_exhange_24;
+            this.btnSwitchPeriod.ImageAlign = System.Drawing.ContentAlignment.BottomLeft;
+            this.btnSwitchPeriod.Location = new System.Drawing.Point(206, 3);
+            this.btnSwitchPeriod.Name = "btnSwitchPeriod";
+            this.btnSwitchPeriod.Size = new System.Drawing.Size(103, 30);
+            this.btnSwitchPeriod.TabIndex = 12;
+            this.btnSwitchPeriod.Text = "Transferir";
+            this.btnSwitchPeriod.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.btnSwitchPeriod.UseVisualStyleBackColor = true;
+            this.btnSwitchPeriod.Click += new System.EventHandler(this.btnSwitchPeriod_Click);
             // 
             // FrameAsientos
             // 
@@ -1021,5 +1037,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnDummy;
         private System.Windows.Forms.Button btnRefreshDashboard;
         private System.Windows.Forms.Label labelPeriodoCerrado;
+        private System.Windows.Forms.Button btnSwitchPeriod;
     }
 }
