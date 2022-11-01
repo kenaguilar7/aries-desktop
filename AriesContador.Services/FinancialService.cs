@@ -221,6 +221,13 @@ namespace AriesContador.Services
             _unitOfWork.JournalEntryRepository.Remove(journalEntry);
         }
 
+        public void UpdatedJournalEntryPeriod(JournalEntry journalEntry)
+        {
+            var newJournalEntryNumber = _unitOfWork.JournalEntryRepository.GetConsecutiveNumber(journalEntry.PostingPeriodId);
+            journalEntry.Number = newJournalEntryNumber;
+            _unitOfWork.JournalEntryRepository.Update(journalEntry);
+        }
+
         #endregion
 
         #region Journal Entry Line
