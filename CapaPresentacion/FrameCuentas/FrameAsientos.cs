@@ -516,12 +516,13 @@ namespace CapaPresentacion.FrameCuentas
                 this.labelDiferencia.Visible = false;
                 this.txtDiferenciaSaldo.Visible = false;
                 this.txtDiferenciaSaldo.Text = string.Format("{0:₡###,###,###,##0.00}", 0);
-
+                this.btnSwitchPeriod.Enabled = true; 
             }
             else
             {
                 txtTotalCreditos.ForeColor = Color.Black;
                 txtTotalDebitos.ForeColor = Color.Black;
+                this.btnSwitchPeriod.Enabled = false;
             }
         }
         private void SetDiferenciaLabel()
@@ -945,6 +946,19 @@ namespace CapaPresentacion.FrameCuentas
             if(_journalEntry != null)
                 _journalEntry.JournalEntryLines = _financialSercie.GetJournalEntryLineByJournalEntryId(_journalEntry.Id).ToList();
             UpdateView();
+        }
+
+        private void btnSwitchPeriod_Click(object sender, EventArgs e)
+        {
+            var frame = new SwitchAccountEntryPeriod(_journalEntry, PostingPeriodSelected);
+            frame.FinishProcess += ShowSelectedPeriod; 
+            frame.ShowDialog();
+        }
+
+        private void ShowSelectedPeriod(JournalEntry journalEntry, PostingPeriod postingPeriod)
+        {
+            lstMesesAbiertos.SelectedIndex = lstMesesAbiertos.FindStringExact(postingPeriod.ToString());
+            lstNumeroAsientos.SelectedIndex = lstNumeroAsientos.FindStringExact(journalEntry.Number.ToString());
         }
     }
 }

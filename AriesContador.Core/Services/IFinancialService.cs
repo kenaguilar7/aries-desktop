@@ -37,7 +37,7 @@ namespace AriesContador.Core.Services
         void UpdateJournalEntry(JournalEntry journalEntry);
         IEnumerable<JournalEntryDeletedReport> GetAllJournalEntryDeleted(BasicReportParam reportParam);
         void RestoreJournalEntry(JournalEntry journalEntry);
-
+        void UpdatedJournalEntryPeriod(JournalEntry journalEntry); 
 
         #endregion
 

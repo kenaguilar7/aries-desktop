@@ -13,41 +13,17 @@ namespace CapaEntidad.Entidades.JournalEntries
     public class JournalEntry : JournalEntryHeader
     {
         public List<JournalEntryLine> JournalEntryLines { get; set; } = new List<JournalEntryLine>();
-        public DateTime FechaRegistro { get; set; }
         
-        public JournalEntry()
-        {
-        }
+        [Obsolete]
+        public DateTime FechaRegistro { get; set; }
 
-        public override string ToString()
-        {
-            return Convert.ToString(Number);
-        }
+        public override string ToString() => Convert.ToString(Number);
 
-        public decimal DebitosColones
-        {
-            get
-            {
-                return GetMontoTransaccion(DebOrCred.Debito);
-            }
-        }
+        public decimal DebitosColones => GetMontoTransaccion(DebOrCred.Debito);
 
+        public decimal CreditosColones => GetMontoTransaccion(DebOrCred.Credito);
 
-        public decimal CreditosColones
-        {
-            get
-            {
-                return GetMontoTransaccion(DebOrCred.Credito);
-            }
-        }
-
-        public Boolean Cuadrado
-        {
-            get
-            {
-                return (DebitosColones == CreditosColones) ? true : false;
-            }
-        }
+        public Boolean Cuadrado => (DebitosColones == CreditosColones) ? true : false;
 
         private decimal GetMontoTransaccion(DebOrCred comportamiento)
         {
