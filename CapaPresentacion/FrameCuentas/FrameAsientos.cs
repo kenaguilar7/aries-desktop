@@ -34,6 +34,7 @@ namespace CapaPresentacion.FrameCuentas
         private int ProventAsientoIndex = 0;
         private Cuenta AccountInTxtBoxNombreCuenta
         {
+            //Test
             get
             {
                 if (txtBoxNombreCuenta?.Tag is Cuenta myCuenta) return myCuenta;
