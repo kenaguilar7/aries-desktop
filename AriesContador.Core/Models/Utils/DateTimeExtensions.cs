@@ -16,5 +16,9 @@ namespace AriesContador.Core.Models.Utils
             return $"{source.Year}{string.Format("{0, 0:D2}", source.Month)}"; 
         }
 
+        public static DateTime UpdateToFirstDayOfMonth(this DateTime dateTime)
+        {
+            return new DateTime(dateTime.Year, dateTime.Month, 1, 0, 0, 0); 
+        }
     }
 }

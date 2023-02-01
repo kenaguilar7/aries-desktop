@@ -159,26 +159,17 @@ namespace AriesContador.Services
         {
             var postingPeriods = _unitOfWork.PostingPeriodRepository.FindByCompanyId(postingPeriod.CompanyId);
 
-            var isRepeated = postingPeriods
-                    .Any(x => x.Date.Year == postingPeriod.Date.Year &&
-                     x.Date.Month == postingPeriod.Date.Month);
-
-            if (isRepeated)
-            {
+            if (postingPeriods.PeriodExist(postingPeriod))
                 throw new Exception("Periodo contable con fechas repetidas");
-            }
-            else
-            {
-                _unitOfWork.PostingPeriodRepository.Add(postingPeriod);
-            }
 
+            _unitOfWork.PostingPeriodRepository.Add(postingPeriod);
         }
 
         public void UpdatePostingPeriod(PostingPeriod postingPeriod)
         {
             throw new NotImplementedException();
         }
-        public void ClosePostingPeriod(PostingPeriod postingPeriod)
+        public void ClosePostingPeriod(PostingPeriodEndClosing postingPeriod)
         {
             _unitOfWork.PostingPeriodRepository.ClosePostingPeriod(postingPeriod);
         }
@@ -187,40 +178,26 @@ namespace AriesContador.Services
             throw new NotImplementedException();
         }
 
-        public IEnumerable<PostingPeriod> GetAvailablePostingPeriodsForBeCreated(string companyId)
+        public List<PostingPeriod> GetAvailablePostingPeriodsForBeCreated(string companyId)
         {
-            var postingPeriods = this.GetPostingPeriods(companyId);
+            var postingPeriods = GetPostingPeriods(companyId);
+            var output = new List<PostingPeriod>();
 
-            if (postingPeriods.Count() > 0)
+            if (postingPeriods.Any())
             {
-                return CreateAvailablePostingPeriodsForBeCreate(postingPeriods);
+                var exitMovements = HasJournalEntries(postingPeriods);
+                var pPeriods = new PostingPeriodCreator(postingPeriods.ToList(), exitMovements)
+                    .GetAvailablePostingPeriodForBeCreated(); 
+
+                output.AddRange(pPeriods);
             }
             else
             {
-                return CreatePreEntityPostingPeriod(DateTime.Now);
+                var pPeriod = new PostingPeriodCreator().CreatePostingPeriodForNewCompany(); 
+                output.Add(pPeriod);
             }
-        }
 
-        private IEnumerable<PostingPeriod> CreateAvailablePostingPeriodsForBeCreate(IEnumerable<PostingPeriod> postingPeriods)
-        {
-
-            var hasEntries = HasJournalEntries(postingPeriods);
-            if (hasEntries)
-            {
-                var newerPeriod = postingPeriods.GetNewerAccountPeriod();
-                var newerDate = newerPeriod.Date.AddMonths(1);
-                return CreatePreEntityPostingPeriod(newerDate);
-            }
-            else
-            {
-                var olderPeriod = postingPeriods.GetOlderAccountPeriod();
-                var olderDate = olderPeriod.Date.AddMonths(-1);
-
-                var newerPeriod = postingPeriods.GetNewerAccountPeriod();
-                var newerDate = newerPeriod.Date.AddMonths(1);
-
-                return CreatePreEntityPostingPeriod(olderDate, newerDate);
-            }
+            return output; 
         }
 
         private bool HasJournalEntries(IEnumerable<PostingPeriod> postingPeriods)
@@ -231,24 +208,24 @@ namespace AriesContador.Services
                 postingP.JournalEntries = _unitOfWork.JournalEntryRepository.FindByPostingPeriodId(postingP.Id).ToList();
             }
 
-            var hasEntries = postingPeriods.Where(x => x.JournalEntries.Count > 0).Count();
+            var hasEntries = postingPeriods.Count(x => x.JournalEntries.Count > 0);
 
             return hasEntries > 0;
         }
 
-        private IEnumerable<PostingPeriod> CreatePreEntityPostingPeriod(DateTime fromDatePeriod)
-        {
-            return new List<PostingPeriod>() { CreatePostingPeriodEntity(fromDatePeriod) };
-        }
+        //private IEnumerable<PostingPeriod> CreatePreEntityPostingPeriod(DateTime fromDatePeriod)
+        //{
+        //    return new List<PostingPeriod>() { CreatePostingPeriodEntity(fromDatePeriod) };
+        //}
 
-        private IEnumerable<PostingPeriod> CreatePreEntityPostingPeriod(DateTime fromDatePeriod, DateTime toDatePeriod)
-        {
-            return new List<PostingPeriod>() { CreatePostingPeriodEntity(fromDatePeriod),
-                                                  CreatePostingPeriodEntity(toDatePeriod) };
-        }
+        //private IEnumerable<PostingPeriod> CreatePreEntityPostingPeriod(DateTime fromDatePeriod, DateTime toDatePeriod)
+        //{
+        //    return new List<PostingPeriod>() { CreatePostingPeriodEntity(fromDatePeriod),
+        //                                          CreatePostingPeriodEntity(toDatePeriod) };
+        //}
 
-        public PostingPeriod CreatePostingPeriodEntity(DateTime PeriodDate)
-             => new PostingPeriod() { Date = PeriodDate };
+        //public PostingPeriod CreatePostingPeriodEntity(DateTime PeriodDate)
+        //     => new PostingPeriod() { Date = PeriodDate };
 
         #endregion
 
@@ -298,6 +275,13 @@ namespace AriesContador.Services
         public void DeleteJournalEntry(JournalEntry journalEntry)
         {
             _unitOfWork.JournalEntryRepository.Remove(journalEntry);
+        }
+
+        public void UpdatedJournalEntryPeriod(JournalEntry journalEntry)
+        {
+            var newJournalEntryNumber = _unitOfWork.JournalEntryRepository.GetConsecutiveNumber(journalEntry.PostingPeriodId);
+            journalEntry.Number = newJournalEntryNumber;
+            _unitOfWork.JournalEntryRepository.Update(journalEntry);
         }
 
         #endregion

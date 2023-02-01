@@ -35,6 +35,7 @@ namespace CapaPresentacion.FrameCuentas
         private int ProventAsientoIndex = 0;
         private Cuenta AccountInTxtBoxNombreCuenta
         {
+            //Test
             get
             {
                 if (txtBoxNombreCuenta?.Tag is Cuenta myCuenta) return myCuenta;
@@ -59,13 +60,20 @@ namespace CapaPresentacion.FrameCuentas
 
         private void LoadAccountingPeriodList()
         {
-            lstMesesAbiertos.DataSource =  _financialSercie.GetPostingPeriods(GlobalConfig.Company.Codigo).ToList(); 
-            lstTipoCambio.SelectedIndex = 0;
-            lstTipoCambio.SelectedIndex = 0;
-            
-            if (lstMesesAbiertos.Items.Count == 0)
+            try
             {
-                btnAgregarTransa.Enabled = false;
+                lstMesesAbiertos.DataSource =  _financialSercie.GetPostingPeriods(GlobalConfig.Company.Codigo).OrderByDescending(p=>p.Date).ToList(); 
+                lstTipoCambio.SelectedIndex = 0;
+                lstTipoCambio.SelectedIndex = 0;
+            
+                if (lstMesesAbiertos.Items.Count == 0)
+                {
+                    btnAgregarTransa.Enabled = false;
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Error); 
             }
         }
 
@@ -323,6 +331,7 @@ namespace CapaPresentacion.FrameCuentas
                 _journalEntry.JournalEntryLines = _financialSercie.GetJournalEntryLineByJournalEntryId(_journalEntry.Id).ToList();
 
                 //_journalEntry.Transaccions = _transaccionCL.GetCompleto(_journalEntry);
+                ValidatePostingPeriodStatus(); 
                 UpdateView();
                 this.ProventAsientoIndex = lstNumeroAsientos.SelectedIndex;
             }
@@ -335,6 +344,32 @@ namespace CapaPresentacion.FrameCuentas
             }
 
         }
+
+        private void ValidatePostingPeriodStatus()
+        {
+            var postigPeriod = lstMesesAbiertos.SelectedItem as PostingPeriod;
+            if (postigPeriod.Closed)
+            {
+                this.BtnEliminarLinea.Enabled = false;
+                this.btnEditarLinea.Enabled = false;
+                this.btnNuevoAsiento.Enabled = false;
+                this.btnEliminar.Enabled = false;
+                this.btnLimpiar.Enabled = false;
+                this.layoutSaveTransaction.Enabled = false;
+                this.labelPeriodoCerrado.Visible = true; 
+            }
+            else
+            {
+                this.BtnEliminarLinea.Enabled = true;
+                this.btnEditarLinea.Enabled = true;
+                this.btnNuevoAsiento.Enabled = true;
+                this.btnEliminar.Enabled = true;
+                this.btnLimpiar.Enabled = true;
+                this.layoutSaveTransaction.Enabled = true;
+                this.labelPeriodoCerrado.Visible = false;
+            }
+        }
+
         private void BtnEliminar_Click(object sender, EventArgs e)
         {
             try
@@ -483,12 +518,13 @@ namespace CapaPresentacion.FrameCuentas
                 this.labelDiferencia.Visible = false;
                 this.txtDiferenciaSaldo.Visible = false;
                 this.txtDiferenciaSaldo.Text = string.Format("{0:₡###,###,###,##0.00}", 0);
-
+                this.btnSwitchPeriod.Enabled = true; 
             }
             else
             {
                 txtTotalCreditos.ForeColor = Color.Black;
                 txtTotalDebitos.ForeColor = Color.Black;
+                this.btnSwitchPeriod.Enabled = false;
             }
         }
         private void SetDiferenciaLabel()
@@ -904,6 +940,27 @@ namespace CapaPresentacion.FrameCuentas
         public bool IsAvalibleToClose()
         {
             return EqualDebAndCredONJournalEntry(); 
+        }
+
+        private void BtnRefreshGrid(object sender, EventArgs e)
+        {
+            _journalEntry = (JournalEntry)lstNumeroAsientos.SelectedItem;
+            if(_journalEntry != null)
+                _journalEntry.JournalEntryLines = _financialSercie.GetJournalEntryLineByJournalEntryId(_journalEntry.Id).ToList();
+            UpdateView();
+        }
+
+        private void btnSwitchPeriod_Click(object sender, EventArgs e)
+        {
+            var frame = new SwitchAccountEntryPeriod(_journalEntry, PostingPeriodSelected);
+            frame.FinishProcess += ShowSelectedPeriod; 
+            frame.ShowDialog();
+        }
+
+        private void ShowSelectedPeriod(JournalEntry journalEntry, PostingPeriod postingPeriod)
+        {
+            lstMesesAbiertos.SelectedIndex = lstMesesAbiertos.FindStringExact(postingPeriod.ToString());
+            lstNumeroAsientos.SelectedIndex = lstNumeroAsientos.FindStringExact(journalEntry.Number.ToString());
         }
     }
 }

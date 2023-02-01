@@ -155,7 +155,7 @@ namespace CapaLogica
         public List<FechaTransaccion> GetAllActive(Compañia t, Usuario user, Boolean traerAsientos = false)
         {
             List<FechaTransaccion> retorno = GetAll(t, user);
-            var Lstretorno = (from c in retorno where c.Cerrada == false select c).ToList<FechaTransaccion>();
+            var Lstretorno = retorno.OrderBy(x=> x.Fecha).ToList<FechaTransaccion>();
             if (traerAsientos)
             {
                 foreach (var item in Lstretorno)

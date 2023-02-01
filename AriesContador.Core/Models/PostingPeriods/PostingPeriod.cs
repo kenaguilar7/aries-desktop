@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using AriesContador.Core.Models.Utils;
 using CapaEntidad.Entidades.JournalEntries;
 
 namespace AriesContador.Core.Models.PostingPeriods
@@ -38,4 +39,91 @@ namespace AriesContador.Core.Models.PostingPeriods
             return dtinfo.GetMonthName(month);
         }
     }
+
+    public class PostingPeriodEndClosing : BaseModel
+    {
+        public string CompanyId { get; set; }
+
+        public int FromPeriodId { get; set;  }
+
+        public int ToPeriodId { get; set; }
+
+        public string FromPeriod { get; set; }
+
+        public string ToPeriod { get; set; }
+
+        public decimal Amount { get; set; }
+
+        public string UserNotes { get; set; }
+
+        public List<PostingPeriod> PostingPeriods { get; set; }
+    }
+
+    public class PostingPeriodInfo
+    {
+        public string PostingPeriodDateString { get; set; }
+        public string Status { get; set; }
+        public string CreatedDateString { get; set; }
+        public string ClosedDateString { get; set; }
+        public string UserName { get; set; }
+    }
+
+    public class PostingPeriodCreator
+    {
+        private List<PostingPeriod> _postingPeriods = new List<PostingPeriod>();
+        private bool _existMovements; 
+        public PostingPeriodCreator()
+        {
+            
+        }
+
+        public PostingPeriodCreator(List<PostingPeriod> actualOpenPeriods,
+            bool existMovements)
+        {
+            _postingPeriods = actualOpenPeriods;
+            _existMovements = existMovements;
+        }
+
+        public List<PostingPeriod> GetAvailablePostingPeriodForBeCreated()
+        {
+            var returnedList = new List<PostingPeriod>();
+
+            //Create only future periods
+            if (!_existMovements)
+            {
+                var olderPeriod = _postingPeriods.GetOlderAccountPeriod();
+                var newerPeriod = _postingPeriods.GetNewerAccountPeriod();
+                var olderDate = olderPeriod.Date.AddMonths(-1);
+                var newerDate = newerPeriod.Date.AddMonths(1);
+
+                returnedList.AddRange(new List<PostingPeriod>()
+                {
+                    new PostingPeriod(){Date = olderDate.UpdateToFirstDayOfMonth() },
+                    new PostingPeriod(){Date = newerDate.UpdateToFirstDayOfMonth() }, 
+
+                });
+
+            }
+            else
+            {
+                var newerPeriod = _postingPeriods.GetNewerAccountPeriod();
+                var newerDate = newerPeriod.Date.AddMonths(1);
+
+                returnedList.Add(new PostingPeriod()
+                {
+                    Date = newerDate.UpdateToFirstDayOfMonth()
+                });
+            }
+
+
+            return returnedList;
+        }
+
+        public PostingPeriod CreatePostingPeriodForNewCompany()
+        {
+            var output = new PostingPeriod() {Date = DateTime.Now.UpdateToFirstDayOfMonth() };
+            return output;
+        }
+    }
+
 }

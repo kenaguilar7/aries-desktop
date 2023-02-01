@@ -266,6 +266,12 @@
     <Compile Include="FrameCuentas\FrameSeleccionCuenta.Designer.cs">
       <DependentUpon>FrameSeleccionCuenta.cs</DependentUpon>
     </Compile>
+    <Compile Include="FrameCuentas\SwitchAccountEntryPeriod.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrameCuentas\SwitchAccountEntryPeriod.Designer.cs">
+      <DependentUpon>SwitchAccountEntryPeriod.cs</DependentUpon>
+    </Compile>
     <Compile Include="FrameLoginUsuario.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -382,6 +388,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FrameCuentas\FrameSeleccionCuenta.resx">
       <DependentUpon>FrameSeleccionCuenta.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrameCuentas\SwitchAccountEntryPeriod.resx">
+      <DependentUpon>SwitchAccountEntryPeriod.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FrameLoginUsuario.resx">
       <DependentUpon>FrameLoginUsuario.cs</DependentUpon>
@@ -581,7 +590,15 @@
   <ItemGroup>
     <None Include="Resources\icons8-historial-de-pedidos-25.png" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="Resources\icons8-refresh-25.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\21133968216276585063773-128.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\icons8-exhange-24.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

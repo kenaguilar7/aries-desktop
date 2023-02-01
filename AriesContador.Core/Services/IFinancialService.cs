@@ -24,9 +24,9 @@ namespace AriesContador.Core.Services
         void CreatePostingPeriod(PostingPeriod postingPeriod);
         void DeletePostingPeriod(PostingPeriod postingPeriod);
         IEnumerable<PostingPeriod> GetPostingPeriods(string companyId);
-        IEnumerable<PostingPeriod> GetAvailablePostingPeriodsForBeCreated(string companyId); 
+        List<PostingPeriod> GetAvailablePostingPeriodsForBeCreated(string companyId); 
         void UpdatePostingPeriod(PostingPeriod postingPeriod);
-        void ClosePostingPeriod(PostingPeriod postingPeriod);
+        void ClosePostingPeriod(PostingPeriodEndClosing postingPeriod);
 
         #endregion
 
@@ -39,7 +39,7 @@ namespace AriesContador.Core.Services
         void UpdateJournalEntry(JournalEntry journalEntry);
         IEnumerable<JournalEntryDeletedReport> GetAllJournalEntryDeleted(BasicReportParam reportParam);
         void RestoreJournalEntry(JournalEntry journalEntry);
-
+        void UpdatedJournalEntryPeriod(JournalEntry journalEntry); 
 
         #endregion
 
