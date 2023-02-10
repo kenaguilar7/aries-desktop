@@ -120,7 +120,7 @@ namespace CapaPresentacion.Reportes
 
             using (var workbook = new XLWorkbook())
             {
-                var worksheet = workbook.Worksheets.Add();
+                var worksheet = workbook.Worksheets.Add("Hoja1");
                 worksheet.Cell(4, 1).InsertTable(output);
                 SetColumnsFormatExcelReport(worksheet);
                 RemoveColumnsExcelReport(worksheet);

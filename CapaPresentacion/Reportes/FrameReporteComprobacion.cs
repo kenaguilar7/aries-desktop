@@ -21,7 +21,6 @@ using CapaEntidad.Entidades.JournalEntries;
 using CapaEntidad.Entidades.Reports;
 using CapaEntidad.Utils;
 using ClosedXML.Excel;
-using MoreLinq;
 
 namespace CapaPresentacion.Reportes
 {
@@ -131,7 +130,7 @@ namespace CapaPresentacion.Reportes
 
             using (var workbook = new XLWorkbook())
             {
-                var worksheet = workbook.Worksheets.Add();
+                var worksheet = workbook.Worksheets.Add("Hoja1");
                 worksheet.Cell(4, 1).InsertTable(output);
                 RemoveColumnsExcelReport(worksheet);
                 SetColumnsFormatExcelReport(worksheet);
