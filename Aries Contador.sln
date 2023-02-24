@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30804.86
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33110.190
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CapaDatos", "CapaDatos\CapaDatos.csproj", "{910A256A-64ED-4415-AC56-B05AD3265E7F}"
 EndProject
@@ -17,7 +17,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AriesContador.Data", "Aries
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AriesContador.Services", "AriesContador.Services\AriesContador.Services.csproj", "{2A11D985-3D8E-43FC-9A49-E3618C709075}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AriesContador.Tests", "AriesContador.Tests\AriesContador.Tests.csproj", "{A54B5E12-4470-4FFF-9E22-6C17BAF5F26C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AriesContador.Tests", "AriesContador.Tests\AriesContador.Tests.csproj", "{A54B5E12-4470-4FFF-9E22-6C17BAF5F26C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FEC16CC2-C46F-46BE-BA20-52CCBFE73D1A}"
+	ProjectSection(SolutionItems) = preProject
+		apprunner.yaml = apprunner.yaml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
