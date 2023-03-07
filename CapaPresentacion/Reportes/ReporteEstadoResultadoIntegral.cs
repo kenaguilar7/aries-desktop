@@ -15,6 +15,9 @@ using AriesContador.Services;
 using CapaEntidad.Entidades.JournalEntries;
 using CapaEntidad.Entidades.Reports;
 using ClosedXML.Excel;
+using AriesContador.Core.Models.Patterns.Factories;
+using AriesContador.Core.Models.Patterns.ActionsWorker;
+using System.Threading.Tasks;
 
 namespace CapaPresentacion.Reportes
 {
@@ -56,22 +59,7 @@ namespace CapaPresentacion.Reportes
                 if (dt.Columns[col.HeaderText] != null)
                     col.HeaderText = dt.Columns[col.HeaderText].Caption;
             }
-            //SetStyleToRows(report.Results); 
             ConfigGridColumns();
-        }
-
-        private void SetStyleToRows(IEnumerable<EstadoResultadoIntegralReport> reportResults)
-        {
-            var canditatesToPrint = from r in reportResults where r.IsMainAccount select new { AccountName = r.Account };
-            
-            foreach (DataGridViewRow row in GridDatos.Rows)
-            {
-                var rowName = Convert.ToString(row.Cells[0].Value);
-                if (canditatesToPrint.Any(x=>x.AccountName.Equals(rowName)))
-                {
-                    row.DefaultCellStyle.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-                }
-            }
         }
 
         private ResultReportEstadoResultadoIntegral ReporteEstadoResultadoIntegralData()
@@ -156,6 +144,8 @@ namespace CapaPresentacion.Reportes
             GridDatos.Columns[nameof(EstadoResultadoIntegralReport.IsMainAccount)].Visible = false;
         }
 
+        #region
+
         private void btnExcel_Click(object sender, EventArgs e)
         {
             try
@@ -164,7 +154,15 @@ namespace CapaPresentacion.Reportes
                 {
                     if (sfd.ShowDialog() == DialogResult.OK)
                     {
-                        ExportToExcel(sfd.FileName);
+                        var param = new ReportResultadoPameter()
+                        {
+                            CompanyId= GlobalConfig.Company.Codigo,
+                            FirstDate = lstStarPeriod.SelectedItem as PostingPeriod,
+                            EndDate = lstEndPeriod.SelectedItem as PostingPeriod,
+                            UserName = GlobalConfig.Usuario.ToString()
+                        };
+                        var actionReport = new ReportResultadoIntegralActions(_financialReportService, param, sfd.FileName); 
+                        Task.Run(async ()=> { await actionReport.Execute();  } );
                     }
                 }
             }
@@ -173,75 +171,12 @@ namespace CapaPresentacion.Reportes
                 MessageBox.Show(ex.Message, TextoGeneral.MensajeBannerError, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
-        private void ExportToExcel(string path)
-        {
-            var lst = ReporteEstadoResultadoIntegralData(); 
-            var output = ToDataTable(lst.Results, lst.TotalPeridaGanancia);
-
-            using (var workbook = new XLWorkbook())
-            {
-                var worksheet = workbook.Worksheets.Add("Hoja1");
-                worksheet.Cell(4, 1).InsertTable(output);
-                RemoveColumnsExcelReport(worksheet);
-                SetColumnsFormatExcelReport(worksheet);
-                SetExcelSheetGeneralFormat(worksheet);
-                ConfigSheetHeaders(worksheet);
-                AddHeadExcelReport(worksheet);
-                workbook.SaveAs(path);
-                Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
-            }
-        }
-
-        private void AddHeadExcelReport(IXLWorksheet worksheet)
-        {
-            var firstDate = lstStarPeriod.SelectedItem as PostingPeriod;
-            var endDate = lstEndPeriod.SelectedItem as PostingPeriod;
-
-            worksheet.Cell(1, 1).Value = GlobalConfig.Company.ToString();
-            worksheet.Cell(2, 1).Value = $"Estado de resultado integral {firstDate.Date.ToString("Y")} a {endDate.Date.ToString("Y")}";
-            worksheet.Cell(3, 1).Value = GlobalConfig.Usuario.ToString();
-        }
-
-        private void ConfigSheetHeaders(IXLWorksheet ws)
-        {
-
-            var range2 = ws.Range(ws.Cell(4, 1).Address, ws.Cell(4, _accountTreeDeep).Address);
-            range2.Value = "Cuentas";
-            range2.Merge();
-            range2.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-
-            ws.Cell(4, _accountTreeDeep + 1).Value = "Saldo";
-
-            for (int i = 1; i < _accountTreeDeep; i++)
-            {
-                ws.Column(i).Width = 3;
-            }
-        }
-        
-        private void SetExcelSheetGeneralFormat(IXLWorksheet worksheet)
-        {
-            worksheet.Tables.FirstOrDefault().Theme = XLTableTheme.None;
-            worksheet.Tables.FirstOrDefault().ShowHeaderRow = false;
-            worksheet.Tables.FirstOrDefault().ShowAutoFilter = false;
-            worksheet.Columns().AdjustToContents();
-        }
-        
-        private void RemoveColumnsExcelReport(IXLWorksheet worksheet)
-        {
-            worksheet.Column(_accountTreeDeep + 1).Delete();
-            worksheet.Column(_accountTreeDeep + 1).Delete();
-            worksheet.Column(_accountTreeDeep + 1).Delete();
-        }
-        
-        private void SetColumnsFormatExcelReport(IXLWorksheet worksheet)
-        {
-            worksheet.Column(_accountTreeDeep + 1).Style.NumberFormat.Format = "₡#,##0.00";
-        }
-        
         private void tbnSalir_Click(object sender, EventArgs e)
         {
             this.Close();
         }
+
+        #endregion
     }
+
 }

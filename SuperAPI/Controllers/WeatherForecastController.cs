@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace AriesContador.Api.Controllers
+namespace SuperAPI.Controllers
 {
     [ApiController]
     [Route("[controller]")]
@@ -23,17 +23,11 @@ namespace AriesContador.Api.Controllers
         {
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {
-                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+                Date = DateTime.Now.AddDays(index),
                 TemperatureC = Random.Shared.Next(-20, 55),
                 Summary = Summaries[Random.Shared.Next(Summaries.Length)]
             })
             .ToArray();
-        }
-
-        [HttpGet(Name = "GetTest")]
-        public IActionResult GetTest()
-        {
-            return Ok("Se trata de llegar a lo desconocido a través del desorden de todos los sentidos."); 
         }
     }
 }

@@ -34,6 +34,7 @@ namespace AriesContador.Data.Repositories
             var output = dataAccess.LoadData<Account, BasicReportParam>("SP_EstadoResultadoIntegralReport", reportParam);
             output.BuildAccountsBalance();
             return output.OrderByDescTree();
+            //return output;
         }
 
         public IEnumerable<PostingPeriodInfo> PostingPeriodReport(string companyId)
