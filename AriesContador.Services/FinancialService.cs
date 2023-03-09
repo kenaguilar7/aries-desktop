@@ -5,9 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using AriesContador.Core.Services;
-using AriesContador.Core.Models.Companies;
-using AriesContador.Core.Models.Utils;
-using CapaEntidad.Entidades.JournalEntries;
+using AriesContador.Core.Models.JournalEntries;
 
 namespace AriesContador.Services
 {

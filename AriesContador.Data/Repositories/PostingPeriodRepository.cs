@@ -1,12 +1,8 @@
-﻿using AriesContador.Core.Models.Accounts;
-using CapaEntidad.Entidades.JournalEntries;
-using AriesContador.Core.Models.PostingPeriods;
+﻿using AriesContador.Core.Models.PostingPeriods;
 using AriesContador.Core.Repositories;
 using AriesContador.Data.Internal.DataAccess;
 using System;
-using System.Linq;
 using System.Collections.Generic;
-using System.Text;
 
 namespace AriesContador.Data.Repositories
 {

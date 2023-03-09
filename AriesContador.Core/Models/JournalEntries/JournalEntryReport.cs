@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using ClosedXML.Attributes;
 
-namespace CapaEntidad.Entidades.JournalEntries
+namespace AriesContador.Core.Models.JournalEntries
 {
     public class JournalEntryReport
     {
@@ -51,10 +51,10 @@ namespace CapaEntidad.Entidades.JournalEntries
         public decimal ForeignAmount { get; set; }
     }
 
-    //public class BasicReportParam
-    //{
-    //    public string CompanyId { get; set; }
-    //    public string FirstDate { get; set; }
-    //    public string EndDate { get; set; }
-    //}
+    public class BasicReportParam
+    {
+        public string CompanyId { get; set; }
+        public string FirstDate { get; set; }
+        public string EndDate { get; set; }
+    }
 }

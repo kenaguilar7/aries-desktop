@@ -5,15 +5,11 @@ using System.Text;
 using AriesContador.Core;
 using AriesContador.Core.Models;
 using AriesContador.Core.Models.Accounts;
+using AriesContador.Core.Models.JournalEntries;
 using AriesContador.Core.Models.PostingPeriods;
+using AriesContador.Core.Models.Reports;
 using AriesContador.Core.Models.Utils;
 using AriesContador.Core.Services;
-using CapaEntidad.Entidades.JournalEntries;
-using CapaEntidad.Entidades.Reports;
-using AriesContador.Core.Models.Utils;
-using CapaEntidad.Entidades.Seguridad;
-using CapaEntidad.Enumeradores;
-
 namespace AriesContador.Services
 {
     public class FinancialReportService : IFinancialReportService
@@ -29,7 +25,7 @@ namespace AriesContador.Services
         public IEnumerable<JournalEntryReport> JournalEntryReport(BasicReportParam jEParams)
         {
             var output = _unitOfWork.FinancialReportRepository.JournalEntryReport(jEParams);
-            return output; 
+            return output;
         }
 
         public IEnumerable<BalanceComprobacionReport> BalanceComprobacionReport(BasicReportParam reportParam)
@@ -43,18 +39,18 @@ namespace AriesContador.Services
                 {
                     Account = account.Name,
                     AccountPath = account.PathDirection,
-                    SaldoAnteriorDeb = (account.DebOCred == DebOCred.Debito) ? account.PriorBalance : 0,
-                    SaldoAnteriorCred = (account.DebOCred == DebOCred.Credito) ? account.PriorBalance : 0,
-                    SaldoMensualDeb = (account.DebOCred == DebOCred.Debito) ? account.MontlyBalance : 0,
-                    SaldoMensualCred = (account.DebOCred == DebOCred.Credito) ? account.MontlyBalance : 0,
-                    SaldoActualCuentaDeb = (account.DebOCred == DebOCred.Debito) ? account.CurrentBalance : 0,
-                    SaldoActualCuentaCred = (account.DebOCred == DebOCred.Credito) ? account.CurrentBalance : 0,
+                    SaldoAnteriorDeb = (account.DebOCred == DebOrCred.Debito) ? account.PriorBalance : 0,
+                    SaldoAnteriorCred = (account.DebOCred == DebOrCred.Credito) ? account.PriorBalance : 0,
+                    SaldoMensualDeb = (account.DebOCred == DebOrCred.Debito) ? account.MontlyBalance : 0,
+                    SaldoMensualCred = (account.DebOCred == DebOrCred.Credito) ? account.MontlyBalance : 0,
+                    SaldoActualCuentaDeb = (account.DebOCred == DebOrCred.Debito) ? account.CurrentBalance : 0,
+                    SaldoActualCuentaCred = (account.DebOCred == DebOrCred.Credito) ? account.CurrentBalance : 0,
                 };
 
                 report.Add(rLine);
             }
 
-            return report; 
+            return report;
         }
 
         public ResultReportEstadoResultadoIntegral EstadoResultadoIntegral(BasicReportParam reportParam)
@@ -95,13 +91,13 @@ namespace AriesContador.Services
             foreach (var account in accountsReport)
             {
                 var auxAccountWithOutMoves = account.AccountType == AccountType.Cuenta_Auxiliar &&
-                                                 account.Editable == true && account.CurrentBalance == 0; 
+                                                 account.Editable == true && account.CurrentBalance == 0;
 
                 if (!auxAccountWithOutMoves)
                 {
                     var rLine = new EstadoResultadoIntegralReport
                     {
-                        Account = (account.AccountType == AccountType.Cuenta_Titulo)?$"TOTAL {account.Name}":account.Name,
+                        Account = (account.AccountType == AccountType.Cuenta_Titulo) ? $"TOTAL {account.Name}" : account.Name,
                         AccountPath = account.PathDirection,
                         SaldoActual = account.CurrentBalance,
                         IsMainAccount = account.AccountType == AccountType.Cuenta_Titulo
@@ -111,13 +107,13 @@ namespace AriesContador.Services
             }
 
             var resultAmount = accountsReport.GetTotalPeridasYGanancias();
-            return new ResultReportEstadoResultadoIntegral() {Results = report, TotalPeridaGanancia = resultAmount}; 
+            return new ResultReportEstadoResultadoIntegral() { Results = report, TotalPeridaGanancia = resultAmount };
         }
 
         public ClosurePostingPeriodBalance PreviousClosurePostingPeriodBalance(BasicReportParam reportParam)
         {
             var accountsReport = _unitOfWork.FinancialReportRepository.EstadoResultadoIntegralAccounts(reportParam);
-            return new ClosurePostingPeriodBalance(){Amount = accountsReport.GetTotalPeridasYGanancias()}; 
+            return new ClosurePostingPeriodBalance() { Amount = accountsReport.GetTotalPeridasYGanancias() };
         }
 
         public IEnumerable<PostingPeriodInfoReport> PostingPeriodInfo(string companyId)
@@ -130,20 +126,49 @@ namespace AriesContador.Services
                 var item = new PostingPeriodInfoReport
                 {
                     AccountPeriodName = postingPeriod.PostingPeriodDateString,
-                    Status = postingPeriod.Status, 
+                    Status = postingPeriod.Status,
                     CreatedDate = postingPeriod.CreatedDateString,
-                    ClosedDate = postingPeriod.ClosedDateString, 
+                    ClosedDate = postingPeriod.ClosedDateString,
                     UserName = postingPeriod.UserName
-                }; 
+                };
                 returnList.Add(item);
             }
-            return returnList; 
+            return returnList;
         }
 
         public IEnumerable<ClosingPostingPeriodReport> ClosingPostingPeriodReport(string companyId)
         {
-            return _unitOfWork.FinancialReportRepository.ClosingPostingPeriodReport(companyId); 
+            return _unitOfWork.FinancialReportRepository.ClosingPostingPeriodReport(companyId);
         }
+        //public IEnumerable<Core.Models.Reports.BalanceComprobacionReport> BalanceComprobacionReport(Core.Models.JournalEntries.BasicReportParam reportParam)
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        //public IEnumerable<Core.Models.Reports.ClosingPostingPeriodReport> ClosingPostingPeriodReport(string companyId)
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        //public Core.Models.Reports.ResultReportEstadoResultadoIntegral EstadoResultadoIntegral(Core.Models.JournalEntries.BasicReportParam reportParam)
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        //public IEnumerable<Core.Models.JournalEntries.JournalEntryReport> JournalEntryReport(Core.Models.JournalEntries.BasicReportParam jEParams)
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        //public IEnumerable<Core.Models.Reports.PostingPeriodInfoReport> PostingPeriodInfo(string companyId)
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        //public ClosurePostingPeriodBalance PreviousClosurePostingPeriodBalance(Core.Models.JournalEntries.BasicReportParam reportParam)
+        //{
+        //    throw new NotImplementedException();
+        //}
     }
 }
 

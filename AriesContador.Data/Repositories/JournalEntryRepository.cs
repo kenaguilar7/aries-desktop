@@ -1,9 +1,10 @@
-﻿using CapaEntidad.Entidades.JournalEntries;
+﻿using AriesContador.Core.Models.JournalEntries;
 using AriesContador.Core.Repositories;
 using AriesContador.Data.Internal.DataAccess;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 
 namespace AriesContador.Data.Repositories
 {

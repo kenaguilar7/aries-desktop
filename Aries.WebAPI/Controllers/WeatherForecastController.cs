@@ -1,5 +1,5 @@
+using AriesContador.Core.Models.Users;
 using Microsoft.AspNetCore.Mvc;
-using MySuperLib;
 
 namespace Aries.WebAPI.Controllers
 {
@@ -10,7 +10,7 @@ namespace Aries.WebAPI.Controllers
         private static readonly string[] Summaries = new[]
         {
         "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-    };
+        };
 
         private readonly ILogger<WeatherForecastController> _logger;
 
@@ -20,10 +20,10 @@ namespace Aries.WebAPI.Controllers
         }
 
         [HttpGet(Name = "GetWeatherForecast")]
-        public string Get()
-        {
-
-            return "Hola"; 
-        }
+        public User Get() 
+            => new User() 
+            {
+                Mail="kenaguilar.steve@gmail.com"
+            };
     }
 }

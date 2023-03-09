@@ -1,8 +1,8 @@
-﻿using AriesContador.Core.Models.Patterns.Command;
+﻿using AriesContador.Core.Models.JournalEntries;
+using AriesContador.Core.Models.Patterns.Command;
 using AriesContador.Core.Models.PostingPeriods;
+using AriesContador.Core.Models.Reports;
 using AriesContador.Core.Services;
-using CapaEntidad.Entidades.JournalEntries;
-using CapaEntidad.Entidades.Reports;
 using ClosedXML.Excel;
 using System;
 using System.Collections.Generic;

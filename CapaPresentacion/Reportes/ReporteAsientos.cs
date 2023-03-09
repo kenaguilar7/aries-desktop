@@ -1,16 +1,10 @@
-﻿using CapaEntidad.Entidades.JournalEntries;
-using CapaEntidad.Entidades.FechaTransacciones;
+﻿//using CapaEntidad.Entidades.JournalEntries;
 using CapaEntidad.Enumeradores;
-using CapaEntidad.Reportes;
 using CapaEntidad.Textos;
-using CapaLogica;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Windows.Forms;
 using AriesContador.Core;
 using AriesContador.Core.Models.PostingPeriods;
@@ -19,6 +13,7 @@ using AriesContador.Core.Services;
 using AriesContador.Data;
 using AriesContador.Services;
 using ClosedXML.Excel;
+using AriesContador.Core.Models.JournalEntries;
 
 namespace CapaPresentacion.Reportes
 {
@@ -31,6 +26,8 @@ namespace CapaPresentacion.Reportes
 
         public ReporteAsientos()
         {
+
+            var ff = new FinancialService(null); 
             InitializeComponent();
             IUnitOfWork unit = new UnitOfWork(GlobalConfig.ConnectionString);
             _financialReportService = new FinancialReportService(unit);

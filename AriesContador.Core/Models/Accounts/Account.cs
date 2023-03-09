@@ -1,10 +1,5 @@
 ﻿using AriesContador.Core.Models.Accounts.Behavior;
 using AriesContador.Core.Models.Utils;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using CapaEntidad.Entidades.JournalEntries;
-using CapaEntidad.Utils;
 
 namespace AriesContador.Core.Models.Accounts
 {
@@ -15,7 +10,7 @@ namespace AriesContador.Core.Models.Accounts
 
         public int? FatherAccount { get; set; }
 
-        public DebOCred DebOCred { get; set; }
+        public DebOrCred DebOCred { get; set; }
 
         public decimal PriorBalance { get; set; }
 
@@ -41,7 +36,7 @@ namespace AriesContador.Core.Models.Accounts
         {
             get
             {
-                if (DebOCred == DebOCred.Debito)
+                if (DebOCred == DebOrCred.Debito)
                 { return new Debit(); }
                 else { return new Credit(); }
             }

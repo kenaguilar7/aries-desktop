@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using CapaEntidad.Utils;
+using AriesContador.Core.Models.Utils; 
 
-namespace CapaEntidad.Entidades.JournalEntries
+namespace AriesContador.Core.Models.JournalEntries
 {
     public class JournalEntry : JournalEntryHeader
     {

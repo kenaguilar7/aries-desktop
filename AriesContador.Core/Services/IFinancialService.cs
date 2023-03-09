@@ -1,6 +1,6 @@
 ﻿using AriesContador.Core.Models.Accounts;
+using AriesContador.Core.Models.JournalEntries;
 using AriesContador.Core.Models.PostingPeriods;
-using CapaEntidad.Entidades.JournalEntries;
 using System;
 using System.Collections.Generic;
 

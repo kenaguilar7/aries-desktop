@@ -4,7 +4,7 @@ using System.Text;
 
 namespace AriesContador.Core.Models.Utils
 {
-    public enum DebOCred
+    public enum DebOrCred
     {
         Debito = 1,
         Credito = 2,

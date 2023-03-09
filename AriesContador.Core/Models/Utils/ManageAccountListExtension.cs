@@ -1,11 +1,6 @@
 ﻿using AriesContador.Core.Models.Accounts;
-using CapaEntidad.Entidades.Cuentas;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace AriesContador.Core.Models.Utils
 {

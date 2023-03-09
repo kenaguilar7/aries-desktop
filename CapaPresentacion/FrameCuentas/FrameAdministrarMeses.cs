@@ -14,6 +14,7 @@ using AriesContador.Data;
 using AriesContador.Services;
 using CapaEntidad.Entidades.JournalEntries;
 using CapaEntidad.Entidades.Reports;
+using AriesContador.Core.Models.JournalEntries;
 
 namespace CapaPresentacion.FrameCuentas
 {

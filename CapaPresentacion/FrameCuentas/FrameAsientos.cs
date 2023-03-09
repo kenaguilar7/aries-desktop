@@ -3,22 +3,20 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using AriesContador.Core;
+using AriesContador.Core.Models.JournalEntries;
 using AriesContador.Core.Models.PostingPeriods;
 using AriesContador.Core.Services;
 using AriesContador.Data;
 using AriesContador.Services;
-using CapaEntidad.Entidades.JournalEntries;
 using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Enumeradores;
 using CapaEntidad.Interfaces;
 using CapaEntidad.Textos;
-using CapaEntidad.Utils;
-using CapaLogica;
 using CapaPresentacion.Reportes;
 using CapaPresentacion.Utils;
+using AriesContador.Core.Models.Utils; 
 
 
 namespace CapaPresentacion.FrameCuentas 
@@ -78,26 +76,26 @@ namespace CapaPresentacion.FrameCuentas
 
         private void ConfigExchangeController(TipoMonedaCompañia moneyType)
         {
-            lstTipoCambio.DataSource = Enum.GetValues(typeof(Currency));
+            lstTipoCambio.DataSource = Enum.GetValues(typeof(AriesContador.Core.Models.Utils.Currency));
 
             switch (moneyType)
             {
                 case TipoMonedaCompañia.Dolares_y_Colones:
                     ColumnTipoCambio.Visible = true;
                     ColumnMontoDolares.Visible = true;
-                    lstTipoCambio.SelectedItem = Currency.colones;
+                    lstTipoCambio.SelectedItem = AriesContador.Core.Models.Utils.Currency.colones;
                     lstTipoCambio.Enabled = true;
                     break;
                 case TipoMonedaCompañia.Solo_Colones:
                     ColumnTipoCambio.Visible = false;
                     ColumnMontoDolares.Visible = false;
-                    lstTipoCambio.SelectedItem = Currency.colones;
+                    lstTipoCambio.SelectedItem = AriesContador.Core.Models.Utils.Currency.colones;
                     lstTipoCambio.Enabled = false;
                     break;
                 case TipoMonedaCompañia.Solo_Dolares:
                     ColumnTipoCambio.Visible = true;
                     ColumnMontoDolares.Visible = true;
-                    lstTipoCambio.SelectedItem = Currency.dolares;
+                    lstTipoCambio.SelectedItem = AriesContador.Core.Models.Utils.Currency.dolares;
                     lstTipoCambio.Enabled = false;
                     break;
                 default:
@@ -251,15 +249,15 @@ namespace CapaPresentacion.FrameCuentas
                 UpdatedBy = GlobalConfig.Usuario.Id,
             };
 
-            if (lstTipoCambio.SelectedItem is Currency.colones)
+            if (lstTipoCambio.SelectedItem is AriesContador.Core.Models.Utils.Currency.colones)
             {
-                jELine.Currency = Currency.colones;
+                jELine.Currency = AriesContador.Core.Models.Utils.Currency.colones;
                 jELine.RateAmount = 1.00m;
                 jELine.Amount = Convert.ToDecimal(txtMontoTotalTransaccion.Text);
             }
-            else if (lstTipoCambio.SelectedItem is Currency.dolares)
+            else if (lstTipoCambio.SelectedItem is AriesContador.Core.Models.Utils.Currency.dolares)
             {
-                jELine.Currency = Currency.dolares;
+                jELine.Currency = AriesContador.Core.Models.Utils.Currency.dolares;
                 jELine.RateAmount = Convert.ToDecimal(txtTipoCambio.Text);
                 jELine.ForeignAmount = Convert.ToDecimal(txtMontoTotalTransaccion.Text);
 
@@ -267,7 +265,7 @@ namespace CapaPresentacion.FrameCuentas
                 jELine.Amount = Math.Truncate(100 * foreignAmount) / 100;
             }
 
-            jELine.DebOrCred = (rDebitos.Checked) ? DebOrCred.Debito : DebOrCred.Credito;
+            jELine.DebOrCred = (rDebitos.Checked) ? AriesContador.Core.Models.Utils.DebOrCred.Debito : AriesContador.Core.Models.Utils.DebOrCred.Credito;
 
             return jELine;
         }
@@ -477,19 +475,19 @@ namespace CapaPresentacion.FrameCuentas
                 row.Cells[2].Value = tr.Memo;
                 row.Cells[3].Value = tr.Date;
 
-                if (tr.DebOrCred == DebOrCred.Debito)
+                if (tr.DebOrCred == AriesContador.Core.Models.Utils.DebOrCred.Debito)
                 {
                     row.Cells[4].Value = tr.Amount;
                     debitos += Convert.ToDecimal(tr.Amount);
                 }
-                else if (tr.DebOrCred == DebOrCred.Credito)
+                else if (tr.DebOrCred == AriesContador.Core.Models.Utils.DebOrCred.Credito)
                 {
                     row.Cells[5].Value = tr.Amount;
                     creditos += Convert.ToDecimal(tr.Amount);
                 }
                 row.Cells[6].Value = tr.Currency.ToString();
                 row.Cells[7].Value = tr.RateAmount;
-                if (tr.Currency == Currency.dolares)
+                if (tr.Currency == AriesContador.Core.Models.Utils.Currency.dolares)
                 {
                     row.Cells[8].Value = tr.ForeignAmount;
                 }
@@ -593,7 +591,7 @@ namespace CapaPresentacion.FrameCuentas
 
             TransferirCuenta(accountDTO);
 
-            if (dummy.DebOrCred == DebOrCred.Debito)
+            if (dummy.DebOrCred == AriesContador.Core.Models.Utils.DebOrCred.Debito)
             { rDebitos.PerformClick(); }
             else { rCreditos.PerformClick(); }
 
@@ -601,7 +599,7 @@ namespace CapaPresentacion.FrameCuentas
             txtBoxDetalle.Text = dummy.Memo;
             txtBoxFechaFactura.Text = dummy.Date.ToShortDateString();
 
-            if (dummy.Currency == Currency.dolares)
+            if (dummy.Currency == AriesContador.Core.Models.Utils.Currency.dolares)
             {
                 txtMontoTotalTransaccion.Text = (dummy.Amount / dummy.RateAmount).ToString();
                 lstTipoCambio.SelectedIndex = 1;

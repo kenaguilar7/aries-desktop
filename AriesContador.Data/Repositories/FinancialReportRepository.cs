@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Text;
 using AriesContador.Core.Repositories;
 using AriesContador.Data.Internal.DataAccess;
-using CapaEntidad.Entidades.JournalEntries;
 using System.Linq;
 using AriesContador.Core.Models.Accounts;
 using AriesContador.Core.Models.PostingPeriods;
 using AriesContador.Core.Models.Utils;
-using CapaEntidad.Entidades.Reports;
+using AriesContador.Core.Models.JournalEntries;
+using AriesContador.Core.Models.Reports;
 
 namespace AriesContador.Data.Repositories
 {

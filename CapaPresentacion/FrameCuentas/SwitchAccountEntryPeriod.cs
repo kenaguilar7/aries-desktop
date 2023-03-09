@@ -2,10 +2,10 @@
 using System.Linq;
 using System.Windows.Forms;
 using AriesContador.Core;
+using AriesContador.Core.Models.JournalEntries;
 using AriesContador.Core.Models.PostingPeriods;
 using AriesContador.Data;
 using AriesContador.Services;
-using CapaEntidad.Entidades.JournalEntries;
 
 namespace CapaPresentacion.FrameCuentas
 {

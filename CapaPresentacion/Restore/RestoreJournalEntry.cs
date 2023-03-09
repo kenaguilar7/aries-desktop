@@ -1,18 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using AriesContador.Core;
+using AriesContador.Core.Models.JournalEntries;
 using AriesContador.Core.Models.PostingPeriods;
 using AriesContador.Core.Services;
 using AriesContador.Data;
 using AriesContador.Services;
-using CapaEntidad.Entidades.JournalEntries;
 using CapaEntidad.Textos;
 
 namespace CapaPresentacion.Restore

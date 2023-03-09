@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
 using AriesContador.Core;
@@ -12,12 +11,10 @@ using AriesContador.Core.Models.Utils;
 using AriesContador.Core.Services;
 using AriesContador.Data;
 using AriesContador.Services;
-using CapaEntidad.Entidades.JournalEntries;
-using CapaEntidad.Entidades.Reports;
-using ClosedXML.Excel;
-using AriesContador.Core.Models.Patterns.Factories;
 using AriesContador.Core.Models.Patterns.ActionsWorker;
 using System.Threading.Tasks;
+using AriesContador.Core.Models.JournalEntries;
+using AriesContador.Core.Models.Reports;
 
 namespace CapaPresentacion.Reportes
 {

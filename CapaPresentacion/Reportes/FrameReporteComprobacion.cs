@@ -1,15 +1,9 @@
-﻿using CapaEntidad.Entidades.Cuentas;
-using CapaEntidad.Entidades.FechaTransacciones;
-using CapaEntidad.Enumeradores;
-using CapaEntidad.Reportes;
-using CapaEntidad.Textos;
-using CapaLogica;
+﻿using CapaEntidad.Textos;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
-using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using AriesContador.Core;
@@ -17,10 +11,9 @@ using AriesContador.Core.Models.PostingPeriods;
 using AriesContador.Core.Services;
 using AriesContador.Data;
 using AriesContador.Services;
-using CapaEntidad.Entidades.JournalEntries;
-using CapaEntidad.Entidades.Reports;
-using CapaEntidad.Utils;
 using ClosedXML.Excel;
+using AriesContador.Core.Models.Reports;
+using AriesContador.Core.Models.JournalEntries;
 
 namespace CapaPresentacion.Reportes
 {

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using AriesContador.Core.Models.Utils;
-using CapaEntidad.Entidades.JournalEntries;
+using AriesContador.Core.Models.JournalEntries;
 
 namespace AriesContador.Core.Models.PostingPeriods
 {

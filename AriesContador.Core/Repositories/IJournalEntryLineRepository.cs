@@ -1,7 +1,7 @@
-﻿using System;
+﻿using AriesContador.Core.Models.JournalEntries;
+using System;
 using System.Collections.Generic;
 using System.Text;
-using CapaEntidad.Entidades.JournalEntries;
 
 namespace AriesContador.Core.Repositories
 {

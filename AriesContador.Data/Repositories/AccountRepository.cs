@@ -10,7 +10,7 @@ using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Linq;
 using AriesContador.Core.Models.Utils;
-using CapaEntidad.Entidades.JournalEntries;
+using AriesContador.Core.Models.JournalEntries;
 
 namespace AriesContador.Data.Repositories
 {

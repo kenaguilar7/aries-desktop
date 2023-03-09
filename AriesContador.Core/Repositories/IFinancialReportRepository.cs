@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 using AriesContador.Core.Models.Accounts;
+using AriesContador.Core.Models.JournalEntries;
 using AriesContador.Core.Models.PostingPeriods;
-using CapaEntidad.Entidades.JournalEntries;
-using CapaEntidad.Entidades.Reports;
+using AriesContador.Core.Models.Reports;
 
 namespace AriesContador.Core.Repositories
 {
