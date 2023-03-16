@@ -82,9 +82,6 @@ namespace CapaLogica
                 retorno = cuentaDao.GetInforCompletaCuentaMayor(cuenta);
             }
 
-
-            //decimal acumulado = 0;
-
             decimal lastSaldoActual = 0m;
             foreach (DataRow item in retorno.Rows)
             {
@@ -95,13 +92,7 @@ namespace CapaLogica
                 //acumulado += lastSaldoActual;
 
                 item["Saldo Actual"] = string.Format("{0:n}", lastSaldoActual);
-
-
             }
-
-
-
-
             return retorno;
         }
         public Boolean Update(ref Cuenta cuenta, Usuario user, String nuevoNombre, Compañia compañia, String nuevaDesc, out String mensaje)

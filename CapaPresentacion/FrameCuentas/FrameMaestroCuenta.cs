@@ -148,6 +148,7 @@ namespace CapaPresentacion.FrameCuentas
             row.Cells[1].Value = CuentaActual.DebitosColones;
             row.Cells[2].Value = CuentaActual.CreditosColones;
             row.Cells[3].Value = CuentaActual.SaldoActualColones;
+            //row.Cells[4].Value = CuentaActual.SaldoActualDolares;
             gridDatosA.Rows.Add(row);
         }
         private void CargarGridB()

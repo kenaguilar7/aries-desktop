@@ -260,3 +260,4 @@ paket-files/
 __pycache__/
 *.pyc
 /CapaPresentacion/App.config
+/Aries.WebAPI/appsettings.json
