@@ -59,7 +59,7 @@ namespace CapaPresentacion.FrameCuentas
         {
             try
             {
-                lstMesesAbiertos.DataSource =  _financialSercie.GetPostingPeriods(GlobalConfig.Company.Codigo).OrderByDescending(p=>p.Date).ToList(); 
+                lstMesesAbiertos.DataSource =  _financialSercie.GetPostingPeriods(GlobalConfig.Company.Code).OrderByDescending(p=>p.Date).ToList(); 
                 lstTipoCambio.SelectedIndex = 0;
                 lstTipoCambio.SelectedIndex = 0;
             

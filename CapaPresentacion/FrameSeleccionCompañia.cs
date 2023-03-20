@@ -1,4 +1,4 @@
-﻿using CapaEntidad.Entidades.Compañias;
+﻿//using CapaEntidad.Entidades.Compañias;
 using CapaLogica;
 using System;
 using System.Collections.Generic;
@@ -12,6 +12,9 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using CapaEntidad.Textos;
 using CapaPresentacion.Utils;
+using AriesContador.Services;
+using AriesContador.Core.Models.Companies;
+using System.Activities.Expressions;
 
 namespace CapaPresentacion
 {
@@ -19,18 +22,23 @@ namespace CapaPresentacion
     {
 
         FrameMenu fm = null;
-        public FrameSeleccionCompañia(FrameMenu fm)
+        private readonly IHttpAdministrationService _httpAdministrationService;
+
+        public FrameSeleccionCompañia(FrameMenu fm, IHttpAdministrationService companyService)
         {
+            this._httpAdministrationService = companyService;
             this.fm = fm as FrameMenu;
             InitializeComponent();
             CargarCompañias();
         }
 
-        private void CargarCompañias()
+        private async void CargarCompañias()
         {
 
-            var _lstCompanies = (from c in new CompañiaCL().GetAll(GlobalConfig.Usuario) where c.Activo == true orderby c.Nombre select c).ToList<Compañia>();
-
+            //var _lstCompanies = (from c in new CompañiaCL().GetAll(GlobalConfig.Usuario) where c.Activo == true orderby c.Nombre select c).ToList<Compañia>();
+            var _lstCompanies = await _httpAdministrationService.GetAllCompanies();
+            _lstCompanies = _lstCompanies.FindAll(x => x.Active == true).OrderBy(x => x.Name).ToList();
+            
             lstCompanias.DataSource = _lstCompanies;
             lstCompanias.SelectedIndex = -1;
             this.lstCompanias.SelectedIndexChanged += new System.EventHandler(this.lstCompanias_SelectedIndexChanged);
@@ -40,12 +48,11 @@ namespace CapaPresentacion
         {
             try
             {
-                var c = (Compañia)btnAceptar.Tag;
-                if (c != null)
+                if (btnAceptar.Tag is Company company && company != null)
                 {
 
                     if(!IsAvalibleToChangeCompany())return;
-                    GlobalConfig.Company = c;
+                    GlobalConfig.NewCompany = company;
                     fm.comParametro = true;
                     this.Close();
                 }
@@ -87,12 +94,12 @@ namespace CapaPresentacion
             return isAvalibleToChangeCompany; 
         }
 
-        private void CargarCompaniaFormulario(Compañia compañia)
+        private void CargarCompaniaFormulario(Company compañia)
         {
             // lstCompanias.SelectedIndex = -1;
             txtCompaniaBuscada.Text = compañia.ToString();
             txtCompaniaBuscada.Visible = true;
-            txtIdentificacion.Text = compañia.NumeroCedula;
+            txtIdentificacion.Text = compañia.IdNumber;
             txtIdentificacion.Visible = true;
             btnAceptar.Tag = compañia;
 
@@ -110,7 +117,7 @@ namespace CapaPresentacion
                     //Le decimos que me devuelva un String con el formto del parametro
                     var cod = "C" + num.ToString("000");
 
-                    List<Compañia> salida = (from c in (List<Compañia>)lstCompanias.DataSource where c.Codigo == cod select c).Take(1).ToList<Compañia>();
+                    List<Company> salida = (from c in (List<Company>)lstCompanias.DataSource where c.Code == cod select c).Take(1).ToList<Company>();
 
                     if (salida.Count != 0)
                     {
@@ -120,7 +127,7 @@ namespace CapaPresentacion
                 else
                 {
 
-                    List<Compañia> salida = (from c in (List<Compañia>)lstCompanias.DataSource where c.Codigo == txtBoxBuscar.Text select c).Take(1).ToList<Compañia>();
+                    List<Company> salida = (from c in (List<Company>)lstCompanias.DataSource where c.Code == txtBoxBuscar.Text select c).Take(1).ToList<Company>();
 
                     if (salida.Count != 0)
                     {
@@ -138,7 +145,7 @@ namespace CapaPresentacion
         private void lstCompanias_SelectedIndexChanged(object sender, EventArgs e)
         {
             this.txtCompaniaBuscada.Visible = false;
-            var c = (Compañia)lstCompanias.SelectedItem;
+            var c = (Company)lstCompanias.SelectedItem;
             CargarCompaniaFormulario(c);
         }
 

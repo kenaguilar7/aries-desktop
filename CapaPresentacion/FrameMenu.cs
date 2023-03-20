@@ -12,37 +12,44 @@ using CapaEntidad.Entidades.Usuarios;
 using CapaPresentacion.AdminAsientos;
 using CapaPresentacion.FrameUsuarios;
 using CapaPresentacion.Restore;
+using AriesContador.Core.Services;
+using AriesContador.Services;
 
 namespace CapaPresentacion
 {
     public partial class FrameMenu : Form
     {
+        //private readonly IFinancialService financialService;
+        private readonly IHttpAdministrationService _httpAdministrationService;
+
         public Boolean comParametro { set { CargarCompañia(); } }
-        public FrameMenu()
+        public FrameMenu(IHttpAdministrationService companyService)
         {
+            this._httpAdministrationService = companyService;
             InitializeComponent();
 
-            //FrameLoginUsuario n = new FrameLoginUsuario();
-            //n.FormClosing += N_FormClosing;
+            FrameLoginUsuario n = new FrameLoginUsuario(_httpAdministrationService);
+            n.FormClosing += N_FormClosing;
 
-            //n.ShowDialog();
-            //void N_FormClosing(object sender, FormClosingEventArgs e)
-            //{
-            //    if (GlobalConfig.Usuario == null)
-            //    {
-            //        Application.Exit();
-            //    }
-            //}
-
-            GlobalConfig.Usuario = new Usuario()
+            n.ShowDialog();
+            void N_FormClosing(object sender, FormClosingEventArgs e)
             {
-                Id = 1,
-                MyNombre = "Kenneth DEV"
-            };
+                if (GlobalConfig.User == null)
+                {
+                    Application.Exit();
+                }
+            }
+
+            //GlobalConfig.Usuario = new Usuario()
+            //{
+            //    Id = 1,
+            //    MyNombre = "Kenneth DEV"
+            //};
 
 
             CargarDatos();
-
+            //this._httpAdministrationService = companyService;
+            //this.companyService = companyService;
         }
         private void CargarDatos()
         {
@@ -62,8 +69,9 @@ namespace CapaPresentacion
         }
         private void CargarCompañia()
         {
-            this.txtCompaniaNombre.Text = GlobalConfig.Company.ToString();
+            this.txtCompaniaNombre.Text = GlobalConfig.NewCompany.ToString();
         }
+
         private void MaestroDeCompañiasToolStripMenuItem_Click(object sender, EventArgs e)
         {
             FrameMaestroCompañia n = new FrameMaestroCompañia();
@@ -118,7 +126,7 @@ namespace CapaPresentacion
         {
             try
             {
-                FrameSeleccionCompañia n = new FrameSeleccionCompañia(this);
+                FrameSeleccionCompañia n = new FrameSeleccionCompañia(this, _httpAdministrationService);
                 n.ShowDialog();
             }
             catch (Exception ex)
@@ -144,7 +152,7 @@ namespace CapaPresentacion
         {
             try
             {
-                FrameSeleccionCompañia n = new FrameSeleccionCompañia(this);
+                FrameSeleccionCompañia n = new FrameSeleccionCompañia(this, _httpAdministrationService);
                 n.ShowDialog();
             }
             catch (Exception ex)

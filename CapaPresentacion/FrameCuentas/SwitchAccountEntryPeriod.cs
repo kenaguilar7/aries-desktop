@@ -30,7 +30,7 @@ namespace CapaPresentacion.FrameCuentas
 
         private void SwitchAccountEntryPeriod_Load(object sender, EventArgs e)
         {
-            var lst = _financialService.GetPostingPeriods(GlobalConfig.Company.Codigo).OrderByDescending(p => p.Date).ToList();
+            var lst = _financialService.GetPostingPeriods(GlobalConfig.Company.Code).OrderByDescending(p => p.Date).ToList();
             lst.RemoveAll(p => p.Id == _postingPeriod.Id || p.Closed); 
             this.lstMesesAbiertos.DataSource = lst; 
             this.txtAccountName.Text = _journalEntry.Number.ToString();

@@ -64,7 +64,7 @@ namespace CapaDatos.Daos
                 "n.account_name_id LEFT JOIN accounts b ON a.father_account = " +
                 "b.account_id WHERE a.company_id = @company_id AND a.active = 1  ORDER BY a.account_id; ";
 
-            DataTable dt = manejador.Listado(sql, new List<Parametro> { new Parametro("@company_id", t.Codigo) }, CommandType.Text);
+            DataTable dt = manejador.Listado(sql, new List<Parametro> { new Parametro("@company_id", t.Code) }, CommandType.Text);
 
 
             foreach (DataRow item in dt.Rows)
@@ -231,7 +231,7 @@ ORDER BY T5.month_report , T4.entry_id
                         cmd.Parameters.AddWithValue("@father_account", padre.Id);
                         cmd.Parameters.AddWithValue("@previous_balance_c", t.SaldoAnteriorColones);
                         cmd.Parameters.AddWithValue("@previous_balance_d", t.SaldoAnteriorDolares);
-                        cmd.Parameters.AddWithValue("@company_id", t.MyCompania.Codigo);
+                        cmd.Parameters.AddWithValue("@company_id", t.MyCompania.Code);
                         cmd.Parameters.AddWithValue("@account_type", t.TipoCuenta.TipoCuenta.ToString().Replace('_', ' ').ToUpper());
                         cmd.Parameters.AddWithValue("@detail", t.Detalle);
                         cmd.Parameters.AddWithValue("@editable", t.Editable);
@@ -293,7 +293,7 @@ ORDER BY T5.month_report , T4.entry_id
                             SelectCommand = cmd
                         };
                         cmd.Parameters.AddWithValue("@updated_by", usuario.UsuarioId);
-                        cmd.Parameters.AddWithValue("@company_id", compañia.Codigo);
+                        cmd.Parameters.AddWithValue("@company_id", compañia.Code);
                         cmd.Parameters.AddWithValue("@limit_sec", limitSecy);
                         cmd.ExecuteNonQuery();
 
@@ -310,7 +310,7 @@ ORDER BY T5.month_report , T4.entry_id
                         cmd.Parameters.AddWithValue("@previous_balance_d", cuentaSaldoAsiento.SaldoActualDolares);
                         cmd.Parameters.AddWithValue("@updated_by", usuario.UsuarioId);
                         cmd.Parameters.AddWithValue("@account_id", cuentaSaldoAsiento.Id);
-                        cmd.Parameters.AddWithValue("@company_id", compañia.Codigo);
+                        cmd.Parameters.AddWithValue("@company_id", compañia.Code);
                         MySqlDataAdapter da = new MySqlDataAdapter
                         {
                             SelectCommand = cmd
@@ -357,7 +357,7 @@ ORDER BY T5.month_report , T4.entry_id
                                                      new Parametro("@detail",t.Detalle),
                                                      new Parametro("@updated_by",user.UsuarioId),
                                                      new Parametro("@account_id",t.Id),
-                                                     new Parametro("@company_id",t.MyCompania.Codigo)},
+                                                     new Parametro("@company_id",t.MyCompania.Code)},
                                                      CommandType.Text);
                 if (retorno > 0)
                 {
@@ -403,7 +403,7 @@ ORDER BY T5.month_report , T4.entry_id
                                                      new Parametro("@account_guide",(int)t.Indicador),
                                                      new Parametro("@updated_by",user.UsuarioId),
                                                      new Parametro("@account_id",t.Id),
-                                                     new Parametro("@company_id",t.MyCompania.Codigo)},
+                                                     new Parametro("@company_id",t.MyCompania.Code)},
                                                      CommandType.Text);
                 if (retorno > 0)
                 {
@@ -436,7 +436,7 @@ ORDER BY T5.month_report , T4.entry_id
                       "GROUP BY account_id";
 
             var parametros = new List<Parametro>() {
-                        new Parametro("@company_id", compañia.Codigo),
+                        new Parametro("@company_id", compañia.Code),
                         new Parametro("@date1", $"{dateTime1.Year}{String.Format("{0, 0:D2}", dateTime1.Month)}"),
                         new Parametro("@date2", $"{dateTime2.Year}{String.Format("{0, 0:D2}", dateTime2.Month)}")
             };
@@ -472,7 +472,7 @@ ORDER BY T5.month_report , T4.entry_id
                 {
 
                     cmd.Parameters.AddWithValue("@account_id", cuenta.Id);
-                    cmd.Parameters.AddWithValue("@company_id", compañia.Codigo);
+                    cmd.Parameters.AddWithValue("@company_id", compañia.Code);
                     cmd.Parameters.AddWithValue("@name", nuevoNombre);
                     var cot = Convert.ToInt32(cmd.ExecuteScalar());
 
@@ -624,7 +624,7 @@ ORDER BY T5.month_report , T4.entry_id
                         {
                             cmd.Parameters.AddWithValue("@father_account", cuenta.Padre);
                         }
-                        cmd.Parameters.AddWithValue("@company_id", cuenta.MyCompania.Codigo);
+                        cmd.Parameters.AddWithValue("@company_id", cuenta.MyCompania.Code);
                         cmd.Parameters.AddWithValue("@account_type", cuenta.TipoCuenta.TipoCuenta.ToString().Replace('_', ' ').ToUpper());
                         cmd.Parameters.AddWithValue("@account_guide", (int)cuenta.Indicador);
                         cmd.Parameters.AddWithValue("@detail", cuenta.Detalle);

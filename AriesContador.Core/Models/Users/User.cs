@@ -29,9 +29,29 @@ namespace AriesContador.Core.Models.Users
 
         public string Password { get; set; }
 
+        public string CurrentToken { get; set;  }
+        
         public override string ToString()
         {
             return $"{Name} {LastName} {LastName}";
         }
     }
+
+    public class Login
+    {
+        public string UserId { get; set; }
+        public string Password { get; set; }
+    }
+
+    public class WebToken 
+    { 
+        public string Token { get; set;  }
+        public User User { get; set; }
+    }
+
+    //public class UserLogin
+    //{
+    //    public string Username { get; internal set; }
+    //    public string Password { get; internal set; }
+    //}
 }

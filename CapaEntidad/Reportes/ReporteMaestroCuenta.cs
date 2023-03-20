@@ -83,7 +83,7 @@ namespace CapaEntidad.Reportes
                 var column = 1;
                 var row = 1;
 
-                worksheet.Cell(row++, column).Value = $"{compañia} {compañia.Codigo}";
+                worksheet.Cell(row++, column).Value = $"{compañia} {compañia.Code}";
                 worksheet.Cell(row++, column).Value = $"Maestro de Cuentas";
                 worksheet.Cell(row++, column).Value = usuario;
                 worksheet.Cell(row++, column).Value = "Cuentas";
@@ -150,7 +150,7 @@ namespace CapaEntidad.Reportes
                 var column = 1;
                 var row = 1;
 
-                worksheet.Cell(row++, column).Value = $"{compañia} {compañia.Codigo}";
+                worksheet.Cell(row++, column).Value = $"{compañia} {compañia.Code}";
                 worksheet.Cell(row++, column).Value = $"Maestro de Cuentas";
                 worksheet.Cell(row++, column).Value = usuario;
 

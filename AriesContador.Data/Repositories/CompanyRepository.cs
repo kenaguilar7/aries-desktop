@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace AriesContador.Data.Repositories
 {
@@ -53,11 +54,13 @@ namespace AriesContador.Data.Repositories
 
         }
 
-        public IEnumerable<Company> GetAll()
+        public async Task<IEnumerable<Company>> GetAll()
         {
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            var output = dataAccess.LoadData<Company>("SP_GetCompanies");
-            return output;
+            var dataAccess = new MySqlDataAccessAsync(_connectionString);
+            var lst1 = await dataAccess.ExecuteQuery<Company>(Query.Query.AdministrationQuery.JuridicPerson);
+            var lst2 = await dataAccess.ExecuteQuery<Company>(Query.Query.AdministrationQuery.FisicPerson);
+            lst1.AddRange(lst2);
+            return await Task.FromResult(lst1); 
         }
 
         public string GetConsecutive()

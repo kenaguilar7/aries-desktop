@@ -5,13 +5,10 @@ using CapaEntidad.Enumeradores;
 using CapaEntidad.Entidades.Compañias;
 using CapaEntidad.Verificaciones;
 using System.Linq;
-using CapaEntidad.Entidades.Usuarios;
 using System.Collections.Generic;
 using CapaEntidad.Textos;
 using CapaPresentacion.Reportes;
-using System.Drawing;
 using System.Threading.Tasks;
-using System.ComponentModel;
 
 namespace CapaPresentacion.FrameCompañias
 {
@@ -58,7 +55,7 @@ namespace CapaPresentacion.FrameCompañias
             this.txtBoxObservaciones.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.SiguienteEnter);
             //this.txtBoxID.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtBoxID_KeyPress);
 
-            lst = (from alias in lstCompanies orderby alias.Codigo descending select alias).ToList<Compañia>();
+            lst = (from alias in lstCompanies orderby alias.Code descending select alias).ToList<Compañia>();
             this.lstMovimientosRegistro.SelectedIndex = 0;
             this.lstCompanias.DataSource = lst;
 
@@ -74,7 +71,7 @@ namespace CapaPresentacion.FrameCompañias
             ///Y agregamos una nueva compañia con el nombre maestro  de cuentas por defecto, esta sera la opcion que el 
             ///usuario puede marcar para que no duplique de ninguna otra compañia
             var lstMCuentas = new Compañia[lst.Count + 1];
-            lstMCuentas[0] = new Compañia() { Nombre = "", Codigo = "POR DEFECTO" };
+            lstMCuentas[0] = new Compañia() { Nombre = "", Code = "POR DEFECTO" };
             ///Copiamos la lista de cuentas a la nueva lista para guardarla en el seleccionador de maestros de cuenta
             lst.CopyTo(lstMCuentas, 1);
             lstCopiarMaestroCuentas.DataSource = lstMCuentas;
@@ -102,7 +99,7 @@ namespace CapaPresentacion.FrameCompañias
             this.txtBoxDireccion.Text = compania.Direccion;
             this.txtBoxTelefono1.Text = compania.Telefono[0];
             this.txtBoxTelefono2.Text = compania.Telefono[1];
-            this.ttCodigo.Text = compania.Codigo;
+            this.ttCodigo.Text = compania.Code;
             this.groupCodigo.Visible = true;
             this.txtBoxWeb.Text = compania.Web;
             this.txtBoxMail.Text = compania.Correo;
@@ -429,7 +426,7 @@ namespace CapaPresentacion.FrameCompañias
                     //Le decimos que me devuelva un String con el formto del parametro
                     var cod = "C" + num.ToString("000");
 
-                    List<Compañia> salida = (from c in (List<Compañia>)lstCompanias.DataSource where c.Codigo == cod select c).Take(1).ToList<Compañia>();
+                    List<Compañia> salida = (from c in (List<Compañia>)lstCompanias.DataSource where c.Code == cod select c).Take(1).ToList<Compañia>();
 
                     if (salida.Count != 0)
                     {
@@ -438,7 +435,7 @@ namespace CapaPresentacion.FrameCompañias
                 }
                 else
                 {
-                    List<Compañia> salida = (from c in (List<Compañia>)lstCompanias.DataSource where c.Codigo == txtBoxBuscar.Text select c).Take(1).ToList<Compañia>();
+                    List<Compañia> salida = (from c in (List<Compañia>)lstCompanias.DataSource where c.Code == txtBoxBuscar.Text select c).Take(1).ToList<Compañia>();
                     if (salida.Count != 0)
                     {
                         CargarCompaniaFormulario(salida[0]);

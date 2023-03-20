@@ -1,14 +1,11 @@
-﻿using CapaEntidad.Entidades.Usuarios;
-using CapaLogica;
+﻿using AriesContador.Core;
+using AriesContador.Core.Models;
+using AriesContador.Core.Models.Users;
+using AriesContador.Core.Services;
+using AriesContador.Data;
+using AriesContador.Services;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace CapaPresentacion
@@ -16,22 +13,47 @@ namespace CapaPresentacion
     public partial class FrameLoginUsuario : Form
     {
 
-       public FrameLoginUsuario()
-        {
+       //private readonly IAdministrationService _administrationService;
+        private readonly IHttpAdministrationService httpAdministrationService;
 
+        public FrameLoginUsuario(IHttpAdministrationService httpAdministrationService)
+       {
             InitializeComponent();
-            AddVersionNumber(); 
+            AddVersionNumber();
+            //InitializeComponent();
+            //IUnitOfWork unit = new UnitOfWork(GlobalConfig.ConnectionString);
+            //_administrationService = new AdministrationService(unit);
+
+            this.httpAdministrationService = httpAdministrationService;
         }
 
-        private void btnAceptar_Click(object sender, EventArgs e)
+        private async void btnAceptar_Click(object sender, EventArgs e)
         {
             try
             {
-                var usuario = new UsuarioCL().Login(txtBoxUsuario.Text,txtBoxClave.Text);
-                if (usuario != null)
+                var param = new Login()
                 {
-                    GlobalConfig.Usuario = usuario;
+                    UserId = txtBoxUsuario.Text,
+                    Password = txtBoxClave.Text
+                };
+
+                //var param = new Login()
+                //{
+                //    UserId = "kenneth",
+                //    Password = "96321"
+                //};
+
+                var token = await httpAdministrationService.Login(param);
+
+                if (token.Token != null)
+                {
+                    EnvironmentVariable.ApiToken = token;
+                    GlobalConfig.User = token.User;
                     this.Close();
+                }
+                else
+                {
+                    MessageBox.Show("Usuario o contraseña incorrecta", "", MessageBoxButtons.OK, MessageBoxIcon.Exclamation); 
                 }
             }
             catch (Exception ex)
@@ -101,4 +123,6 @@ namespace CapaPresentacion
             //Application.Exit(); 
         }
     }
+
+
 }

@@ -1,13 +1,7 @@
 ﻿using AriesContador.Core;
-using AriesContador.Core.Models.Accounts;
-using AriesContador.Core.Models.Companies;
-using AriesContador.Core.Models.PostingPeriods;
-using AriesContador.Core.Models.Users;
 using AriesContador.Core.Repositories;
 using AriesContador.Data.Repositories;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace AriesContador.Data
 {

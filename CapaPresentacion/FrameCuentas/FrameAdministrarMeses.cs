@@ -48,14 +48,14 @@ namespace CapaPresentacion.FrameCuentas
 
         private void LoadDataGrids()
         {
-            dtRegistros.DataSource = _financialReportService.PostingPeriodInfo(GlobalConfig.Company.Codigo);
+            dtRegistros.DataSource = _financialReportService.PostingPeriodInfo(GlobalConfig.Company.Code);
             dtGridClosingPeriodsReport.DataSource =
-                _financialReportService.ClosingPostingPeriodReport(GlobalConfig.Company.Codigo); 
+                _financialReportService.ClosingPostingPeriodReport(GlobalConfig.Company.Code); 
         }
 
         private void LoadDropDowns()
         {
-            _postingPeriods = _financialService.GetPostingPeriods(GlobalConfig.Company.Codigo).ToList();
+            _postingPeriods = _financialService.GetPostingPeriods(GlobalConfig.Company.Code).ToList();
             var olderPeriod = _postingPeriods.Where(x => !x.Closed)
                                              .OrderBy(x => x.Date)
                                              .ToList()
@@ -64,7 +64,7 @@ namespace CapaPresentacion.FrameCuentas
             this.lstFromPeriod.DataSource = new List<PostingPeriod>() { olderPeriod };
 
             var availablePostingPeriods =
-                _financialService.GetAvailablePostingPeriodsForBeCreated(GlobalConfig.Company.Codigo);
+                _financialService.GetAvailablePostingPeriodsForBeCreated(GlobalConfig.Company.Code);
             lstAbrirMes.DataSource = availablePostingPeriods;
         }
 
@@ -96,7 +96,7 @@ namespace CapaPresentacion.FrameCuentas
             {
                 Date = new DateTime(selectedDate.Year, selectedDate.Month, 1, 0, 0, 0, 0), 
                 Closed = false, 
-                CompanyId = GlobalConfig.Company.Codigo, 
+                CompanyId = GlobalConfig.Company.Code, 
                 UpdatedBy = GlobalConfig.Usuario.Id
             }; 
 
@@ -136,7 +136,7 @@ namespace CapaPresentacion.FrameCuentas
 
             var savedModel = new PostingPeriodEndClosing()
             {
-                CompanyId = GlobalConfig.Company.Codigo,
+                CompanyId = GlobalConfig.Company.Code,
                 FromPeriodId = fromDatePeriod.Id, 
                 ToPeriodId = toDatePeriod.Id, 
                 FromPeriod = fromDatePeriod.ToString(), 
@@ -174,7 +174,7 @@ namespace CapaPresentacion.FrameCuentas
 
             var reportParamns = new BasicReportParam()
             {
-                CompanyId = GlobalConfig.Company.Codigo,
+                CompanyId = GlobalConfig.Company.Code,
                 FirstDate = $"{firstDate.Date.Year}{string.Format("{0, 0:D2}", firstDate.Date.Month)}",
                 EndDate = $"{endDate.Date.Year}{string.Format("{0, 0:D2}", endDate.Date.Month)}"
             };

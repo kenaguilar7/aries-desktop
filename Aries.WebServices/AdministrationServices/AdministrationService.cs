@@ -5,6 +5,7 @@ using AriesContador.Core.Services;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Aries.WebServices.AdministrationServices
 {
@@ -37,9 +38,9 @@ namespace Aries.WebServices.AdministrationServices
             return user;
         }
 
-        public IEnumerable<Company> GetAllCompanies()
+        public async Task<IEnumerable<Company>> GetAllCompanies()
         {
-            var output = _unitOfWork.CompanyRepository.GetAll();
+            var output = await _unitOfWork.CompanyRepository.GetAll();
             return output;
         }
 
@@ -83,6 +84,16 @@ namespace Aries.WebServices.AdministrationServices
         public void UpdateUser(User usuario)
         {
             _unitOfWork.UserRepository.Update(usuario);
+        }
+
+        Task<WebToken> Login(Login param)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<WebToken> IAdministrationService.Login(Login param)
+        {
+            throw new NotImplementedException();
         }
     }
 }

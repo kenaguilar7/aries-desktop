@@ -27,7 +27,7 @@ namespace CapaEntidad.Reportes
                 var column = 1;
                 var row = 1;
                 var tpmda = (compañia.TipoMoneda == TipoMonedaCompañia.Solo_Dolares) ? "Dolares y Colones" : "Colones";
-                worksheet.Cell(row++, column).Value = $"{compañia} {compañia.Codigo}";
+                worksheet.Cell(row++, column).Value = $"{compañia} {compañia.Code}";
                 worksheet.Cell(row++, column).Value = $"Balance Comprobación en {tpmda} al mes de";
                 worksheet.Cell(row++, column).Value = usuario;
 

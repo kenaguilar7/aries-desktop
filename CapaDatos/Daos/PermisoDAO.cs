@@ -26,7 +26,7 @@ namespace CapaDatos.Daos
 
                 var parametros = new List<Parametro> {
                     new Parametro("@user_id", asignacion.UsuarioId),
-                    new Parametro("@company_id", compani.Codigo),
+                    new Parametro("@company_id", compani.Code),
                     new Parametro("@updated_by", usuario.UsuarioId)
                 };
 
@@ -95,7 +95,7 @@ namespace CapaDatos.Daos
 
                 var parametros = new List<Parametro> {
                     new Parametro("@user_id", asignacion.UsuarioId),
-                    new Parametro("@company_id", compani.Codigo),
+                    new Parametro("@company_id", compani.Code),
                     new Parametro("@updated_by", usuario.UsuarioId)
                 };
 

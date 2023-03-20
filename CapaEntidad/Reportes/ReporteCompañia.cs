@@ -51,7 +51,7 @@ namespace CapaEntidad.Reportes
                 {
                     var colum = 1;
 
-                    worksheet.Cell(row, colum++).Value = compan.Codigo;
+                    worksheet.Cell(row, colum++).Value = compan.Code;
                     worksheet.Cell(row, colum++).Value = compan.TipoId.ToString().Replace('_', ' ');
                     ///Daba un problema con los numero de cédula NITE y DIMEX los convertia en numeros 
                     //worksheet.Cell(row, colum).DataType = XLDataType.Text; 

@@ -140,9 +140,9 @@ namespace CapaDatos.Daos
             try
             {
                 List<Parametro> lst = new List<Parametro>();
-                compania.Codigo = NuevoCodigo();
+                compania.Code = NuevoCodigo();
 
-                lst.Add(new Parametro("@company_id", compania.Codigo));
+                lst.Add(new Parametro("@company_id", compania.Code));
                 lst.Add(new Parametro("@type_id", (int)compania.TipoId));
                 lst.Add(new Parametro("@number_id", compania.NumeroCedula));
                 lst.Add(new Parametro("@name", compania.Nombre));
@@ -159,7 +159,7 @@ namespace CapaDatos.Daos
 
                 if (manejador.Ejecutar(sql, lst, CommandType.Text) != 0)
                 {
-                    if (copiarMAestroCuenta.Codigo == "POR DEFECTO")
+                    if (copiarMAestroCuenta.Code == "POR DEFECTO")
                     {
                         GenerarCuentasDefault(compania, user);
                     }
@@ -278,7 +278,7 @@ namespace CapaDatos.Daos
 
                 List<Parametro> lst = new List<Parametro>();
 
-                lst.Add(new Parametro("@company_id", compania.Codigo));
+                lst.Add(new Parametro("@company_id", compania.Code));
                 lst.Add(new Parametro("@name", compania.Nombre));
                 lst.Add(new Parametro("@money_type", compania.TipoMoneda));
                 lst.Add(new Parametro("address", compania.Direccion));
@@ -331,7 +331,7 @@ namespace CapaDatos.Daos
                         Object[] vn = item.ItemArray;
 
                         var c = new PersonaFisica();
-                        c.Codigo = Convert.ToString(vn[0]);
+                        c.Code = Convert.ToString(vn[0]);
                         c.TipoId = (TipoID)Convert.ToInt32(vn[1]);
                         c.Direccion = Convert.ToString(vn[2]);
                         c.Web = Convert.ToString(vn[3]);
@@ -483,7 +483,7 @@ namespace CapaDatos.Daos
                         }
 
                         cmd.Parameters.AddWithValue("@account_name_id", r.Item4);
-                        cmd.Parameters.AddWithValue("@company_id", c.Codigo);
+                        cmd.Parameters.AddWithValue("@company_id", c.Code);
                         cmd.Parameters.AddWithValue("@account_type", r.Item1);
                         cmd.Parameters.AddWithValue("@account_guide", r.Item2);
                         cmd.Parameters.AddWithValue("@updated_by", 1);

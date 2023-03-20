@@ -3,6 +3,7 @@ using AriesContador.Core.Models.Users;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace AriesContador.Core.Services
 {
@@ -11,7 +12,7 @@ namespace AriesContador.Core.Services
         string GetCompanyConsecutive(); 
         void CreateCompany(Company compañia);
         void CreateUser(User usuario);
-        IEnumerable<Company> GetAllCompanies();
+        Task<IEnumerable<Company>> GetAllCompanies();
         Company FindByCode(string code); 
         IEnumerable<User> GetAllUsers();
         IEnumerable<Company> GetAllInactiveCompanies();
@@ -21,6 +22,6 @@ namespace AriesContador.Core.Services
         void InactivateUser(User usuario);
         void UpdateCompany(Company compania);
         void UpdateUser(User usuario);
-
+        Task<WebToken> Login(Login param);
     }
 }

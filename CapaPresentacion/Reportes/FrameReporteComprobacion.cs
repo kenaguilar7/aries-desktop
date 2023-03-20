@@ -34,7 +34,7 @@ namespace CapaPresentacion.Reportes
 
         private void FrameReporteComprobacion_Load(object sender, EventArgs e)
         {
-            var lstPostingPe = _financialService.GetPostingPeriods(GlobalConfig.Company.Codigo).ToList();
+            var lstPostingPe = _financialService.GetPostingPeriods(GlobalConfig.Company.Code).ToList();
 
             this.PostingPeriods = lstPostingPe;
             var lstP = lstPostingPe.OrderBy(p => p.Date);
@@ -199,7 +199,7 @@ namespace CapaPresentacion.Reportes
 
             var reportParamns = new BasicReportParam()
             {
-                CompanyId = GlobalConfig.Company.Codigo,
+                CompanyId = GlobalConfig.Company.Code,
                 FirstDate = $"{firstDate.Date.Year}{string.Format("{0, 0:D2}", firstDate.Date.Month)}",
                 EndDate = $"{endDate.Date.Year}{string.Format("{0, 0:D2}", endDate.Date.Month)}"
             };

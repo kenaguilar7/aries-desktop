@@ -30,18 +30,21 @@ namespace AriesContador.Data.Internal.DataAccess
             }
         }
 
-        public async Task<List<T>> LoadData<T>(string storedProcedure)
+        public async Task<List<T>> LoadData<T>(string storedProcedure, CommandType commandType = CommandType.StoredProcedure)
         {
             string connectionString = _connectionString.MySQLDefault;
 
             using (IDbConnection connection = new MySqlConnection(connectionString))
             {
                 var result = await connection.QueryAsync<T>(storedProcedure, commandType:
-                    CommandType.StoredProcedure);
+                    commandType);
                 List<T> rows = result.ToList(); 
                 return rows;
             }
         }
+
+        public async Task<List<T>> ExecuteQuery<T>(string storedProcedure)
+            => await LoadData<T>(storedProcedure, CommandType.Text); 
 
         public void SaveData<T>(string storedProcedure, T parameters)
         {

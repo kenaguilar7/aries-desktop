@@ -23,7 +23,7 @@ namespace CapaEntidad.Reportes
             {
                 var worksheet = workbook.Worksheets.Add("Sample Sheet");
 
-                worksheet.Cell(1, 1).Value = $"{compañia} {compañia.Codigo}";
+                worksheet.Cell(1, 1).Value = $"{compañia} {compañia.Code}";
                 worksheet.Cell(2, 1).Value = $"Reporte perdidas y ganacias";
                 worksheet.Cell(4, 1).Value = usuario;
 

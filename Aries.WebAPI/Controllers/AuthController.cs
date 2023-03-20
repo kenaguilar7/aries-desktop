@@ -1,4 +1,5 @@
-﻿using AriesContador.Core.Services;
+﻿using AriesContador.Core.Models.Users;
+using AriesContador.Core.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -21,13 +22,19 @@ namespace Aries.WebAPI.Controllers
         }
 
         [HttpPost("login")]
-        public IActionResult Login(string username, string password)
+        public IActionResult Login([FromBody]Login userLogin)
         {
             var users = _administrationService.GetAllUsers();
-            if (users.Any(u => u.UserName == username && u.Password == password))
+            if (users.Any(u => u.UserName == userLogin.UserId && u.Password == userLogin.Password))
             {
                 var tokenString = GenerateToken();
-                return Ok(new { token = tokenString });
+                var webToken = new WebToken()
+                {
+                    Token = tokenString,
+                    User = users.First(u=> u.UserName == userLogin.UserId)
+                }; 
+
+                return Ok(webToken);
             }
 
             return Unauthorized();
@@ -51,4 +58,6 @@ namespace Aries.WebAPI.Controllers
             return tokenHandler.WriteToken(token);
         }
     }
+
+
 }

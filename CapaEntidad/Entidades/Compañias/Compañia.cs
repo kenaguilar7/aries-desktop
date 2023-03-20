@@ -8,7 +8,7 @@ namespace CapaEntidad.Entidades.Compañias
     public class Compañia
     {
 
-        public String Codigo { get; set; }
+        public String Code { get; set; }
         public TipoID TipoId { get; set; }
         public String NumeroCedula { get; set; }
         public String Nombre { get; set; }
@@ -25,7 +25,7 @@ namespace CapaEntidad.Entidades.Compañias
         protected Compañia(TipoID tipoID, string numeroId, string nombre, TipoMonedaCompañia TipoMoneda, string direccion,
                          string[] telefono, string web, string correo, string observaciones, string codigo = "", Boolean activo = true)
         {
-            this.Codigo = codigo;
+            this.Code = codigo;
             this.TipoId = tipoID;
             this.NumeroCedula = numeroId;
             this.Nombre = nombre;
@@ -42,7 +42,7 @@ namespace CapaEntidad.Entidades.Compañias
         public override string ToString()
         {
 
-            return $"{ Nombre.ToUpper()}-{Codigo}"; 
+            return $"{ Nombre.ToUpper()}-{Code}"; 
         }
 
     }

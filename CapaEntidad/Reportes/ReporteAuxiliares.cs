@@ -102,7 +102,7 @@ namespace CapaEntidad.Reportes
                 var column = 1;
                 var row = 1;
                 
-                worksheet.Cell(row++, column).Value = $"{compañia} {compañia.Codigo}";
+                worksheet.Cell(row++, column).Value = $"{compañia} {compañia.Code}";
                 worksheet.Cell(row++, column).Value = $"Balance Auxiliares";
                 worksheet.Cell(row++, column).Value = usuario;
                 switch (tipoMoneda)

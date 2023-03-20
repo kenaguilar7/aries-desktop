@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
+using AriesContador.Core.Services;
+using AriesContador.Services;
 using Microsoft.Extensions.DependencyInjection;
 namespace CapaPresentacion
 {
@@ -15,16 +17,16 @@ namespace CapaPresentacion
             Application.SetCompatibleTextRenderingDefault(false);
             GlobalConfig globalConfig = new GlobalConfig();
 
-            //var services = new ServiceCollection();
+            var services = new ServiceCollection();
+            //services.AddSingleton<IFinancialService, FinancialService>();
+            services.AddSingleton<IHttpAdministrationService, HttpAdministrationService>();
+            services.AddSingleton<FrameMenu>();
+            
+            var serviceProvider = services.BuildServiceProvider();
+            var form = serviceProvider.GetService<FrameMenu>();
+            Application.Run(form);
 
-            //ConfigureServices(services);
-
-            //using (ServiceProvider serviceProvider = services.BuildServiceProvider())
-            //{
-            //    var form1 = serviceProvider.GetRequiredService<FrameMenu>();
-            //    Application.Run(form1);
-            //}
-            Application.Run(new FrameMenu());
+            //Application.Run(new FrameMenu());
         }
 
     }

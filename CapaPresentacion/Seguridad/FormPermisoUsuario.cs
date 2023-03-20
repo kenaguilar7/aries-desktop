@@ -88,7 +88,7 @@ namespace CapaPresentacion.Seguridad
             ///Buscamos todas las compañias
             TodasLasCompañias.ForEach((Compañia) =>
             {
-                if (CompañiasDelUsuario.Find(x => x.Codigo == Compañia.Codigo) == null)
+                if (CompañiasDelUsuario.Find(x => x.Code == Compañia.Code) == null)
                 {
                     ///si la busqueda fue nula
                     ///quiere decir que el usuario no tiene asginada la compañia

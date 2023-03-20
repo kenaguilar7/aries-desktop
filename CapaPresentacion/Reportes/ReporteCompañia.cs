@@ -116,7 +116,7 @@ namespace CapaPresentacion.Reportes
                 DataGridViewRow row = new DataGridViewRow();
                 row.CreateCells(GridDatos);
                 row.Tag = comp;
-                row.Cells[0].Value = comp.Codigo;
+                row.Cells[0].Value = comp.Code;
                 row.Cells[1].Value = comp.TipoId.ToString().Replace('_', ' '); ;
                 row.Cells[2].Value = comp.NumeroCedula;
                 row.Cells[3].Value = comp.Nombre;

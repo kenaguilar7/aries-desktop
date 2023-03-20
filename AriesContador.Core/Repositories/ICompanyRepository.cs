@@ -2,12 +2,13 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace AriesContador.Core.Repositories
 {
     public interface ICompanyRepository : IRepository<Company> 
     {
-        IEnumerable<Company> GetAll(); 
-       string GetConsecutive(); 
+        Task<IEnumerable<Company>> GetAll(); 
+        string GetConsecutive(); 
     }
 }

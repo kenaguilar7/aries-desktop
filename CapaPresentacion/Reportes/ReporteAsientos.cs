@@ -36,7 +36,7 @@ namespace CapaPresentacion.Reportes
 
         private void ReporteAsientos_Load(object sender, EventArgs e)
         {
-            this.PostingPeriods = _financialService.GetPostingPeriods(GlobalConfig.Company.Codigo).ToList();
+            this.PostingPeriods = _financialService.GetPostingPeriods(GlobalConfig.Company.Code).ToList();
             this.lstStarPeriod.DataSource = this.PostingPeriods.DeepClone(); 
         }
 
@@ -84,7 +84,7 @@ namespace CapaPresentacion.Reportes
 
             var reportParamns = new BasicReportParam()
             {
-                CompanyId = GlobalConfig.Company.Codigo,
+                CompanyId = GlobalConfig.Company.Code,
                 FirstDate = $"{firstDate.Date.Year}{string.Format("{0, 0:D2}", firstDate.Date.Month)}",
                 EndDate = $"{endDate.Date.Year}{string.Format("{0, 0:D2}", endDate.Date.Month)}"
             };

@@ -1,15 +1,39 @@
 ﻿using AriesContador.Core;
+using AriesContador.Core.Models;
 using AriesContador.Core.Models.Accounts;
 using AriesContador.Core.Models.Companies;
 using AriesContador.Core.Models.Users;
 using AriesContador.Core.Services;
+using AriesContador.Data;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Security.Cryptography;
+using System.Linq;
+using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace AriesContador.Services
 {
+
+    //public interface IWindowsFormsAdministrationService 
+    //{
+    //    string GetCompanyConsecutive();
+    //    void CreateCompany(Company compañia);
+    //    void CreateUser(User usuario);
+    //    IEnumerable<Company> GetAllCompanies();
+    //    Company FindByCode(string code);
+    //    IEnumerable<User> GetAllUsers();
+    //    IEnumerable<Company> GetAllInactiveCompanies();
+    //    IEnumerable<User> GetAllInactiveUsers();
+    //    User FinUserById(int id);
+    //    void InactivateCompany(Company compania);
+    //    void InactivateUser(User usuario);
+    //    void UpdateCompany(Company compania);
+    //    void UpdateUser(User usuario);
+    //    Task<WebToken> Login(Login param);
+    //}
+
     public class AdministrationService : IAdministrationService
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -39,9 +63,9 @@ namespace AriesContador.Services
             return user;
         }
 
-        public IEnumerable<Company> GetAllCompanies()
+        public async Task<IEnumerable<Company>> GetAllCompanies()
         {
-            var output = _unitOfWork.CompanyRepository.GetAll();
+            var output = await _unitOfWork.CompanyRepository.GetAll();
             return output;
         }
 
@@ -77,6 +101,12 @@ namespace AriesContador.Services
             throw new NotImplementedException();
         }
 
+        public async Task<WebToken> Login(Login param)
+        {
+            var response = await HttpClientService.GetAsync<WebToken, Login>(string.Concat(EnvironmentVariable.ApiUrl, "auth/login"), param); 
+            return response; 
+        }
+
         public void UpdateCompany(Company compania)
         {
             _unitOfWork.CompanyRepository.Update(compania);
@@ -87,4 +117,7 @@ namespace AriesContador.Services
             _unitOfWork.UserRepository.Update(usuario);
         }
     }
+
+
+
 }

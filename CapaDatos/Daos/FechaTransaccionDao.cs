@@ -28,7 +28,7 @@ namespace CapaDatos.Daos
             {
                 List<FechaTransaccion> retorno = new List<FechaTransaccion>();
                 var sql = "SELECT accounting_months_id, month_report, closed FROM accounting_months WHERE company_id = @company_id";
-                DataTable dt = manejador.Listado(sql, new Parametro("@company_id", t.Codigo), CommandType.Text);
+                DataTable dt = manejador.Listado(sql, new Parametro("@company_id", t.Code), CommandType.Text);
 
                 foreach (DataRow item in dt.Rows)
                 {
@@ -57,7 +57,7 @@ namespace CapaDatos.Daos
                       "(SELECT user_name FROM users us WHERE  us.user_id = ac.updated_by  LIMIT 1) AS 'Usuario' " +
                       "FROM accounting_months ac " +
                       "WHERE ac.company_id = @company_id AND ac.active = 1 ORDER BY ac.month_report DESC";
-            return manejador.Listado(sql, new Parametro("@company_id", t.Codigo), CommandType.Text);
+            return manejador.Listado(sql, new Parametro("@company_id", t.Code), CommandType.Text);
 
         }
         public Boolean Insert(FechaTransaccion t, Compañia compañia, Usuario user, out String mensaje)
@@ -76,7 +76,7 @@ namespace CapaDatos.Daos
 
                 var parametros = new List<Parametro>() {
                     new Parametro("@month_report", t.Fecha),
-                    new Parametro("@company_id", compañia.Codigo),
+                    new Parametro("@company_id", compañia.Code),
                     new Parametro("@updated_by", user.UsuarioId)
                     };
 
@@ -143,7 +143,7 @@ namespace CapaDatos.Daos
 
                         cmd.Parameters.AddWithValue("@closed", Convert.ToByte(t.Cerrada));
                         cmd.Parameters.AddWithValue("@updated_by", user.UsuarioId);
-                        cmd.Parameters.AddWithValue("@company_id", compañia.Codigo);
+                        cmd.Parameters.AddWithValue("@company_id", compañia.Code);
                         cmd.Parameters.AddWithValue("@accounting_months_id", t.Id);
 
                         if (cmd.ExecuteNonQuery() == 0)
@@ -173,7 +173,7 @@ namespace CapaDatos.Daos
                             cmd.Parameters.AddWithValue("@previous_balance_d", item.SaldoActualDolares);
                             cmd.Parameters.AddWithValue("@updated_by", user.UsuarioId);
                             cmd.Parameters.AddWithValue("@account_id", item.Id);
-                            cmd.Parameters.AddWithValue("@company_id", compañia.Codigo);
+                            cmd.Parameters.AddWithValue("@company_id", compañia.Code);
                             cmd.ExecuteNonQuery();
 
                         }

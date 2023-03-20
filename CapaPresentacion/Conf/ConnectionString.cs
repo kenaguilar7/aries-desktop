@@ -11,5 +11,7 @@ namespace CapaPresentacion.Conf
     public class ConnectionString : IConnectionString
     {
         public string MySQLDefault => ConfigurationManager.ConnectionStrings["DBconnectionString"].ConnectionString;
+
+        public string HttpBaseUrl => ConfigurationManager.ConnectionStrings["HttpBaseUrl"].ConnectionString;
     }
 }

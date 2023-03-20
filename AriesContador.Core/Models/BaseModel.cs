@@ -14,7 +14,7 @@ namespace AriesContador.Core.Models
 
         public int UpdatedBy { get; set; }
 
-        public Boolean Active { get; set; }
+        public bool Active { get; set; }
         public int ActiveMySQL
         {
             get { return Convert.ToInt32(this.Active); }

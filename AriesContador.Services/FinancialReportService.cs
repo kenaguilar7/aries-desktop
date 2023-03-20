@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using AriesContador.Core;
 using AriesContador.Core.Models;
 using AriesContador.Core.Models.Accounts;
@@ -139,6 +141,11 @@ namespace AriesContador.Services
         public IEnumerable<ClosingPostingPeriodReport> ClosingPostingPeriodReport(string companyId)
         {
             return _unitOfWork.FinancialReportRepository.ClosingPostingPeriodReport(companyId);
+        }
+
+        public Task<DataTable> AccountMoving()
+        {
+            throw new NotImplementedException();
         }
         //public IEnumerable<Core.Models.Reports.BalanceComprobacionReport> BalanceComprobacionReport(Core.Models.JournalEntries.BasicReportParam reportParam)
         //{
