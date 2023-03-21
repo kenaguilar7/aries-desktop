@@ -1,4 +1,5 @@
-﻿using CapaEntidad.Entidades.Cuentas;
+﻿using AriesContador.Core.Models.Utils;
+using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Enumeradores;
 using CapaEntidad.Interfaces;
 using CapaEntidad.Reportes;
@@ -22,7 +23,7 @@ namespace CapaPresentacion.Reportes
         private void CargarDatos()
         {
 
-            if (GlobalConfig.Company.TipoMoneda == TipoMonedaCompañia.Solo_Colones)
+            if (GlobalConfig.Company.CurrencyType == CurrencyTypeCompany.Solo_Colones)
             {
                 chckBxMostarDolares.Checked = false;
                 chckBxMostarDolares.Enabled = false;

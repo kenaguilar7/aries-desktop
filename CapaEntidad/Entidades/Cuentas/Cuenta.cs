@@ -3,13 +3,14 @@ using CapaEntidad.Entidades.Compañias;
 using System;
 using CapaEntidad.Enumeradores;
 using System.Collections.Generic;
+using AriesContador.Core.Models.Companies;
 
 namespace CapaEntidad.Entidades.Cuentas
 {
     public class Cuenta
     {
         public String Nombre { get; set; }
-        public Compañia MyCompania { get; set; } ///Quitar
+        public Company MyCompania { get; set; } ///Quitar
         public int Id { get; set; }
         public int Padre { get; set; }
         public decimal SaldoAnteriorColones { get; set; }
@@ -29,7 +30,7 @@ namespace CapaEntidad.Entidades.Cuentas
         {
 
         }
-        public Cuenta(string nombre, Compañia myCompania, ITipoCuenta tipoCuenta, IndicadorCuenta indicador, String detalle,
+        public Cuenta(string nombre, Company myCompania, ITipoCuenta tipoCuenta, IndicadorCuenta indicador, String detalle,
                       int padre, int id = 0, decimal saldoAnteriorColones = 0.0M, decimal saldoAnteriorDolares = 0.00M,
                       decimal debitos = 0.0M, decimal creditos = 0.0M, bool active = true, bool editable = false, bool cuadrada = true)
         {

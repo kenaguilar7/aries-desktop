@@ -1,11 +1,9 @@
-﻿using CapaEntidad.Entidades.Compañias;
+﻿using AriesContador.Core.Models.Companies;
 using CapaEntidad.Entidades.Cuentas;
 using CapaLogica;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CapaPresentacion.MaestroCuentas
 {
@@ -21,7 +19,7 @@ namespace CapaPresentacion.MaestroCuentas
         }
 
 
-        public Boolean CargarCuentas(Compañia compañia)
+        public Boolean CargarCuentas(Company compañia)
         {
             Cuentas = _CuentaCL.GetAll(compañia);
 

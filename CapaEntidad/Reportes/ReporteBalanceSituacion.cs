@@ -1,4 +1,5 @@
-﻿using CapaEntidad.Entidades.Compañias;
+﻿using AriesContador.Core.Models.Companies;
+using CapaEntidad.Entidades.Compañias;
 using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Entidades.Usuarios;
 using CapaEntidad.Enumeradores;
@@ -15,7 +16,7 @@ namespace CapaEntidad.Reportes
     public class ReporteBalanceSituacion
     {
 
-        public static void GenerarReporte(String direccion, List<Cuenta> _lstExcel, decimal totalPerdida, decimal totalSituacion, Compañia compañia, Usuario usuario)
+        public static void GenerarReporte(String direccion, List<Cuenta> _lstExcel, decimal totalPerdida, decimal totalSituacion, Company compañia, Usuario usuario)
         {
 
             var maxValue = (from c in _lstExcel orderby c.GetNombreParaExcel(_lstExcel.ToList()).Length select new { top = c.GetNombreParaExcel(_lstExcel.ToList()).Length }).LastOrDefault();

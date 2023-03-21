@@ -7,12 +7,9 @@ using CapaPresentacion.FrameCompañias;
 using CapaPresentacion.FrameCuentas;
 using CapaPresentacion.Seguridad;
 using CapaPresentacion.Reportes;
-using CapaEntidad.Entidades.Compañias;
-using CapaEntidad.Entidades.Usuarios;
 using CapaPresentacion.AdminAsientos;
 using CapaPresentacion.FrameUsuarios;
 using CapaPresentacion.Restore;
-using AriesContador.Core.Services;
 using AriesContador.Services;
 
 namespace CapaPresentacion
@@ -28,7 +25,7 @@ namespace CapaPresentacion
             this._httpAdministrationService = companyService;
             InitializeComponent();
 
-            FrameLoginUsuario n = new FrameLoginUsuario(_httpAdministrationService);
+            LoginForm n = new LoginForm(_httpAdministrationService);
             n.FormClosing += N_FormClosing;
 
             n.ShowDialog();

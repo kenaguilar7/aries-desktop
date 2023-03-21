@@ -1,5 +1,5 @@
-﻿using CapaDatos.Conexion;
-using CapaEntidad.Entidades.Compañias;
+﻿using AriesContador.Core.Models.Companies;
+using CapaDatos.Conexion;
 using CapaEntidad.Entidades.Seguridad;
 using CapaEntidad.Entidades.Usuarios;
 using CapaEntidad.Entidades.Ventanas;
@@ -15,7 +15,7 @@ namespace CapaDatos.Daos
     {
         private readonly Manejador manejador = new Manejador();
 
-        public Boolean InsertCompany(List<Compañia> compañias, Usuario asignacion, Usuario usuario)
+        public Boolean InsertCompany(List<Company> compañias, Usuario asignacion, Usuario usuario)
         {
             int contador = compañias.Count;
             foreach (var compani in compañias)
@@ -85,7 +85,7 @@ namespace CapaDatos.Daos
 
             return true;
         }
-        public bool RemoveCompany(List<Compañia> compañias, Usuario asignacion, Usuario usuario)
+        public bool RemoveCompany(List<Company> compañias, Usuario asignacion, Usuario usuario)
         {
             int contador = compañias.Count;
             foreach (var compani in compañias)

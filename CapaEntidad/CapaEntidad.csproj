@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>CapaEntidad</RootNamespace>
     <AssemblyName>CapaEntidad</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -111,7 +112,7 @@
     <Compile Include="Entidades\JournalEntries\JournalEntryReport.cs" />
     <Compile Include="Entidades\JournalEntries\JournalEntryStatus.cs" />
     <Compile Include="Entidades\JournalEntries\JournalEntryLine.cs" />
-    <Compile Include="Entidades\Compañias\Compañia.cs" />
+    <Compile Include="Entidades\Compañias\Company.cs" />
     <Compile Include="Entidades\Compañias\PersonaFisica.cs" />
     <Compile Include="Entidades\Compañias\PersonaJuridica.cs" />
     <Compile Include="Entidades\Cuentas\Activo.cs" />
@@ -140,8 +141,8 @@
     <Compile Include="Enumeradores\EstadoUltimoEnvio.cs" />
     <Compile Include="Enumeradores\IndicadorCuenta.cs" />
     <Compile Include="Enumeradores\TipoCuenta.cs" />
-    <Compile Include="Enumeradores\TipoID.cs" />
-    <Compile Include="Enumeradores\TipoMonedaCompañia.cs" />
+    <Compile Include="Enumeradores\IdType.cs" />
+    <Compile Include="Enumeradores\CurrencyTypeCompany.cs" />
     <Compile Include="Enumeradores\TipoUsuario.cs" />
     <Compile Include="Interfaces\IDao.cs" />
     <Compile Include="Interfaces\ICallingForm.cs" />
@@ -168,6 +169,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AriesContador.Core\AriesContador.Core.csproj">
+      <Project>{BFD0E8AF-597B-42C5-B21A-147CF8706D79}</Project>
+      <Name>AriesContador.Core</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

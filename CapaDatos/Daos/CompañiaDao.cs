@@ -1,6 +1,6 @@
-﻿using CapaDatos.Conexion;
-using CapaEntidad.Entidades.Compañias;
-using CapaEntidad.Entidades.Cuentas;
+﻿using AriesContador.Core.Models.Companies;
+using AriesContador.Core.Models.Utils;
+using CapaDatos.Conexion;
 using CapaEntidad.Entidades.Seguridad;
 using CapaEntidad.Entidades.Usuarios;
 using CapaEntidad.Entidades.Ventanas;
@@ -23,9 +23,9 @@ namespace CapaDatos.Daos
         /// <param name="t"></param>
         /// <param name="user"></param>
         /// <returns></returns>
-        public List<Compañia> GetAll(Usuario user)
+        public List<Company> GetAll(Usuario user)
         {
-            var retorno = new List<Compañia>();
+            var retorno = new List<Company>();
 
             var sqlFisicas = "";
             var sqlJuridicas = "";
@@ -122,11 +122,11 @@ namespace CapaDatos.Daos
 
             return retorno;
         }
-        public DataTable GetDataTable(Compañia t, Usuario user)
+        public DataTable GetDataTable(Company t, Usuario user)
         {
             return manejador.Listado("SELECT * FROM companies", CommandType.Text);
         }
-        public Boolean Insert(Compañia compania, Usuario user, Compañia copiarMAestroCuenta, out String mensaje)
+        public Boolean Insert(Company compania, Usuario user, Company copiarMAestroCuenta, out String mensaje)
         {
 
             if (!Guachi.Consultar(user, VentanaInfo.FormMaestroCompanias, CRUDName.Insertar))
@@ -143,16 +143,16 @@ namespace CapaDatos.Daos
                 compania.Code = NuevoCodigo();
 
                 lst.Add(new Parametro("@company_id", compania.Code));
-                lst.Add(new Parametro("@type_id", (int)compania.TipoId));
-                lst.Add(new Parametro("@number_id", compania.NumeroCedula));
-                lst.Add(new Parametro("@name", compania.Nombre));
-                lst.Add(new Parametro("@money_type", (int)compania.TipoMoneda));
-                lst.Add(new Parametro("@address", compania.Direccion));
+                lst.Add(new Parametro("@type_id", (int)compania.IdType));
+                lst.Add(new Parametro("@number_id", compania.IdNumber));
+                lst.Add(new Parametro("@name", compania.Name));
+                lst.Add(new Parametro("@money_type", (int)compania.CurrencyType));
+                lst.Add(new Parametro("@address", compania.Address));
                 lst.Add(new Parametro("@website", compania.Web));
-                lst.Add(new Parametro("@mail", compania.Correo));
-                lst.Add(new Parametro("@phone_number1", compania.Telefono[0]));
-                lst.Add(new Parametro("@phone_number2", compania.Telefono[1]));
-                lst.Add(new Parametro("@notes", compania.Observaciones));
+                lst.Add(new Parametro("@mail", compania.Mail));
+                lst.Add(new Parametro("@phone_number1", compania.PhoneNumber1));
+                lst.Add(new Parametro("@phone_number2", compania.PhoneNumber2));
+                lst.Add(new Parametro("@notes", compania.Memo));
                 lst.Add(new Parametro("@user_id", user.UsuarioId));
                 lst.Add(new Parametro("@op1", ((compania is PersonaJuridica) ? ((PersonaJuridica)compania).MyIDRepresentanteLegal : ((PersonaFisica)compania).MyApellidoPaterno)));
                 lst.Add(new Parametro("@op2", ((compania is PersonaJuridica) ? ((PersonaJuridica)compania).MyRepresentanteLegal : ((PersonaFisica)compania).MyApellidoMaterno)));
@@ -187,11 +187,11 @@ namespace CapaDatos.Daos
                 throw;
             }
         }
-        private bool CopiarMaestroDeCuenta(Compañia copiarMAestroCuenta, Usuario usuario, Compañia compañia)
+        private bool CopiarMaestroDeCuenta(Company copiarMAestroCuenta, Usuario usuario, Company compañia)
         {
             return new CuentaDao().CopiarCuentas(copiarMAestroCuenta, compañia, usuario);
         }
-        public DataTable GetDataTable(TipoID tipoID, Boolean todos = false)
+        public DataTable GetDataTable(IdType tipoID, Boolean todos = false)
         {
             var sql = "";
 
@@ -216,7 +216,7 @@ namespace CapaDatos.Daos
                 return manejador.Listado(sql, CommandType.Text);
             }
 
-            if (tipoID == TipoID.CEDULA_JURIDICA)
+            if (tipoID == IdType.CEDULA_JURIDICA)
             {
                 sql = "SET lc_time_names = 'es_MX'; SELECT " +
                            "company_id AS 'Código'," +
@@ -259,7 +259,7 @@ namespace CapaDatos.Daos
 
 
         }
-        public Boolean Update(Compañia compania, Usuario user, out String mensaje)
+        public Boolean Update(Company compania, Usuario user, out String mensaje)
         {
 
             if (!Guachi.Consultar(user, VentanaInfo.FormMaestroCompanias, CRUDName.Actualizar))
@@ -269,7 +269,7 @@ namespace CapaDatos.Daos
             }
 
 
-            var message = compania.Nombre + " ACTUAIZADA CORRECTAMENTE";
+            var message = compania.Name + " ACTUAIZADA CORRECTAMENTE";
             var sql = "UPDATE companies SET " +
                       "name=@name,money_type=@money_type,op1=@op1,op2=@op2,address=@address,website=@website,mail=@mail,phone_number1=@phone_number1," +
                       "phone_number2=@phone_number2,notes=@notes,user_id=@user_id,active=@active WHERE company_id=@company_id";
@@ -279,16 +279,16 @@ namespace CapaDatos.Daos
                 List<Parametro> lst = new List<Parametro>();
 
                 lst.Add(new Parametro("@company_id", compania.Code));
-                lst.Add(new Parametro("@name", compania.Nombre));
-                lst.Add(new Parametro("@money_type", compania.TipoMoneda));
-                lst.Add(new Parametro("address", compania.Direccion));
+                lst.Add(new Parametro("@name", compania.Name));
+                lst.Add(new Parametro("@money_type", compania.CurrencyType));
+                lst.Add(new Parametro("address", compania.Address));
                 lst.Add(new Parametro("@website", compania.Web));
-                lst.Add(new Parametro("@mail", compania.Correo));
-                lst.Add(new Parametro("@phone_number1", compania.Telefono[0]));
-                lst.Add(new Parametro("@phone_number2", compania.Telefono[1]));
-                lst.Add(new Parametro("@notes", compania.Observaciones));
+                lst.Add(new Parametro("@mail", compania.Mail));
+                lst.Add(new Parametro("@phone_number1", compania.PhoneNumber1));
+                lst.Add(new Parametro("@phone_number2", compania.PhoneNumber2));
+                lst.Add(new Parametro("@notes", compania.Memo));
                 lst.Add(new Parametro("@user_id", user.UsuarioId));
-                lst.Add(new Parametro("@active", compania.Activo));
+                lst.Add(new Parametro("@active", compania.Active));
                 lst.Add(new Parametro("@op1", ((compania is PersonaJuridica) ? ((PersonaJuridica)compania).MyRepresentanteLegal : ((PersonaFisica)compania).MyApellidoPaterno)));
                 lst.Add(new Parametro("@op2", ((compania is PersonaJuridica) ? ((PersonaJuridica)compania).MyIDRepresentanteLegal : ((PersonaFisica)compania).MyApellidoMaterno)));
 
@@ -310,9 +310,9 @@ namespace CapaDatos.Daos
                 return false;
             }
         }
-        public Compañia GetCompañia(String id, TipoID tipoID)
+        public Company GetCompañia(String id, IdType tipoID)
         {
-            if (tipoID == TipoID.CEDULA_NACIONAL)
+            if (tipoID == IdType.CEDULA_NACIONAL)
             {
                 //tratar de hacerlo mas eficiente
                 var comdando = "SELECT * FROM maestro_compania m, personas p WHERE M.codigo = P.IDCompania AND p.cedula = @p1 ";
@@ -332,13 +332,13 @@ namespace CapaDatos.Daos
 
                         var c = new PersonaFisica();
                         c.Code = Convert.ToString(vn[0]);
-                        c.TipoId = (TipoID)Convert.ToInt32(vn[1]);
-                        c.Direccion = Convert.ToString(vn[2]);
+                        c.IdType = (IdType)Convert.ToInt32(vn[1]);
+                        c.Address = Convert.ToString(vn[2]);
                         c.Web = Convert.ToString(vn[3]);
-                        c.Correo = Convert.ToString(vn[4]);
-                        c.Observaciones = Convert.ToString(vn[6]);
-                        c.NumeroCedula = Convert.ToString(vn[10]);
-                        c.Nombre = Convert.ToString(vn[11]);
+                        c.Mail = Convert.ToString(vn[4]);
+                        c.Memo = Convert.ToString(vn[6]);
+                        c.IdNumber = Convert.ToString(vn[10]);
+                        c.Name = Convert.ToString(vn[11]);
                         c.MyApellidoPaterno = Convert.ToString(vn[12]);
                         c.MyApellidoMaterno = Convert.ToString(vn[13]);
                         return c;
@@ -406,10 +406,10 @@ namespace CapaDatos.Daos
                 object[] vs = item.ItemArray;
                 retorno.Add(new PersonaJuridica(
                     codigo: Convert.ToString(vs[0]),
-                    tipoID: ((TipoID)Convert.ToInt32(vs[1])),
+                    tipoID: ((AriesContador.Core.Models.Utils.IdType)Convert.ToInt32(vs[1])),
                     numeroId: Convert.ToString(vs[2]),
                     nombre: Convert.ToString(vs[3]),
-                    TipoMoneda: (TipoMonedaCompañia)Convert.ToInt16(vs[4]),
+                    TipoMoneda: (CurrencyTypeCompany)Convert.ToInt16(vs[4]),
                     representanteLegal: Convert.ToString(vs[5]),
                     IDRepresentante: Convert.ToString(vs[6]),
                     direccion: Convert.ToString(vs[7]),
@@ -436,10 +436,10 @@ namespace CapaDatos.Daos
                 object[] vs = item.ItemArray;
                 retorno.Add(new PersonaFisica(
                           codigo: Convert.ToString(vs[0]),
-                          tipoID: ((TipoID)Convert.ToInt32(vs[1])),
+                          tipoID: ((AriesContador.Core.Models.Utils.IdType)Convert.ToInt32(vs[1])),
                           numeroId: Convert.ToString(vs[2]),
                           nombre: Convert.ToString(vs[3]),
-                          TipoMoneda: (TipoMonedaCompañia)Convert.ToInt16(vs[4]),
+                          TipoMoneda: (CurrencyTypeCompany)Convert.ToInt16(vs[4]),
                           apellidoPaterno: Convert.ToString(vs[5]),
                           apellidoMaterno: Convert.ToString(vs[6]),
                           direccion: Convert.ToString(vs[7]),
@@ -456,7 +456,7 @@ namespace CapaDatos.Daos
         }
         #endregion
         //1 tipo cuenta 2 guia ,3 cuenta padre
-        public void GenerarCuentasDefault(Compañia c, Usuario user)
+        public void GenerarCuentasDefault(Company c, Usuario user)
         {
             using (MySqlTransaction tr = manejador.GetConnection().BeginTransaction(IsolationLevel.Serializable))
             {

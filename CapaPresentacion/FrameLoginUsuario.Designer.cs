@@ -1,6 +1,6 @@
 ﻿namespace CapaPresentacion
 {
-    partial class FrameLoginUsuario
+    partial class LoginForm
     {
         /// <summary>
         /// Required designer variable.
@@ -69,7 +69,7 @@
             this.txtVerClave.Size = new System.Drawing.Size(24, 17);
             this.txtVerClave.TabIndex = 66;
             this.txtVerClave.Text = "    ";
-            this.txtVerClave.Click += new System.EventHandler(this.VerClave_Click);
+            this.txtVerClave.Click += new System.EventHandler(this.TogglePasswordVisibilityButton_Click);
             // 
             // panel1
             // 

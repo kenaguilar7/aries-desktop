@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using AriesContador.Core.Models;
 using AriesContador.Core.Models.Companies;
 using AriesContador.Core.Models.Users;
-using CapaEntidad.Entidades.Compañias;
 using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Entidades.Seguridad;
 using CapaEntidad.Entidades.Usuarios;
@@ -55,11 +54,11 @@ namespace CapaPresentacion
         }
 
         public static List<Cuenta> Cuentas { get; set; } = new List<Cuenta>();
-        public static List<Compañia> Compañias { get; set; } = new List<Compañia>();
+        public static List<Company> Compañias { get; set; } = new List<Company>();
         public static Usuario Usuario { get; set; }
         public static User User { get; set;  }
-        public static Compañia Company { get; set; }
-        public static Company NewCompany { get; set; }
+        public static Company Company { get; set; }
+        public static AriesContador.Core.Models.Companies.Company NewCompany { get; set; }
 
         public static ConnectionString ConnectionString = new ConnectionString();
         public static string BaseUrl = ConfigurationManager.ConnectionStrings["HttpBaseUrl"].ConnectionString; 

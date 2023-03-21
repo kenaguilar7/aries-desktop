@@ -1,11 +1,9 @@
-﻿using CapaDatos.Daos;
-using CapaEntidad.Entidades.Compañias;
+﻿using AriesContador.Core.Models.Companies;
+using CapaDatos.Daos;
 using CapaEntidad.Entidades.Usuarios;
-using CapaEntidad.Enumeradores;
 using CapaEntidad.Verificaciones;
 using System;
 using System.Collections.Generic;
-using System.Data;
 
 
 namespace CapaLogica
@@ -19,22 +17,22 @@ namespace CapaLogica
         /// <param name="t"></param>
         /// <param name="user"></param>
         /// <returns></returns>
-        public Boolean Insert(Compañia t, Usuario user, Compañia copiarDe, out String mensaje)
+        public Boolean Insert(Company t, Usuario user, Company copiarDe, out String mensaje)
         {
 
             try
             {
 
                 ///Mandemos estas verificaciones a la capa entida
-                if (!VerificaString.VerificarID(t.NumeroCedula, t.TipoId, out mensaje))
+                if (!VerificaString.VerificarID(t.IdNumber, t.IdType, out mensaje))
                 {
                     return false;
                 }
-                if (!VerificaString.IsNullOrWhiteSpace(t.Nombre, "Nombre", out mensaje))
+                if (!VerificaString.IsNullOrWhiteSpace(t.Name, "Nombre", out mensaje))
                 {
                     return false;
                 }
-                if (!VerificaString.ValidarEmail(t.Correo))
+                if (!VerificaString.ValidarEmail(t.Mail))
                 {
                     mensaje = "Formato de correo invalido";
                     return false;
@@ -59,19 +57,19 @@ namespace CapaLogica
             }
 
         }
-        public Boolean Update(Compañia t, Usuario user, out String mensaje)
+        public Boolean Update(Company t, Usuario user, out String mensaje)
         {
             try
             {
-                if (!VerificaString.VerificarID(t.NumeroCedula, t.TipoId, out mensaje))
+                if (!VerificaString.VerificarID(t.IdNumber, t.IdType, out mensaje))
                 {
                     return false;
                 }
-                if (!VerificaString.IsNullOrWhiteSpace(t.Nombre, "Nombre", out mensaje))
+                if (!VerificaString.IsNullOrWhiteSpace(t.Name, "Nombre", out mensaje))
                 {
                     return false;
                 }
-                if (!VerificaString.ValidarEmail(t.Correo))
+                if (!VerificaString.ValidarEmail(t.Mail))
                 {
                     mensaje = "Formato de correo invalido";
                     return false;
@@ -105,7 +103,7 @@ namespace CapaLogica
         /// puede ordenarlas. 
         /// </summary>
         /// <returns></returns>
-        public List<Compañia> GetAll(Usuario usuario)
+        public List<Company> GetAll(Usuario usuario)
         {
             return compañiaDao.GetAll(usuario);
         }

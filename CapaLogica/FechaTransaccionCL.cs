@@ -1,5 +1,5 @@
-﻿using CapaDatos.Daos;
-using CapaEntidad.Entidades.Compañias;
+﻿using AriesContador.Core.Models.Companies;
+using CapaDatos.Daos;
 using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Entidades.FechaTransacciones;
 using CapaEntidad.Entidades.Usuarios;
@@ -17,15 +17,15 @@ namespace CapaLogica
         private FechaTransaccionDao _fechaDao = new FechaTransaccionDao();
         private AsientoCL _asientoCL = new AsientoCL();
 
-        public List<FechaTransaccion> GetAll(Compañia t, Usuario user)
+        public List<FechaTransaccion> GetAll(Company t, Usuario user)
         {
             return _fechaDao.GetAll(t, user);
         }
-        public DataTable GetDataTable(Compañia t, Usuario user)
+        public DataTable GetDataTable(Company t, Usuario user)
         {
             return _fechaDao.GetDataTable(t, user);
         }
-        public Boolean Insert(FechaTransaccion t, Compañia compañia, Usuario user, out String mensaje)
+        public Boolean Insert(FechaTransaccion t, Company compañia, Usuario user, out String mensaje)
         {
             var lstTodosMeses = this.GetAll(compañia, user);
             ///Se va a hacer un indice unico en la base de datos para evitar esto 
@@ -57,7 +57,7 @@ namespace CapaLogica
         /// <param name="user"></param>
         /// <param name="lst"></param>
         /// <returns></returns>
-        public List<FechaTransaccion> FechaAbrirMes(Compañia t, Usuario user)
+        public List<FechaTransaccion> FechaAbrirMes(Company t, Usuario user)
         {
             List<FechaTransaccion> lst = _fechaDao.GetAll(t, user);
 
@@ -109,7 +109,7 @@ namespace CapaLogica
         /// <param name="user"></param>
         /// <param name="lst"></param>
         /// <returns></returns>
-        public List<FechaTransaccion> FechaCerrarMes(Compañia t, Usuario user)
+        public List<FechaTransaccion> FechaCerrarMes(Company t, Usuario user)
         {
             List<FechaTransaccion> lst = _fechaDao.GetAll(t, user);
             List<FechaTransaccion> retorno = new List<FechaTransaccion>();
@@ -152,7 +152,7 @@ namespace CapaLogica
 
             return retorno;
         }
-        public List<FechaTransaccion> GetAllActive(Compañia t, Usuario user, Boolean traerAsientos = false)
+        public List<FechaTransaccion> GetAllActive(Company t, Usuario user, Boolean traerAsientos = false)
         {
             List<FechaTransaccion> retorno = GetAll(t, user);
             var Lstretorno = retorno.OrderBy(x=> x.Fecha).ToList<FechaTransaccion>();
@@ -169,7 +169,7 @@ namespace CapaLogica
 
             return Lstretorno;
         }
-        public Boolean CerrarMes(FechaTransaccion t, Compañia compañia, Usuario user, out String mensaje)
+        public Boolean CerrarMes(FechaTransaccion t, Company compañia, Usuario user, out String mensaje)
         {
             ///Primero verificamos que este mes sea apto para cerrarse
             var meses = this.FechaCerrarMes(compañia, user);
@@ -218,7 +218,7 @@ namespace CapaLogica
         /// <param name="fechaTransaccion"></param>
         /// <param name="mensaje"></param>
         /// <returns></returns>
-        public Boolean BuscarAsientosDescuadrados(Compañia compañia, FechaTransaccion fechaTransaccion, out String mensaje)
+        public Boolean BuscarAsientosDescuadrados(Company compañia, FechaTransaccion fechaTransaccion, out String mensaje)
         {
 
             var asientCL = new AsientoCL();
@@ -246,7 +246,7 @@ namespace CapaLogica
 
         }
 
-        public List<Cuenta> AsientoDeCierre(Compañia compañia, Usuario usuario, IEnumerable<FechaTransaccion> fechaTransaccions, Cuenta cuenta)
+        public List<Cuenta> AsientoDeCierre(Company compañia, Usuario usuario, IEnumerable<FechaTransaccion> fechaTransaccions, Cuenta cuenta)
         {
             var meses = this.FechaCerrarMes(compañia, usuario);
 

@@ -31,4 +31,5 @@ namespace CapaPresentacion
 
     }
 }
+
 //to do: la referencia de usuario en companies en la base de datos permmite insertar valores nulos corregir.

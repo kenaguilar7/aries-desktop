@@ -1,4 +1,5 @@
-﻿using CapaEntidad.Enumeradores;
+﻿using AriesContador.Core.Models.Utils;
+using CapaEntidad.Enumeradores;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,15 +18,15 @@ namespace CapaEntidad.Verificaciones
         /// </summary>
         /// <param name="tipoID"></param>
         /// <returns></returns>
-        public static String MascaraIdentificacion(TipoID tipoID)
+        public static String MascaraIdentificacion(IdType tipoID)
         {
 
             switch (tipoID)
             {
-                case TipoID.CEDULA_JURIDICA: return "3-000-000000";
-                case TipoID.CEDULA_NACIONAL: return "0-0000-0000";
-                case TipoID.DIMEX: return "000000000000";
-                case TipoID.NITE: return "0000000000";
+                case IdType.CEDULA_JURIDICA: return "3-000-000000";
+                case IdType.CEDULA_NACIONAL: return "0-0000-0000";
+                case IdType.DIMEX: return "000000000000";
+                case IdType.NITE: return "0000000000";
                 default: return "null";
 
             }
@@ -65,7 +66,7 @@ namespace CapaEntidad.Verificaciones
         /// <param name="tipoID"></param>
         /// <param name="mensaje"></param>
         /// <returns></returns>
-        public static Boolean VerificarID(String id, TipoID tipoID, out String mensaje)
+        public static Boolean VerificarID(String id, IdType tipoID, out String mensaje)
         {
 
             var retorno = true;
@@ -79,28 +80,28 @@ namespace CapaEntidad.Verificaciones
              */
             switch (tipoID)
             {
-                case TipoID.CEDULA_JURIDICA:
+                case IdType.CEDULA_JURIDICA:
                     if (id.Length != 12)
                     {
                         mensaje = "Formato de cédula incorrecto";
                         return false;
                     }
                     break;
-                case TipoID.CEDULA_NACIONAL:
+                case IdType.CEDULA_NACIONAL:
                     if (id.Length != 11)
                     {
                         mensaje = "Formato de cédula incorrecto";
                         return false;
                     }
                     break;
-                case TipoID.DIMEX:
+                case IdType.DIMEX:
                     if (id.Length != 12)
                     {
                         mensaje = "Formato de cédula incorrecto";
                         return false;
                     }
                     break;
-                case TipoID.NITE:
+                case IdType.NITE:
                     if (id.Length != 10)
                     {
                         mensaje = "Formato de cédula incorrecto";

@@ -1,12 +1,6 @@
 ﻿using CapaDatos.Daos;
-using CapaEntidad.Entidades.JournalEntries;
-using CapaEntidad.Entidades.Compañias;
 using CapaEntidad.Entidades.FechaTransacciones;
-using CapaEntidad.Entidades.Usuarios;
-using CapaEntidad.Enumeradores;
-using CapaEntidad.Interfaces;
 using System;
-using System.Collections.Generic;
 using System.Data;
 
 namespace CapaLogica

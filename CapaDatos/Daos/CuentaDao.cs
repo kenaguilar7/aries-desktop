@@ -1,19 +1,15 @@
 ﻿using CapaDatos.Conexion;
-using CapaEntidad.Entidades.Compañias;
 using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Entidades.FechaTransacciones;
 using CapaEntidad.Entidades.Seguridad;
 using CapaEntidad.Entidades.Usuarios;
 using CapaEntidad.Entidades.Ventanas;
 using CapaEntidad.Enumeradores;
-using CapaEntidad.Interfaces;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
-using System.Threading.Tasks;
-using MySqlConnector.Authentication;
+using AriesContador.Core.Models.Companies;
 
 namespace CapaDatos.Daos
 {
@@ -45,7 +41,7 @@ namespace CapaDatos.Daos
             mensaje = (result == 1) ? "Cuenta eliminada correctamente" : "No se pudo eliminar la cuenta porque tiene movimientos";
             return (result == 1) ? true : false;
         }
-        public List<Cuenta> GetAll(Compañia t, Usuario user = null)
+        public List<Cuenta> GetAll(Company t, Usuario user = null)
         {
             var retorno = new List<Cuenta>();
 
@@ -278,7 +274,7 @@ ORDER BY T5.month_report , T4.entry_id
 
         }
 
-        public bool GenerarSaldosEnCeroParaCierreDeAsieto(Cuenta cuentaSaldoAsiento, Compañia compañia, Usuario usuario, int limitSecy)
+        public bool GenerarSaldosEnCeroParaCierreDeAsieto(Cuenta cuentaSaldoAsiento, Company compañia, Usuario usuario, int limitSecy)
         {
             using (MySqlTransaction tr = manejador.GetConnection().BeginTransaction(IsolationLevel.Serializable))
             {
@@ -427,7 +423,7 @@ ORDER BY T5.month_report , T4.entry_id
 
 
         }
-        public void CuentaConSaldos(List<Cuenta> cuentas, Compañia compañia, DateTime dateTime1, DateTime dateTime2)
+        public void CuentaConSaldos(List<Cuenta> cuentas, Company compañia, DateTime dateTime1, DateTime dateTime2)
         {
 
             var sql = "SELECT account_id, SUM(debito),SUM(credito),SUM(debito_USD), SUM(credito_USD), SUM(cuadrado)  " +
@@ -461,7 +457,7 @@ ORDER BY T5.month_report , T4.entry_id
 
             }
         }
-        public Boolean VerificarNombre(Cuenta cuenta, String nuevoNombre, Compañia compañia)
+        public Boolean VerificarNombre(Cuenta cuenta, String nuevoNombre, Company compañia)
         {
             try
             {
@@ -492,7 +488,7 @@ ORDER BY T5.month_report , T4.entry_id
             }
 
         }
-        public Boolean CopiarCuentas(Compañia compañiaModelo, Compañia compañiaNueva, Usuario usuario)
+        public Boolean CopiarCuentas(Company compañiaModelo, Company compañiaNueva, Usuario usuario)
         {
 
             ///Empezamos insertando de arriba a abajo 

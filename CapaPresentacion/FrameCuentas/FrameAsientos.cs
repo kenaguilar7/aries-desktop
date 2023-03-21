@@ -51,7 +51,7 @@ namespace CapaPresentacion.FrameCuentas
 
         private void FrameAsientos_Load(object sender, EventArgs e)
         {
-            ConfigExchangeController(GlobalConfig.Company.TipoMoneda);
+            ConfigExchangeController(GlobalConfig.Company.CurrencyType);
             LoadAccountingPeriodList();
         }
 
@@ -74,25 +74,25 @@ namespace CapaPresentacion.FrameCuentas
             }
         }
 
-        private void ConfigExchangeController(TipoMonedaCompañia moneyType)
+        private void ConfigExchangeController(CurrencyTypeCompany moneyType)
         {
             lstTipoCambio.DataSource = Enum.GetValues(typeof(AriesContador.Core.Models.Utils.Currency));
 
             switch (moneyType)
             {
-                case TipoMonedaCompañia.Dolares_y_Colones:
+                case CurrencyTypeCompany.Dolares_y_Colones:
                     ColumnTipoCambio.Visible = true;
                     ColumnMontoDolares.Visible = true;
                     lstTipoCambio.SelectedItem = AriesContador.Core.Models.Utils.Currency.colones;
                     lstTipoCambio.Enabled = true;
                     break;
-                case TipoMonedaCompañia.Solo_Colones:
+                case CurrencyTypeCompany.Solo_Colones:
                     ColumnTipoCambio.Visible = false;
                     ColumnMontoDolares.Visible = false;
                     lstTipoCambio.SelectedItem = AriesContador.Core.Models.Utils.Currency.colones;
                     lstTipoCambio.Enabled = false;
                     break;
-                case TipoMonedaCompañia.Solo_Dolares:
+                case CurrencyTypeCompany.Solo_Dolares:
                     ColumnTipoCambio.Visible = true;
                     ColumnMontoDolares.Visible = true;
                     lstTipoCambio.SelectedItem = AriesContador.Core.Models.Utils.Currency.dolares;

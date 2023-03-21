@@ -1,4 +1,5 @@
-﻿using CapaEntidad.Entidades.Compañias;
+﻿using AriesContador.Core.Models.Companies;
+using CapaEntidad.Entidades.Compañias;
 using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Entidades.Usuarios;
 using ClosedXML.Excel;
@@ -15,7 +16,7 @@ namespace CapaEntidad.Reportes
     public class ReporteMovimientoCuenta
     {
 
-        public static void GenerarReporte(String direccion, Boolean MostrarDolares, DataTable dataTable, Compañia compañia, Usuario usuario, Cuenta cuenta)
+        public static void GenerarReporte(String direccion, Boolean MostrarDolares, DataTable dataTable, Company compañia, Usuario usuario, Cuenta cuenta)
         {
             using (var workbook = new XLWorkbook())
             {

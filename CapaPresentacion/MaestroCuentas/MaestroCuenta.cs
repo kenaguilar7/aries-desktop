@@ -1,4 +1,4 @@
-﻿using CapaEntidad.Entidades.Compañias;
+﻿using AriesContador.Core.Models.Companies;
 using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Entidades.FechaTransacciones;
 using CapaLogica;
@@ -17,9 +17,9 @@ namespace CapaPresentacion.MaestroCuentas
         private LGCuenta _lGCuenta { get; } = new LGCuenta();
 
 
-        private Compañia compañiaActual;
+        private Company compañiaActual;
         public IEnumerable<FechaTransaccion> FechaTransaccions { get; internal set; }
-        public Compañia CompañiaActual
+        public Company CompañiaActual
         {
             get { return compañiaActual; }
             set

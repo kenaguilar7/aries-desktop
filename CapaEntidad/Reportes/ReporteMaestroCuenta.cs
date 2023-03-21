@@ -1,4 +1,6 @@
-﻿using CapaEntidad.Entidades.Compañias;
+﻿using AriesContador.Core.Models.Companies;
+using AriesContador.Core.Models.Utils;
+using CapaEntidad.Entidades.Compañias;
 using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Entidades.FechaTransacciones;
 using CapaEntidad.Entidades.Usuarios;
@@ -15,7 +17,7 @@ namespace CapaEntidad.Reportes
 {
     public class ReporteMaestroCuenta
     {
-        public static void GenerarReporte(List<Cuenta> list, String direccion, Compañia compañia, Usuario usuario,
+        public static void GenerarReporte(List<Cuenta> list, String direccion, Company compañia, Usuario usuario,
                                           FechaTransaccion mesFinal, Boolean GenerarSaldo = false)
         {
 
@@ -26,7 +28,7 @@ namespace CapaEntidad.Reportes
                 ///Creamos el encabezado
                 var column = 1;
                 var row = 1;
-                var tpmda = (compañia.TipoMoneda == TipoMonedaCompañia.Solo_Dolares) ? "Dolares y Colones" : "Colones"; 
+                var tpmda = (compañia.CurrencyType == CurrencyTypeCompany.Solo_Dolares) ? "Dolares y Colones" : "Colones"; 
                 worksheet.Cell(row++, column).Value = $"{compañia}";
                 worksheet.Cell(row++, column).Value = $"Maestro de Cuentas en {tpmda},  a {mesFinal}";
                 worksheet.Cell(row++, column).Value = $"usuario {usuario.ToString()}"; 
@@ -37,17 +39,17 @@ namespace CapaEntidad.Reportes
 
                 if (GenerarSaldo)
                 {
-                    switch (compañia.TipoMoneda)
+                    switch (compañia.CurrencyType)
                     {
-                        case TipoMonedaCompañia.Dolares_y_Colones:
+                        case CurrencyTypeCompany.Dolares_y_Colones:
                             LlenarTitulosUnaDivisa(ref worksheet, row, column, list);
                             LlenarSaldoCuentasColones(ref worksheet, row, column, list);
                             break;
-                        case TipoMonedaCompañia.Solo_Colones:
+                        case CurrencyTypeCompany.Solo_Colones:
                             LlenarTitulosUnaDivisa(ref worksheet, row, column, list);
                             LlenarSaldoCuentasColones(ref worksheet, row, column, list);
                             break;
-                        case TipoMonedaCompañia.Solo_Dolares:
+                        case CurrencyTypeCompany.Solo_Dolares:
                             LlenarTitulosAmbasDivisas(ref worksheet, row, column, list);
                             LlenarSaldoCuentasColonesDolares(ref worksheet, row, column, list);
                             break;
@@ -64,17 +66,17 @@ namespace CapaEntidad.Reportes
             }
 
         }
-        public static void GenerarReporteCuentas(List<Cuenta> list, String direccion, Compañia compañia, Usuario usuario)
+        public static void GenerarReporteCuentas(List<Cuenta> list, String direccion, Company compañia, Usuario usuario)
         {
 
-            if (compañia.TipoMoneda == TipoMonedaCompañia.Dolares_y_Colones)
+            if (compañia.CurrencyType == CurrencyTypeCompany.Dolares_y_Colones)
             {
                 GenerarReporteAmbasDivisas(list, direccion, compañia, usuario);
                 return;
             }
 
-            char divisa = (compañia.TipoMoneda == TipoMonedaCompañia.Solo_Colones) ? '₡' : '$';
-            divisa = (compañia.TipoMoneda == TipoMonedaCompañia.Solo_Dolares) ? '$' : divisa;
+            char divisa = (compañia.CurrencyType == CurrencyTypeCompany.Solo_Colones) ? '₡' : '$';
+            divisa = (compañia.CurrencyType == CurrencyTypeCompany.Solo_Dolares) ? '$' : divisa;
 
             using (var workbook = new XLWorkbook())
             {
@@ -140,7 +142,7 @@ namespace CapaEntidad.Reportes
 
 
         }
-        private static void GenerarReporteAmbasDivisas(List<Cuenta> list, String direccion, Compañia compañia, Usuario usuario)
+        private static void GenerarReporteAmbasDivisas(List<Cuenta> list, String direccion, Company compañia, Usuario usuario)
         {
 
             using (var workbook = new XLWorkbook())

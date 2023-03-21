@@ -10,21 +10,15 @@ using System.Windows.Forms;
 
 namespace CapaPresentacion
 {
-    public partial class FrameLoginUsuario : Form
+    public partial class LoginForm : Form
     {
+        private readonly IHttpAdministrationService _httpService;
 
-       //private readonly IAdministrationService _administrationService;
-        private readonly IHttpAdministrationService httpAdministrationService;
-
-        public FrameLoginUsuario(IHttpAdministrationService httpAdministrationService)
-       {
+        public LoginForm(IHttpAdministrationService httpAdministrationService)
+        {
             InitializeComponent();
             AddVersionNumber();
-            //InitializeComponent();
-            //IUnitOfWork unit = new UnitOfWork(GlobalConfig.ConnectionString);
-            //_administrationService = new AdministrationService(unit);
-
-            this.httpAdministrationService = httpAdministrationService;
+            _httpService = httpAdministrationService;
         }
 
         private async void btnAceptar_Click(object sender, EventArgs e)
@@ -43,7 +37,7 @@ namespace CapaPresentacion
                 //    Password = "96321"
                 //};
 
-                var token = await httpAdministrationService.Login(param);
+                var token = await _httpService.Login(param);
 
                 if (token.Token != null)
                 {
@@ -93,7 +87,7 @@ namespace CapaPresentacion
 
         }
 
-        private void VerClave_Click(object sender, EventArgs e)
+        private void TogglePasswordVisibilityButton_Click(object sender, EventArgs e)
         {
             if (txtBoxClave.UseSystemPasswordChar)
             {

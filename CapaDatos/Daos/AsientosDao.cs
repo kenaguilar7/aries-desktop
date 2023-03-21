@@ -1,18 +1,8 @@
 ﻿using CapaDatos.Conexion;
-using CapaEntidad.Entidades.JournalEntries;
-using CapaEntidad.Entidades.Compañias;
-using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Entidades.FechaTransacciones;
-using CapaEntidad.Entidades.Seguridad;
-using CapaEntidad.Entidades.Usuarios;
-using CapaEntidad.Entidades.Ventanas;
-using CapaEntidad.Enumeradores;
-using CapaEntidad.Interfaces;
-using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using CapaDatos.SQL;
 
 namespace CapaDatos.Daos
 {

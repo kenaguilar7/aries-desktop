@@ -1,4 +1,5 @@
-﻿using CapaEntidad.Entidades.Compañias;
+﻿using AriesContador.Core.Models.Companies;
+using CapaEntidad.Entidades.Compañias;
 using CapaEntidad.Entidades.Usuarios;
 using ClosedXML.Excel;
 using System;
@@ -10,7 +11,7 @@ namespace CapaEntidad.Reportes
     public class ReporteCompañia
     {
 
-        public static void GenerarReporte(List<Compañia> list, String direccion, Usuario usuario)
+        public static void GenerarReporte(List<Company> list, String direccion, Usuario usuario)
         {
 
             using (var workbook = new XLWorkbook())
@@ -52,22 +53,22 @@ namespace CapaEntidad.Reportes
                     var colum = 1;
 
                     worksheet.Cell(row, colum++).Value = compan.Code;
-                    worksheet.Cell(row, colum++).Value = compan.TipoId.ToString().Replace('_', ' ');
+                    worksheet.Cell(row, colum++).Value = compan.IdType.ToString().Replace('_', ' ');
                     ///Daba un problema con los numero de cédula NITE y DIMEX los convertia en numeros 
                     //worksheet.Cell(row, colum).DataType = XLDataType.Text; 
                     ///Error aun no resuelto
-                    worksheet.Cell(row, colum++).Value = compan.NumeroCedula;
-                    worksheet.Cell(row, colum++).Value = compan.Nombre;
+                    worksheet.Cell(row, colum++).Value = compan.IdNumber;
+                    worksheet.Cell(row, colum++).Value = compan.Name;
                     worksheet.Cell(row, colum++).Value = (compan is PersonaFisica) ? ((PersonaFisica)compan).MyApellidoPaterno : ((PersonaJuridica)compan).MyRepresentanteLegal;
                     worksheet.Cell(row, colum++).Value = (compan is PersonaFisica) ? ((PersonaFisica)compan).MyApellidoMaterno : ((PersonaJuridica)compan).MyIDRepresentanteLegal;
-                    worksheet.Cell(row, colum++).Value = compan.Direccion;
+                    worksheet.Cell(row, colum++).Value = compan.Address;
                     worksheet.Cell(row, colum++).Value = compan.Web;
-                    worksheet.Cell(row, colum++).Value = compan.Correo;
-                    worksheet.Cell(row, colum++).Value = compan.Telefono[0];
-                    worksheet.Cell(row, colum++).Value = compan.Telefono[1];
-                    worksheet.Cell(row, colum++).Value = compan.Observaciones;
-                    worksheet.Cell(row, colum++).Value = compan.TipoMoneda.ToString().Replace('_', ' ');
-                    worksheet.Cell(row, colum++).Value = (compan.Activo) ? "Activa" : "Desactiva";
+                    worksheet.Cell(row, colum++).Value = compan.Mail;
+                    worksheet.Cell(row, colum++).Value = compan.PhoneNumber1;
+                    worksheet.Cell(row, colum++).Value = compan.PhoneNumber2;
+                    worksheet.Cell(row, colum++).Value = compan.Memo;
+                    worksheet.Cell(row, colum++).Value = compan.CurrencyType.ToString().Replace('_', ' ');
+                    worksheet.Cell(row, colum++).Value = (compan.Active) ? "Activa" : "Desactiva";
                     row++;
 
                 }

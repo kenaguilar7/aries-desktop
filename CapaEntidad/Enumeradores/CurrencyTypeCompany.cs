@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace CapaEntidad.Enumeradores
 {
-    public enum TipoMonedaCompañia
-    {
-        Dolares_y_Colones = 1,
-        Solo_Colones = 2,
-        Solo_Dolares = 3
-    }
+    //public enum CurrencyTypeCompany
+    //{
+    //    Dolares_y_Colones = 1,
+    //    Solo_Colones = 2,
+    //    Solo_Dolares = 3
+    //}
 }

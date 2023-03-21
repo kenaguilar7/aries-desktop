@@ -1,4 +1,6 @@
-﻿using CapaEntidad.Entidades.Compañias;
+﻿using AriesContador.Core.Models.Companies;
+using AriesContador.Core.Models.Utils;
+using CapaEntidad.Entidades.Compañias;
 using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Entidades.FechaTransacciones;
 using CapaEntidad.Entidades.Usuarios;
@@ -15,8 +17,8 @@ namespace CapaEntidad.Reportes
     {
 
 
-        public static void GenerarReporte(Dictionary<FechaTransaccion, List<Cuenta>> lstCuentas, Compañia compañia, Usuario usuario,
-                          TipoMonedaCompañia tipoMoneda, String direccion)
+        public static void GenerarReporte(Dictionary<FechaTransaccion, List<Cuenta>> lstCuentas, Company compañia, Usuario usuario,
+                          CurrencyTypeCompany tipoMoneda, String direccion)
         {
 
 
@@ -107,18 +109,18 @@ namespace CapaEntidad.Reportes
                 worksheet.Cell(row++, column).Value = usuario;
                 switch (tipoMoneda)
                 {
-                    case TipoMonedaCompañia.Dolares_y_Colones:
+                    case CurrencyTypeCompany.Dolares_y_Colones:
                         LLenarNombreCuentas(ref worksheet, 6, ref column, nuevaLista);
                         //LlenarTitulosAmbasDivisas(ref worksheet, row, column, list);
                         LlenarSaldoCuentasColonesDolares(ref worksheet, 7, column, tablaCuentas);
                         break;
-                    case TipoMonedaCompañia.Solo_Colones:
+                    case CurrencyTypeCompany.Solo_Colones:
                         LLenarNombreCuentas(ref worksheet, 5, ref column, nuevaLista);
                         //LlenarTitulosUnaDivisa(ref worksheet, row, column, list);
                         LlenarSaldoCuentasColones(ref worksheet, 6, column, tablaCuentas);
 
                         break;
-                    case TipoMonedaCompañia.Solo_Dolares:
+                    case CurrencyTypeCompany.Solo_Dolares:
                         LLenarNombreCuentas(ref worksheet, 5, ref column, nuevaLista);
                         //LlenarTitulosUnaDivisa(ref worksheet, row, column, list);
                         //LlenarSaldoCuentasDolares(ref worksheet, 6, column, tablaCuentas);

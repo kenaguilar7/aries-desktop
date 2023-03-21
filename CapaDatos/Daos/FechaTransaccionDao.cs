@@ -1,20 +1,14 @@
 ﻿using CapaDatos.Conexion;
-using CapaEntidad.Entidades.JournalEntries;
-using CapaEntidad.Entidades.Compañias;
 using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Entidades.FechaTransacciones;
 using CapaEntidad.Entidades.Seguridad;
 using CapaEntidad.Entidades.Usuarios;
 using CapaEntidad.Entidades.Ventanas;
-using CapaEntidad.Enumeradores;
-using CapaEntidad.Interfaces;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using AriesContador.Core.Models.Companies;
 
 namespace CapaDatos.Daos
 {
@@ -22,7 +16,7 @@ namespace CapaDatos.Daos
     {
         Manejador manejador = new Manejador();
 
-        public List<FechaTransaccion> GetAll(Compañia t, Usuario user)
+        public List<FechaTransaccion> GetAll(Company t, Usuario user)
         {
             try
             {
@@ -47,7 +41,7 @@ namespace CapaDatos.Daos
                 throw;
             }
         }
-        public DataTable GetDataTable(Compañia t, Usuario user)
+        public DataTable GetDataTable(Company t, Usuario user)
         {
             var sql = "SET lc_time_names = 'es_ES';" +
                       "SELECT DATE_FORMAT(ac.month_report,'%M %Y') AS 'Mes'," +
@@ -60,7 +54,7 @@ namespace CapaDatos.Daos
             return manejador.Listado(sql, new Parametro("@company_id", t.Code), CommandType.Text);
 
         }
-        public Boolean Insert(FechaTransaccion t, Compañia compañia, Usuario user, out String mensaje)
+        public Boolean Insert(FechaTransaccion t, Company compañia, Usuario user, out String mensaje)
         {
 
             if (!Guachi.Consultar(user, VentanaInfo.FormAdminMeses, CRUDName.Insertar))
@@ -109,7 +103,7 @@ namespace CapaDatos.Daos
         /// <param name="lstCuentas"></param>
         /// <param name="mensaje"></param>
         /// <returns></returns>
-        public Boolean CerrarMes(FechaTransaccion t, Compañia compañia, Usuario user, List<Cuenta> lstCuentas, out String mensaje)
+        public Boolean CerrarMes(FechaTransaccion t, Company compañia, Usuario user, List<Cuenta> lstCuentas, out String mensaje)
         {
 
             /**

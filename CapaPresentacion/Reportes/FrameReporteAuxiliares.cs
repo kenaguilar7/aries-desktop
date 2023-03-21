@@ -70,11 +70,11 @@ namespace CapaPresentacion.Reportes
                     }
                 }
 
-                using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "Excel|*.xlsx", Title = "Reporte auxiliares", FileName = $"REPORTE DE AUXILIARES {GlobalConfig.Company.ToString()} - {GlobalConfig.Company.NumeroCedula}" })
+                using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "Excel|*.xlsx", Title = "Reporte auxiliares", FileName = $"REPORTE DE AUXILIARES {GlobalConfig.Company.ToString()} - {GlobalConfig.Company.IdNumber}" })
                 {
                     if (sfd.ShowDialog() == DialogResult.OK)
                     {
-                        ReporteAuxiliares.GenerarReporte(lstCuentas, GlobalConfig.Company, GlobalConfig.Usuario, GlobalConfig.Company.TipoMoneda, sfd.FileName);
+                        ReporteAuxiliares.GenerarReporte(lstCuentas, GlobalConfig.Company, GlobalConfig.Usuario, GlobalConfig.Company.CurrencyType, sfd.FileName);
                     }
                 }
 

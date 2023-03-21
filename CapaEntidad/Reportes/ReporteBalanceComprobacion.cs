@@ -1,4 +1,6 @@
-﻿using CapaEntidad.Entidades.Compañias;
+﻿using AriesContador.Core.Models.Companies;
+using AriesContador.Core.Models.Utils;
+using CapaEntidad.Entidades.Compañias;
 using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Entidades.Usuarios;
 using CapaEntidad.Enumeradores;
@@ -14,8 +16,8 @@ namespace CapaEntidad.Reportes
     public class ReporteBalanceComprobacion
     {
 
-        public static void GenerarReporte(List<Cuenta> list, Compañia compañia, Usuario usuario,
-                                          TipoMonedaCompañia tipoMoneda, String direccion)
+        public static void GenerarReporte(List<Cuenta> list, Company compañia, Usuario usuario,
+                                          CurrencyTypeCompany tipoMoneda, String direccion)
         {
 
             ///Generamos el encabezado
@@ -26,24 +28,24 @@ namespace CapaEntidad.Reportes
                 ///Creamos el encabezado
                 var column = 1;
                 var row = 1;
-                var tpmda = (compañia.TipoMoneda == TipoMonedaCompañia.Solo_Dolares) ? "Dolares y Colones" : "Colones";
+                var tpmda = (compañia.CurrencyType == CurrencyTypeCompany.Solo_Dolares) ? "Dolares y Colones" : "Colones";
                 worksheet.Cell(row++, column).Value = $"{compañia} {compañia.Code}";
                 worksheet.Cell(row++, column).Value = $"Balance Comprobación en {tpmda} al mes de";
                 worksheet.Cell(row++, column).Value = usuario;
 
                 switch (tipoMoneda)
                 {
-                    case TipoMonedaCompañia.Dolares_y_Colones:
+                    case CurrencyTypeCompany.Dolares_y_Colones:
                         LLenarNombreCuentas(ref worksheet, 5, ref column, list);
                         LlenarTitulosUnaDivisa(ref worksheet, row, column, list);
                         LlenarSaldoCuentasColones(ref worksheet, 6, column, list);
                         break;
-                    case TipoMonedaCompañia.Solo_Colones:
+                    case CurrencyTypeCompany.Solo_Colones:
                         LLenarNombreCuentas(ref worksheet, 5, ref column, list);
                         LlenarTitulosUnaDivisa(ref worksheet, row, column, list);
                         LlenarSaldoCuentasColones(ref worksheet, 6, column, list);
                         break;
-                    case TipoMonedaCompañia.Solo_Dolares:
+                    case CurrencyTypeCompany.Solo_Dolares:
                         LLenarNombreCuentas(ref worksheet, 6, ref column, list);
                         LlenarTitulosAmbasDivisas(ref worksheet, row, column, list);
                         LlenarSaldoCuentasColonesDolares(ref worksheet, 7, column, list);

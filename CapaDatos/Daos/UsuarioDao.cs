@@ -1,5 +1,4 @@
 ﻿using CapaDatos.Conexion;
-using CapaEntidad.Entidades.Compañias;
 using CapaEntidad.Entidades.Seguridad;
 using CapaEntidad.Entidades.Usuarios;
 using CapaEntidad.Entidades.Ventanas;

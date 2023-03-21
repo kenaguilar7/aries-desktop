@@ -55,8 +55,8 @@ namespace CapaPresentacion.Reportes
 
         private void ConfigGridColumns()
         {
-            var companyMoneyType = GlobalConfig.Company.TipoMoneda;
-            if (companyMoneyType == TipoMonedaCompañia.Solo_Dolares)
+            var companyMoneyType = GlobalConfig.Company.CurrencyType;
+            if (companyMoneyType == CurrencyTypeCompany.Solo_Dolares)
             {
                 GridDatos.Columns[nameof(JournalEntryReport.DebitAmount)].DefaultCellStyle.Format = "$#,0.00";
                 GridDatos.Columns[nameof(JournalEntryReport.CreditAmount)].DefaultCellStyle.Format = "$#,0.00";
@@ -70,7 +70,7 @@ namespace CapaPresentacion.Reportes
             GridDatos.Columns[nameof(JournalEntryReport.RateAmount)].DefaultCellStyle.Format = "₡#,0.00";
             GridDatos.Columns[nameof(JournalEntryReport.ForeignAmount)].DefaultCellStyle.Format = "$#,0.00";
 
-            if (companyMoneyType == TipoMonedaCompañia.Solo_Colones)
+            if (companyMoneyType == CurrencyTypeCompany.Solo_Colones)
             {
                 GridDatos.Columns[nameof(JournalEntryReport.RateAmount)].Visible = false;
                 GridDatos.Columns[nameof(JournalEntryReport.ForeignAmount)].Visible = false;
@@ -144,8 +144,8 @@ namespace CapaPresentacion.Reportes
 
         private void SetColumnsFormatExcelReport(IXLWorksheet worksheet)
         {
-            var companyMoneyType = GlobalConfig.Company.TipoMoneda;
-            if (companyMoneyType == TipoMonedaCompañia.Solo_Dolares)
+            var companyMoneyType = GlobalConfig.Company.CurrencyType;
+            if (companyMoneyType == CurrencyTypeCompany.Solo_Dolares)
             {
                 worksheet.Column(8).Style.NumberFormat.Format = "$#,##0.00";
                 worksheet.Column(7).Style.NumberFormat.Format = "$#,##0.00";
@@ -166,8 +166,8 @@ namespace CapaPresentacion.Reportes
 
         private void RemoveColumnsExcelReport(IXLWorksheet worksheet)
         {
-            var companyMoneyType = GlobalConfig.Company.TipoMoneda;
-            if (companyMoneyType == TipoMonedaCompañia.Solo_Colones)
+            var companyMoneyType = GlobalConfig.Company.CurrencyType;
+            if (companyMoneyType == CurrencyTypeCompany.Solo_Colones)
             {
                 worksheet.Column(9).Delete();
                 worksheet.Column(10).Delete();

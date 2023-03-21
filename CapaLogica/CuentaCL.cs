@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Threading.Tasks;
+using AriesContador.Core.Models.Companies;
 using CapaDatos.Daos;
-using CapaEntidad.Entidades.Compañias;
 using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Entidades.FechaTransacciones;
 using CapaEntidad.Entidades.Usuarios;
@@ -26,7 +25,7 @@ namespace CapaLogica
             }
             return cuentaDao.Deleted(cuenta, usuario, out mensaje);
         }
-        public List<Cuenta> GetAll(Compañia t)
+        public List<Cuenta> GetAll(Company t)
         {
             var cuentas = cuentaDao.GetAll(t);
             return Ordernar(cuentas);
@@ -95,7 +94,7 @@ namespace CapaLogica
             }
             return retorno;
         }
-        public Boolean Update(ref Cuenta cuenta, Usuario user, String nuevoNombre, Compañia compañia, String nuevaDesc, out String mensaje)
+        public Boolean Update(ref Cuenta cuenta, Usuario user, String nuevoNombre, Company compañia, String nuevaDesc, out String mensaje)
         {
             try
             {
@@ -146,7 +145,7 @@ namespace CapaLogica
         /// <param name="mensaje"></param>
         /// <param name="lst"></param>
         /// <returns></returns>
-        public Boolean VerificarNombre(Cuenta cuenta, String nombre, out String mensaje, Compañia compañia)///mejorar 
+        public Boolean VerificarNombre(Cuenta cuenta, String nombre, out String mensaje, Company compañia)///mejorar 
         {
             if (String.IsNullOrWhiteSpace(nombre))
             {
@@ -170,7 +169,7 @@ namespace CapaLogica
 
             }
         }
-        public void LLenarConSaldos(DateTime fechaInicio, DateTime fechaFinal, List<Cuenta> lst, Compañia compañia)
+        public void LLenarConSaldos(DateTime fechaInicio, DateTime fechaFinal, List<Cuenta> lst, Company compañia)
         {
             lst.ForEach(delegate (Cuenta c)
             {
@@ -320,7 +319,7 @@ namespace CapaLogica
             return retorno;
         }
 
-        public Boolean GenerarSaldosEnCeroParaCierreDeAsieto(Cuenta cuentaSaldoAsiento, Compañia compañia, Usuario usuario, int limitSec) {
+        public Boolean GenerarSaldosEnCeroParaCierreDeAsieto(Cuenta cuentaSaldoAsiento, Company compañia, Usuario usuario, int limitSec) {
             return cuentaDao.GenerarSaldosEnCeroParaCierreDeAsieto(cuentaSaldoAsiento, compañia, usuario, limitSec);
         }
 

@@ -1,8 +1,7 @@
-﻿using CapaEntidad.Entidades.Compañias;
+﻿using AriesContador.Core.Models.Companies;
 using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Entidades.FechaTransacciones;
 using CapaEntidad.Entidades.Usuarios;
-using CapaEntidad.Enumeradores;
 using CapaEntidad.Reportes;
 using CapaEntidad.Textos;
 using CapaLogica;
@@ -17,7 +16,7 @@ namespace CapaPresentacion.Reportes
     public partial class ReporteCuenta : Form
     {
 
-        private Compañia _compania = new Compañia();
+        private Company _compania = new Company();
         private Usuario _usuario = new Usuario();
         private List<Cuenta> _lstCuentas = new List<Cuenta>();
         private List<Cuenta> _lstCuentasFiltradas = new List<Cuenta>();
@@ -26,7 +25,7 @@ namespace CapaPresentacion.Reportes
         private CuentaCL _cuentaCL = new CuentaCL();
         int cont = 0;
         private Boolean ConSaldo { set { LlenarTabla(value); } }
-        public ReporteCuenta(Compañia compañia, Usuario usuario)
+        public ReporteCuenta(Company compañia, Usuario usuario)
         {
             InitializeComponent();
             CargarDatos(compañia, usuario);
@@ -39,7 +38,7 @@ namespace CapaPresentacion.Reportes
         /// <param name="lst"></param>
         /// <param name="compañia"></param>
         /// <param name="usuario"></param>
-        private void CargarDatos(Compañia compañia, Usuario usuario)
+        private void CargarDatos(Company compañia, Usuario usuario)
         {
             _compania = compañia;
             _lstCuentas = _cuentaCL.GetAll(compañia); ;

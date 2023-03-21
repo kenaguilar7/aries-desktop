@@ -1,4 +1,4 @@
-﻿using CapaEntidad.Entidades.Compañias;
+﻿using AriesContador.Core.Models.Companies;
 using CapaEntidad.Entidades.Seguridad;
 using CapaEntidad.Entidades.Usuarios;
 using CapaEntidad.Entidades.Ventanas;
@@ -24,8 +24,8 @@ namespace CapaPresentacion.Seguridad
         CompañiaCL compañiaCL = new CompañiaCL();
         PermisoCL permisoCL = new PermisoCL();
         private List<Usuario> TodosLosUsuarios = new List<Usuario>();
-        private List<Compañia> CompañiasDelUsuario = new List<Compañia>();
-        private List<Compañia> TodasLasCompañias = new List<Compañia>();
+        private List<Company> CompañiasDelUsuario = new List<Company>();
+        private List<Company> TodasLasCompañias = new List<Company>();
         private List<Modulo> modulos = new List<Modulo>();
 
         public FormPermisoUsuario()
@@ -49,7 +49,7 @@ namespace CapaPresentacion.Seguridad
         /// <param name="e"></param>
         private void AgregarCompania_Click(object sender, EventArgs e)
         {
-            var lst = (listCompañiasSinAsignar.SelectedItems.Cast<Compañia>()).ToList();
+            var lst = (listCompañiasSinAsignar.SelectedItems.Cast<Company>()).ToList();
             lst.ForEach((compañia) =>
             {
                 listCompañiasAsignadas.Items.Add(compañia);
@@ -64,7 +64,7 @@ namespace CapaPresentacion.Seguridad
         /// <param name="e"></param>
         private void RemoverCompañia_Click(object sender, EventArgs e)
         {
-            var lst = (listCompañiasAsignadas.SelectedItems.Cast<Compañia>()).ToList();
+            var lst = (listCompañiasAsignadas.SelectedItems.Cast<Company>()).ToList();
             lst.ForEach((compañia) =>
             {
                 listCompañiasSinAsignar.Items.Add(compañia);
@@ -183,8 +183,8 @@ namespace CapaPresentacion.Seguridad
         {
             ///Primero guarda las compañias 
 
-            var nuevas = (listCompañiasAsignadas.Items.Cast<Compañia>()).ToList();
-            var remover = (listCompañiasSinAsignar.Items.Cast<Compañia>()).ToList();
+            var nuevas = (listCompañiasAsignadas.Items.Cast<Company>()).ToList();
+            var remover = (listCompañiasSinAsignar.Items.Cast<Company>()).ToList();
 
             var user = (Usuario)lstUsuarios.SelectedItem;
             if (user != null)
