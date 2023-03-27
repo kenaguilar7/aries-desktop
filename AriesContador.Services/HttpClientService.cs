@@ -8,67 +8,89 @@ using System.Threading.Tasks;
 
 namespace AriesContador.Services
 {
-    public class HttpClientService
+
+    public interface IHttpClientService
     {
-        private static HttpClient _client = new HttpClient();
-        private HttpClientService()
+        Task<T> GetAsync<T>(string requestUri);
+        Task<T> PostAsync<T, P>(string requestUri, P parameter);
+        Task<T> PutAsync<T, P>(string requestUri, P parameter);
+        Task<T> DeleteAsync<T>(string requestUri);
+    }
+
+    public class HttpClientService : IHttpClientService
+    {
+        private static readonly Lazy<HttpClient> _client = new Lazy<HttpClient>(() => new HttpClient());
+
+        public async Task<T> GetAsync<T>(string requestUri)
         {
+            var url = new Uri(requestUri);
+            try
+            {
+                _client.Value.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", EnvironmentVariable.ApiToken.Token);
+                var response = await _client.Value.GetAsync(url);
+                response.EnsureSuccessStatusCode();
+                string responseJson = await response.Content.ReadAsStringAsync();
+                return JsonConvert.DeserializeObject<T>(responseJson);
+            }
+            catch (Exception e)
+            {
+                throw new HttpRequestException($"Failed to send GET request to {requestUri}: {e.Message}", e);
+            }
         }
 
-        public static async Task<T> GetAsync<T, P>(string requestUri, P parameter)
+        public async Task<T> PostAsync<T, P>(string requestUri, P parameter)
         {
-
             var url = new Uri(requestUri);
-            
             string jsonString = JsonConvert.SerializeObject(parameter, Newtonsoft.Json.Formatting.Indented, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
-
-            // Crear instancia de HttpContent
             var httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
             try
             {
-                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", EnvironmentVariable.Token);
-                // Enviar solicitud POST con HttpContent en el cuerpo
-                var response = await _client.PostAsync(url, httpContent);
-
-                // Leer respuesta de la solicitud
+                _client.Value.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", EnvironmentVariable.ApiToken.Token);
+                var response = await _client.Value.PostAsync(url, httpContent);
+                response.EnsureSuccessStatusCode();
                 string responseJson = await response.Content.ReadAsStringAsync();
-
-                var returnedObject = JsonConvert.DeserializeObject<T>(responseJson);
-                return await Task.FromResult(returnedObject);
+                return JsonConvert.DeserializeObject<T>(responseJson);
             }
             catch (Exception e)
             {
-                throw;
+                throw new HttpRequestException($"Failed to send POST request to {requestUri}: {e.Message}", e);
             }
-
         }
-        public static async Task<T> GetAsync<T>(string requestUri)
+
+        public async Task<T> PutAsync<T, P>(string requestUri, P parameter)
         {
-
             var url = new Uri(requestUri);
-
-            //string jsonString = JsonConvert.SerializeObject(parameter, Newtonsoft.Json.Formatting.Indented, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
-
-            // Crear instancia de HttpContent
-            //var httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
+            string jsonString = JsonConvert.SerializeObject(parameter, Newtonsoft.Json.Formatting.Indented, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+            var httpContent = new StringContent(jsonString, Encoding.UTF8, "application/json");
             try
             {
-                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", EnvironmentVariable.ApiToken.Token);
-                // Enviar solicitud POST con HttpContent en el cuerpo
-                var response = await _client.GetAsync(url);
-
-                // Leer respuesta de la solicitud
+                _client.Value.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", EnvironmentVariable.ApiToken.Token);
+                var response = await _client.Value.PutAsync(url, httpContent);
+                response.EnsureSuccessStatusCode();
                 string responseJson = await response.Content.ReadAsStringAsync();
-
-                var returnedObject = JsonConvert.DeserializeObject<T>(responseJson);
-                return await Task.FromResult(returnedObject);
+                return JsonConvert.DeserializeObject<T>(responseJson);
             }
             catch (Exception e)
             {
-                throw;
+                throw new HttpRequestException($"Failed to send PUT request to {requestUri}: {e.Message}", e);
             }
+        }
 
+        public async Task<T> DeleteAsync<T>(string requestUri)
+        {
+            var url = new Uri(requestUri);
+            try
+            {
+                _client.Value.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", EnvironmentVariable.ApiToken.Token);
+                var response = await _client.Value.DeleteAsync(url);
+                response.EnsureSuccessStatusCode();
+                string responseJson = await response.Content.ReadAsStringAsync();
+                return JsonConvert.DeserializeObject<T>(responseJson);
+            }
+            catch (Exception e)
+            {
+                throw new HttpRequestException($"Failed to send DELETE request to {requestUri}: {e.Message}", e);
+            }
         }
     }
-
 }

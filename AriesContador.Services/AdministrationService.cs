@@ -14,26 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace AriesContador.Services
-{
-
-    //public interface IWindowsFormsAdministrationService 
-    //{
-    //    string GetCompanyConsecutive();
-    //    void CreateCompany(Company compañia);
-    //    void CreateUser(User usuario);
-    //    IEnumerable<Company> GetAllCompanies();
-    //    Company FindByCode(string code);
-    //    IEnumerable<User> GetAllUsers();
-    //    IEnumerable<Company> GetAllInactiveCompanies();
-    //    IEnumerable<User> GetAllInactiveUsers();
-    //    User FinUserById(int id);
-    //    void InactivateCompany(Company compania);
-    //    void InactivateUser(User usuario);
-    //    void UpdateCompany(Company compania);
-    //    void UpdateUser(User usuario);
-    //    Task<WebToken> Login(Login param);
-    //}
-
+{   
     public class AdministrationService : IAdministrationService
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -99,12 +80,6 @@ namespace AriesContador.Services
         public void InactivateUser(User usuario)
         {
             throw new NotImplementedException();
-        }
-
-        public async Task<WebToken> Login(Login param)
-        {
-            var response = await HttpClientService.GetAsync<WebToken, Login>(string.Concat(EnvironmentVariable.ApiUrl, "auth/login"), param); 
-            return response; 
         }
 
         public void UpdateCompany(Company compania)

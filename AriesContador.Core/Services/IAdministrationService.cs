@@ -22,6 +22,5 @@ namespace AriesContador.Core.Services
         void InactivateUser(User usuario);
         void UpdateCompany(Company compania);
         void UpdateUser(User usuario);
-        Task<WebToken> Login(Login param);
     }
 }

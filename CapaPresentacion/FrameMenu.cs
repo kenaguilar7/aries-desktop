@@ -11,12 +11,12 @@ using CapaPresentacion.AdminAsientos;
 using CapaPresentacion.FrameUsuarios;
 using CapaPresentacion.Restore;
 using AriesContador.Services;
+using AriesContador.Core.Models;
 
 namespace CapaPresentacion
 {
     public partial class FrameMenu : Form
     {
-        //private readonly IFinancialService financialService;
         private readonly IHttpAdministrationService _httpAdministrationService;
 
         public Boolean comParametro { set { CargarCompañia(); } }
@@ -28,25 +28,15 @@ namespace CapaPresentacion
             LoginForm n = new LoginForm(_httpAdministrationService);
             n.FormClosing += N_FormClosing;
 
-            n.ShowDialog();
-            void N_FormClosing(object sender, FormClosingEventArgs e)
-            {
-                if (GlobalConfig.User == null)
+                n.ShowDialog();
+                void N_FormClosing(object sender, FormClosingEventArgs e)
                 {
-                    Application.Exit();
+                    if (GlobalConfig.User == null)
+                    {
+                        Application.Exit();
+                    }
                 }
-            }
-
-            //GlobalConfig.Usuario = new Usuario()
-            //{
-            //    Id = 1,
-            //    MyNombre = "Kenneth DEV"
-            //};
-
-
             CargarDatos();
-            //this._httpAdministrationService = companyService;
-            //this.companyService = companyService;
         }
         private void CargarDatos()
         {
@@ -66,7 +56,7 @@ namespace CapaPresentacion
         }
         private void CargarCompañia()
         {
-            this.txtCompaniaNombre.Text = GlobalConfig.NewCompany.ToString();
+            this.txtCompaniaNombre.Text = GlobalConfig.Company.ToString();
         }
 
         private void MaestroDeCompañiasToolStripMenuItem_Click(object sender, EventArgs e)
@@ -381,6 +371,17 @@ namespace CapaPresentacion
             {
                 MessageBox.Show("Seleccione una compañia", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             }
+        }
+
+        private void tokenToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var scriptInfo = 
+                "Token Actual: "
+                + EnvironmentVariable.ApiToken.Token
+                + Environment.NewLine
+                + "Conectado a API: "
+                + EnvironmentVariable.ApiUrl; 
+            MessageBox.Show(scriptInfo, "Token info",MessageBoxButtons.OK, MessageBoxIcon.Information); 
         }
     }
 }

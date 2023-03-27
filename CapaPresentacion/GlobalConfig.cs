@@ -8,6 +8,7 @@ using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Entidades.Seguridad;
 using CapaEntidad.Entidades.Usuarios;
 using CapaEntidad.Entidades.Ventanas;
+using CapaEntidad.Enumeradores;
 using CapaPresentacion.Conf;
 using Squirrel;
 
@@ -27,7 +28,7 @@ namespace CapaPresentacion
 
         private async Task CheckForUpdates()
         {
-            
+
             using (var manager = new UpdateManager(ConfigurationManager.ConnectionStrings["UpdateServerString"].ConnectionString))
             {
                 await manager.UpdateApp();
@@ -41,8 +42,8 @@ namespace CapaPresentacion
 
         public static bool GetPermiso(Ventana ventana, CRUDItem cRUDItem)
         {
-            
-            
+
+
             return false;
         }
 
@@ -55,13 +56,47 @@ namespace CapaPresentacion
 
         public static List<Cuenta> Cuentas { get; set; } = new List<Cuenta>();
         public static List<Company> Compañias { get; set; } = new List<Company>();
-        public static Usuario Usuario { get; set; }
-        public static User User { get; set;  }
-        public static Company Company { get; set; }
-        public static AriesContador.Core.Models.Companies.Company NewCompany { get; set; }
+        //public static Usuario Usuario { get; set; }
+        //public static User User { get; set;  }
+        //public static Company Company { get; set; }
+        //public static Company NewCompany { get; set; }
 
         public static ConnectionString ConnectionString = new ConnectionString();
-        public static string BaseUrl = ConfigurationManager.ConnectionStrings["HttpBaseUrl"].ConnectionString; 
-        
+
+        public static string BaseUrl = ConfigurationManager.ConnectionStrings["HttpBaseUrl"].ConnectionString;
+
+
+
+        public static Company Company { get; set; }
+        //private static Company _newCompany; 
+        //public static Company NewCompany 
+        //{
+        //    get { return _newCompany;  }
+        //    set 
+        //    {
+        //        Company = new Company= value;
+        //    }
+        //}
+
+
+        public static Usuario Usuario { get; set; }
+        private static User user;
+        public static User User
+        {
+            get { return user; }
+            set 
+            {
+                Usuario = new Usuario()
+                {
+                    UsuarioId = value.IdNumber,
+                    UserName = value.UserName,
+                    TipoUsuario = (TipoUsuario)value.UserType,
+                    MyNombre = value.Name
+                }; 
+
+                user = value; 
+            }
+        }
+
     }
 }

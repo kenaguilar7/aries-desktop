@@ -52,7 +52,7 @@ namespace CapaPresentacion
                 {
 
                     if(!IsAvalibleToChangeCompany())return;
-                    GlobalConfig.NewCompany = company;
+                    GlobalConfig.Company = company;
                     fm.comParametro = true;
                     this.Close();
                 }

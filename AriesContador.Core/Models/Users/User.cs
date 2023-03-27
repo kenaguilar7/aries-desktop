@@ -44,8 +44,8 @@ namespace AriesContador.Core.Models.Users
     }
 
     public class WebToken 
-    { 
-        public string Token { get; set;  }
+    {
+        public string Token { get; set; } = string.Empty; 
         public User User { get; set; }
     }
 

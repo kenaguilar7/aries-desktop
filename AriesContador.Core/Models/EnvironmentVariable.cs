@@ -8,8 +8,7 @@ namespace AriesContador.Core.Models
     public static class EnvironmentVariable
     {
 
-        public static string Token { get; set;  }
         public static string ApiUrl { get; set; }
-        public static WebToken ApiToken { get; set; }
+        public static WebToken ApiToken { get; set; } = new WebToken();
     }
 }

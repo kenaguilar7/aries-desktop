@@ -4,7 +4,6 @@ using AriesContador.Core.Models.Users;
 using AriesContador.Core.Services;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Aries.WebServices.AdministrationServices
@@ -84,16 +83,6 @@ namespace Aries.WebServices.AdministrationServices
         public void UpdateUser(User usuario)
         {
             _unitOfWork.UserRepository.Update(usuario);
-        }
-
-        Task<WebToken> Login(Login param)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<WebToken> IAdministrationService.Login(Login param)
-        {
-            throw new NotImplementedException();
         }
     }
 }
