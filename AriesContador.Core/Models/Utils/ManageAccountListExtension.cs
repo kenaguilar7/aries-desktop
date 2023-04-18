@@ -120,67 +120,67 @@ namespace AriesContador.Core.Models.Utils
             return retorno;
         }
 
-        //public static IEnumerable<Account> OrderByDescTree(this IEnumerable<Account> lst)
-        //{
-
-        //    List<Account> retorno = new List<Account>();
-
-
-        //    foreach (Account item in lst)
-        //    {
-        //        if (item.AccountType == AccountType.Cuenta_Titulo)
-        //        {
-        //            CargarNodos(item);
-        //        }
-        //    }
-
-        //    void CargarNodos(Account cuenta)
-        //    {
-        //        var sql = from c in lst where c.FatherAccount == cuenta.Id select c;
-        //        var cueHijas = sql.ToArray<Account>();
-        //        foreach (Account item in cueHijas)
-        //        {
-        //            CargarNodos(item);
-        //        }
-        //        retorno.Add(cuenta);
-        //    }
-        //    retorno.Reverse();
-        //    return retorno;
-        //}
-
         public static IEnumerable<Account> OrderByDescTree(this IEnumerable<Account> lst)
         {
+            lst = lst.OrderByDescending(x=>x.Id); 
             List<Account> retorno = new List<Account>();
+
 
             foreach (Account item in lst)
             {
                 if (item.AccountType == AccountType.Cuenta_Titulo)
                 {
-                    retorno.AddRange(Test(item, lst));
+                    CargarNodos(item);
                 }
             }
 
-
+            void CargarNodos(Account cuenta)
+            {
+                var sql = from c in lst where c.FatherAccount == cuenta.Id select c;
+                var cueHijas = sql.ToArray<Account>();
+                foreach (Account item in cueHijas)
+                {
+                    CargarNodos(item);
+                }
+                retorno.Add(cuenta);
+            }
+            retorno.Reverse();
             return retorno;
         }
 
-        private static IEnumerable<Account> Test(Account account, IEnumerable<Account> lst)
-        {
-            var returnList = new List<Account>
-            {
-                account
-            };
+        //public static IEnumerable<Account> OrderByDescTree(this IEnumerable<Account> lst)
+        //{
+        //    List<Account> retorno = new List<Account>();
 
-            var sql = from c in lst where c.FatherAccount == account.Id select c;
+        //    foreach (Account item in lst)
+        //    {
+        //        if (item.AccountType == AccountType.Cuenta_Titulo)
+        //        {
+        //            retorno.AddRange(Test(item, lst));
+        //        }
+        //    }
 
-            foreach (Account item in sql)
-            {
-                if (sql.Count() != 0)
-                    continue; 
 
-                returnList.AddRange(Test(item, lst));
-            }
-            return returnList;
-        }
+        //    return retorno;
+        //}
+
+        //private static IEnumerable<Account> Test(Account account, IEnumerable<Account> lst)
+        //{
+        //    var returnList = new List<Account>
+        //    {
+        //        account
+        //    };
+
+        //    var sql = from c in lst where c.FatherAccount == account.Id select c;
+
+        //    foreach (Account item in sql)
+        //    {
+        //        if (sql.Count() != 0)
+        //            continue; 
+
+        //        returnList.AddRange(Test(item, lst));
+        //    }
+        //    return returnList;
+        //}
     }
 }

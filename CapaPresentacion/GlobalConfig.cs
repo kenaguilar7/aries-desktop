@@ -91,7 +91,8 @@ namespace CapaPresentacion
                     UsuarioId = value.IdNumber,
                     UserName = value.UserName,
                     TipoUsuario = (TipoUsuario)value.UserType,
-                    MyNombre = value.Name
+                    MyNombre = value.Name, 
+                    Id = value.Id
                 }; 
 
                 user = value; 
