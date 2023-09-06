@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace AriesContador.Core.Repositories
 {
@@ -7,6 +8,6 @@ namespace AriesContador.Core.Repositories
     {
         void Add(TEntity entity);
         void Update(TEntity entity);
-        void Remove(TEntity entity);
+        Task Remove(TEntity entity);
     }
 }

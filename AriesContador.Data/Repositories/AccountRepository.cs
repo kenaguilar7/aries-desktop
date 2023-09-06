@@ -11,6 +11,7 @@ using System.Text;
 using System.Linq;
 using AriesContador.Core.Models.Utils;
 using AriesContador.Core.Models.JournalEntries;
+using System.Threading.Tasks;
 
 namespace AriesContador.Data.Repositories
 {
@@ -47,10 +48,10 @@ namespace AriesContador.Data.Repositories
             return output.FirstOrDefault();
         }
 
-        public void Remove(Account entity)
+        public async Task Remove(Account entity)
         {
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            dataAccess.SaveData<Account>("SP_DesactivateAccount", entity);
+            MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
+            await dataAccess.SaveData<Account>("SP_DesactivateAccount", entity);
         }
 
         public void Update(Account entity)

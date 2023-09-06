@@ -61,7 +61,7 @@ namespace CapaPresentacion
 
         private void MaestroDeCompañiasToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            FrameMaestroCompañia n = new FrameMaestroCompañia();
+            FrameMaestroCompañia n = new FrameMaestroCompañia(_httpAdministrationService);
             n.MdiParent = this;
             n.Show();
         }

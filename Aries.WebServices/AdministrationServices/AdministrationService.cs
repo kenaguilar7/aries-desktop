@@ -26,6 +26,11 @@ namespace Aries.WebServices.AdministrationServices
             _unitOfWork.UserRepository.Add(usuario);
         }
 
+        public async Task DeleteCompany(Company company)
+        {
+            await _unitOfWork.CompanyRepository.Remove(company);
+        }
+
         public Company FindByCode(string code)
         {
             throw new NotImplementedException();
@@ -59,15 +64,10 @@ namespace Aries.WebServices.AdministrationServices
             return output;
         }
 
-        public string GetCompanyConsecutive()
+        public async Task<string> GetCompanyConsecutive()
         {
-            var newID = _unitOfWork.CompanyRepository.GetConsecutive();
-            return newID;
-        }
-
-        public void InactivateCompany(Company compania)
-        {
-            _unitOfWork.CompanyRepository.Remove(compania);
+            var lastCompany = await _unitOfWork.CompanyRepository.LatestCode();
+            return "C" + (int.Parse(lastCompany.Substring(1, 3)) + 1).ToString("000"); 
         }
 
         public void InactivateUser(User usuario)

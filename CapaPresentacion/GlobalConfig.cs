@@ -88,7 +88,7 @@ namespace CapaPresentacion
             {
                 Usuario = new Usuario()
                 {
-                    UsuarioId = value.IdNumber,
+                    UsuarioId = value.Id.ToString(),
                     UserName = value.UserName,
                     TipoUsuario = (TipoUsuario)value.UserType,
                     MyNombre = value.Name, 

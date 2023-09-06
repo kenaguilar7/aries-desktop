@@ -70,7 +70,6 @@ namespace AriesContador.Services
                 {
                     var rLine = new EstadoResultadoIntegralReport
                     {
-                        Account = (account.AccountType == AccountType.Cuenta_Titulo) ? $"TOTAL {account.Name}" : account.Name,
                         AccountPath = account.PathDirection,
                         SaldoActual = account.CurrentBalance,
                         IsMainAccount = account.AccountType == AccountType.Cuenta_Titulo

@@ -57,30 +57,41 @@ namespace AriesContador.Data.Repositories
         public async Task<IEnumerable<Company>> GetAll()
         {
             var dataAccess = new MySqlDataAccessAsync(_connectionString);
+
             var lst1 = await dataAccess.ExecuteQuery<Company>(Query.Query.AdministrationQuery.JuridicPerson);
             var lst2 = await dataAccess.ExecuteQuery<Company>(Query.Query.AdministrationQuery.FisicPerson);
             lst1.AddRange(lst2);
             return await Task.FromResult(lst1); 
         }
 
-        public string GetConsecutive()
+        public async Task<string> LatestCode()
         {
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            var output = (dataAccess.LoadData<string>("SP_GetLastCompanyCode")).First();
-
-            var newCode = int.Parse(output.Substring(1, 3));
-            newCode++;
-
-            var code = "C" + (newCode).ToString("000");
-
-            return code;
-
+            string query = "SELECT c.company_id as Code FROM companies c ORDER BY c.company_id DESC LIMIT 1";
+            MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
+            var output = await dataAccess.ExecuteQuery<Company>(query);
+            return output.First().Code; 
         }
 
-        public void Remove(Company entity)
+        public async Task Remove(Company entity)
         {
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            dataAccess.SaveData<Company>("SP_DesactivateCompany", entity);
+            var query = @"
+delete T2 from accounting_months T0 JOIN  
+accounting_entries T1 ON T1.accounting_months_id = T0.accounting_months_id
+JOIN transactions_accounting T2 ON T1.accounting_entry_id = T2.accounting_entry_id
+where T0.company_id = @Code;
+
+delete T1 from accounting_months T0 JOIN  
+accounting_entries T1 ON T1.accounting_months_id = T0.accounting_months_id
+where T0.company_id = @Code; 
+
+delete T0 from posting_period_end_closing T0 where T0.company_id = @Code; 
+
+delete T0 from accounting_months T0 where T0.company_id = @Code; 
+  
+delete from companies where company_id = @Code
+"; 
+           MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
+           await dataAccess.ExecuteSingle(query, entity);
         }
 
         public void Update(Company entity)

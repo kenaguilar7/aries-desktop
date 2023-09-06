@@ -25,13 +25,13 @@ namespace Aries.WebAPI.Controllers
         public IActionResult Login([FromBody]Login userLogin)
         {
             var users = _administrationService.GetAllUsers();
-            if (users.Any(u => u.UserName == userLogin.UserId && u.Password == userLogin.Password))
+            if (users.Any(u => u.UserName.ToLower() == userLogin.UserId.ToLower() && u.Password == userLogin.Password))
             {
                 var tokenString = GenerateToken();
                 var webToken = new WebToken()
                 {
                     Token = tokenString,
-                    User = users.First(u=> u.UserName == userLogin.UserId)
+                    User = users.First(u=> u.UserName.ToLower() == userLogin.UserId.ToLower())
                 }; 
 
                 return Ok(webToken);

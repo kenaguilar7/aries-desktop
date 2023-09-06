@@ -381,7 +381,7 @@ namespace CapaDatos.Daos
                 {
                     cfd = "C000";
                 }
-                //creo que falta cerrar la conexión
+
                 return "C" + (
                               (
                                (int.Parse

@@ -1,16 +1,9 @@
 ﻿using AriesContador.Core;
-using AriesContador.Core.Models;
-using AriesContador.Core.Models.Accounts;
 using AriesContador.Core.Models.Companies;
 using AriesContador.Core.Models.Users;
 using AriesContador.Core.Services;
-using AriesContador.Data;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace AriesContador.Services
@@ -31,6 +24,11 @@ namespace AriesContador.Services
         public void CreateUser(User usuario)
         {
             _unitOfWork.UserRepository.Add(usuario);
+        }
+
+        public Task DeleteCompany(Company company)
+        {
+            throw new NotImplementedException();
         }
 
         public Company FindByCode(string code)
@@ -66,17 +64,6 @@ namespace AriesContador.Services
             return output;
         }
 
-        public string GetCompanyConsecutive()
-        {
-            var newID = _unitOfWork.CompanyRepository.GetConsecutive();
-            return newID;
-        }
-
-        public void InactivateCompany(Company compania)
-        {
-            _unitOfWork.CompanyRepository.Remove(compania);
-        }
-
         public void InactivateUser(User usuario)
         {
             throw new NotImplementedException();
@@ -91,6 +78,12 @@ namespace AriesContador.Services
         {
             _unitOfWork.UserRepository.Update(usuario);
         }
+
+        Task<string> IAdministrationService.GetCompanyConsecutive()
+        {
+            throw new NotImplementedException();
+        }
+
     }
 
 

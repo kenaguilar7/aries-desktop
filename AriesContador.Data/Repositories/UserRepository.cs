@@ -4,6 +4,7 @@ using AriesContador.Data.Internal.DataAccess;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace AriesContador.Data.Repositories
 {
@@ -35,7 +36,7 @@ namespace AriesContador.Data.Repositories
             return output.FirstOrDefault();
         }
 
-        public void Remove(User entity)
+        public async Task Remove(User entity)
         {
             throw new NotImplementedException();
         }

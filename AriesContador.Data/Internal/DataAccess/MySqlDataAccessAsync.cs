@@ -30,6 +30,18 @@ namespace AriesContador.Data.Internal.DataAccess
             }
         }
 
+        public async Task ExecuteSingle<U>(string query, U parameters)
+        {
+            string connectionString = _connectionString.MySQLDefault;
+
+            using (IDbConnection connection = new MySqlConnection(connectionString))
+            {
+                var result = await connection.QueryAsync(query, parameters,
+                    commandType: CommandType.Text);
+            }
+        }
+
+
         public async Task<List<T>> LoadData<T>(string storedProcedure, CommandType commandType = CommandType.StoredProcedure)
         {
             string connectionString = _connectionString.MySQLDefault;
@@ -43,19 +55,21 @@ namespace AriesContador.Data.Internal.DataAccess
             }
         }
 
-        public async Task<List<T>> ExecuteQuery<T>(string storedProcedure)
-            => await LoadData<T>(storedProcedure, CommandType.Text); 
+        public async Task<List<T>> ExecuteQuery<T>(string query)
+            => await LoadData<T>(query, CommandType.Text); 
 
-        public void SaveData<T>(string storedProcedure, T parameters)
+        public async Task SaveData<T>(string storedProcedure, T parameters)
         {
             string connectionString = _connectionString.MySQLDefault;
 
             using (IDbConnection connection = new MySqlConnection(connectionString))
             {
-                connection.Execute(storedProcedure, parameters,
+                await connection.ExecuteAsync(storedProcedure, parameters,
                     commandType: CommandType.StoredProcedure);
             }
         }
+
+        
 
         public Q SaveData<T, Q>(string storedProcedure, T parameters)
         {

@@ -107,7 +107,19 @@ namespace CapaPresentacion.Reportes
                 DataRow row = table.NewRow();
 
                 var accountSlip = item.AccountPath.Split(new char[] { '¡' }, StringSplitOptions.RemoveEmptyEntries);
-                var lastName = (item.IsMainAccount)? $"TOTAL {accountSlip.LastOrDefault()}":accountSlip.LastOrDefault();
+
+
+
+                string lastName;
+                if (item.IsMainAccount)
+                {
+                    lastName = $"TOTAL {accountSlip.LastOrDefault()}";
+                }
+                else
+                {
+                    lastName = accountSlip.LastOrDefault();
+                }
+
                 row[$"AccountName{accountSlip.Length - 1}"] = lastName;
 
                 foreach (PropertyDescriptor prop in properties)

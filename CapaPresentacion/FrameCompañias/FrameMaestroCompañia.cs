@@ -9,34 +9,34 @@ using CapaPresentacion.Reportes;
 using System.Threading.Tasks;
 using AriesContador.Core.Models.Companies;
 using AriesContador.Core.Models.Utils;
+using AriesContador.Services;
+using AriesContador.Core.Models.Users;
 
 namespace CapaPresentacion.FrameCompañias
 {
     public partial class FrameMaestroCompañia : Form
     {
-        public FrameMaestroCompañia()
-        {
-            InitializeComponent();
-            CargarDatos();
-        }
+        private readonly IHttpAdministrationService _administrationService;
         CompañiaCL compañiaCL = new CompañiaCL();
-
-        //BindingList<Compañia> lst = new BindingList<Compañia>();
         List<Company> lst = new List<Company>();
 
+        public FrameMaestroCompañia(IHttpAdministrationService administrationService)
+        {
+            InitializeComponent();
+            _administrationService = administrationService;
+        }
 
-
-        /// <summary>
-        /// Carga datos y eventos al formulario
-        /// </summary>
-        /// <param name="usuario"></param>
-        public async Task CargarDatos()
+        private async void FrameMaestroCompañia_Load(object sender, EventArgs e)
         {
             this.lstCompanias.DataSource = new List<Company>();
 
             lstTipoId.SelectedIndex = 0;
-            txtCodigoCia.Text = await Task.Run(() => compañiaCL.NuevoCodigo());
-            var lstCompanies = await Task.Run(() => compañiaCL.GetAll(GlobalConfig.Usuario));
+            //txtCodigoCia.Text = await compañiaCL.NuevoCodigo();
+            //var lstCompanies = compañiaCL.GetAll(GlobalConfig.Usuario);
+
+            var lstCompanies = await _administrationService.GetAllCompanies();
+            var companyNewCode  = await _administrationService.BuildNewCompanyCode();
+            txtCodigoCia.Text = companyNewCode.Code; 
 
             //eventos
             this.lstTipoId.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.SiguienteEnter);
@@ -48,47 +48,29 @@ namespace CapaPresentacion.FrameCompañias
             this.txtBoxTelefono1.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.SiguienteEnter);
             this.txtBoxTelefono2.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.SiguienteEnter);
             this.lstMovimientosRegistro.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.SiguienteEnter);
-            // this.panelOps.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.SiguienteEnter);
-            //this.btnAgregaTelefono.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.SiguienteEnter);
             this.txtBoxWeb.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.SiguienteEnter);
             this.txtBoxMail.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.SiguienteEnter);
             this.txtBoxObservaciones.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.SiguienteEnter);
-            //this.txtBoxID.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtBoxID_KeyPress);
 
             lst = (from alias in lstCompanies orderby alias.Code descending select alias).ToList<Company>();
             this.lstMovimientosRegistro.SelectedIndex = 0;
             this.lstCompanias.DataSource = lst;
 
-            /**
-             * 
-             * en eL paso de asignar la lista de compañias al control de donde se podra seleccionar para crear un maestro de
-             * cuentas a partir de la compañia seleccionada, se tuvo que duplicar la copia, porque el copilador interpreta esta como solo una
-             * y cuando se selecciona una opcion en un control en el otro cambia, esto porque ambas listas apuntas al mismo espacio en memoria
-             * 
-             */
-
-            ///Creamos una nueva lista para almacenar las compañias que podran ser usadas para duplicar su maestro de cuentas
-            ///Y agregamos una nueva compañia con el nombre maestro  de cuentas por defecto, esta sera la opcion que el 
-            ///usuario puede marcar para que no duplique de ninguna otra compañia
             var lstMCuentas = new Company[lst.Count + 1];
             lstMCuentas[0] = new Company() { Name = "", Code = "POR DEFECTO" };
-            ///Copiamos la lista de cuentas a la nueva lista para guardarla en el seleccionador de maestros de cuenta
             lst.CopyTo(lstMCuentas, 1);
+
             lstCopiarMaestroCuentas.DataSource = lstMCuentas;
             this.lstCompanias.SelectedIndex = -1;
             this.lstCompanias.SelectedIndexChanged += new System.EventHandler(this.LstCompanias_SelectedIndexChanged);
+
+            var user = GlobalConfig.User.UserType;
+            btnDelete.Enabled = (user == UserType.Administrador) ? true : false;
+
         }
-        /// <summary>
-        /// Carga la compañia pasada por parametros al forumulario
-        /// </summary>
-        /// <param name="compania"></param>
+
         private void CargarCompaniaFormulario(Company compania)
         {
-            /**
-             * la lista lstTipoId tiene como primer indice 0; mientras que 
-             * los unum de tipo id tiene como primer indice 1
-             * en este caso le restamos 1 
-             */
             lstTipoId.SelectedIndex = Convert.ToInt16(compania.IdType) - 1;
             lstCopiarMaestroCuentas.SelectedIndex = -1;
             lstCopiarMaestroCuentas.Enabled = false;
@@ -131,9 +113,7 @@ namespace CapaPresentacion.FrameCompañias
             this.lstTipoId.Enabled = false;
 
         }
-        /// <summary>
-        /// Limpia el formulario
-        /// </summary>
+
         private void LimpiarFormulario()
         {
 
@@ -167,7 +147,7 @@ namespace CapaPresentacion.FrameCompañias
             //lstCopiarMaestroCuentas.SelectedIndex = 1;
         }
 
-        #region Eventos
+        #region Events
         private void SiguienteEnter(object sender, KeyPressEventArgs e)
         {
 
@@ -223,11 +203,6 @@ namespace CapaPresentacion.FrameCompañias
         {
             this.Close();
         }
-        /// <summary>
-        /// Obtiene los datos del formulario los valida y registra
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void GuardarNuevaCómpaña(object sender, EventArgs e)
         {
 
@@ -412,11 +387,6 @@ namespace CapaPresentacion.FrameCompañias
 
         #endregion
 
-        #region METODOS DE SOPORTE
-        //mejorar esto!!!!!!!!!!!!!!!!!!
-
-        #endregion
-
         private void TxtBoxBuscarLeave(object sender, EventArgs e)
         {
             try
@@ -489,5 +459,23 @@ namespace CapaPresentacion.FrameCompañias
                 }
             }
         }
+
+        private async void bntDelete_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show("Este cambio es irreversible. \n ¿Desea continuar de todas formas?", TextoGeneral.NombreApp, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.No)
+                return;
+
+            try
+            {
+
+                await _administrationService.DeleteCompany((Company)btnActualizar.Tag);
+                this.LimpiarFormulario(); 
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, TextoGeneral.NombreApp,MessageBoxButtons.OK, MessageBoxIcon.Error); 
+            }
+        }
+
     }
 }
