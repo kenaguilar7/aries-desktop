@@ -31,8 +31,6 @@ namespace CapaPresentacion.FrameCompañias
             this.lstCompanias.DataSource = new List<Company>();
 
             lstTipoId.SelectedIndex = 0;
-            //txtCodigoCia.Text = await compañiaCL.NuevoCodigo();
-            //var lstCompanies = compañiaCL.GetAll(GlobalConfig.Usuario);
 
             var lstCompanies = await _administrationService.GetAllCompanies();
             var companyNewCode  = await _administrationService.BuildNewCompanyCode();
@@ -51,6 +49,8 @@ namespace CapaPresentacion.FrameCompañias
             this.txtBoxWeb.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.SiguienteEnter);
             this.txtBoxMail.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.SiguienteEnter);
             this.txtBoxObservaciones.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.SiguienteEnter);
+
+            this.lstCompanias.SelectedIndexChanged -= new System.EventHandler(this.LstCompanias_SelectedIndexChanged);
 
             lst = (from alias in lstCompanies orderby alias.Code descending select alias).ToList<Company>();
             this.lstMovimientosRegistro.SelectedIndex = 0;
@@ -470,6 +470,7 @@ namespace CapaPresentacion.FrameCompañias
 
                 await _administrationService.DeleteCompany((Company)btnActualizar.Tag);
                 this.LimpiarFormulario(); 
+                FrameMaestroCompañia_Load(null, null); 
             }
             catch (Exception ex)
             {
