@@ -4,7 +4,7 @@ using AriesContador.Data.Internal.DataAccess;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using System.Threading.Tasks;
 
 namespace AriesContador.Data.Repositories
 {
@@ -69,11 +69,11 @@ namespace AriesContador.Data.Repositories
             dataAccess.SaveData<JournalEntry>("SP_RestoreJournalEntry", entryLine);
         }
 
-        public void Remove(JournalEntry entity)
+        public async Task Remove(JournalEntry entity)
         {
             entity.JournalEntryLines = new List<JournalEntryLine>();
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            dataAccess.SaveData<JournalEntry>("SP_DesactivateJournalEntry", entity);
+            MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
+            await dataAccess.SaveData<JournalEntry>("SP_DesactivateJournalEntry", entity);
         }
 
         public void Update(JournalEntry entity)

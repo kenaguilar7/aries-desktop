@@ -14,7 +14,7 @@ namespace AriesContador.Services
         Task<T> GetAsync<T>(string requestUri);
         Task<T> PostAsync<T, P>(string requestUri, P parameter);
         Task<T> PutAsync<T, P>(string requestUri, P parameter);
-        Task<T> DeleteAsync<T>(string requestUri);
+        Task DeleteAsync(string requestUri);
     }
 
     public class HttpClientService : IHttpClientService
@@ -76,16 +76,16 @@ namespace AriesContador.Services
             }
         }
 
-        public async Task<T> DeleteAsync<T>(string requestUri)
+        public async Task DeleteAsync(string requestUri)
         {
             var url = new Uri(requestUri);
             try
             {
                 _client.Value.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", EnvironmentVariable.ApiToken.Token);
                 var response = await _client.Value.DeleteAsync(url);
-                response.EnsureSuccessStatusCode();
-                string responseJson = await response.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<T>(responseJson);
+                var ss = response.EnsureSuccessStatusCode();
+                if (!response.IsSuccessStatusCode)
+                    throw new Exception(response.RequestMessage.Content.ToString()); 
             }
             catch (Exception e)
             {

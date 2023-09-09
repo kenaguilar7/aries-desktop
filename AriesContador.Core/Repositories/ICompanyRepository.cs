@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace AriesContador.Core.Repositories
 {
-    public interface ICompanyRepository : IRepository<Company> 
+    public interface ICompanyRepository : IRepository<Company>
     {
-        Task<IEnumerable<Company>> GetAll(); 
-        string GetConsecutive(); 
+        Task<IEnumerable<Company>> GetAll();
+        Task<string> LatestCode(); 
     }
 }

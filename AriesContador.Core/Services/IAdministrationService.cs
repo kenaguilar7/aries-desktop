@@ -9,18 +9,18 @@ namespace AriesContador.Core.Services
 {
     public interface IAdministrationService
     {
-        string GetCompanyConsecutive(); 
-        void CreateCompany(Company compañia);
-        void CreateUser(User usuario);
+        Task<string> GetCompanyConsecutive(); 
+        void CreateCompany(Company company);
+        void CreateUser(User user);
         Task<IEnumerable<Company>> GetAllCompanies();
+        Task DeleteCompany(Company company); 
         Company FindByCode(string code); 
         IEnumerable<User> GetAllUsers();
         IEnumerable<Company> GetAllInactiveCompanies();
         IEnumerable<User> GetAllInactiveUsers();
         User FinUserById(int id); 
-        void InactivateCompany(Company compania);
-        void InactivateUser(User usuario);
-        void UpdateCompany(Company compania);
-        void UpdateUser(User usuario);
+        void InactivateUser(User user);
+        void UpdateCompany(Company company);
+        void UpdateUser(User user);
     }
 }

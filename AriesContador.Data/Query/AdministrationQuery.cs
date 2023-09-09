@@ -12,6 +12,7 @@ namespace AriesContador.Data.Query
 SELECT
 T0.company_id AS 'Code',
 T0.type_id+0 AS 'CompanyType',
+T0.type_id+0 AS 'IdType',
 T0.number_id AS 'IdNumber',
 T0.name AS 'Name',
 T0.money_type+0 AS 'CurrencyType',
@@ -27,14 +28,14 @@ T0.user_id AS 'CreatedBy',
 T0.created_at AS 'CreatedAt',
 T0.updated_at AS 'UpdateAt',
 T0.active AS 'Active'
-FROM companies AS T0 JOIN companies_permission AS T1 ON T0.company_id = T1.company_id 
-WHERE T0.type_id = 1 AND T1.active = 1 AND T1.deleted = 0
+FROM companies AS T0 WHERE T0.type_id = 1 
 ";
 
             public const string FisicPerson = @"
 SELECT
 T0.company_id AS 'Code',
 T0.type_id+0 AS 'CompanyType',
+T0.type_id+0 AS 'IdType',
 T0.number_id AS 'IdNumber',
 T0.name AS 'Name',
 T0.money_type+0 AS 'CurrencyType',
@@ -50,8 +51,8 @@ T0.user_id AS 'CreatedBy',
 T0.created_at AS 'CreatedAt',
 T0.updated_at AS 'UpdateAt',
 T0.active AS 'Active'
-FROM companies AS T0 JOIN companies_permission AS T1 ON T0.company_id = T1.company_id 
-WHERE T0.type_id <> 1 AND T1.active = 1 AND T1.deleted = 0
+FROM companies AS T0 
+WHERE T0.type_id <> 1
 "; 
 
         }

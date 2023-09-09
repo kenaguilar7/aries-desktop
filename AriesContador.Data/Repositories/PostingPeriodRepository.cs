@@ -3,6 +3,7 @@ using AriesContador.Core.Repositories;
 using AriesContador.Data.Internal.DataAccess;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace AriesContador.Data.Repositories
 {
@@ -56,7 +57,7 @@ namespace AriesContador.Data.Repositories
             return output;
         }
 
-        public void Remove(PostingPeriod entity)
+        public async Task Remove(PostingPeriod entity)
         {
             throw new NotImplementedException();
         }

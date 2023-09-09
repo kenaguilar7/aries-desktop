@@ -79,6 +79,7 @@
             this.btnGuardar = new System.Windows.Forms.Button();
             this.btnActualizar = new System.Windows.Forms.Button();
             this.btnLimpiar = new System.Windows.Forms.Button();
+            this.btnDelete = new System.Windows.Forms.Button();
             this.groupBox2.SuspendLayout();
             this.maestro.SuspendLayout();
             this.groupCodigo.SuspendLayout();
@@ -628,6 +629,7 @@
             this.flowLayoutPanel1.Controls.Add(this.btnActualizar);
             this.flowLayoutPanel1.Controls.Add(this.btnLimpiar);
             this.flowLayoutPanel1.Controls.Add(this.btnListado);
+            this.flowLayoutPanel1.Controls.Add(this.btnDelete);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
             this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 16);
@@ -702,6 +704,22 @@
             this.btnLimpiar.UseVisualStyleBackColor = true;
             this.btnLimpiar.Click += new System.EventHandler(this.BtnLimpiar);
             // 
+            // btnDelete
+            // 
+            this.btnDelete.FlatAppearance.BorderSize = 0;
+            this.btnDelete.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnDelete.Image = global::CapaPresentacion.Properties.Resources.icons8_basura_25;
+            this.btnDelete.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnDelete.Location = new System.Drawing.Point(538, 5);
+            this.btnDelete.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnDelete.Name = "btnDelete";
+            this.btnDelete.Size = new System.Drawing.Size(83, 28);
+            this.btnDelete.TabIndex = 12;
+            this.btnDelete.Text = "&Eliminar";
+            this.btnDelete.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.btnDelete.UseVisualStyleBackColor = true;
+            this.btnDelete.Click += new System.EventHandler(this.bntDelete_Click);
+            // 
             // FrameMaestroCompañia
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -717,6 +735,7 @@
             this.Name = "FrameMaestroCompañia";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Maestro de Compañias";
+            this.Load += new System.EventHandler(this.FrameMaestroCompañia_Load);
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
             this.maestro.ResumeLayout(false);
@@ -784,5 +803,6 @@
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.TextBox txtBoxObservaciones;
+        private System.Windows.Forms.Button btnDelete;
     }
 }
