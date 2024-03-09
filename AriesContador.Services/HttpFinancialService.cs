@@ -154,9 +154,21 @@ namespace AriesContador.Services
             throw new NotImplementedException();
         }
 
-        public Task<IEnumerable<JournalEntry>> GetJournalEntries(int postingPeriodId)
+        public async Task<IEnumerable<JournalEntry>> GetJournalEntries(int postingPeriodId)
         {
-            throw new NotImplementedException();
+            try
+            {
+
+                var response = await _httpClientService
+                    .GetAsync<List<JournalEntry>>
+                    (string.Concat(EnvironmentVariable.ApiUrl, $"JournalEntry/GetJournalEntries/{postingPeriodId}"));
+                return response;
+            }
+            catch (Exception e)
+            {
+
+                throw;
+            }
         }
 
         public Task<JournalEntry> GetJournalEntryById(int id)

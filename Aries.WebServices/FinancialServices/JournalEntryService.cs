@@ -48,9 +48,7 @@ namespace Aries.WebServices.FinancialServices
         }
 
         public Task<IEnumerable<JournalEntry>> GetJournalEntries(int postingPeriodId)
-        {
-            throw new NotImplementedException();
-        }
+            => _unitOfWork.JournalEntryRepository.FindByPostingPeriodIdAsync(postingPeriodId);  
 
         public Task<JournalEntry> GetJournalEntryById(int id)
         {

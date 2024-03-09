@@ -21,5 +21,12 @@ namespace Aries.WebAPI.Controllers
             return Ok(newConsecutive);
         }
 
+        [HttpGet("GetJournalEntries/{postingPeriodId}")]
+        public async Task<IActionResult> GetJournalEntries(int postingPeriodId)
+        {
+            var result = await _journalEntryService.GetJournalEntries(postingPeriodId);
+            return Ok(result);
+        }
+
     }
 }

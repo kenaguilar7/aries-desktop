@@ -42,6 +42,25 @@ namespace AriesContador.Data.Repositories
             }
         }
 
+        public async Task<IEnumerable<JournalEntry>> FindByPostingPeriodIdAsync(int pstPeriodId)
+        {
+
+                MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString); 
+            
+                dataAccess.StartTransaction();
+                var output = await dataAccess.LoadDataInTransaction<JournalEntry, dynamic>
+                                ("SP_GetJournalEntryByPostingPeriodId", new { PostingPeriodId = pstPeriodId });
+
+
+                foreach (var jEntry in output)
+                {
+                    var jELines = await dataAccess.LoadDataInTransaction<JournalEntryLine, dynamic>
+                        ("SP_GetJournalEntryLineByJournalEntryId", new { JournalEntryId = jEntry.Id });
+                    jEntry.JournalEntryLines = jELines;
+                }
+                return output;
+        }
+
         public JournalEntry GetById(int id)
         {
             MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);

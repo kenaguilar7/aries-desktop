@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace AriesContador.Data.Internal.DataAccess
 {
-    internal class MySqlDataAccessAsync
+    internal class MySqlDataAccessAsync : IDisposable
     {
         private readonly IConnectionString _connectionString;
         public MySqlDataAccessAsync(IConnectionString connectionString)
@@ -111,12 +111,11 @@ namespace AriesContador.Data.Internal.DataAccess
             return retVal;
         }
 
-        public List<T> LoadDataInTransaction<T, U>(string storedProcedure, U parameters)
+        public async Task<List<T>> LoadDataInTransaction<T, U>(string storedProcedure, U parameters)
         {
-            List<T> rows = _connection.Query<T>(storedProcedure, parameters,
-                commandType: CommandType.StoredProcedure, transaction: _transaction).ToList();
-
-            return rows;
+            var result = await _connection.QueryAsync<T>(storedProcedure, parameters,
+                commandType: CommandType.StoredProcedure, transaction: _transaction);
+            return result.ToList(); 
         }
 
         public void StartTransaction()

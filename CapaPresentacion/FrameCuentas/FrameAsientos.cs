@@ -134,7 +134,7 @@ namespace CapaPresentacion.FrameCuentas
         {
             if (EqualDebAndCredONJournalEntry())
             {
-                var lst = _financialSercie.GetJournalEntries(PostingPeriodSelected.Id);
+                var lst = await _httpFinancialService.GetJournalEntries(PostingPeriodSelected.Id);
                 lstNumeroAsientos.DataSource = await ConfigAsientoBorrador(lst);
                 this.PreventMesesAbiertosIndex = lstMesesAbiertos.SelectedIndex;
             }
