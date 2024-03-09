@@ -17,12 +17,6 @@ namespace CapaDatos.Daos
     {
         private Manejador manejador = new Manejador(); 
 
-        /// <summary>
-        /// Devuelve la lista con todas las compañias
-        /// </summary>
-        /// <param name="t"></param>
-        /// <param name="user"></param>
-        /// <returns></returns>
         public List<Company> GetAll(Usuario user)
         {
             var retorno = new List<Company>();
@@ -122,10 +116,6 @@ namespace CapaDatos.Daos
 
             return retorno;
         }
-        public DataTable GetDataTable(Company t, Usuario user)
-        {
-            return manejador.Listado("SELECT * FROM companies", CommandType.Text);
-        }
         public Boolean Insert(Company compania, Usuario user, Company copiarMAestroCuenta, out String mensaje)
         {
 
@@ -187,77 +177,10 @@ namespace CapaDatos.Daos
                 throw;
             }
         }
+        
         private bool CopiarMaestroDeCuenta(Company copiarMAestroCuenta, Usuario usuario, Company compañia)
         {
             return new CuentaDao().CopiarCuentas(copiarMAestroCuenta, compañia, usuario);
-        }
-        public DataTable GetDataTable(IdType tipoID, Boolean todos = false)
-        {
-            var sql = "";
-
-            if (todos)
-            {
-                sql = " SET lc_time_names = 'es_MX'; SELECT " +
-                   "T0.company_id AS 'Código'," +
-                   "T0.type_id AS 'Tipo ID'," +
-                   "T0.number_id AS 'Número Identicación'," +
-                   "T0.name AS 'Nombre'," +
-                   "T0.op1 AS 'Apellido Paterno'," +
-                   "T0.op2 AS 'Apellido Materno'," +
-                   "T0.address AS 'Dirección'," +
-                   "T0.website AS 'Sitio Web'," +
-                   "T0.mail AS 'Correro Electronico'," +
-                   "T0.phone_number1 AS 'Telefono'," +
-                   "T0.phone_number2 AS 'Telefono'," +
-                   "T0.notes AS 'Observaciones'," +
-                   "(SELECT CONCAT(u.name, ' ', u.lastname_p, ' ', u.lastname_m) FROM users AS u WHERE u.user_id = T0.user_id LIMIT 1) AS 'Usuario'," +
-                   "IF(T0.active <> 1, 'No', 'Si') AS 'Acivo' " +
-                   "FROM companies AS T0 WHERE T0.type_id <> 1";
-                return manejador.Listado(sql, CommandType.Text);
-            }
-
-            if (tipoID == IdType.CEDULA_JURIDICA)
-            {
-                sql = "SET lc_time_names = 'es_MX'; SELECT " +
-                           "company_id AS 'Código'," +
-                           "type_id AS 'Tipo ID'," +
-                           "number_id AS 'Número Identicación'," +
-                           "name AS 'Nombre'," +
-                           "op1 AS 'Representante Legal'," +
-                           "op2 AS 'ID Representante'," +
-                           "address AS 'Dirección'," +
-                           "website AS 'Sitio Web'," +
-                           "mail AS 'Correro Electronico'," +
-                           "phone_number1 AS 'Telefono'," +
-                           "phone_number2 AS 'Telefono'," +
-                           "notes AS 'Observaciones'," +
-                           "(SELECT CONCAT(name, ' ', lastname_p, ' ', lastname_m) FROM users AS u WHERE u.user_id = user_id LIMIT 1) AS 'Usuario'," +
-                           "IF(active <> 1, 'No', 'Si') AS 'Acivo' " +
-                           "FROM companies WHERE type_id = 1";
-                return manejador.Listado(sql, CommandType.Text);
-            }
-            else
-            {
-                sql = "SET lc_time_names = 'es_MX'; SELECT " +
-                     "company_id AS 'Código'," +
-                     "type_id AS 'Tipo ID'," +
-                     "number_id AS 'Número Identicación'," +
-                     "name AS 'Nombre'," +
-                     "op1 AS 'Apellido Paterno'," +
-                     "op2 AS 'Apellido Materno'," +
-                     "address AS 'Dirección'," +
-                     "website AS 'Sitio Web'," +
-                     "mail AS 'Correro Electronico'," +
-                     "phone_number1 AS 'Telefono'," +
-                     "phone_number2 AS 'Telefono'," +
-                     "notes AS 'Observaciones'," +
-                     "(SELECT CONCAT(name, ' ', lastname_p, ' ', lastname_m) FROM users AS u WHERE u.user_id = user_id LIMIT 1) AS 'Usuario'," +
-                     "IF(active <> 1, 'No', 'Si') AS 'Acivo' " +
-                     "FROM companies WHERE type_id = @type_id";
-                return manejador.Listado(sql, new Parametro("@type_id", Convert.ToInt16(tipoID)), CommandType.Text);
-            }
-
-
         }
         public Boolean Update(Company compania, Usuario user, out String mensaje)
         {
@@ -309,56 +232,6 @@ namespace CapaDatos.Daos
                 mensaje = ex.Message;
                 return false;
             }
-        }
-        public Company GetCompañia(String id, IdType tipoID)
-        {
-            if (tipoID == IdType.CEDULA_NACIONAL)
-            {
-                //tratar de hacerlo mas eficiente
-                var comdando = "SELECT * FROM maestro_compania m, personas p WHERE M.codigo = P.IDCompania AND p.cedula = @p1 ";
-
-
-                using (MySqlCommand cmd = new MySqlCommand(comdando, manejador.GetConnection()))
-                {
-                    cmd.Parameters.AddWithValue("@p1", id);
-                    MySqlDataAdapter da = new MySqlDataAdapter();
-                    da.SelectCommand = cmd;
-                    DataTable dt = new DataTable();
-                    da.Fill(dt);
-
-                    foreach (DataRow item in dt.Rows)
-                    {
-                        Object[] vn = item.ItemArray;
-
-                        var c = new PersonaFisica();
-                        c.Code = Convert.ToString(vn[0]);
-                        c.IdType = (IdType)Convert.ToInt32(vn[1]);
-                        c.Address = Convert.ToString(vn[2]);
-                        c.Web = Convert.ToString(vn[3]);
-                        c.Mail = Convert.ToString(vn[4]);
-                        c.Memo = Convert.ToString(vn[6]);
-                        c.IdNumber = Convert.ToString(vn[10]);
-                        c.Name = Convert.ToString(vn[11]);
-                        c.MyApellidoPaterno = Convert.ToString(vn[12]);
-                        c.MyApellidoMaterno = Convert.ToString(vn[13]);
-                        return c;
-                    }
-
-
-
-                }
-
-            }
-            else
-            {
-                //DataTable dt = Listado("sp_buscar_fisicasID", new ClsParametros("@id", id), CommandType.Text);
-                //foreach (DataRow item in dt.Rows)
-                //{
-                //    return SetinComp.CrearPersonaFisica(item.ItemArray);
-                //}
-            }
-
-            return null;
         }
 
         #region funciones de soporte

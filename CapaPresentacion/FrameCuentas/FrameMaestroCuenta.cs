@@ -1,4 +1,5 @@
-﻿using CapaEntidad.Entidades.Cuentas;
+﻿using AriesContador.Services;
+using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Entidades.FechaTransacciones;
 using CapaEntidad.Enumeradores;
 using CapaEntidad.Interfaces;
@@ -22,7 +23,10 @@ namespace CapaPresentacion.FrameCuentas
         private List<Cuenta> _lstCuentas { get; set; } = new List<Cuenta>();
         private List<FechaTransaccion> _lstFechas { get; set; } = new List<FechaTransaccion>();
         private Cuenta CuentaActual { get; set; }
-        public FrameMaestroCuenta()
+
+
+
+        public FrameMaestroCuenta(/*IHttpAdministrationService administrationService*/)
         {
             InitializeComponent();
             CargarDatos();
@@ -49,6 +53,8 @@ namespace CapaPresentacion.FrameCuentas
             treeCuentas.Nodes.AddRange(TreeViewCuentas.CrearTreeView(_lstCuentas));
             // CargarDatosAListas();
         }
+
+
         private void CargarDatosAListas()
         {
             AFechaFinal.SelectedIndexChanged -= this.AFechaFinalSelectedIndexChanged;

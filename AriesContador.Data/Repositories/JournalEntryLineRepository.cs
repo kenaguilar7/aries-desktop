@@ -72,5 +72,9 @@ namespace AriesContador.Data.Repositories
             dataAccess.SaveData("SP_RestoreJournalEntryLine", entryLine);
         }
 
+        public Task AddAsync(JournalEntryLine entity)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

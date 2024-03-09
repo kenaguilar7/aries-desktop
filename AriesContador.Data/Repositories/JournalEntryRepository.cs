@@ -57,6 +57,13 @@ namespace AriesContador.Data.Repositories
             return newNumber.First();
         }
 
+        public async Task<int> GetConsecutiveNumberAsync(int postingPeriodId)
+        {
+            MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
+            var newNumber = await dataAccess.LoadData<int, dynamic>("SP_GetJournalEntryConsecutive", new { postingPeriodId });
+            return newNumber.First();
+        }
+
         public IEnumerable<JournalEntryDeletedReport> GetDeletedItemByDateRange(BasicReportParam reportParam)
         {
             MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
@@ -83,6 +90,11 @@ namespace AriesContador.Data.Repositories
             MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
             dataAccess.SaveData<JournalEntry>("SP_UpdateJournalEntry", entity);
             entity.JournalEntryLines = repoEntities;
+        }
+
+        public Task AddAsync(JournalEntry entity)
+        {
+            throw new NotImplementedException();
         }
     }
 }

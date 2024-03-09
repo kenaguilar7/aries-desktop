@@ -218,68 +218,81 @@ namespace CapaPresentacion.FrameCompañias
                 
                 try
                 {
-
-                
-
                     IdType tipo = (IdType)lstTipoId.SelectedIndex + 1;
+                    var Persona = new PersonaJuridica(
+                                        numeroId: txtBoxID.Text,
+                                        tipoID: tipo,
+                                        nombre: txtBoxNombre.Text,
+                                        TipoMoneda: (CurrencyTypeCompany)lstMovimientosRegistro.SelectedIndex + 1,
+                                        representanteLegal: txtBoxOp1.Text,
+                                        IDRepresentante: txtBoxOp2.Text,
+                                        direccion: txtBoxDireccion.Text,
+                                        web: txtBoxWeb.Text,
+                                        correo: txtBoxMail.Text,
+                                        observaciones: txtBoxObservaciones.Text,
+                                        telefono: new string[] { this.txtBoxTelefono1.Text, this.txtBoxTelefono2.Text }
+                                                            );
 
-                    if (lstTipoId.SelectedIndex == 0)
-                    {
 
-                        var Persona = new PersonaJuridica(
-                                            numeroId: txtBoxID.Text,
-                                            tipoID: tipo,
-                                            nombre: txtBoxNombre.Text,
-                                            TipoMoneda: (CurrencyTypeCompany)lstMovimientosRegistro.SelectedIndex + 1,
-                                            representanteLegal: txtBoxOp1.Text,
-                                            IDRepresentante: txtBoxOp2.Text,
-                                            direccion: txtBoxDireccion.Text,
-                                            web: txtBoxWeb.Text,
-                                            correo: txtBoxMail.Text,
-                                            observaciones: txtBoxObservaciones.Text,
-                                            telefono: new string[] { this.txtBoxTelefono1.Text, this.txtBoxTelefono2.Text }
-                                                                );
+        
 
-                        if (compañiaCL.Insert(Persona, GlobalConfig.Usuario, copiarde, out String mensaje))
-                        {
-                            MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
-                            lst.Add(Persona);
-                            this.LimpiarFormulario();
-                            //CargarDatos(); 
-                        }
-                        else
-                        {
-                            MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                        }
-                    }
-                    else
-                    {
-                        var Persona = new PersonaFisica(
-                                            numeroId: txtBoxID.Text,
-                                            tipoID: tipo,
-                                            nombre: txtBoxNombre.Text,
-                                            TipoMoneda: (CurrencyTypeCompany)lstMovimientosRegistro.SelectedIndex + 1,
-                                            apellidoPaterno: txtBoxOp1.Text,
-                                            apellidoMaterno: txtBoxOp2.Text,
-                                            direccion: txtBoxDireccion.Text,
-                                            web: txtBoxWeb.Text,
-                                            correo: txtBoxMail.Text,
-                                            observaciones: txtBoxObservaciones.Text,
-                                            telefono: new string[] { this.txtBoxTelefono1.Text, this.txtBoxTelefono2.Text }
-                                                                );
-                        if (compañiaCL.Insert(Persona, GlobalConfig.Usuario, copiarde, out String mensaje))
-                        {
+                    //if (lstTipoId.SelectedIndex == 0)
+                    //{
 
-                            MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
-                            lst.Add(Persona);
-                            LimpiarFormulario();
-                            //CargarDatos(); 
-                        }
-                        else
-                        {
-                            MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                        }
-                    }
+                    //    var Persona = new PersonaJuridica(
+                    //                        numeroId: txtBoxID.Text,
+                    //                        tipoID: tipo,
+                    //                        nombre: txtBoxNombre.Text,
+                    //                        TipoMoneda: (CurrencyTypeCompany)lstMovimientosRegistro.SelectedIndex + 1,
+                    //                        representanteLegal: txtBoxOp1.Text,
+                    //                        IDRepresentante: txtBoxOp2.Text,
+                    //                        direccion: txtBoxDireccion.Text,
+                    //                        web: txtBoxWeb.Text,
+                    //                        correo: txtBoxMail.Text,
+                    //                        observaciones: txtBoxObservaciones.Text,
+                    //                        telefono: new string[] { this.txtBoxTelefono1.Text, this.txtBoxTelefono2.Text }
+                    //                                            );
+
+                    //    if (compañiaCL.Insert(Persona, GlobalConfig.Usuario, copiarde, out String mensaje))
+                    //    {
+                    //        MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    //        lst.Add(Persona);
+                    //        this.LimpiarFormulario();
+                    //        //CargarDatos(); 
+                    //    }
+                    //    else
+                    //    {
+                    //        MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    //    }
+                    //}
+                    //else
+                    //{
+                    //    var Persona = new PersonaFisica(
+                    //                        numeroId: txtBoxID.Text,
+                    //                        tipoID: tipo,
+                    //                        nombre: txtBoxNombre.Text,
+                    //                        TipoMoneda: (CurrencyTypeCompany)lstMovimientosRegistro.SelectedIndex + 1,
+                    //                        apellidoPaterno: txtBoxOp1.Text,
+                    //                        apellidoMaterno: txtBoxOp2.Text,
+                    //                        direccion: txtBoxDireccion.Text,
+                    //                        web: txtBoxWeb.Text,
+                    //                        correo: txtBoxMail.Text,
+                    //                        observaciones: txtBoxObservaciones.Text,
+                    //                        telefono: new string[] { this.txtBoxTelefono1.Text, this.txtBoxTelefono2.Text }
+                    //                                            );
+                    //    if (compañiaCL.Insert(Persona, GlobalConfig.Usuario, copiarde, out String mensaje))
+                    //    {
+
+                    //        MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    //        lst.Add(Persona);
+                    //        LimpiarFormulario();
+                    //        //CargarDatos(); 
+                    //    }
+                    //    else
+                    //    {
+                    //        MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    //    }
+                    //}
 
                 }
                 catch (Exception ex)

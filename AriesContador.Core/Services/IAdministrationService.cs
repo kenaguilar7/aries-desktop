@@ -10,7 +10,7 @@ namespace AriesContador.Core.Services
     public interface IAdministrationService
     {
         Task<string> GetCompanyConsecutive(); 
-        void CreateCompany(Company company);
+        Task CreateCompany(Company company);
         void CreateUser(User user);
         Task<IEnumerable<Company>> GetAllCompanies();
         Task DeleteCompany(Company company); 

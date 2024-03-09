@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace AriesContador.Core.Repositories
 {
@@ -10,6 +11,7 @@ namespace AriesContador.Core.Repositories
         JournalEntry GetById(int jEntryId); 
         IEnumerable<JournalEntry> FindByPostingPeriodId(int postPeriodId);
         int GetConsecutiveNumber(int postingPeriodId);
+        Task<int> GetConsecutiveNumberAsync(int postingPeriodId); 
         IEnumerable<JournalEntryDeletedReport> GetDeletedItemByDateRange(BasicReportParam reportParam);
         void RestoreJournalEntry(JournalEntry entryLine);
     }

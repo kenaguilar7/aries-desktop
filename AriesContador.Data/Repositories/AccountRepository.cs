@@ -80,5 +80,9 @@ namespace AriesContador.Data.Repositories
             return output.OrderByTree();
         }
 
+        public Task AddAsync(Account entity)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

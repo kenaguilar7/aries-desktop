@@ -21,6 +21,11 @@ namespace AriesContador.Data.Repositories
             entity.Id = dataAccess.SaveData<PostingPeriod, int>("SP_InsertPostingPeriod", entity);
         }
 
+        public Task AddAsync(PostingPeriod entity)
+        {
+            throw new NotImplementedException();
+        }
+
         public void ClosePostingPeriod(PostingPeriodEndClosing postingPeriod)
         {
             MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
@@ -54,6 +59,13 @@ namespace AriesContador.Data.Repositories
         {
             MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
             var output = dataAccess.LoadData<PostingPeriod, dynamic>("SP_GetAllPostingPeriod", new { CompanyId = companyId });
+            return output;
+        }
+
+        public async Task<IEnumerable<PostingPeriod>> FindByCompanyIdAsync(string companyId)
+        {
+            var dataAccess = new MySqlDataAccessAsync(_connectionString);
+            var output = await dataAccess.LoadData<PostingPeriod, dynamic>("SP_GetAllPostingPeriod", new { CompanyId = companyId });
             return output;
         }
 

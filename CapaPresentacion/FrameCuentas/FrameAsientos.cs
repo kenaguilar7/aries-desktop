@@ -9,15 +9,15 @@ using AriesContador.Core.Models.JournalEntries;
 using AriesContador.Core.Models.PostingPeriods;
 using AriesContador.Core.Services;
 using AriesContador.Data;
-using AriesContador.Services;
 using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Enumeradores;
 using CapaEntidad.Interfaces;
 using CapaEntidad.Textos;
 using CapaPresentacion.Reportes;
 using CapaPresentacion.Utils;
-using AriesContador.Core.Models.Utils; 
-
+using AriesContador.Core.Models.Utils;
+using System.Threading.Tasks;
+using AriesContador.Services;
 
 namespace CapaPresentacion.FrameCuentas 
 {
@@ -26,8 +26,7 @@ namespace CapaPresentacion.FrameCuentas
         private JournalEntry _journalEntry;
         private JournalEntryLine _journalEntryLineOnEdit = new JournalEntryLine();
         private readonly IFinancialService _financialSercie;
-
-        
+        private readonly IHttpFinancialService _httpFinancialService;
         private int PreventMesesAbiertosIndex = 0;
         private int ProventAsientoIndex = 0;
         private Cuenta AccountInTxtBoxNombreCuenta
@@ -42,24 +41,27 @@ namespace CapaPresentacion.FrameCuentas
 
         private PostingPeriod PostingPeriodSelected => (PostingPeriod) lstMesesAbiertos.SelectedItem;
 
-        public FrameAsientos()
+        public FrameAsientos(IHttpFinancialService httpFinancialService)
         {
             InitializeComponent();
             IUnitOfWork unit = new UnitOfWork(GlobalConfig.ConnectionString);
             _financialSercie = new FinancialService(unit);
+            _httpFinancialService = httpFinancialService;
         }
 
-        private void FrameAsientos_Load(object sender, EventArgs e)
+        private async void FrameAsientos_Load(object sender, EventArgs e)
         {
             ConfigExchangeController(GlobalConfig.Company.CurrencyType);
-            LoadAccountingPeriodList();
+            await LoadAccountingPeriodList();
         }
 
-        private void LoadAccountingPeriodList()
+        private async Task LoadAccountingPeriodList()
         {
             try
             {
-                lstMesesAbiertos.DataSource =  _financialSercie.GetPostingPeriods(GlobalConfig.Company.Code).OrderByDescending(p=>p.Date).ToList(); 
+                var lstResult = await _httpFinancialService.GetPostingPeriods(GlobalConfig.Company.Code); 
+                lstMesesAbiertos.DataSource = lstResult.OrderByDescending(p => p.Date).ToList();
+
                 lstTipoCambio.SelectedIndex = 0;
                 lstTipoCambio.SelectedIndex = 0;
             
@@ -108,9 +110,9 @@ namespace CapaPresentacion.FrameCuentas
             //}
         }
 
-        private IEnumerable<JournalEntry> ConfigAsientoBorrador(IEnumerable<JournalEntry> asientos)
+        private async Task<IEnumerable<JournalEntry>> ConfigAsientoBorrador(IEnumerable<JournalEntry> asientos)
         {
-            var newEntryNum = _financialSercie.CreateJournalEntryConsecutive(PostingPeriodSelected.Id);
+            var newEntryNum = await _httpFinancialService.CreateJournalEntryConsecutive(PostingPeriodSelected.Id);
 
             var newJEnt = new JournalEntry()
             {
@@ -128,12 +130,12 @@ namespace CapaPresentacion.FrameCuentas
             return jEntries.OrderByDescending(x => x.Number).ToArray();
         }
 
-        private void LstMesesAbiertos_SelectedIndexChanged(object sender, EventArgs e)
+        private async void LstMesesAbiertos_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (EqualDebAndCredONJournalEntry())
             {
                 var lst = _financialSercie.GetJournalEntries(PostingPeriodSelected.Id);
-                lstNumeroAsientos.DataSource = ConfigAsientoBorrador(lst);
+                lstNumeroAsientos.DataSource = await ConfigAsientoBorrador(lst);
                 this.PreventMesesAbiertosIndex = lstMesesAbiertos.SelectedIndex;
             }
             else

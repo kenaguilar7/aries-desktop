@@ -9,6 +9,9 @@ using System.Text;
 using Microsoft.Extensions.Configuration;
 using System.Configuration;
 using Microsoft.OpenApi.Models;
+using Aries.WebServices.FinancialServices;
+using AriesContador.Core.Repositories;
+using AriesContador.Data.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 //var Configuration = builder.Build();
@@ -21,6 +24,12 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddTransient<IConnectionString, ConnectionString>();
 builder.Services.AddScoped<IAdministrationService, AdministrationService>();
+builder.Services.AddScoped<IPostingPeriodService, PostingPeriodService>();
+builder.Services.AddScoped<IPostingPeriodRepository, PostingPeriodRepository>();
+builder.Services.AddScoped<IJournalEntryService, JournalEntryService>();
+builder.Services.AddScoped<IJournalEntryRepository, JournalEntryRepository>();
+
+
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddSwaggerGen(c => {
     c.SwaggerDoc("v1", new OpenApiInfo
