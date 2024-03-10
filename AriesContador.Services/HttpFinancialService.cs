@@ -16,9 +16,9 @@ namespace AriesContador.Services
     {
         Task ClosePostingPeriod(PostingPeriodEndClosing postingPeriod);
         Task CreateAccount(Account account);
-        Task CreateJournalEntry(JournalEntry journalEntry);
+        Task<int> CreateJournalEntry(JournalEntry journalEntry);
         Task<int> CreateJournalEntryConsecutive(int postingPeriodId);
-        Task CreateJournalEntryLine(JournalEntryLine journalEntryLine);
+        Task<int> CreateJournalEntryLine(JournalEntryLine journalEntryLine);
         Task CreatePostingPeriod(PostingPeriod postingPeriod);
         Task DeleteAccount(Account account);
         Task DeleteJournalEntry(JournalEntry journalEntry);
@@ -67,9 +67,19 @@ namespace AriesContador.Services
             throw new NotImplementedException();
         }
 
-        public Task CreateJournalEntry(JournalEntry journalEntry)
+        public async Task<int> CreateJournalEntry(JournalEntry journalEntry)
         {
-            throw new NotImplementedException();
+            try
+            {
+
+                return await _httpClientService
+                    .PostAsync<int,JournalEntry>
+                    (string.Concat(EnvironmentVariable.ApiUrl, $"CreateJournalEntry"), journalEntry);
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
         }
 
         public async Task<int> CreateJournalEntryConsecutive(int postingPeriodId)
@@ -89,9 +99,19 @@ namespace AriesContador.Services
             }
         }
 
-        public Task CreateJournalEntryLine(JournalEntryLine journalEntryLine)
+        public async Task<int> CreateJournalEntryLine(JournalEntryLine journalEntryLine)
         {
-            throw new NotImplementedException();
+            try
+            {
+                return await _httpClientService
+                    .PostAsync<int, JournalEntryLine>
+                    (string.Concat(EnvironmentVariable.ApiUrl, $"JournalEntryLine/CreateJournalEntryLine"), journalEntryLine);
+            }
+            catch (Exception e)
+            {
+
+                throw;
+            }
         }
 
         public Task CreatePostingPeriod(PostingPeriod postingPeriod)

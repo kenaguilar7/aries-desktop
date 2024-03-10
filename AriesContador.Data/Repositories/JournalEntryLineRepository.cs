@@ -72,6 +72,13 @@ namespace AriesContador.Data.Repositories
             dataAccess.SaveData("SP_RestoreJournalEntryLine", entryLine);
         }
 
+        public async Task<int> AddAsyncWithReturnId(JournalEntryLine entity)
+        {
+            MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
+            var id = await dataAccess.SaveData<JournalEntryLine, int>("SP_InsertJournalEntryLine", entity);
+            return id;
+        }
+
         public Task AddAsync(JournalEntryLine entity)
         {
             throw new NotImplementedException();

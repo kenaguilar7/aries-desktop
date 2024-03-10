@@ -71,7 +71,7 @@ namespace AriesContador.Data.Internal.DataAccess
 
         
 
-        public Q SaveData<T, Q>(string storedProcedure, T parameters)
+        public async Task<Q> SaveData<T, Q>(string storedProcedure, T parameters)
         {
             string connectionString = _connectionString.MySQLDefault;
 
@@ -81,7 +81,7 @@ namespace AriesContador.Data.Internal.DataAccess
 
             using (IDbConnection connection = new MySqlConnection(connectionString))
             {
-                var id = connection.Execute(storedProcedure, _params,
+                var id = await connection.ExecuteAsync(storedProcedure, _params,
                     commandType: CommandType.StoredProcedure);
                 var retVal = _params.Get<Q>("Id");
 

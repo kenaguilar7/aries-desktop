@@ -1,4 +1,5 @@
 ﻿using Aries.WebServices.FinancialServices;
+using AriesContador.Core.Models.JournalEntries;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Aries.WebAPI.Controllers
@@ -13,6 +14,14 @@ namespace Aries.WebAPI.Controllers
         {
             _journalEntryService = journalEntryService;
         }
+
+        [HttpPost("CreateJournalEntry")]
+        public async Task<IActionResult> CreateJournalEntry([FromBody] JournalEntry journalEntry)
+        {
+            var id = await _journalEntryService.CreateJournalEntry(journalEntry);
+            return Ok(id);
+        }
+
 
         [HttpGet("GetConsecutiveNumber/{postingPeriodId}")]
         public async Task<IActionResult> GetConsecutiveNumber(int postingPeriodId)

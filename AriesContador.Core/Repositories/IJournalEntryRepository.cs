@@ -15,5 +15,6 @@ namespace AriesContador.Core.Repositories
         Task<int> GetConsecutiveNumberAsync(int postingPeriodId); 
         IEnumerable<JournalEntryDeletedReport> GetDeletedItemByDateRange(BasicReportParam reportParam);
         void RestoreJournalEntry(JournalEntry entryLine);
+        Task<int> AddAsyncReturningId(JournalEntry journalEntry);
     }
 }

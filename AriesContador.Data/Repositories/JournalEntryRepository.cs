@@ -22,6 +22,12 @@ namespace AriesContador.Data.Repositories
             entity.Id = dataAccess.SaveData<JournalEntry, int>("SP_InsertJournalEntry", entity);
         }
 
+        public async Task AddAsync(JournalEntry entity)
+        {
+            MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
+            entity.Id = await dataAccess.SaveData<JournalEntry, int>("SP_InsertJournalEntry", entity);
+        }
+
         public IEnumerable<JournalEntry> FindByPostingPeriodId(int pstPeriodId)
         {
 
@@ -111,9 +117,11 @@ namespace AriesContador.Data.Repositories
             entity.JournalEntryLines = repoEntities;
         }
 
-        public Task AddAsync(JournalEntry entity)
+        public async Task<int> AddAsyncReturningId(JournalEntry journalEntry)
         {
-            throw new NotImplementedException();
+            MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
+            journalEntry.Id = await dataAccess.SaveData<JournalEntry, int>("SP_InsertJournalEntry", journalEntry);
+            return journalEntry.Id; 
         }
     }
 }

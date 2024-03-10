@@ -149,7 +149,7 @@ namespace CapaPresentacion.FrameCuentas
 
 
         #region CRUD JournalEntry
-        private void btnNuevoAsiento_Click(object sender, EventArgs e)
+        private async void btnNuevoAsiento_Click(object sender, EventArgs e)
         {
             try
             {
@@ -157,7 +157,7 @@ namespace CapaPresentacion.FrameCuentas
                 
                 if (_journalEntry.Id == 0)
                 {
-                    _financialSercie.CreateJournalEntry(_journalEntry);
+                    await _httpFinancialService.CreateJournalEntry(_journalEntry);
                 }
                 LstMesesAbiertos_SelectedIndexChanged(null, null);
 
@@ -168,11 +168,11 @@ namespace CapaPresentacion.FrameCuentas
             }
         }
 
-        private JournalEntry ValidateBookEntryForInsert(JournalEntry asiento)
+        private async Task<JournalEntry> ValidateBookEntryForInsert(JournalEntry asiento)
         {
             if (asiento.Id == 0)
             {
-                 _financialSercie.CreateJournalEntry(asiento);
+                asiento.Id = await _httpFinancialService.CreateJournalEntry(asiento);
             }
             return asiento;
         }
@@ -272,7 +272,7 @@ namespace CapaPresentacion.FrameCuentas
             return jELine;
         }
 
-        private void BtnAgregarTransaccion(object sender, EventArgs e)
+        private async void BtnAgregarTransaccion(object sender, EventArgs e)
         {
             try
             {
@@ -280,9 +280,9 @@ namespace CapaPresentacion.FrameCuentas
                 {
                     if (ValidateChildren())
                     {
-                        ValidateBookEntryForInsert(_journalEntry);
+                        await ValidateBookEntryForInsert(_journalEntry);
                         var newJEntry = CreateJournalEntryLineModel();
-                        _financialSercie.CreateJournalEntryLine(newJEntry);
+                        newJEntry.Id = await _httpFinancialService.CreateJournalEntryLine(newJEntry);
                         _journalEntry.JournalEntryLines.Add(newJEntry);
 
                         UpdateJournalEntryState();

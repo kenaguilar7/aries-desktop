@@ -2,11 +2,13 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace AriesContador.Core.Repositories
 {
     public interface IJournalEntryLineRepository : IRepository<JournalEntryLine>
     {
+        Task<int> AddAsyncWithReturnId(JournalEntryLine entity);
         JournalEntryLine GetById(int id);
         IEnumerable<JournalEntryLine> FindByJournalEntryId(int journalEntryId);
         IEnumerable<JournalEntryLine> FindByAccountIdAndPostingPeriodId(int accountId, int postingPeriodId);
