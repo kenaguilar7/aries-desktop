@@ -41,10 +41,10 @@ namespace AriesContador.Data.Repositories
             return output;
         }
 
-        public Account GetById(int id)
+        public async Task<Account> GetById(int id)
         {
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            var output = dataAccess.LoadData<Account, dynamic>("SP_GetAccountById", new { accountId = id });
+            MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
+            var output = await dataAccess.LoadData<Account, dynamic>("SP_GetAccountById", new { accountId = id });
             return output.FirstOrDefault();
         }
 

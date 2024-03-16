@@ -399,7 +399,7 @@ namespace CapaPresentacion.FrameCuentas
                     MessageBoxIcon.Exclamation);
             }
         }
-        private void btnEditarLinea_Click(object sender, EventArgs e)
+        private async void btnEditarLinea_Click(object sender, EventArgs e)
         {
             var adummy = this.GridDatos.SelectedRows;
 
@@ -410,7 +410,7 @@ namespace CapaPresentacion.FrameCuentas
             else
             {
                 var dummy = (JournalEntryLine)this.GridDatos.SelectedRows[0].Tag;
-                CargarDatosPanelTransaction(dummy);
+                await CargarDatosPanelTransaction(dummy);
                 //btnAgregarTransa.Text = "Actualizar";
                 btnAgregarTransa.Visible = false; 
                 btnUpdateJELine.Visible = true; 
@@ -578,12 +578,12 @@ namespace CapaPresentacion.FrameCuentas
             btnAgregarTransa.Text = "Agregar";
         }
 
-        private void CargarDatosPanelTransaction(JournalEntryLine dummy)
+        private async Task CargarDatosPanelTransaction(JournalEntryLine dummy)
         {
 
             _journalEntryLineOnEdit = dummy;
 
-            var account = _financialSercie.FindAccount(dummy.AccountId);
+            var account = await _httpFinancialService.FindAccount(dummy.AccountId);
 
             var accountDTO = new Cuenta()
             {

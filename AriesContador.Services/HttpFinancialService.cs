@@ -161,9 +161,20 @@ namespace AriesContador.Services
             throw new NotImplementedException();
         }
 
-        public Task<Account> FindAccount(int id)
+        public async Task<Account> FindAccount(int accountId)
         {
-            throw new NotImplementedException();
+            try
+            {
+
+                var response = await _httpClientService
+                    .GetAsync<Account>
+                    (string.Concat(EnvironmentVariable.ApiUrl, $"Account/FindAccount/{accountId}"));
+                return response;
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
         }
 
         public Task<Account> GetAccountBalance(Account account, IEnumerable<PostingPeriod> postingPeriods)

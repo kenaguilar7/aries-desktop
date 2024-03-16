@@ -30,6 +30,8 @@ builder.Services.AddScoped<IJournalEntryService, JournalEntryService>();
 builder.Services.AddScoped<IJournalEntryRepository, JournalEntryRepository>();
 builder.Services.AddScoped<IJournalEntryLineService, JournalEntryLineService>();
 builder.Services.AddScoped<IJournalEntryLineRepository, JournalEntryLineRepository>();
+builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
