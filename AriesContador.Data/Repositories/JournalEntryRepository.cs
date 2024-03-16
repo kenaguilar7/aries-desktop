@@ -56,14 +56,6 @@ namespace AriesContador.Data.Repositories
                 dataAccess.StartTransaction();
                 var output = await dataAccess.LoadDataInTransaction<JournalEntry, dynamic>
                                 ("SP_GetJournalEntryByPostingPeriodId", new { PostingPeriodId = pstPeriodId });
-
-
-                foreach (var jEntry in output)
-                {
-                    var jELines = await dataAccess.LoadDataInTransaction<JournalEntryLine, dynamic>
-                        ("SP_GetJournalEntryLineByJournalEntryId", new { JournalEntryId = jEntry.Id });
-                    jEntry.JournalEntryLines = jELines;
-                }
                 return output;
         }
 
