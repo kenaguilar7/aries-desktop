@@ -21,18 +21,16 @@ namespace Aries.WebServices.FinancialServices
     {
         private readonly IUnitOfWork _unitOfWork;
 
-        public JournalEntryLineService(IUnitOfWork unitOfWork) 
+        public JournalEntryLineService(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
         }
 
         public Task<int> CreateJournalEntryLine(JournalEntryLine journalEntryLine)
-            =>  _unitOfWork.JournalEntryLineRepository.AddAsyncWithReturnId(journalEntryLine);
+            => _unitOfWork.JournalEntryLineRepository.AddAsyncWithReturnId(journalEntryLine);
 
-        public Task DeleteJournalEntryLine(JournalEntryLine journalEntryLine)
-        {
-            throw new NotImplementedException();
-        }
+        public async Task DeleteJournalEntryLine(JournalEntryLine journalEntryLine)
+            => await _unitOfWork.JournalEntryLineRepository.Remove(journalEntryLine);
 
         public Task<IEnumerable<JournalEntryLineDeletedReport>> GetAllJournalEntryLineDeleted(BasicReportParam reportParam)
         {
@@ -45,9 +43,7 @@ namespace Aries.WebServices.FinancialServices
         }
 
         public Task<IEnumerable<JournalEntryLine>> GetJournalEntryLineByJournalEntryId(int journalEntryId)
-        {
-            throw new NotImplementedException();
-        }
+            => _unitOfWork.JournalEntryLineRepository.FindByJournalEntryIdAsync(journalEntryId);
 
         public Task RestoreJournalEntryLine(JournalEntryLine journalEntryLine)
         {
@@ -55,8 +51,6 @@ namespace Aries.WebServices.FinancialServices
         }
 
         public Task UpdateJournalEntryLine(JournalEntryLine journalEntryLine)
-        {
-            throw new NotImplementedException();
-        }
+            => _unitOfWork.JournalEntryLineRepository.UpdateAsync(journalEntryLine);
     }
 }

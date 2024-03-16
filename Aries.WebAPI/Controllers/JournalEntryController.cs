@@ -22,7 +22,6 @@ namespace Aries.WebAPI.Controllers
             return Ok(id);
         }
 
-
         [HttpGet("GetConsecutiveNumber/{postingPeriodId}")]
         public async Task<IActionResult> GetConsecutiveNumber(int postingPeriodId)
         {
@@ -37,5 +36,18 @@ namespace Aries.WebAPI.Controllers
             return Ok(result);
         }
 
+        [HttpPost("UpdateJournalEntry")]
+        public async Task<IActionResult> UpdateJournalEntry([FromBody] JournalEntry journalEntry)
+        {
+            await _journalEntryService.UpdateJournalEntry(journalEntry);
+            return Ok();
+        }
+
+        [HttpPost("DeleteJournalEntry")]
+        public async Task<IActionResult> DeleteJournalEntry([FromBody] JournalEntry journalEntry)
+        {
+            await _journalEntryService.DeleteJournalEntry(journalEntry);    
+            return Ok();
+        }
     }
 }

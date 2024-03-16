@@ -14,5 +14,7 @@ namespace AriesContador.Core.Repositories
         IEnumerable<JournalEntryLine> FindByAccountIdAndPostingPeriodId(int accountId, int postingPeriodId);
         IEnumerable<JournalEntryLineDeletedReport> GetDeletedItemByDateRange(BasicReportParam reportParam);
         void RestoreJournalEntryLine(JournalEntryLine entryLine);
+        Task<IEnumerable<JournalEntryLine>> FindByJournalEntryIdAsync(int journalEntryId);
+        Task UpdateAsync(JournalEntryLine entity); 
     }
 }

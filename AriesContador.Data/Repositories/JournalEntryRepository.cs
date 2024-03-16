@@ -117,6 +117,15 @@ namespace AriesContador.Data.Repositories
             entity.JournalEntryLines = repoEntities;
         }
 
+        public async Task UpdateAsync(JournalEntry entity)
+        {
+            var repoEntities = entity.JournalEntryLines;
+            entity.JournalEntryLines = new List<JournalEntryLine>();
+            MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
+            await dataAccess.SaveData<JournalEntry>("SP_UpdateJournalEntry", entity);
+            entity.JournalEntryLines = repoEntities;
+        }
+
         public async Task<int> AddAsyncReturningId(JournalEntry journalEntry)
         {
             MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);

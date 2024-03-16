@@ -34,12 +34,10 @@ namespace Aries.WebServices.FinancialServices
 
 
         public Task<int> CreateJournalEntryConsecutive(int postingPeriodId)
-            => _unitOfWork.JournalEntryRepository.GetConsecutiveNumberAsync(postingPeriodId); 
+            => _unitOfWork.JournalEntryRepository.GetConsecutiveNumberAsync(postingPeriodId);
 
         public Task DeleteJournalEntry(JournalEntry journalEntry)
-        {
-            throw new NotImplementedException();
-        }
+            => _unitOfWork.JournalEntryRepository.Remove(journalEntry); 
 
         public Task<IEnumerable<JournalEntryDeletedReport>> GetAllJournalEntryDeleted(BasicReportParam reportParam)
         {
@@ -65,8 +63,6 @@ namespace Aries.WebServices.FinancialServices
         }
 
         public Task UpdateJournalEntry(JournalEntry journalEntry)
-        {
-            throw new NotImplementedException();
-        }
+        => _unitOfWork.JournalEntryRepository.UpdateAsync(journalEntry); 
     }
 }

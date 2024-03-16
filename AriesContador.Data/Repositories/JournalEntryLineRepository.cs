@@ -38,6 +38,14 @@ namespace AriesContador.Data.Repositories
             return jEntryLines;
         }
 
+        public async Task<IEnumerable<JournalEntryLine>> FindByJournalEntryIdAsync(int journalEntryId)
+        {
+            MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
+            var jEntryLines = await  dataAccess.LoadData<JournalEntryLine, dynamic>
+                                ("SP_GetJournalEntryLineByJournalEntryId", new { JournalEntryId = journalEntryId });
+            return jEntryLines;
+        }
+
         public JournalEntryLine GetById(int id)
         {
             MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
@@ -55,6 +63,13 @@ namespace AriesContador.Data.Repositories
         {
             MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
             dataAccess.SaveData<JournalEntryLine>("SP_UpdateJournalEntryLine", entity);
+
+        }
+
+        public async Task UpdateAsync(JournalEntryLine entity)
+        {
+            MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
+            await dataAccess.SaveData<JournalEntryLine>("SP_UpdateJournalEntryLine", entity);
 
         }
 

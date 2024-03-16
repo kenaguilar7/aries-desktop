@@ -124,14 +124,36 @@ namespace AriesContador.Services
             throw new NotImplementedException();
         }
 
-        public Task DeleteJournalEntry(JournalEntry journalEntry)
+        public async Task DeleteJournalEntry(JournalEntry journalEntry)
         {
-            throw new NotImplementedException();
+            try
+            {
+
+                await _httpClientService
+                    .PostAsync<dynamic, JournalEntry>
+                    (string.Concat(EnvironmentVariable.ApiUrl, $"JournalEntry/DeleteJournalEntry"), journalEntry);
+            }
+            catch (Exception e)
+            {
+
+                throw;
+            }
         }
 
-        public Task DeleteJournalEntryLine(JournalEntryLine journalEntryLine)
+        public async Task DeleteJournalEntryLine(JournalEntryLine journalEntryLine)
         {
-            throw new NotImplementedException();
+            try
+            {
+
+                await _httpClientService
+                    .PostAsync<dynamic, JournalEntryLine>
+                    (string.Concat(EnvironmentVariable.ApiUrl, $"JournalEntryline/DeleteJournalEntryLine"), journalEntryLine);
+            }
+            catch (Exception e)
+            {
+
+                throw;
+            }
         }
 
         public Task DeletePostingPeriod(PostingPeriod postingPeriod)
@@ -201,9 +223,21 @@ namespace AriesContador.Services
             throw new NotImplementedException();
         }
 
-        public Task<IEnumerable<JournalEntryLine>> GetJournalEntryLineByJournalEntryId(int journalEntryId)
+        public async Task<IEnumerable<JournalEntryLine>> GetJournalEntryLineByJournalEntryId(int journalEntryId)
         {
-            throw new NotImplementedException();
+            try
+            {
+
+                var response = await _httpClientService
+                    .GetAsync<List<JournalEntryLine>>
+                    (string.Concat(EnvironmentVariable.ApiUrl, $"JournalEntryLine/FindJournalEntryLine/{journalEntryId}"));
+                return response;
+            }
+            catch (Exception e)
+            {
+
+                throw;
+            }
         }
 
         public async Task<IEnumerable<PostingPeriod>> GetPostingPeriods(string companyId)
@@ -243,14 +277,34 @@ namespace AriesContador.Services
             throw new NotImplementedException();
         }
 
-        public Task UpdateJournalEntry(JournalEntry journalEntry)
+        public async Task UpdateJournalEntry(JournalEntry journalEntry)
         {
-            throw new NotImplementedException();
+            try
+            {
+
+                await _httpClientService
+                    .PostAsync<dynamic, JournalEntry>(string.Concat(EnvironmentVariable.ApiUrl, $"JournalEntry/UpdateJournalEntry/"), journalEntry);
+            }
+            catch (Exception e)
+            {
+
+                throw;
+            }
         }
 
-        public Task UpdateJournalEntryLine(JournalEntryLine journalEntryLine)
+        public async Task UpdateJournalEntryLine(JournalEntryLine journalEntryLine)
         {
-            throw new NotImplementedException();
+            try
+            {
+
+                await _httpClientService
+                    .PostAsync<dynamic, JournalEntryLine>(string.Concat(EnvironmentVariable.ApiUrl, $"JournalEntryLine/UpdateJournalEntryLine/"), journalEntryLine);
+            }
+            catch (Exception e)
+            {
+
+                throw;
+            }
         }
 
         public Task UpdatePostingPeriod(PostingPeriod postingPeriod)
