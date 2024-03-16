@@ -74,7 +74,7 @@ namespace AriesContador.Services
 
                 return await _httpClientService
                     .PostAsync<int,JournalEntry>
-                    (string.Concat(EnvironmentVariable.ApiUrl, $"CreateJournalEntry"), journalEntry);
+                    (string.Concat(EnvironmentVariable.ApiUrl, $"JournalEntry/CreateJournalEntry"), journalEntry);
             }
             catch (Exception e)
             {

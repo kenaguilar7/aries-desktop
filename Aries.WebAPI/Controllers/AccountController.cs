@@ -1,10 +1,10 @@
 ﻿using Aries.WebServices.FinancialServices;
-using AriesContador.Core.Models.Patterns.Command;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Aries.WebAPI.Controllers
 {
-    //[Authorize]
+    [Authorize]
     [ApiController]
     [Route("[controller]")]
     public class AccountController : ControllerBase

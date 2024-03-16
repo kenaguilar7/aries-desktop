@@ -1,7 +1,6 @@
 ﻿using AriesContador.Core.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Company = AriesContador.Core.Models.Companies; 
 
 namespace Aries.WebAPI.Controllers
 {

@@ -25,7 +25,6 @@ namespace CapaPresentacion.FrameCuentas
     {
         private JournalEntry _journalEntry;
         private JournalEntryLine _journalEntryLineOnEdit = new JournalEntryLine();
-        private readonly IFinancialService _financialSercie;
         private readonly IHttpFinancialService _httpFinancialService;
         private int PreventMesesAbiertosIndex = 0;
         private int ProventAsientoIndex = 0;
@@ -44,8 +43,6 @@ namespace CapaPresentacion.FrameCuentas
         public FrameAsientos(IHttpFinancialService httpFinancialService)
         {
             InitializeComponent();
-            IUnitOfWork unit = new UnitOfWork(GlobalConfig.ConnectionString);
-            _financialSercie = new FinancialService(unit);
             _httpFinancialService = httpFinancialService;
         }
 
