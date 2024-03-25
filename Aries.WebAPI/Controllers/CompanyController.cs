@@ -1,5 +1,4 @@
 ﻿using AriesContador.Core.Services;
-using DocumentFormat.OpenXml.ExtendedProperties;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -47,6 +46,21 @@ namespace Aries.WebAPI.Controllers
             }
             catch (Exception e)
             {
+                throw;
+            }
+        }
+
+        [HttpPost("Create")]
+        public async Task<IActionResult> Create([FromBody] AriesContador.Core.Models.Companies.Company company)
+        {
+            try
+            {
+                await administrationService.CreateCompany(company);
+                return Ok();
+            }
+            catch (Exception)
+            {
+
                 throw;
             }
         }

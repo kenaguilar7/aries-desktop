@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace AriesContador.Data.Internal.DataAccess
 {
-    internal class MySqlDataAccessAsync
+    internal class MySqlDataAccessAsync : IDisposable
     {
         private readonly IConnectionString _connectionString;
         public MySqlDataAccessAsync(IConnectionString connectionString)
@@ -71,7 +71,7 @@ namespace AriesContador.Data.Internal.DataAccess
 
         
 
-        public Q SaveData<T, Q>(string storedProcedure, T parameters)
+        public async Task<Q> SaveData<T, Q>(string storedProcedure, T parameters)
         {
             string connectionString = _connectionString.MySQLDefault;
 
@@ -81,7 +81,7 @@ namespace AriesContador.Data.Internal.DataAccess
 
             using (IDbConnection connection = new MySqlConnection(connectionString))
             {
-                var id = connection.Execute(storedProcedure, _params,
+                var id = await connection.ExecuteAsync(storedProcedure, _params,
                     commandType: CommandType.StoredProcedure);
                 var retVal = _params.Get<Q>("Id");
 
@@ -111,12 +111,11 @@ namespace AriesContador.Data.Internal.DataAccess
             return retVal;
         }
 
-        public List<T> LoadDataInTransaction<T, U>(string storedProcedure, U parameters)
+        public async Task<List<T>> LoadDataInTransaction<T, U>(string storedProcedure, U parameters)
         {
-            List<T> rows = _connection.Query<T>(storedProcedure, parameters,
-                commandType: CommandType.StoredProcedure, transaction: _transaction).ToList();
-
-            return rows;
+            var result = await _connection.QueryAsync<T>(storedProcedure, parameters,
+                commandType: CommandType.StoredProcedure, transaction: _transaction);
+            return result.ToList(); 
         }
 
         public void StartTransaction()

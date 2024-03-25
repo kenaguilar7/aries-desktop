@@ -22,6 +22,11 @@ namespace AriesContador.Data.Repositories
             entity.Id = dataAccess.SaveData<User, int>("SP_InsertUser", entity);
         }
 
+        public Task AddAsync(User entity)
+        {
+            throw new NotImplementedException();
+        }
+
         public IEnumerable<User> GetAll()
         {
             MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);

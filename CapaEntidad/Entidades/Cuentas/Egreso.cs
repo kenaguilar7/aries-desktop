@@ -15,7 +15,7 @@ namespace CapaEntidad.Entidades.Cuentas
         }
         public decimal SaldoMensual(decimal debito, decimal credito)
         {
-            return (credito - debito);
+            return (debito - credito);
         }
     }
 }

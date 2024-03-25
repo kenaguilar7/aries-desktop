@@ -18,12 +18,47 @@ namespace AriesContador.Data.Repositories
             this._connectionString = connectionString;
         }
 
+        public async Task AddAsync(Company company)
+        {
+            var accounts = company.Account;
+            company.Account = null;
+            //using (MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync   (_connectionString))
+            //{
+            MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
+            try
+            {
+                dataAccess.StartTransaction();
+                dataAccess.SaveDataInTransaction<Company>("SP_InsertCompany", company);
+
+                foreach (var account in accounts)
+                {
+                    var oldId = account.Id;
+                    var newID = dataAccess.SaveDataInTransaction<Account, int>("SP_InsertAccount", account);
+                    account.Id = newID;
+
+                    var childAccounts = (from acn in accounts
+                                         where acn.FatherAccount == oldId
+                                         select acn).ToList();
+
+                    childAccounts.ForEach(x => x.FatherAccount = newID);
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                dataAccess.RollBackTransaction();
+                throw ex;
+            }
+        }
+
         public void Add(Company entity)
         {
             var accounts = entity.Account;
             entity.Account = null;
-            using (MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString))
-            {
+            //using (MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync   (_connectionString))
+            //{
+            MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString); 
                 try
                 {
                     dataAccess.StartTransaction();
@@ -50,7 +85,7 @@ namespace AriesContador.Data.Repositories
                     throw ex;
                 }
 
-            }
+            //}
 
         }
 
@@ -90,7 +125,7 @@ delete T0 from accounting_months T0 where T0.company_id = @Code;
   
 delete from companies where company_id = @Code
 "; 
-           MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
+          MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
            await dataAccess.ExecuteSingle(query, entity);
         }
 
