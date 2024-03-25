@@ -149,7 +149,6 @@
     <Compile Include="Interfaces\ITipoCuenta.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Reportes\ReporteAsiento.cs" />
-    <Compile Include="Reportes\ReporteAuxiliares.cs" />
     <Compile Include="Reportes\ReporteBalanceComprobacion.cs" />
     <Compile Include="Reportes\ReporteBalanceSituacion.cs" />
     <Compile Include="Reportes\ReporteCompañia.cs" />

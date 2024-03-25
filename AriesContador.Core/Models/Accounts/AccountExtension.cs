@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AriesContador.Core.Models.PostingPeriods;
+using System;
 using System.Collections.Generic;
 using System.Linq; 
 
@@ -32,5 +33,32 @@ namespace AriesContador.Core.Models.Accounts
         //        var costoVenta = _lstExcel.ToList().Find(x => x.Indicador == IndicadorCuenta.Cuenta_Titulo && x.TipoCuenta.TipoCuenta == TipoCuenta.Costo_Venta);
 
         //        return  ingreso.SaldoActualColones - costoVenta.SaldoActualColones - Egreso.SaldoActualColones; 
+    
+        public static List<Account> GetUniqueAccountsByPeriod(this IDictionary<PostingPeriod, List<Account>> reportData)
+        {
+            return reportData.SelectMany(kv => kv.Value)
+                          .GroupBy(account => account.Id)
+                          .Select(group => group.First())
+                          .ToList();
+        }
+
+        public static Account[] TransformUniqueAccounts(this IDictionary<PostingPeriod, List<Account>> allData)
+        {
+            return allData.GetUniqueAccountsByPeriod()
+                    .Select(c => new Account()
+                    {
+                        Name = c.Name,
+                        Id = c.Id,
+                        FatherAccount =
+                        c.FatherAccount
+                    }).ToArray();
+        }
+
+        public static List<Account> RemoveAccountWithOutBalances(this IEnumerable<Account> accounts)
+        {
+            return accounts.Where(x => x.HasBalances() ||
+                                (!x.HasBalances() && x.AccountType == AccountType.Cuenta_Titulo))
+                                .ToList(); 
+        }
     }
 }

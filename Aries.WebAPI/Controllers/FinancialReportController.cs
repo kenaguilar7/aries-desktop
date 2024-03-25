@@ -1,4 +1,5 @@
 ﻿using Aries.WebServices.FinancialReportsServices;
+using AriesContador.Core.Models.ReporteAuxiliaresModels;
 using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Authorization;

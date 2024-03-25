@@ -1,22 +1,13 @@
 ﻿using AriesContador.Core.Models.PostingPeriods;
-using AriesContador.Core.Repositories;
 using AriesContador.Services;
 using AriesContador.Services.Models.Reports;
-using CapaEntidad.Entidades.Cuentas;
-using CapaEntidad.Entidades.FechaTransacciones;
-using CapaEntidad.Reportes;
-using CapaLogica;
 using ClosedXML.Excel;
-using SharpCompress.Common;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -34,7 +25,6 @@ namespace CapaPresentacion.Reportes
             IHttpFinancialService financialService)
         {
             InitializeComponent();
-            //CargarDatos();
             _httpFinancialReportService = httpFinancialReportService;
             _financialService = financialService;
         }
@@ -91,6 +81,7 @@ namespace CapaPresentacion.Reportes
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
                     File.WriteAllBytes(sfd.FileName, _reporteAuxiliarResponse.Report);
+                    Process.Start(new ProcessStartInfo(sfd.FileName) { UseShellExecute = true });
                 }
             }
         }
