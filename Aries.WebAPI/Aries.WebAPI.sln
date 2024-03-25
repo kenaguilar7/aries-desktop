@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AriesContador.Core", "..\Ar
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AriesContador.Data", "..\AriesContador.Data\AriesContador.Data.csproj", "{D889CA52-CF10-47AC-A106-16A4FD9593DE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aries.WebServices", "..\Aries.WebServices\Aries.WebServices.csproj", "{0929EB53-D696-475F-8621-19C99761CD5F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aries.WebServices", "..\Aries.WebServices\Aries.WebServices.csproj", "{0929EB53-D696-475F-8621-19C99761CD5F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AriesContador.UnitTest", "..\AriesContador.UnitTest\AriesContador.UnitTest.csproj", "{7A0D70D7-3A92-45F5-BA3E-E24F0CE9F0F2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{0929EB53-D696-475F-8621-19C99761CD5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0929EB53-D696-475F-8621-19C99761CD5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0929EB53-D696-475F-8621-19C99761CD5F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A0D70D7-3A92-45F5-BA3E-E24F0CE9F0F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A0D70D7-3A92-45F5-BA3E-E24F0CE9F0F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A0D70D7-3A92-45F5-BA3E-E24F0CE9F0F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A0D70D7-3A92-45F5-BA3E-E24F0CE9F0F2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

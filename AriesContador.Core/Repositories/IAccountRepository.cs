@@ -12,6 +12,6 @@ namespace AriesContador.Core.Repositories
         Task<Account> GetById(int id); 
         IEnumerable<Account> FindByCompanyId(string companyId);
         IEnumerable<Account> GetDefaultAccounts();
-        IEnumerable<Account> AccountsWithBalanceByDateRange(BasicReportParam reportParam); 
+        Task<IEnumerable<Account>> AccountsWithBalanceByDateRange(BasicReportParam reportParam); 
     }
 }

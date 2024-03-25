@@ -1,13 +1,15 @@
 ﻿using AriesContador.Core.Models.Accounts;
+using AriesContador.Core.Models.Utils;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace AriesContador.Core.Models.Accounts
 {
     public abstract class BaseAccount : BaseModel
     {
-        public string Name { get; set; }
+
 
         public string Memo { get; set; }
 

@@ -19,12 +19,17 @@ namespace CapaPresentacion
     {
         private readonly IHttpAdministrationService _httpAdministrationService;
         private readonly IHttpFinancialService _httpFinancialService;
+        private readonly IHttpFinancialReportService _httpFinancialReportService;
 
         public Boolean comParametro { set { CargarCompañia(); } }
-        public FrameMenu(IHttpAdministrationService companyService, IHttpFinancialService httpFinancialService)
+        public FrameMenu(
+            IHttpAdministrationService companyService, 
+            IHttpFinancialService httpFinancialService, 
+            IHttpFinancialReportService httpFinancialReportService)
         {
             this._httpAdministrationService = companyService;
             this._httpFinancialService = httpFinancialService;
+            this._httpFinancialReportService = httpFinancialReportService;
             InitializeComponent();
 
             LoginForm n = new LoginForm(_httpAdministrationService);
@@ -177,7 +182,7 @@ namespace CapaPresentacion
             {
                 if (GlobalConfig.Company != null)
                 {
-                    FrameReporteAuxiliares frame = new FrameReporteAuxiliares();
+                    FrameReporteAuxiliares frame = new FrameReporteAuxiliares(_httpFinancialReportService, _httpFinancialService);
                     frame.MdiParent = this;
                     frame.Show();
                 }

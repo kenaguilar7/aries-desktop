@@ -1,8 +1,11 @@
 ﻿using AriesContador.Core.Models.Accounts;
+using AriesContador.Core.Models.JournalEntries;
 using AriesContador.Core.Models.PostingPeriods;
 using AriesContador.Core.Repositories;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using static ClosedXML.Excel.XLPredefinedFormat;
 
 namespace Aries.WebServices.FinancialServices
 {
@@ -10,7 +13,7 @@ namespace Aries.WebServices.FinancialServices
     {
         Task DeleteAccount(Account account);
         Task<Account> FindAccount(int id);
-        Task<Account> GetAccountBalance(Account account, IEnumerable<PostingPeriod> postingPeriods);
+        Task<IEnumerable<Account>> GetAccountsBalance(string companyId, PostingPeriod startLook, PostingPeriod endLook); 
         Task<IEnumerable<Account>> GetDefaultAccounts();
         Task CreateAccount(Account account);
         Task UpdateAccount(Account account);
@@ -39,9 +42,14 @@ namespace Aries.WebServices.FinancialServices
         public async Task<Account> FindAccount(int id)
             => await _accountRepository.GetById(id); 
 
-        public Task<Account> GetAccountBalance(Account account, IEnumerable<PostingPeriod> postingPeriods)
+        public async Task<IEnumerable<Account>> GetAccountsBalance(string companyId, PostingPeriod startLook, PostingPeriod endLook)
         {
-            throw new System.NotImplementedException();
+            return await _accountRepository.AccountsWithBalanceByDateRange(new BasicReportParam()
+            {
+                CompanyId = companyId,
+                FirstDate = $"{startLook.Year}{String.Format("{0, 0:D2}", startLook.Month)}",
+                EndDate = $"{endLook.Year}{String.Format("{0, 0:D2}", endLook.Month)}" 
+            }); 
         }
 
         public Task<IEnumerable<Account>> GetAccounts(string companyId)

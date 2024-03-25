@@ -12,6 +12,7 @@ using Microsoft.OpenApi.Models;
 using Aries.WebServices.FinancialServices;
 using AriesContador.Core.Repositories;
 using AriesContador.Data.Repositories;
+using Aries.WebServices.FinancialReportsServices;
 
 var builder = WebApplication.CreateBuilder(args);
 //var Configuration = builder.Build();
@@ -32,6 +33,7 @@ builder.Services.AddScoped<IJournalEntryLineService, JournalEntryLineService>();
 builder.Services.AddScoped<IJournalEntryLineRepository, JournalEntryLineRepository>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+builder.Services.AddScoped<IReporteAuxiliaresService, ReporteAuxiliaresService>();
 
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();

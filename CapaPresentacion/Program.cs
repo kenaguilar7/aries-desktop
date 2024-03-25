@@ -22,6 +22,7 @@ namespace CapaPresentacion
             services.AddSingleton<IHttpAdministrationService, HttpAdministrationService>();
             services.AddSingleton<IHttpFinancialService, HttpFinancialService>();
             services.AddSingleton<IHttpClientService, HttpClientService>();
+            services.AddSingleton<IHttpFinancialReportService, HttpFinancialReportService>();
             services.AddSingleton<FrameMenu>();
             
             var serviceProvider = services.BuildServiceProvider();

@@ -72,10 +72,10 @@ namespace AriesContador.Data.Repositories
             }
         }
 
-        public IEnumerable<Account> AccountsWithBalanceByDateRange(BasicReportParam reportParam)
+        public async Task<IEnumerable<Account>> AccountsWithBalanceByDateRange(BasicReportParam reportParam)
         {
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            var output = dataAccess.LoadData<Account, BasicReportParam>("SP_AuxiliaryAccountsWithBalanceByDateRange", reportParam);
+            MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
+            var output = await dataAccess.LoadData<Account, BasicReportParam>("SP_AuxiliaryAccountsWithBalanceByDateRange", reportParam);
             output.BuildAccountsBalance();
             return output.OrderByTree();
         }
