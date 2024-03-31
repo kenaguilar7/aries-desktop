@@ -1,4 +1,5 @@
 ﻿using AriesContador.Core.Models.PostingPeriods;
+using AriesContador.Core.Models.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq; 
@@ -59,6 +60,46 @@ namespace AriesContador.Core.Models.Accounts
             return accounts.Where(x => x.HasBalances() ||
                                 (!x.HasBalances() && x.AccountType == AccountType.Cuenta_Titulo))
                                 .ToList(); 
+        }
+
+        public static Dictionary<PostingPeriod, Account[]> GetReportTable(this IDictionary<PostingPeriod, List<Account>> allData)
+        {
+            var tablaCuentas = new Dictionary<PostingPeriod, Account[]>();
+
+            foreach (var mes in allData)
+            {
+                Account[] cuentasConSaldo = allData.TransformUniqueAccounts();
+
+                foreach (var cuenta in cuentasConSaldo)
+                {
+                    var cuentaMes = mes.Value.FirstOrDefault(cv => cv.Id == cuenta.Id);
+                    if (cuentaMes != null)
+                    {
+                        cuenta.DebOrCred = cuentaMes.DebOrCred;
+                        cuenta.AccountTag = cuentaMes.AccountTag;
+                        cuenta.AccountType = cuentaMes.AccountType;
+                        cuenta.PriorBalance = cuentaMes.PriorBalance;
+                        cuenta.PriorBalanceForeign = cuentaMes.PriorBalanceForeign;
+                        cuenta.DebitBalance = cuentaMes.DebitBalance;
+                        cuenta.CreditBalance = cuentaMes.CreditBalance;
+                        cuenta.DebitBalanceForeign = cuentaMes.DebitBalanceForeign;
+                        cuenta.CreditBalanceForeign = cuentaMes.CreditBalanceForeign;
+                    }
+                    else
+                    {
+                        cuenta.AccountType = AccountType.Cuenta_Auxiliar;
+                        cuenta.PriorBalance = 0.00m;
+                        cuenta.PriorBalanceForeign = 0.00m;
+                        cuenta.DebitBalance = 0.00m;
+                        cuenta.CreditBalance = 0.00m;
+                        cuenta.DebitBalanceForeign = 0.00m;
+                        cuenta.CreditBalanceForeign = 0.00m;
+                    }
+                }
+
+                tablaCuentas.Add(mes.Key, cuentasConSaldo);
+            }
+            return tablaCuentas;
         }
     }
 }

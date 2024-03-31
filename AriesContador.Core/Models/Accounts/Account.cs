@@ -7,18 +7,8 @@ namespace AriesContador.Core.Models.Accounts
 {
     public class Account : BaseAccount
     {
-        private string _name;
+        public string Name { get; set; }
 
-        public string Name
-        {
-            get { return DetailedName; }
-            set { _name = value; }
-        }
-
-        public string DetailedName
-        {
-            get { return $"{_name} - {this.DebOrCred.ToString()}"; }
-        }
         public int? FatherAccount { get; set; }
 
         public DebOrCred DebOrCred { get; set; }

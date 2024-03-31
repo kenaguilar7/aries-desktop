@@ -10,6 +10,7 @@ using System.Linq;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using CapaEntidad.Textos;
 
 namespace CapaPresentacion.Reportes
 {
@@ -17,7 +18,7 @@ namespace CapaPresentacion.Reportes
     {
 
         private IEnumerable<PostingPeriod> postingPeriods = new List<PostingPeriod>();
-        private ReporteAuxiliarResponse _reporteAuxiliarResponse { get; set; } 
+        private ReporteAuxiliarResponse _reporteAuxiliarResponse { get; set; }
         private readonly IHttpFinancialReportService _httpFinancialReportService;
         private readonly IHttpFinancialService _financialService;
 
@@ -32,7 +33,7 @@ namespace CapaPresentacion.Reportes
         private async void FrameReporteAuxiliares_Load(object sender, EventArgs e)
         {
             postingPeriods = await _financialService.GetPostingPeriods(GlobalConfig.Company.Code);
-            this.lstMesInicio.DataSource = postingPeriods; 
+            this.lstMesInicio.DataSource = postingPeriods;
         }
 
         private void lstMesInicio_SelectedIndexChanged(object sender, EventArgs e)
@@ -41,12 +42,15 @@ namespace CapaPresentacion.Reportes
             lstMesFinal.DataSource = meses;
         }
         private async void btnGenerar_Click(object sender, EventArgs e)
-            => await GenerarReport(); 
+            => await GenerarReport();
 
         private async Task GenerarReport()
         {
             try
             {
+                btnGenerar.Enabled = false;
+                btnGenerarExcel.Enabled = false;
+                
                 var listaFiltrada = postingPeriods
                                     .Where(item => item.Date >= ((PostingPeriod)lstMesInicio.SelectedItem).Date &&
                                                    item.Date <= ((PostingPeriod)lstMesFinal.SelectedItem).Date)
@@ -56,25 +60,36 @@ namespace CapaPresentacion.Reportes
                 {
                     CompanyId = GlobalConfig.Company.Code,
                     PostingPeriods = listaFiltrada,
-                    currencyTypeCompany = GlobalConfig.Company.CurrencyType
+                    CurrencyType = GlobalConfig.Company.CurrencyType,
+                    ReportHeader = new ReportHeaderText()
+                    {
+                        CompanyName = GlobalConfig.Company.Name + " " + GlobalConfig.Company.Code,
+                        ReportName = "Reporte de Auxiliares",
+                        IssuerName = GlobalConfig.User.ToString()
+                    }
                 });
 
-                var dt = ConvertExcelToDataTable(_reporteAuxiliarResponse.Report);
+                var dtResponse = ConvertExcelToDataTable(_reporteAuxiliarResponse.Report);
                 dtGridReportContainer
-                    .DataSource = dt;
+                    .DataSource = dtResponse;
 
-                SetGridStile(); 
+                SetGridStile();
+
+                btnGenerar.Enabled = true;
+                btnGenerarExcel.Enabled = true;
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show(ex.Message, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                btnGenerar.Enabled = true;
+                btnGenerarExcel.Enabled = true;
             }
         }
 
         private async void btnGenerarExcel_Click(object sender, EventArgs e)
         {
-            if(_reporteAuxiliarResponse == null)
-                await GenerarReport(); 
+            if (_reporteAuxiliarResponse == null)
+                await GenerarReport();
 
             using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "Excel|*.xlsx", Title = "Reporte auxiliares", FileName = $"REPORTE DE AUXILIARES {GlobalConfig.Company.ToString()} - {GlobalConfig.Company.IdNumber}" })
             {
@@ -96,7 +111,7 @@ namespace CapaPresentacion.Reportes
         {
             for (int i = 0; i < numberOfColumns; i++)
             {
-                if(i< _reporteAuxiliarResponse.NumberOfColumns) 
+                if (i < _reporteAuxiliarResponse.AccountNamesColumnLength)
                 {
                     dtGridReportContainer.Columns[i].HeaderText = string.Empty;
                 }
@@ -114,31 +129,29 @@ namespace CapaPresentacion.Reportes
             using (var stream = new MemoryStream(excelData))
             using (var workbook = new XLWorkbook(stream))
             {
-                var worksheet = workbook.Worksheet(1); // Asume que quieres la primera hoja
+                var worksheet = workbook.Worksheet(1);
                 var dataTable = new DataTable();
 
-                int numberOfColumns = worksheet.Row(7).CellsUsed().Count(); // Determina el número de columnas basado en la primera fila
-                this.numberOfColumns = numberOfColumns; 
+                this.numberOfColumns = _reporteAuxiliarResponse.AccountNamesColumnLength + _reporteAuxiliarResponse.ColumnsBalanceHeaderText.Count();
+                
                 for (int i = 0; i < numberOfColumns; i++)
                 {
-                    //var col = new DataColumn();
-
-                    if (i >= _reporteAuxiliarResponse.NumberOfColumns)
+                    if (i >= _reporteAuxiliarResponse.AccountNamesColumnLength)
                     {
-                        dataTable.Columns.Add(_reporteAuxiliarResponse.ColumnsBalanceHeaderText[i-_reporteAuxiliarResponse.NumberOfColumns], typeof(decimal));
+                        dataTable.Columns.Add(_reporteAuxiliarResponse.ColumnsBalanceHeaderText[i - _reporteAuxiliarResponse.AccountNamesColumnLength], typeof(decimal));
                     }
                     else
                     {
-                        dataTable.Columns.Add("Column" + (i + 1), typeof(string)); // Agrega columnas genéricas (Column1, Column2, etc.)
+                        dataTable.Columns.Add("Column" + (i + 1), typeof(string));
                     }
                 }
 
-                foreach (IXLRow row in worksheet.RowsUsed().Skip(6)) // Usa RowsUsed() para ignorar filas completamente vacías
+                foreach (IXLRow row in worksheet.RowsUsed().Skip(6))
                 {
                     var dataRow = dataTable.NewRow();
                     for (int i = 0; i < numberOfColumns; i++)
                     {
-                        var cell = row.Cell(i + 1); 
+                        var cell = row.Cell(i + 1);
                         dataRow[i] = cell.Value;
                     }
                     dataTable.Rows.Add(dataRow);

@@ -11,7 +11,7 @@ namespace AriesContador.Core.Models.ReporteAuxiliaresModels
         /// <summary>
         /// Numer of columns in base 0
         /// </summary>
-        public int NumberOfColumns { get; set; }
+        public int AccountNamesColumnLength { get; set; }
 
         public List<string> ColumnsBalanceHeaderText { get; set; } = new List<string>();
     }

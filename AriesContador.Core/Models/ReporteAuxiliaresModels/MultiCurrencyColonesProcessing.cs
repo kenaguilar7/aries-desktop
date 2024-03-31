@@ -54,7 +54,7 @@ namespace AriesContador.Core.Models.ReporteAuxiliaresModels
                     worksheet.Cell(rowMonto, column + 1).Style.NumberFormat.NumberFormatId = 4;
                     rowMonto++;
                 }
-                column = column + 2;
+                column += 2;
             }
             headers = _headers;
         }
