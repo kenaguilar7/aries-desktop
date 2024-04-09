@@ -1,7 +1,6 @@
 ﻿using AriesContador.Core.Models;
 using AriesContador.Core.Models.Companies;
 using AriesContador.Core.Models.Users;
-using AriesContador.Services.Models.Company;
 using DocumentFormat.OpenXml.ExtendedProperties;
 using System;
 using System.Collections.Generic;
