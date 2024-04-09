@@ -15,7 +15,7 @@ using AriesContador.Core.Models;
 
 namespace CapaPresentacion
 {
-    public partial class FrameMenu : Form
+    public partial class FrameMenu : Form, IProgresiveBar
     {
         private readonly IHttpAdministrationService _httpAdministrationService;
         private readonly IHttpFinancialService _httpFinancialService;
@@ -23,8 +23,8 @@ namespace CapaPresentacion
 
         public Boolean comParametro { set { CargarCompañia(); } }
         public FrameMenu(
-            IHttpAdministrationService companyService, 
-            IHttpFinancialService httpFinancialService, 
+            IHttpAdministrationService companyService,
+            IHttpFinancialService httpFinancialService,
             IHttpFinancialReportService httpFinancialReportService)
         {
             this._httpAdministrationService = companyService;
@@ -35,14 +35,14 @@ namespace CapaPresentacion
             LoginForm n = new LoginForm(_httpAdministrationService);
             n.FormClosing += N_FormClosing;
 
-                n.ShowDialog();
-                void N_FormClosing(object sender, FormClosingEventArgs e)
+            n.ShowDialog();
+            void N_FormClosing(object sender, FormClosingEventArgs e)
+            {
+                if (GlobalConfig.User == null)
                 {
-                    if (GlobalConfig.User == null)
-                    {
-                        Application.Exit();
-                    }
+                    Application.Exit();
                 }
+            }
             CargarDatos();
         }
         private void CargarDatos()
@@ -176,13 +176,16 @@ namespace CapaPresentacion
                 MessageBox.Show(ex.Message);
             }
         }
+
+        public ToolStripProgressBar ProgressiveBarStatus { get { return this.ProgressBar;  } }
+
         private void balanceDeAuxiliaresToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
             {
                 if (GlobalConfig.Company != null)
                 {
-                    FrameReporteAuxiliares frame = new FrameReporteAuxiliares(_httpFinancialReportService, _httpFinancialService);
+                    FrameReporteAuxiliares frame = new FrameReporteAuxiliares(_httpFinancialReportService, _httpFinancialService, this);
                     frame.MdiParent = this;
                     frame.Show();
                 }
@@ -390,5 +393,15 @@ namespace CapaPresentacion
                 + EnvironmentVariable.ApiUrl; 
             MessageBox.Show(scriptInfo, "Token info",MessageBoxButtons.OK, MessageBoxIcon.Information); 
         }
+
+        public void UpdateProgressStatus(bool visble)
+        {
+            this.ProgressBar.Visible = visble;
+        }
+    }
+
+    public interface IProgresiveBar 
+    {
+        void UpdateProgressStatus(bool visble); 
     }
 }

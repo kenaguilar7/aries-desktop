@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Aries.WebAPI.Controllers
 {
-    //[Authorize]
+    [Authorize]
     [ApiController]
     [Route("[controller]")]
     public class FinancialReportController : ControllerBase
@@ -22,9 +22,16 @@ namespace Aries.WebAPI.Controllers
         [HttpPost("ReporteAuxiliares")]
         public async Task<IActionResult> GetExcelFile([FromBody] ReporteAuxiliarRequestBody requestBody)
         {
-            var exc = await _reporteAuxiliaresService.Generate(requestBody);
-            return Ok(exc); 
-            //return File(exc, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "SampleFile.xlsx");
+            try
+            {
+                var exc = await _reporteAuxiliaresService.Generate(requestBody);
+                return Ok(exc); 
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
         }
     }
 

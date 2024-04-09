@@ -15,22 +15,22 @@ namespace AriesContador.Core.Models.ReporteAuxiliaresModels
 
         private void LlenarSaldoCuentasColones(ref IXLWorksheet worksheet, int row, int column, Dictionary<PostingPeriod, Account[]> lstFechas, out List<string> Headers)
         {
-            var rowFechas = row;
+            var rowFechas = row + 1;
             List<string> header = new List<string>();
 
             foreach (var fecha in lstFechas)
             {
                 header.Add($"{fecha.Key.ToString()}-COL");
-                ///Se escribe la fecha en el exel 
-                ///
                 worksheet.Cell(rowFechas - 1, column).Value = fecha.Key.ToString();
-                ///worksheet.Cell(rowFechas - 1, column).Style.NumberFormat.Format = "MMM yyyy";
-                ///Ahora imprimos las cuentas
+                worksheet.Cell(rowFechas - 1, column).Style.NumberFormat.Format = "MMM yyyy";
+
                 var rowMonto = rowFechas;
+
                 foreach (var cuenta in fecha.Value)
                 {
-                    worksheet.Cell(rowMonto++, column).Value = cuenta.MontlyBalance;
-
+                    var rowNumber = rowMonto++; 
+                    worksheet.Cell(rowNumber, column).Value = cuenta.MontlyBalance;
+                    worksheet.Cell(rowNumber, column).Style.NumberFormat.NumberFormatId = 4;
                 }
                 column++;
             }

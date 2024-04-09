@@ -21,13 +21,16 @@ namespace CapaPresentacion.Reportes
         private ReporteAuxiliarResponse _reporteAuxiliarResponse { get; set; }
         private readonly IHttpFinancialReportService _httpFinancialReportService;
         private readonly IHttpFinancialService _financialService;
+        private readonly IProgresiveBar toolStripProgressBar;
 
         public FrameReporteAuxiliares(IHttpFinancialReportService httpFinancialReportService,
-            IHttpFinancialService financialService)
+            IHttpFinancialService financialService,
+            IProgresiveBar toolStripProgressBar)
         {
             InitializeComponent();
             _httpFinancialReportService = httpFinancialReportService;
             _financialService = financialService;
+            this.toolStripProgressBar = toolStripProgressBar;
         }
 
         private async void FrameReporteAuxiliares_Load(object sender, EventArgs e)
@@ -50,6 +53,7 @@ namespace CapaPresentacion.Reportes
             {
                 btnGenerar.Enabled = false;
                 btnGenerarExcel.Enabled = false;
+                toolStripProgressBar.UpdateProgressStatus(true);
                 
                 var listaFiltrada = postingPeriods
                                     .Where(item => item.Date >= ((PostingPeriod)lstMesInicio.SelectedItem).Date &&
@@ -77,12 +81,15 @@ namespace CapaPresentacion.Reportes
 
                 btnGenerar.Enabled = true;
                 btnGenerarExcel.Enabled = true;
+                toolStripProgressBar.UpdateProgressStatus(false);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 btnGenerar.Enabled = true;
                 btnGenerarExcel.Enabled = true;
+                toolStripProgressBar.UpdateProgressStatus(false);
+
+                MessageBox.Show(ex.Message, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -103,6 +110,7 @@ namespace CapaPresentacion.Reportes
 
         private void BtnSalir_Click(object sender, EventArgs e)
         {
+            toolStripProgressBar.UpdateProgressStatus(false);
             this.Close();
         }
 

@@ -51,6 +51,7 @@
             this.PermisosDeUsuarioToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.gestionDeCorreosToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.elementosEliminadosToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.tokenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.salirToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
@@ -60,7 +61,6 @@
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.ProgressBar = new System.Windows.Forms.ToolStripProgressBar();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.tokenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -77,7 +77,7 @@
             this.sistemaToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(1359, 35);
+            this.menuStrip1.Size = new System.Drawing.Size(1359, 33);
             this.menuStrip1.TabIndex = 1;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -247,6 +247,13 @@
             this.elementosEliminadosToolStripMenuItem.Text = "Elementos eliminados";
             this.elementosEliminadosToolStripMenuItem.Click += new System.EventHandler(this.elementosEliminadosToolStripMenuItem_Click);
             // 
+            // tokenToolStripMenuItem
+            // 
+            this.tokenToolStripMenuItem.Name = "tokenToolStripMenuItem";
+            this.tokenToolStripMenuItem.Size = new System.Drawing.Size(287, 34);
+            this.tokenToolStripMenuItem.Text = "Token";
+            this.tokenToolStripMenuItem.Click += new System.EventHandler(this.tokenToolStripMenuItem_Click);
+            // 
             // salirToolStripMenuItem
             // 
             this.salirToolStripMenuItem.Name = "salirToolStripMenuItem";
@@ -266,10 +273,10 @@
             this.toolStripSeparator1,
             this.ProgressBar,
             this.toolStripSeparator2});
-            this.toolStrip1.Location = new System.Drawing.Point(0, 659);
+            this.toolStrip1.Location = new System.Drawing.Point(0, 656);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Padding = new System.Windows.Forms.Padding(0, 0, 3, 0);
-            this.toolStrip1.Size = new System.Drawing.Size(1359, 33);
+            this.toolStrip1.Size = new System.Drawing.Size(1359, 36);
             this.toolStrip1.TabIndex = 3;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -279,7 +286,7 @@
             this.toolStripButton1.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton1.Image")));
             this.toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButton1.Name = "toolStripButton1";
-            this.toolStripButton1.Size = new System.Drawing.Size(34, 28);
+            this.toolStripButton1.Size = new System.Drawing.Size(34, 31);
             this.toolStripButton1.Click += new System.EventHandler(this.SeleccioneCompañiaParaTrabajar);
             // 
             // txtUsuario
@@ -311,6 +318,7 @@
             // 
             // ProgressBar
             // 
+            this.ProgressBar.BackColor = System.Drawing.SystemColors.Highlight;
             this.ProgressBar.MarqueeAnimationSpeed = 30;
             this.ProgressBar.Name = "ProgressBar";
             this.ProgressBar.Size = new System.Drawing.Size(600, 31);
@@ -322,13 +330,6 @@
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
             this.toolStripSeparator2.Size = new System.Drawing.Size(6, 33);
-            // 
-            // tokenToolStripMenuItem
-            // 
-            this.tokenToolStripMenuItem.Name = "tokenToolStripMenuItem";
-            this.tokenToolStripMenuItem.Size = new System.Drawing.Size(287, 34);
-            this.tokenToolStripMenuItem.Text = "Token";
-            this.tokenToolStripMenuItem.Click += new System.EventHandler(this.tokenToolStripMenuItem_Click);
             // 
             // FrameMenu
             // 

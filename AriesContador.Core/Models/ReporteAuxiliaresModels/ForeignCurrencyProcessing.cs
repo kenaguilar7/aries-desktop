@@ -1,6 +1,7 @@
 ﻿using AriesContador.Core.Models.Accounts;
 using AriesContador.Core.Models.PostingPeriods;
 using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Spreadsheet;
 using System.Collections.Generic;
 
 namespace AriesContador.Core.Models.ReporteAuxiliaresModels
@@ -15,22 +16,26 @@ namespace AriesContador.Core.Models.ReporteAuxiliaresModels
 
         private void LlenarSaldoCuentasColones(ref IXLWorksheet worksheet, int row, int column, Dictionary<PostingPeriod, Account[]> lstFechas, out List<string> headers)
         {
-            var rowFechas = row;
-            List<string> _headers = new List<string>();
+            var rowFechas = row + 1;
+            List<string> _header = new List<string>();
 
             foreach (var fecha in lstFechas)
             {
-                _headers.Add($"{fecha.Key.ToString()}-USD");
+                _header.Add($"{fecha.Key.ToString()}-USD");
                 worksheet.Cell(rowFechas - 1, column).Value = fecha.Key.ToString();
+                worksheet.Cell(rowFechas - 1, column).Style.NumberFormat.Format = "MMM yyyy";
+
                 var rowMonto = rowFechas;
+
                 foreach (var cuenta in fecha.Value)
                 {
-                    worksheet.Cell(rowMonto++, column).Value = cuenta.MontlyBalanceForeign;
+                    var rowNumber = rowMonto++;
+                    worksheet.Cell(rowNumber, column).Value = cuenta.MontlyBalanceForeign;
+                    worksheet.Cell(rowNumber, column).Style.NumberFormat.NumberFormatId = 4;
                 }
                 column++;
             }
-
-            headers = _headers;
+            headers = _header;
         }
     }
 }
