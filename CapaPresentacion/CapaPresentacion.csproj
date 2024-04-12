@@ -117,9 +117,6 @@
     <Reference Include="Flurl, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Flurl.4.0.0\lib\net472\Flurl.dll</HintPath>
     </Reference>
-    <Reference Include="Flurl.Http, Version=4.0.2.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Flurl.Http.4.0.2\lib\net461\Flurl.Http.dll</HintPath>
-    </Reference>
     <Reference Include="GlobalTech.TextBoxControl, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Recursos\GlobalTech.TextBoxControl.dll</HintPath>
