@@ -3,8 +3,6 @@ using AriesContador.Core.Models.Accounts;
 using AriesContador.Core.Models.JournalEntries;
 using AriesContador.Core.Models.PostingPeriods;
 using AriesContador.Core.Services;
-using Flurl;
-using Flurl.Http;
 using System;
 using System.Collections.Generic;
 using System.Text;

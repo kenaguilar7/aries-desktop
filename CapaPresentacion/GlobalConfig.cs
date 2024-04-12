@@ -64,6 +64,7 @@ namespace CapaPresentacion
         public static ConnectionString ConnectionString = new ConnectionString();
 
         public static string BaseUrl = ConfigurationManager.ConnectionStrings["HttpBaseUrl"].ConnectionString;
+        public static bool IsBeta = bool.Parse(ConfigurationManager.ConnectionStrings["IsBeta"].ConnectionString);
 
 
 

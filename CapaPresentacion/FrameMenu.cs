@@ -58,7 +58,11 @@ namespace CapaPresentacion
         {
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
             FileVersionInfo versionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
-            this.Text += $" v.{versionInfo.FileVersion}";
+
+            string betaSign = GlobalConfig.IsBeta? "BETA" : string.Empty; 
+
+            this.Text += $" v.{versionInfo.FileVersion} {betaSign}";
+            
             ///fo
         }
         private void CargarCompañia()
