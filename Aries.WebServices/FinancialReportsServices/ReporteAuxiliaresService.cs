@@ -6,6 +6,7 @@ using AriesContador.Core.Models.Utils;
 using ClosedXML.Excel;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Aries.WebServices.FinancialReportsServices
@@ -45,7 +46,7 @@ namespace Aries.WebServices.FinancialReportsServices
                 List<string> Headers = new List<string>();
 
                 var currencyProcessing = CurrencyProcessingFactory.GetCurrencyProcessing(requestBody.CurrencyType);
-                currencyProcessing.Process(ref worksheet, ref column, combinedAccounts, reportData.GetReportTable(), out Headers);
+                currencyProcessing.Process(ref worksheet, ref column, combinedAccounts.OrderByDescTree().ToList(), reportData.GetReportTable(), out Headers);
 
                 reportResponse.AccountNamesColumnLength = column -1;
 

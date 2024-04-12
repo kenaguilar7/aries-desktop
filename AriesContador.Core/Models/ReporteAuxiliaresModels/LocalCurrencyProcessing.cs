@@ -13,7 +13,12 @@ namespace AriesContador.Core.Models.ReporteAuxiliaresModels
             LlenarSaldoCuentasColones(ref worksheet, 6, column, tableReport, out Headers); 
         }
 
-        private void LlenarSaldoCuentasColones(ref IXLWorksheet worksheet, int row, int column, Dictionary<PostingPeriod, Account[]> lstFechas, out List<string> Headers)
+        private void LlenarSaldoCuentasColones(
+            ref IXLWorksheet worksheet, 
+            int row, 
+            int column, 
+            Dictionary<PostingPeriod, Account[]> lstFechas, 
+            out List<string> Headers)
         {
             var rowFechas = row + 1;
             List<string> header = new List<string>();
