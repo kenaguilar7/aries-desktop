@@ -261,3 +261,4 @@ __pycache__/
 *.pyc
 /CapaPresentacion/App.config
 /Aries.WebAPI/appsettings.json
+/Aries.WebAPI/out
