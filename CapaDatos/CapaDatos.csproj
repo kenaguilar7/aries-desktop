@@ -97,17 +97,14 @@
   <ItemGroup>
     <Compile Include="Conexion\Manejador.cs" />
     <Compile Include="Conexion\Parametros.cs" />
-    <Compile Include="Daos\AsientosDao.cs" />
     <Compile Include="Daos\CompañiaDao.cs" />
     <Compile Include="Daos\CorreoDao.cs" />
     <Compile Include="Daos\CuentaDao.cs" />
     <Compile Include="Daos\FechaTransaccionDao.cs" />
     <Compile Include="Daos\Guachi.cs" />
     <Compile Include="Daos\PermisoDAO.cs" />
-    <Compile Include="Daos\TransaccionDao.cs" />
     <Compile Include="Daos\UsuarioDao.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SQL\Asiento.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AriesContador.Core\AriesContador.Core.csproj">

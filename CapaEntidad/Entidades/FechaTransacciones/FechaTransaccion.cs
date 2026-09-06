@@ -1,10 +1,5 @@
-﻿using CapaEntidad.Entidades.JournalEntries;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CapaEntidad.Entidades.FechaTransacciones
 {
@@ -13,7 +8,6 @@ namespace CapaEntidad.Entidades.FechaTransacciones
         public int Id { get; set; }
         public DateTime Fecha { get; set; }
         public Boolean Cerrada { get; set; }
-        public List<JournalEntry> Asientos {get; set; }
         public FechaTransaccion(DateTime fecha, int id, bool cerrada = false)
         {
             Id = id;

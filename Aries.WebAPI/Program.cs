@@ -108,6 +108,20 @@ app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapGet("/health", async (IConnectionString cs) =>
+{
+    try
+    {
+        using var conn = new MySql.Data.MySqlClient.MySqlConnection(cs.MySQLDefault);
+        await conn.OpenAsync();
+        return Results.Ok(new { status = "ok" });
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(new { status = "unhealthy", detail = ex.Message }, statusCode: 503);
+    }
+}).AllowAnonymous();
+
 app.MapAuthEndpoints();
 app.MapCompanyEndpoints();
 app.MapUserEndpoints();

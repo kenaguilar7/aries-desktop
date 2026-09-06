@@ -15,7 +15,6 @@ namespace CapaLogica
     public class FechaTransaccionCL
     {
         private FechaTransaccionDao _fechaDao = new FechaTransaccionDao();
-        private AsientoCL _asientoCL = new AsientoCL();
 
         public List<FechaTransaccion> GetAll(Company t, Usuario user)
         {
@@ -152,22 +151,9 @@ namespace CapaLogica
 
             return retorno;
         }
-        public List<FechaTransaccion> GetAllActive(Company t, Usuario user, Boolean traerAsientos = false)
+        public List<FechaTransaccion> GetAllActive(Company t, Usuario user)
         {
-            List<FechaTransaccion> retorno = GetAll(t, user);
-            var Lstretorno = retorno.OrderBy(x=> x.Fecha).ToList<FechaTransaccion>();
-            if (traerAsientos)
-            {
-                foreach (var item in Lstretorno)
-                {
-                    //var lstAsiento = _asientoCL.GetPorFecha(item, t, traerInfoCompleta: true, traerNuevo: false);
-
-                    //item.Asientos = lstAsiento;
-                }
-
-            }
-
-            return Lstretorno;
+            return GetAll(t, user).OrderBy(x => x.Fecha).ToList<FechaTransaccion>();
         }
         public Boolean CerrarMes(FechaTransaccion t, Company compañia, Usuario user, out String mensaje)
         {
@@ -220,30 +206,8 @@ namespace CapaLogica
         /// <returns></returns>
         public Boolean BuscarAsientosDescuadrados(Company compañia, FechaTransaccion fechaTransaccion, out String mensaje)
         {
-
-            var asientCL = new AsientoCL();
-
-            //var lstCuentasPedientes = asientCL.ListadoAsientosDescuadrados(compañia, fechaTransaccion);
-            //if (lstCuentasPedientes.Rows.Count > 0)
-            //{
-            //    mensaje = "Faltan asientos por cuadrar: \n";
-            //    mensaje += $"Mes contable: {fechaTransaccion.ToString()} \n";
-            //    foreach (DataRow item in lstCuentasPedientes.Rows)
-            //    {
-            //        object[] vs = item.ItemArray;
-            //        mensaje += $"Asiento: {vs[1]}- Debitos: {vs[2]} Creditos: {vs[3]} \n";
-            //    }
-
-            //    return true;
-            //}
-            //else
-            //{
-            //    mensaje = "tbd";
-            //    return false;
-            //}
             mensaje = "";
             return true;
-
         }
 
         public List<Cuenta> AsientoDeCierre(Company compañia, Usuario usuario, IEnumerable<FechaTransaccion> fechaTransaccions, Cuenta cuenta)

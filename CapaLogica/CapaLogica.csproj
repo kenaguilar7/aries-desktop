@@ -81,14 +81,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AsientoCL.cs" />
     <Compile Include="CompañiaCL.cs" />
     <Compile Include="CorreoCL.cs" />
     <Compile Include="CuentaCL.cs" />
     <Compile Include="FechaTransaccionCL.cs" />
     <Compile Include="PermisoCL.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TransaccionCL.cs" />
     <Compile Include="UsuarioCL.cs" />
   </ItemGroup>
   <ItemGroup>

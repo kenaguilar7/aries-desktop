@@ -11,11 +11,29 @@
         "Bypass",
         "-File",
         "${workspaceFolder}/scripts/local/start-local.ps1",
-        "-DockerOnly"
+        "-SkipApi"
       ],
       "problemMatcher": [],
       "presentation": {
         "reveal": "silent",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "docker-stack",
+      "type": "shell",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/local/start-local.ps1",
+        "-DockerOnly"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
         "panel": "shared"
       }
     },

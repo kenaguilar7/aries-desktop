@@ -46,6 +46,16 @@ namespace AriesContador.Data.Internal.DataAccess
             }
         }
 
+        public List<T> ExecuteQuery<T, U>(string query, U parameters)
+        {
+            string connectionString = _connectionString.MySQLDefault;
+
+            using (IDbConnection connection = new MySqlConnection(connectionString))
+            {
+                return connection.Query<T>(query, parameters, commandType: CommandType.Text).ToList();
+            }
+        }
+
         public void SaveData<T>(string storedProcedure, T parameters)
         {
             string connectionString = _connectionString.MySQLDefault;

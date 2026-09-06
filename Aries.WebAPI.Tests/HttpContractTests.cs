@@ -5,11 +5,9 @@ using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using AriesContador.Core.Models;
 using AriesContador.Core.Models.Companies;
 using AriesContador.Core.Models.JournalEntries;
 using AriesContador.Core.Models.Users;
-using AriesContador.Services;
 using Newtonsoft.Json;
 using Xunit;
 
@@ -63,26 +61,24 @@ namespace Aries.WebAPI.Tests
         }
 
         [Fact]
-        public async Task HttpAdministrationService_matches_desktop_routes()
+        public async Task Auth_and_company_routes_match_desktop_contract()
         {
-            var client = _factory.CreateClient();
-            EnvironmentVariable.ApiUrl = client.BaseAddress.ToString();
-            EnvironmentVariable.ApiToken = new WebToken();
+            var client = await ClientWithToken();
 
-            var http = new HttpAdministrationService(new TestHttpClientService(client));
-            var login = await http.Login(new Login { UserId = "kenneth", Password = "96321" });
-            EnvironmentVariable.ApiToken = login;
-
-            Assert.Equal("kenneth", login.User.UserName);
-            Assert.False(string.IsNullOrWhiteSpace(login.Token));
-
-            var companies = await http.GetAllCompanies();
+            var companiesResponse = await client.GetAsync("/company/getAll");
+            companiesResponse.EnsureSuccessStatusCode();
+            var companies = JsonConvert.DeserializeObject<List<Company>>(
+                await companiesResponse.Content.ReadAsStringAsync());
             Assert.Contains(companies, c => c.Code == "C001");
 
-            var next = await http.BuildNewCompanyCode();
+            var codeResponse = await client.GetAsync("/company/BuildCode");
+            codeResponse.EnsureSuccessStatusCode();
+            var next = JsonConvert.DeserializeObject<Company>(
+                await codeResponse.Content.ReadAsStringAsync());
             Assert.Equal("C002", next.Code);
 
-            await http.DeleteCompany(new Company { Code = "C001" });
+            var deleteResponse = await client.DeleteAsync("/company/delete/C001");
+            deleteResponse.EnsureSuccessStatusCode();
             Assert.Equal("C001", _factory.Admin.LastDeletedCode);
         }
 

@@ -1,20 +1,13 @@
-﻿using AriesContador.Core;
-using CapaEntidad.Entidades.FechaTransacciones;
-using CapaEntidad.Textos;
-using CapaLogica;
+﻿using CapaEntidad.Textos;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Windows.Forms;
+using AriesContador.Core.Models.JournalEntries;
 using AriesContador.Core.Models.PostingPeriods;
+using AriesContador.Core.Models.Reports;
 using AriesContador.Core.Models.Utils;
 using AriesContador.Core.Services;
-using AriesContador.Data;
-using AriesContador.Services;
-using CapaEntidad.Entidades.JournalEntries;
-using CapaEntidad.Entidades.Reports;
-using AriesContador.Core.Models.JournalEntries;
 
 namespace CapaPresentacion.FrameCuentas
 {

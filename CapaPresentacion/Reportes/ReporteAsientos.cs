@@ -1,5 +1,4 @@
-﻿//using CapaEntidad.Entidades.JournalEntries;
-using CapaEntidad.Enumeradores;
+﻿using CapaEntidad.Enumeradores;
 using CapaEntidad.Textos;
 using System;
 using System.Collections.Generic;

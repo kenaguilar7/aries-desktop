@@ -4,31 +4,19 @@ Host HTTP **Minimal APIs** sobre `AriesContador.Services` canónico. Sin `Contro
 
 ## Ambientes
 
-Ver [`scripts/local/README.md`](../scripts/local/README.md). Hay dos perfiles en `Properties/launchSettings.json`. El default es Local.
-
-| Perfil | `ASPNETCORE_ENVIRONMENT` | MySQL |
-|---|---|---|
-| **Aries.WebAPI (Local)** | Development | `127.0.0.1:3307` (`appsettings.Development.json`) |
-| **Aries.WebAPI (Production)** | Production | RDS (`appsettings.Production.json`) |
+Ver [`scripts/local/README.md`](../scripts/local/README.md). El camino local es **Docker** (API + MySQL), no `dotnet run`.
 
 ```powershell
 .\scripts\local\start-local.ps1
-dotnet run --project Aries.WebAPI
 ```
 
-Swagger: `http://localhost:5088/`. F5 del escritorio **no** arranca este host: login y maestros van in-process a MySQL. Para los dos a la vez, en Visual Studio usa **Escritorio + API (Local)**.
+- Swagger: `http://localhost:5088/`
+- Salud: `http://localhost:5088/health`
+- Login de prueba: `POST /auth/login` con `{"UserId":"kenneth","Password":"96321"}`
 
-Debe loguear `Ambiente Development: MySQL 127.0.0.1:3307 / aries` y `Aries.WebAPI escuchando en http://localhost:5088`.
+El contenedor `aries_api_local` habla con MySQL en `host.docker.internal:3307` (`aries_mysql_local`). El escritorio Debug usa el mismo MySQL y `HttpBaseUrl=http://localhost:5088/`.
 
-Contra RDS (cuidado: es producción):
-
-```powershell
-dotnet run --project Aries.WebAPI --launch-profile "Aries.WebAPI (Production)"
-```
-
-Override local: copia `appsettings.Local.json.example` → `appsettings.Local.json` (gitignored). No se carga si el ambiente es Production.
-
-El Debug del escritorio usa el mismo MySQL local y `HttpBaseUrl=http://localhost:5088/`. Release usa `App.Production.config` (RDS + Elastic Beanstalk).
+Para depurar el API **en el host** (no Docker): `docker compose stop api` y F5 en el perfil `Aries.WebAPI (Local)`. Contra RDS: perfil Production — no es el contenedor local.
 
 ## Contrato que el exe ya conoce
 

@@ -357,7 +357,6 @@ namespace CapaPresentacion.FrameCuentas
                     MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
                     _financialService.DeleteJournalEntry(_journalEntry);
-                    //_asientoCL.Delete(_journalEntry, GlobalConfig.Usuario);
                     MessageBox.Show("Asiento eliminado correctamente", TextoGeneral.NombreApp, MessageBoxButtons.OK,
                         MessageBoxIcon.Information);
                     _journalEntry = null;

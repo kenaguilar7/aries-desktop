@@ -46,10 +46,10 @@ namespace AriesContador.Data.Repositories
             if (string.IsNullOrWhiteSpace(userName))
                 return null;
 
-            var dataAccess = new MySqlDataAccessAsync(_connectionString);
+            var dataAccess = new MySqlDataAccess(_connectionString);
             var output = dataAccess.ExecuteQuery<User, object>(
                 Query.Query.AdministrationQuery.FindUserByUserName,
-                new { UserName = userName }).GetAwaiter().GetResult();
+                new { UserName = userName });
             return output.FirstOrDefault();
         }
 

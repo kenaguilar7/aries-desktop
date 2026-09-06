@@ -318,8 +318,6 @@
     <Compile Include="FrameUsuarios\Correo.Designer.cs">
       <DependentUpon>Correo.cs</DependentUpon>
     </Compile>
-    <Compile Include="MaestroCuentas\LGCuenta.cs" />
-    <Compile Include="MaestroCuentas\MaestroCuenta.cs" />
     <Compile Include="Reportes\ReporteBalanceSituacion.cs">
       <SubType>Form</SubType>
     </Compile>

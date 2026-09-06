@@ -22,7 +22,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Aries.WebAPI\Aries.WebAPI.csproj" />
     <ProjectReference Include="..\AriesContador.Core\AriesContador.Core.csproj" />
-    <ProjectReference Include="..\AriesContador.Services\AriesContador.Services.csproj" />
   </ItemGroup>
 
 </Project>

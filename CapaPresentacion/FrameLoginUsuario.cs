@@ -43,8 +43,12 @@ namespace CapaPresentacion
             }
             catch (Exception ex)
             {
-
-                MessageBox.Show(ex.Message, "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                var detail = ex.GetBaseException().Message;
+                MessageBox.Show(
+                    "No se pudo iniciar sesión." + Environment.NewLine + Environment.NewLine + detail,
+                    "Aries Contador",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
 

@@ -21,11 +21,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AriesContador.Tests", "Arie
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aries.Desktop.Tests", "Aries.Desktop.Tests\Aries.Desktop.Tests.csproj", "{8F3A1B2C-4D5E-6789-ABCD-EF0123456789}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FEC16CC2-C46F-46BE-BA20-52CCBFE73D1A}"
-	ProjectSection(SolutionItems) = preProject
-		apprunner.yaml = apprunner.yaml
-	EndProjectSection
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aries.WebAPI", "Aries.WebAPI\Aries.WebAPI.csproj", "{B5E1FBF6-55D7-4ECC-B26B-D8D5285BC820}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aries.WebAPI.Tests", "Aries.WebAPI.Tests\Aries.WebAPI.Tests.csproj", "{6BC48508-2DE6-4BF9-9934-A710C196FB5E}"

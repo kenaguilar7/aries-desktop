@@ -106,12 +106,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BaseModel.cs" />
-    <Compile Include="Entidades\JournalEntries\JournalEntry.cs" />
-    <Compile Include="Entidades\JournalEntries\JournalEntryHeader.cs" />
-    <Compile Include="Entidades\JournalEntries\JournalEntryDeletedReport.cs" />
-    <Compile Include="Entidades\JournalEntries\JournalEntryReport.cs" />
-    <Compile Include="Entidades\JournalEntries\JournalEntryStatus.cs" />
-    <Compile Include="Entidades\JournalEntries\JournalEntryLine.cs" />
     <Compile Include="Entidades\Compañias\Company.cs" />
     <Compile Include="Entidades\Compañias\PersonaFisica.cs" />
     <Compile Include="Entidades\Compañias\PersonaJuridica.cs" />
@@ -123,10 +117,6 @@
     <Compile Include="Entidades\Cuentas\Pasivo.cs" />
     <Compile Include="Entidades\Cuentas\Patrimonio.cs" />
     <Compile Include="Entidades\FechaTransacciones\FechaTransaccion.cs" />
-    <Compile Include="Entidades\Reports\BalanceComprobacionReport.cs" />
-    <Compile Include="Entidades\Reports\ClosingPostingPeriodReport.cs" />
-    <Compile Include="Entidades\Reports\EstadoResultadoIntegralReport.cs" />
-    <Compile Include="Entidades\Reports\PostingPeriodInfoReport.cs" />
     <Compile Include="Entidades\Seguridad\CRUDItem.cs" />
     <Compile Include="Entidades\Seguridad\CRUDName.cs" />
     <Compile Include="Entidades\Seguridad\IPermiso.cs" />
@@ -137,19 +127,16 @@
     <Compile Include="Entidades\Ventanas\Ventana.cs" />
     <Compile Include="Entidades\Ventanas\VentanaInfo.cs" />
     <Compile Include="Enumeradores\Comportamiento.cs" />
-    <Compile Include="Enumeradores\EstadoAsiento.cs" />
     <Compile Include="Enumeradores\EstadoUltimoEnvio.cs" />
     <Compile Include="Enumeradores\IndicadorCuenta.cs" />
     <Compile Include="Enumeradores\TipoCuenta.cs" />
     <Compile Include="Enumeradores\IdType.cs" />
     <Compile Include="Enumeradores\CurrencyTypeCompany.cs" />
     <Compile Include="Enumeradores\TipoUsuario.cs" />
-    <Compile Include="Interfaces\IDao.cs" />
     <Compile Include="Interfaces\ICallingForm.cs" />
     <Compile Include="Interfaces\ITipoCuenta.cs" />
     <Compile Include="Mappers\CuentaMapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Reportes\ReporteAsiento.cs" />
     <Compile Include="Reportes\ReporteAuxiliares.cs" />
     <Compile Include="Reportes\ReporteBalanceComprobacion.cs" />
     <Compile Include="Reportes\ReporteBalanceSituacion.cs" />
@@ -159,7 +146,6 @@
     <Compile Include="Reportes\ReporteMovimientoCuenta.cs" />
     <Compile Include="Reportes\ReportePerdidasGanancias.cs" />
     <Compile Include="Textos\TextoGeneral.cs" />
-    <Compile Include="Textos\TextoSQL.cs" />
     <Compile Include="Utils\Currency.cs" />
     <Compile Include="Utils\DebOrCred.cs" />
     <Compile Include="Utils\TableExtensions.cs" />

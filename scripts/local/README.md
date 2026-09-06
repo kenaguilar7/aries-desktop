@@ -1,86 +1,60 @@
 # Ambientes Local y Production
 
-Hay **dos** configuraciones. F5 / Debug queda en Local. Production es Release (escritorio) o `ASPNETCORE_ENVIRONMENT=Production` (API).
+Hay **dos** configuraciones. F5 / Debug del escritorio queda en Local. El API local corre **en Docker** junto a MySQL.
 
-| | Escritorio | API |
+| | Escritorio | API + MySQL |
 |---|---|---|
-| **Local** | configuración **Debug** → `app.config` | perfil **Aries.WebAPI (Local)** / `Development` → `appsettings.Development.json` |
-| **Production** | configuración **Release** → `App.Production.config` | perfil **Aries.WebAPI (Production)** → `appsettings.Production.json` |
+| **Local** | **Debug** → `app.config` (MySQL `127.0.0.1:3307`, API `http://localhost:5088/`) | `docker compose` → `aries_mysql_local` + `aries_api_local` |
+| **Production** | **Release** → `App.Production.config` (RDS + Elastic Beanstalk) | no usar este compose; es RDS real |
 
-Override opcional (gitignored): `App.Local.config` (gana sobre `app.config` en Debug) y `appsettings.Local.json` (solo si el ambiente no es Production).
+El título del menú muestra `[Local]` o `[Production]`.
 
-El título del menú muestra `[Local]` o `[Production]`. Menú Token info enseña ambiente y host MySQL.
+## Local (Docker)
 
-## Local (Docker :3307)
-
-El Debug del escritorio y `dotnet run` (Development) apuntan a **127.0.0.1:3307**, base `aries`, usuario `kenneth` / `1234`. No usan RDS.
-
-En esta máquina ya puede existir el contenedor `aries_mysql_local` en 3307; el script no levanta un segundo MySQL si el puerto está ocupado.
-
-### 1. Comprobar MySQL
+Topología igual que prod: un contenedor de API y uno de MySQL. El escritorio Debug sigue en el host y entra por los puertos publicados.
 
 ```powershell
 .\scripts\local\start-local.ps1
-docker ps --filter "publish=3307"
 ```
 
-Si no hay nada en 3307: Docker Desktop + `docker compose up -d` (credenciales en `.env`).
+Eso deja:
 
-### 2. Restaurar dump (solo primera vez, copia — nunca RDS)
+| Contenedor | Puerto en el host |
+|---|---|
+| `aries_mysql_local` | **3307** → MySQL 3306 |
+| `aries_api_local` | **5088** → HTTP 8080 |
+
+Swagger: http://localhost:5088/  
+Salud (incluye ping a MySQL): http://localhost:5088/health
+
+Si ya tienes `aries_mysql_local` en 3307, el script **no** crea otro MySQL; solo construye y arranca el API.
+
+### Restaurar dump (solo primera vez, copia — nunca RDS)
 
 Orden: `users` → `companies` → `accounts_names` → `accounts` → meses / asientos → `aries_routines.sql` → `scripts/mysql/fase1` y `fase3`.
 
-### 3. API local (no arranca con F5 del escritorio)
+### Escritorio
 
-El WinForms Debug **no necesita** el API: login, compañías, cuentas y asientos van directo a MySQL. F5 en **CapaPresentacion** no levanta `Aries.WebAPI`.
-
-Si quieres Swagger o el HTTP junto al exe, arranca el API aparte. Los dos deben usar **http://localhost:5088/** (no el 5000 de Kestrel ni el 44320 viejo).
-
-```powershell
-dotnet run --project Aries.WebAPI
-```
-
-O en Visual Studio: perfil de inicio **Escritorio + API (Local)**.
-
-Al arrancar debe loguear `Ambiente Development: MySQL 127.0.0.1:3307 / aries` y `Aries.WebAPI escuchando en http://localhost:5088`.
-
-### 4. Escritorio local
-
-Visual Studio / Cursor: proyecto de inicio **CapaPresentacion**, configuración **Debug**.
-
-`CapaPresentacion\app.config`:
-
-- `DBconnectionString` → 127.0.0.1:3307 / aries / kenneth
-- `HttpBaseUrl` → http://localhost:5088/
-- `UpdateServerString` vacío (no llama a S3)
-- `EnvironmentName` → Local
-
-Otra clave o puerto: copia `app.config` a `App.Local.config` y edita. El build Debug lo aplica al exe.
+Proyecto de inicio **CapaPresentacion**, configuración **Debug**. Login, maestros y asientos van **in-process** a MySQL `:3307` (no necesitan el API). `HttpBaseUrl` apunta a `http://localhost:5088/` para cuando sí uses HTTP.
 
 ## Production (RDS)
 
-Release del escritorio y el perfil Production de la API usan RDS `ariescontrol...rds.amazonaws.com:3306`, usuario `kenneth`, base `aries`.
-
-- Escritorio: `HttpBaseUrl` es Elastic Beanstalk (API desplegada), `UpdateServerString` es S3, `IsBeta=false`.
-- API local con perfil Production: misma cadena RDS. **No aplicar SPs de fase 1/3 sobre RDS.** Esa instancia es producción real.
+Release del escritorio usa RDS y Elastic Beanstalk. **No aplicar SPs de fase 1/3 sobre RDS.**
 
 ```powershell
 dotnet run --project Aries.WebAPI --launch-profile "Aries.WebAPI (Production)"
 ```
 
-Al arrancar debe loguear `Ambiente Production: MySQL ariescontrol... / aries`.
-
-Visual Studio: configuración **Release** en CapaPresentacion. El target `ApplyEnvironmentAppConfig` copia `App.Production.config` → `CapaPresentacion.exe.config`.
+Eso es el API **en el host** contra RDS, no el contenedor local. Visual Studio: configuración **Release** en CapaPresentacion.
 
 ## Archivos
 
 | Archivo | Rol |
 |---|---|
-| `.env.example` → `.env` | Docker local (root, kenneth, puerto 3307) |
-| `docker-compose.yml` | MySQL 8 si no hay contenedor en 3307 |
+| `.env.example` → `.env` | Docker (MySQL, puerto API, JWT) |
+| `docker-compose.yml` | MySQL 8 + `Aries.WebAPI` |
+| `Aries.WebAPI/Dockerfile` | Imagen del API |
 | `CapaPresentacion/app.config` | Debug / Local |
 | `CapaPresentacion/App.Production.config` | Release / Production (RDS) |
-| `CapaPresentacion/App.Local.config.example` | Override Debug (gitignored al copiar) |
-| `Aries.WebAPI/appsettings.Development.json` | API Local |
-| `Aries.WebAPI/appsettings.Production.json` | API contra RDS |
-| `Aries.WebAPI/appsettings.Local.json.example` | Override API (no se carga en Production) |
+| `Aries.WebAPI/appsettings.Development.json` | Fallback si corres el API fuera de Docker |
+| `Aries.WebAPI/appsettings.Production.json` | API contra RDS (no Docker local) |

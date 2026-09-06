@@ -6,13 +6,11 @@ using AriesContador.Core.Models;
 using AriesContador.Core.Models.Companies;
 using AriesContador.Core.Models.Users;
 using CapaEntidad.Entidades.Cuentas;
-using CapaEntidad.Entidades.Seguridad;
 using CapaEntidad.Entidades.Usuarios;
 using CapaEntidad.Entidades.Ventanas;
 using CapaEntidad.Enumeradores;
 using CapaLogica;
 using CapaPresentacion.Conf;
-using Microsoft.Extensions.DependencyInjection;
 using Squirrel;
 
 namespace CapaPresentacion
@@ -34,13 +32,8 @@ namespace CapaPresentacion
         private static void LoadHttpBaseUrl()
         {
             var httpBase = ConfigurationManager.ConnectionStrings["HttpBaseUrl"];
-            if (httpBase == null || string.IsNullOrWhiteSpace(httpBase.ConnectionString))
-            {
-                throw new ConfigurationErrorsException(
-                    "Falta connectionString 'HttpBaseUrl' en CapaPresentacion.exe.config (copia de app.config).");
-            }
-
-            EnvironmentVariable.ApiUrl = httpBase.ConnectionString;
+            if (httpBase != null && !string.IsNullOrWhiteSpace(httpBase.ConnectionString))
+                EnvironmentVariable.ApiUrl = httpBase.ConnectionString;
         }
 
         private static void LoadDatabaseConnectionString()
@@ -59,7 +52,7 @@ namespace CapaPresentacion
             if (string.IsNullOrWhiteSpace(server))
             {
                 throw new ConfigurationErrorsException(
-                    "DBconnectionString no tiene Server=. El login HTTP no prueba RDS; Maestro de Cuentas y Asientos fallarán.");
+                    "DBconnectionString no tiene Server=. Maestro de Cuentas y Asientos fallarán.");
             }
         }
 
@@ -99,22 +92,6 @@ namespace CapaPresentacion
 
         public static List<Modulo> Permisos = new List<Modulo>();
 
-
-
-        public static bool GetPermiso(Ventana ventana, CRUDItem cRUDItem)
-        {
-
-
-            return false;
-        }
-
-
-        public static void SetModule(Usuario usuario, Modulo modulo)
-        {
-            var permisos = usuario.Modulos;
-
-        }
-
         public static List<Cuenta> Cuentas { get; set; } = new List<Cuenta>();
         public static List<Company> Compañias { get; set; } = new List<Company>();
         //public static Usuario Usuario { get; set; }
@@ -131,10 +108,6 @@ namespace CapaPresentacion
             string.Equals(EnvironmentName, "Local", StringComparison.OrdinalIgnoreCase);
 
         public static IServiceProvider Services { get; set; }
-
-        public static string BaseUrl = ConfigurationManager.ConnectionStrings["HttpBaseUrl"]?.ConnectionString;
-
-
 
         public static Company Company { get; set; }
         //private static Company _newCompany; 
