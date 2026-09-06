@@ -8,7 +8,7 @@ using AriesContador.Core;
 using AriesContador.Core.Models.JournalEntries;
 using AriesContador.Core.Models.PostingPeriods;
 using AriesContador.Core.Services;
-using AriesContador.Data;
+using AriesContador.Services;
 using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Enumeradores;
 using CapaEntidad.Interfaces;
@@ -17,7 +17,6 @@ using CapaPresentacion.Reportes;
 using CapaPresentacion.Utils;
 using AriesContador.Core.Models.Utils;
 using System.Threading.Tasks;
-using AriesContador.Services;
 
 namespace CapaPresentacion.FrameCuentas 
 {
@@ -26,6 +25,8 @@ namespace CapaPresentacion.FrameCuentas
         private JournalEntry _journalEntry;
         private JournalEntryLine _journalEntryLineOnEdit = new JournalEntryLine();
         private readonly IHttpFinancialService _httpFinancialService;
+        private readonly IFinancialService _financialService;
+        private readonly IFinancialReportService _financialReportService;
         private int PreventMesesAbiertosIndex = 0;
         private int ProventAsientoIndex = 0;
         private Cuenta AccountInTxtBoxNombreCuenta
@@ -40,10 +41,12 @@ namespace CapaPresentacion.FrameCuentas
 
         private PostingPeriod PostingPeriodSelected => (PostingPeriod) lstMesesAbiertos.SelectedItem;
 
-        public FrameAsientos(IHttpFinancialService httpFinancialService)
+        public FrameAsientos(IHttpFinancialService httpFinancialService, IFinancialService financialService, IFinancialReportService financialReportService)
         {
             InitializeComponent();
             _httpFinancialService = httpFinancialService;
+            _financialService = financialService;
+            _financialReportService = financialReportService;
         }
 
         private async void FrameAsientos_Load(object sender, EventArgs e)
@@ -591,7 +594,7 @@ namespace CapaPresentacion.FrameCuentas
         {
             try
             {
-                ReporteAsientos n = new ReporteAsientos();
+                ReporteAsientos n = new ReporteAsientos(_financialService, _financialReportService);
                 n.MdiParent = this.MdiParent;
                 n.Show();
             }
@@ -929,7 +932,7 @@ namespace CapaPresentacion.FrameCuentas
 
         private void btnSwitchPeriod_Click(object sender, EventArgs e)
         {
-            var frame = new SwitchAccountEntryPeriod(_journalEntry, PostingPeriodSelected);
+            var frame = new SwitchAccountEntryPeriod(_journalEntry, PostingPeriodSelected, _financialService);
             frame.FinishProcess += ShowSelectedPeriod; 
             frame.ShowDialog();
         }

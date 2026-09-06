@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using CapaEntidad.Textos;
 using CapaPresentacion.Utils;
-using AriesContador.Services;
+using AriesContador.Core.Services;
 using AriesContador.Core.Models.Companies;
 using System.Activities.Expressions;
 
@@ -22,11 +22,11 @@ namespace CapaPresentacion
     {
 
         FrameMenu fm = null;
-        private readonly IHttpAdministrationService _httpAdministrationService;
+        private readonly IAdministrationService _administrationService;
 
-        public FrameSeleccionCompañia(FrameMenu fm, IHttpAdministrationService companyService)
+        public FrameSeleccionCompañia(FrameMenu fm, IAdministrationService administrationService)
         {
-            this._httpAdministrationService = companyService;
+            this._administrationService = administrationService;
             this.fm = fm as FrameMenu;
             InitializeComponent();
             CargarCompañias();
@@ -36,7 +36,7 @@ namespace CapaPresentacion
         {
 
             //var _lstCompanies = (from c in new CompañiaCL().GetAll(GlobalConfig.Usuario) where c.Activo == true orderby c.Nombre select c).ToList<Compañia>();
-            var _lstCompanies = await _httpAdministrationService.GetAllCompanies();
+            var _lstCompanies = (await _administrationService.GetAllCompanies(GlobalConfig.User)).ToList();
             _lstCompanies = _lstCompanies.FindAll(x => x.Active == true).OrderBy(x => x.Name).ToList();
             
             lstCompanias.DataSource = _lstCompanies;

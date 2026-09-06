@@ -20,8 +20,12 @@ namespace CapaPresentacion.Restore
         public RestoreJournalEntry()
         {
             InitializeComponent();
-            IUnitOfWork unit = new UnitOfWork(GlobalConfig.ConnectionString);
-            _financialService = new FinancialService(unit);
+        }
+
+        public RestoreJournalEntry(IFinancialService financialService)
+            : this()
+        {
+            _financialService = financialService;
         }
 
         private void RestoreJournalEntry_Load(object sender, EventArgs e)

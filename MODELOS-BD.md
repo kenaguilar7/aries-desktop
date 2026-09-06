@@ -83,7 +83,7 @@ erDiagram
 
 **Modelo:** `AriesContador.Core.Models.Companies.Company`.  
 **Legacy:** `CapaEntidad` comentó su `Company` y reusa Core.  
-**Acceso:** SP `SP_InsertCompany`; listados también SQL embebido en `CompañiaDao` y `AdministrationQuery`.
+**Acceso:** SP `SP_InsertCompany` (fix Fase 1: `OUT NewCompanyId = Code`) y `SP_UpdateCompany` (`scripts/mysql/fase1`). Listados también SQL embebido en `CompañiaDao` y `AdministrationQuery` (`user_id AS CreatedBy`). `Company.UserId` es alias de `CreatedBy`.
 
 #### `users`
 
@@ -102,7 +102,7 @@ erDiagram
 
 **Modelo:** `User`. **Legacy:** `Usuario`.  
 **SP en dump:** `SP_GetAllUsers`, `SP_FindUserById`.  
-**SP que el C# llama y NO están en el dump:** `SP_InsertUser`, `SP_UpdateUser`.
+**SP Fase 1** (`scripts/mysql/fase1`): `SP_InsertUser` (OUT `@Id` = `LAST_INSERT_ID()`), `SP_UpdateUser`. Password sigue en texto plano.
 
 #### `accounts_names`
 
@@ -312,10 +312,10 @@ Dump: `aries_routines.sql`. Definers `kenneth@%`. **37 procedimientos**, 3 funci
 
 | SP | Tablas | Repositorio / uso | En dump |
 |---|---|---|---|
-| `SP_InsertCompany` | companies | `CompanyRepository` | sí |
-| `SP_UpdateCompany` | companies | `CompanyRepository.Update` | **NO** |
-| `SP_InsertUser` | users | `UserRepository.Add` | **NO** |
-| `SP_UpdateUser` | users | `UserRepository.Update` | **NO** |
+| `SP_InsertCompany` | companies | `CompanyRepository` | sí (fix `scripts/mysql/fase1/01_fix_SP_InsertCompany.sql`) |
+| `SP_UpdateCompany` | companies | `CompanyRepository.Update` | sí (`scripts/mysql/fase1/02_SP_UpdateCompany.sql`) |
+| `SP_InsertUser` | users | `UserRepository.Add` | sí (`scripts/mysql/fase1/03_SP_InsertUser.sql`) |
+| `SP_UpdateUser` | users | `UserRepository.Update` | sí (`scripts/mysql/fase1/04_SP_UpdateUser.sql`) |
 | `SP_GetAllUsers` | users | `UserRepository`, `AuthController` | sí |
 | `SP_FindUserById` | users | `UserRepository` | sí |
 | `SP_InsertAccount` | accounts | `AccountRepository`, create company | sí |
@@ -355,17 +355,22 @@ Dump: `aries_routines.sql`. Definers `kenneth@%`. **37 procedimientos**, 3 funci
 
 Typos en nombres de SP son **parte del contrato**. Renombrar rompe Dapper. Migración: alias o wrapper con el mismo nombre.
 
-### 5.2 Huecos que hay que crear o dejar de llamar
+### 5.2 Huecos de dump cubiertos en Fase 1
 
-El código 1.x / Data espera SPs que **no están en el dump**:
+Los SPs que Data ya llamaba y **no estaban en el dump** viven en `scripts/mysql/fase1/`. Aplicar solo en copia (Docker `aries` / `AriesContabilidad_Local` en 3307), nunca RDS.
 
-- `SP_UpdateCompany`
-- `SP_InsertUser`
-- `SP_UpdateUser`
+El dump original de `SP_InsertCompany` hacía `SET NewCompanyId = CompanyId` (variable inexistente). El script `01_fix_SP_InsertCompany.sql` usa `SET NewCompanyId = Code`. `CompanyRepository.Add` no lee el OUT; envía `Code` del cliente.
 
-Hoy esas operaciones o van por SQL embebido (`CapaDatos`) o fallan en el stack Dapper.
+`GetCompanyConsecutive` **no es SP**: `CompanyRepository.LatestCode()` (`SELECT company_id … LIMIT 1`) + formato `"C" + n` en `AdministrationService`.
 
-`SP_InsertCompany` además hace `SET NewCompanyId = CompanyId` (variable inexistente). Debería devolver `Code`. Bug a corregir en la migración, no copiarlo.
+#### Contrato Dapper (`ToInsertParams` / `ToUpdateParams`)
+
+| SP | Parámetros (nombres que envía Data) | Columnas BD |
+|---|---|---|
+| `SP_InsertCompany` | `Code`, `TypeId`, `NumberId`, `CompanyName`, `MoneyType` (int 1–3), `Op1`, `Op2`, `Address`, `Website`←`WebSite`, `Mail`, `PhoneNumber1/2`, `Notes`, `UserId`←`CreatedBy`, `IsActive`←`Active`, OUT `NewCompanyId` | `companies.*` |
+| `SP_UpdateCompany` | igual que insert **sin** `TypeId`/`NumberId` (como `CompañiaDao.Update`) | no cambia `type_id`/`number_id` |
+| `SP_InsertUser` | `UserName`, `UserType` (int), `IdNumber`, `Name`, `LastName`, `MiddleName`, `PhoneNumber`, `Mail`, `Memo`, `Password`, `UpdatedBy`, `Active`, OUT `Id` | `users.notes` ← `Memo`; `lastname_p/m` ← Last/MiddleName |
+| `SP_UpdateUser` | mismos + `Id` (`user_id`) | igual |
 
 ---
 
@@ -410,8 +415,8 @@ Soft delete uniforme: `active = 0`. Restore = `active = 1`. No hay `DELETE` fís
 
 | Área | Escritorio legacy (`CapaDatos`) | Escritorio Dapper (`AriesContador.Data`) | API (`AriesWebApi`) |
 |---|---|---|---|
-| Compañías | SQL embebido `CompañiaDao` | `SP_InsertCompany` / `SP_UpdateCompany` (faltante) + SQL `LatestCode` | mismos repos Data |
-| Usuarios | `UsuarioDao` SQL | SP Get/Find; Insert/Update **faltan** | login = `GetAllUsers` + compare password |
+| Compañías | SQL embebido `CompañiaDao` | `SP_InsertCompany` / `SP_UpdateCompany` (fase 1) + SQL `LatestCode` | mismos repos Data |
+| Usuarios | `UsuarioDao` SQL | `SP_GetAllUsers` / `SP_FindUserById` / `SP_InsertUser` / `SP_UpdateUser` (fase 1) | login = `GetAllUsers` + compare password |
 | Cuentas | `CuentaDao` SQL | SPs account* | `AccountService` |
 | Periodos | `FechaTransaccionDao` | SPs posting period | `PostingPeriodService` |
 | Asientos / líneas | DAOs casi comentados | SPs journal* | JournalEntry(Line)Service |
@@ -421,7 +426,7 @@ Soft delete uniforme: `active = 0`. Restore = `active = 1`. No hay `DELETE` fís
 
 Al unificar, decisión de migración:
 
-1. **Un solo acceso a datos:** repos Dapper + SP (y completar los SP faltantes), o mover lógica de SP a C# y dejar tablas.
+1. **Un solo acceso a datos:** repos Dapper + SP (compañía/usuario completados en Fase 1), o mover lógica de SP a C# y dejar tablas.
 2. **Permisos y correo** siguen solo en el WinForms; o hay que API-izar `windows_permission` / `companies_permission`.
 3. **No reimplementar** `actividades`/`tareas` salvo que aparezca un uso.
 4. Conservar nombres de SP (typos incluidos) o publicar sinónimos.

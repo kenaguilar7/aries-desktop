@@ -1,9 +1,6 @@
-﻿using AriesContador.Core;
-using AriesContador.Core.Models;
+﻿using AriesContador.Core.Models;
 using AriesContador.Core.Models.Users;
 using AriesContador.Core.Services;
-using AriesContador.Data;
-using AriesContador.Services;
 using System;
 using System.Diagnostics;
 using System.Windows.Forms;
@@ -12,16 +9,16 @@ namespace CapaPresentacion
 {
     public partial class LoginForm : Form
     {
-        private readonly IHttpAdministrationService _httpService;
+        private readonly IAdministrationService _administrationService;
 
-        public LoginForm(IHttpAdministrationService httpAdministrationService)
+        public LoginForm(IAdministrationService administrationService)
         {
             InitializeComponent();
             AddVersionNumber();
-            _httpService = httpAdministrationService;
+            _administrationService = administrationService;
         }
 
-        private async void btnAceptar_Click(object sender, EventArgs e)
+        private void btnAceptar_Click(object sender, EventArgs e)
         {
             try
             {
@@ -31,15 +28,9 @@ namespace CapaPresentacion
                     Password = txtBoxClave.Text
                 };
 
-                //var param = new Login()
-                //{
-                //    UserId = "kenneth",
-                //    Password = "96321"
-                //};
+                var token = _administrationService.Login(param);
 
-                var token = await _httpService.Login(param);
-
-                if (token.Token != null)
+                if (token.Token != null && token.User != null)
                 {
                     EnvironmentVariable.ApiToken = token;
                     GlobalConfig.User = token.User;

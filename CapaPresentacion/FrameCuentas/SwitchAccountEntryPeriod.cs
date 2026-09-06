@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Windows.Forms;
-using AriesContador.Core;
 using AriesContador.Core.Models.JournalEntries;
 using AriesContador.Core.Models.PostingPeriods;
-using AriesContador.Data;
-using AriesContador.Services;
+using AriesContador.Core.Services;
 
 namespace CapaPresentacion.FrameCuentas
 {
@@ -13,19 +11,15 @@ namespace CapaPresentacion.FrameCuentas
     {
         private readonly JournalEntry _journalEntry;
         private readonly PostingPeriod _postingPeriod;
-        private readonly FinancialService _financialService;
-        //public event EventHandler FinishProcess;
-        public event Action<JournalEntry, PostingPeriod> FinishProcess; 
+        private readonly IFinancialService _financialService;
+        public event Action<JournalEntry, PostingPeriod> FinishProcess;
 
-
-
-        public SwitchAccountEntryPeriod(JournalEntry journalEntry, PostingPeriod postingPeriod)
+        public SwitchAccountEntryPeriod(JournalEntry journalEntry, PostingPeriod postingPeriod, IFinancialService financialService)
         {
             _journalEntry = journalEntry;
             _postingPeriod = postingPeriod;
             InitializeComponent();
-            IUnitOfWork unit = new UnitOfWork(GlobalConfig.ConnectionString);
-            _financialService = new FinancialService(unit);
+            _financialService = financialService;
         }
 
         private void SwitchAccountEntryPeriod_Load(object sender, EventArgs e)

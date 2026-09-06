@@ -1,15 +1,11 @@
 ﻿using AriesContador.Core.Models.Companies;
 using AriesContador.Core.Models.Utils;
-using CapaEntidad.Enumeradores;
+using AriesContador.Core.Services;
 using CapaEntidad.Textos;
-using CapaLogica;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -17,24 +13,21 @@ namespace CapaPresentacion.Reportes
 {
     public partial class ReporteCompañia : Form
     {
-        CompañiaCL compañiaCL = new CompañiaCL();
-
+        private readonly IAdministrationService _administrationService;
         List<Company> compañias = new List<Company>();
         List<Company> actualList;
 
-        public ReporteCompañia()
+        public ReporteCompañia(IAdministrationService administrationService)
         {
+            _administrationService = administrationService;
             InitializeComponent();
             CargarDatos();
-            //GridDatos.AllowUserToResizeRows = true;
-
-
         }
 
         private async Task CargarDatos()
         {
             lstIds.SelectedIndex = 0;
-            compañias = await Task.Run(()=>compañiaCL.GetAll(GlobalConfig.Usuario));
+            compañias = (await _administrationService.GetAllCompanies(GlobalConfig.User)).ToList();
             RadiosbuttonChanceStatus(null, null);
         }
 

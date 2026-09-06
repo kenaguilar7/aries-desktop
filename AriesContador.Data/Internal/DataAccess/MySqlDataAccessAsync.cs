@@ -56,6 +56,16 @@ namespace AriesContador.Data.Internal.DataAccess
         public async Task<List<T>> ExecuteQuery<T>(string query)
             => await LoadData<T>(query, CommandType.Text);
 
+        public async Task<List<T>> ExecuteQuery<T, U>(string query, U parameters)
+        {
+            string connectionString = _connectionString.MySQLDefault;
+            using (IDbConnection connection = new MySqlConnection(connectionString))
+            {
+                var result = await connection.QueryAsync<T>(query, parameters, commandType: CommandType.Text);
+                return result.ToList();
+            }
+        }
+
         public async Task<List<T>> ExecuteQueryInTransaction<T>(string query)
             => await LoadData<T>(query, CommandType.Text);
 

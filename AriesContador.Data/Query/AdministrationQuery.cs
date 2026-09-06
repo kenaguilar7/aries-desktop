@@ -51,6 +51,12 @@ FROM companies AS T0
 WHERE T0.type_id <> 1
 ";
 
+            public const string CompanyCodesAllowedForUser = @"
+SELECT T1.company_id AS Code
+FROM companies_permission AS T1
+WHERE T1.user_id = @UserId AND T1.active = 1 AND T1.deleted = 0
+";
+
         }
     }
 }

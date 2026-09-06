@@ -13,6 +13,7 @@ namespace AriesContador.Core.Services
         Task CreateCompany(Company company);
         void CreateUser(User user);
         Task<IEnumerable<Company>> GetAllCompanies();
+        Task<IEnumerable<Company>> GetAllCompanies(User currentUser);
         Task DeleteCompany(Company company); 
         Company FindByCode(string code); 
         IEnumerable<User> GetAllUsers();
@@ -22,5 +23,7 @@ namespace AriesContador.Core.Services
         void InactivateUser(User user);
         void UpdateCompany(Company company);
         void UpdateUser(User user);
+        WebToken Login(Login param);
+        bool UserNameTaken(string userName);
     }
 }

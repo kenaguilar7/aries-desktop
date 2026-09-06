@@ -1,26 +1,23 @@
-﻿using CapaLogica;
+﻿using CapaEntidad.Verificaciones;
+using CapaEntidad.Textos;
 using System;
 using System.Windows.Forms;
-using CapaEntidad.Verificaciones;
 using System.Linq;
 using System.Collections.Generic;
-using CapaEntidad.Textos;
 using CapaPresentacion.Reportes;
-using System.Threading.Tasks;
 using AriesContador.Core.Models.Companies;
 using AriesContador.Core.Models.Utils;
-using AriesContador.Services;
 using AriesContador.Core.Models.Users;
+using AriesContador.Core.Services;
 
 namespace CapaPresentacion.FrameCompañias
 {
     public partial class FrameMaestroCompañia : Form
     {
-        private readonly IHttpAdministrationService _administrationService;
-        CompañiaCL compañiaCL = new CompañiaCL();
+        private readonly IAdministrationService _administrationService;
         List<Company> lst = new List<Company>();
 
-        public FrameMaestroCompañia(IHttpAdministrationService administrationService)
+        public FrameMaestroCompañia(IAdministrationService administrationService)
         {
             InitializeComponent();
             _administrationService = administrationService;
@@ -32,9 +29,9 @@ namespace CapaPresentacion.FrameCompañias
 
             lstTipoId.SelectedIndex = 0;
 
-            var lstCompanies = await _administrationService.GetAllCompanies();
-            var companyNewCode  = await _administrationService.BuildNewCompanyCode();
-            txtCodigoCia.Text = companyNewCode.Code; 
+            var lstCompanies = (await _administrationService.GetAllCompanies(GlobalConfig.User)).ToList();
+            var companyNewCode = await _administrationService.GetCompanyConsecutive();
+            txtCodigoCia.Text = companyNewCode; 
 
             //eventos
             this.lstTipoId.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.SiguienteEnter);
@@ -203,7 +200,7 @@ namespace CapaPresentacion.FrameCompañias
         {
             this.Close();
         }
-        private void GuardarNuevaCómpaña(object sender, EventArgs e)
+        private async void GuardarNuevaCómpaña(object sender, EventArgs e)
         {
 
             var copiarde = (Company)lstCopiarMaestroCuentas.SelectedItem;
@@ -219,81 +216,47 @@ namespace CapaPresentacion.FrameCompañias
                 try
                 {
                     IdType tipo = (IdType)lstTipoId.SelectedIndex + 1;
-                    var Persona = new PersonaJuridica(
-                                        numeroId: txtBoxID.Text,
-                                        tipoID: tipo,
-                                        nombre: txtBoxNombre.Text,
-                                        TipoMoneda: (CurrencyTypeCompany)lstMovimientosRegistro.SelectedIndex + 1,
-                                        representanteLegal: txtBoxOp1.Text,
-                                        IDRepresentante: txtBoxOp2.Text,
-                                        direccion: txtBoxDireccion.Text,
-                                        web: txtBoxWeb.Text,
-                                        correo: txtBoxMail.Text,
-                                        observaciones: txtBoxObservaciones.Text,
-                                        telefono: new string[] { this.txtBoxTelefono1.Text, this.txtBoxTelefono2.Text }
-                                                            );
+                    Company persona;
+                    if (lstTipoId.SelectedIndex == 0)
+                    {
+                        persona = new PersonaJuridica(
+                                            numeroId: txtBoxID.Text,
+                                            tipoID: tipo,
+                                            nombre: txtBoxNombre.Text,
+                                            TipoMoneda: (CurrencyTypeCompany)lstMovimientosRegistro.SelectedIndex + 1,
+                                            representanteLegal: txtBoxOp1.Text,
+                                            IDRepresentante: txtBoxOp2.Text,
+                                            direccion: txtBoxDireccion.Text,
+                                            web: txtBoxWeb.Text,
+                                            correo: txtBoxMail.Text,
+                                            observaciones: txtBoxObservaciones.Text,
+                                            telefono: new string[] { this.txtBoxTelefono1.Text, this.txtBoxTelefono2.Text }
+                                                                );
+                    }
+                    else
+                    {
+                        persona = new PersonaFisica(
+                                            numeroId: txtBoxID.Text,
+                                            tipoID: tipo,
+                                            nombre: txtBoxNombre.Text,
+                                            TipoMoneda: (CurrencyTypeCompany)lstMovimientosRegistro.SelectedIndex + 1,
+                                            apellidoPaterno: txtBoxOp1.Text,
+                                            apellidoMaterno: txtBoxOp2.Text,
+                                            direccion: txtBoxDireccion.Text,
+                                            web: txtBoxWeb.Text,
+                                            correo: txtBoxMail.Text,
+                                            observaciones: txtBoxObservaciones.Text,
+                                            telefono: new string[] { this.txtBoxTelefono1.Text, this.txtBoxTelefono2.Text }
+                                                                );
+                    }
 
-
-        
-
-                    //if (lstTipoId.SelectedIndex == 0)
-                    //{
-
-                    //    var Persona = new PersonaJuridica(
-                    //                        numeroId: txtBoxID.Text,
-                    //                        tipoID: tipo,
-                    //                        nombre: txtBoxNombre.Text,
-                    //                        TipoMoneda: (CurrencyTypeCompany)lstMovimientosRegistro.SelectedIndex + 1,
-                    //                        representanteLegal: txtBoxOp1.Text,
-                    //                        IDRepresentante: txtBoxOp2.Text,
-                    //                        direccion: txtBoxDireccion.Text,
-                    //                        web: txtBoxWeb.Text,
-                    //                        correo: txtBoxMail.Text,
-                    //                        observaciones: txtBoxObservaciones.Text,
-                    //                        telefono: new string[] { this.txtBoxTelefono1.Text, this.txtBoxTelefono2.Text }
-                    //                                            );
-
-                    //    if (compañiaCL.Insert(Persona, GlobalConfig.Usuario, copiarde, out String mensaje))
-                    //    {
-                    //        MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    //        lst.Add(Persona);
-                    //        this.LimpiarFormulario();
-                    //        //CargarDatos(); 
-                    //    }
-                    //    else
-                    //    {
-                    //        MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                    //    }
-                    //}
-                    //else
-                    //{
-                    //    var Persona = new PersonaFisica(
-                    //                        numeroId: txtBoxID.Text,
-                    //                        tipoID: tipo,
-                    //                        nombre: txtBoxNombre.Text,
-                    //                        TipoMoneda: (CurrencyTypeCompany)lstMovimientosRegistro.SelectedIndex + 1,
-                    //                        apellidoPaterno: txtBoxOp1.Text,
-                    //                        apellidoMaterno: txtBoxOp2.Text,
-                    //                        direccion: txtBoxDireccion.Text,
-                    //                        web: txtBoxWeb.Text,
-                    //                        correo: txtBoxMail.Text,
-                    //                        observaciones: txtBoxObservaciones.Text,
-                    //                        telefono: new string[] { this.txtBoxTelefono1.Text, this.txtBoxTelefono2.Text }
-                    //                                            );
-                    //    if (compañiaCL.Insert(Persona, GlobalConfig.Usuario, copiarde, out String mensaje))
-                    //    {
-
-                    //        MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    //        lst.Add(Persona);
-                    //        LimpiarFormulario();
-                    //        //CargarDatos(); 
-                    //    }
-                    //    else
-                    //    {
-                    //        MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                    //    }
-                    //}
-
+                    persona.CopyFrom = copiarde.Code;
+                    persona.CreatedBy = GlobalConfig.User.Id;
+                    await _administrationService.CreateCompany(persona);
+                    MessageBox.Show("Se registro la compañia correctamente", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    lst.Add(persona);
+                    this.LimpiarFormulario();
+                    FrameMaestroCompañia_Load(null, null);
                 }
                 catch (Exception ex)
                 {
@@ -364,31 +327,16 @@ namespace CapaPresentacion.FrameCompañias
                     {
                         ((PersonaFisica)com).MyApellidoPaterno = txtBoxOp1.Text;
                         ((PersonaFisica)com).MyApellidoMaterno = txtBoxOp2.Text;
-                        if (compañiaCL.Update(com, GlobalConfig.Usuario, out String mensaje))
-                        {
-                            MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                        }
-                        else
-                        {
-                            MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                        }
-
                     }
-                    else
+                    else if (com is PersonaJuridica)
                     {
                         ((PersonaJuridica)com).MyRepresentanteLegal = txtBoxOp1.Text;
                         ((PersonaJuridica)com).MyIDRepresentanteLegal = txtBoxOp2.Text;
-                        if (compañiaCL.Update(com, GlobalConfig.Usuario, out String mensaje))
-                        {
-                            MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                        }
-                        else
-                        {
-                            MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                        }
                     }
+
+                    com.CreatedBy = GlobalConfig.User.Id;
+                    _administrationService.UpdateCompany(com);
+                    MessageBox.Show("Se actualizo la compañia", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                 }
                 catch (Exception ex)
@@ -434,7 +382,7 @@ namespace CapaPresentacion.FrameCompañias
 
         private void Reporte(object sender, EventArgs e)
         {
-            ReporteCompañia c = new ReporteCompañia();
+            ReporteCompañia c = new ReporteCompañia(_administrationService);
             c.MdiParent = this.MdiParent;
             c.Show();
 

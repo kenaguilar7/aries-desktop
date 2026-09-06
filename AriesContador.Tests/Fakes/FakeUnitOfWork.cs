@@ -41,16 +41,28 @@ namespace AriesContador.Tests.Fakes
         public Task Remove(Company entity) => Task.CompletedTask;
         public Task<IEnumerable<Company>> GetAll() => Task.FromResult(Enumerable.Empty<Company>());
         public Task<string> LatestCode() => Task.FromResult("C001");
+        public Task<IEnumerable<string>> GetCodesAllowedForUser(int userId) =>
+            Task.FromResult(Enumerable.Empty<string>());
     }
 
     public class FakeUserRepository : IUserRepository
     {
-        public void Add(User entity) { }
+        public List<User> Items { get; } = new List<User>();
+
+        public void Add(User entity)
+        {
+            if (entity.Id == 0) entity.Id = Items.Count + 1;
+            Items.Add(entity);
+        }
         public Task AddAsync(User entity) { Add(entity); return Task.CompletedTask; }
-        public void Update(User entity) { }
+        public void Update(User entity)
+        {
+            var i = Items.FindIndex(x => x.Id == entity.Id);
+            if (i >= 0) Items[i] = entity;
+        }
         public Task Remove(User entity) => Task.CompletedTask;
-        public User GetById(int id) => null;
-        public IEnumerable<User> GetAll() => Enumerable.Empty<User>();
+        public User GetById(int id) => Items.FirstOrDefault(x => x.Id == id);
+        public IEnumerable<User> GetAll() => Items;
     }
 
     public class FakeAccountRepository : IAccountRepository

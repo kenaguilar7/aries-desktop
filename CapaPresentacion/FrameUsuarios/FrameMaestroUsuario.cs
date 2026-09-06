@@ -2,7 +2,8 @@
 using CapaEntidad.Enumeradores;
 using CapaEntidad.Textos;
 using CapaEntidad.Verificaciones;
-using CapaLogica;
+using AriesContador.Core.Models.Users;
+using AriesContador.Core.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,11 +13,12 @@ namespace CapaPresentacion.Seguridad
 {
     public partial class FrameMaestroUsuario : Form
     {
-        private UsuarioCL usuarioCL = new UsuarioCL();
+        private readonly IAdministrationService _administrationService;
         private List<Usuario> ListUsuarios = new List<Usuario>();
         private Usuario userCur;
-        public FrameMaestroUsuario()
+        public FrameMaestroUsuario(IAdministrationService administrationService)
         {
+            _administrationService = administrationService;
             InitializeComponent();
             CargarEventos();
             CargarDatos();
@@ -47,7 +49,7 @@ namespace CapaPresentacion.Seguridad
         private void CargarDatos()
         {
             lstUsuarios.Items.Clear();
-            var lst = usuarioCL.GetAll();
+            var lst = _administrationService.GetAllUsers().Select(ToUsuario).ToList();
             lstUsuarios.Items.AddRange(lst.ToArray());
             ListUsuarios = lst;
 
@@ -84,15 +86,9 @@ namespace CapaPresentacion.Seguridad
                         usuario.TipoUsuario = TipoUsuario.Administrador;
                     }
 
-                    if (usuarioCL.Insert(usuario, GlobalConfig.Usuario, out String mensaje))
-                    {
-                        MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        LimpiarFormulario(null, null);
-                    }
-                    else
-                    {
-                        MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                    }
+                    _administrationService.CreateUser(ToUser(usuario, isNew: true));
+                    MessageBox.Show("Datos guardados correctamente", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    LimpiarFormulario(null, null);
 
                 //}
 
@@ -164,15 +160,9 @@ namespace CapaPresentacion.Seguridad
 
                     userUpd.TipoUsuario = (rdbUsuarioAdmin.Checked) ? TipoUsuario.Administrador : TipoUsuario.Usuario;
 
-                    if (usuarioCL.Update(userUpd, GlobalConfig.Usuario, out String mensaje))
-                    {
-                        MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        LimpiarFormulario(null, null);
-                    }
-                    else
-                    {
-                        MessageBox.Show(mensaje, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                    }
+                    _administrationService.UpdateUser(ToUser(userUpd, isNew: false));
+                    MessageBox.Show("Usuario actulizado correctamente", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    LimpiarFormulario(null, null);
 
                 }
 
@@ -316,7 +306,7 @@ namespace CapaPresentacion.Seguridad
         {
             if (this.Visible && txtBoxUsuario.Enabled)
             {
-                if (usuarioCL.VerificarUserName(txtBoxUsuario.Text) || !VerificaString.IsNullOrWhiteSpace(txtBoxUsuario.Text, "nombre de usuario", out String mensaje))
+                if (_administrationService.UserNameTaken(txtBoxUsuario.Text) || !VerificaString.IsNullOrWhiteSpace(txtBoxUsuario.Text, "nombre de usuario", out String mensaje))
                 {
                     MessageBox.Show("Nombre de usuario no valido", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                     txtErrorUserName.Visible = true;
@@ -394,5 +384,51 @@ namespace CapaPresentacion.Seguridad
             }
         }
         #endregion
+
+        private static Usuario ToUsuario(User user)
+        {
+            return new Usuario
+            {
+                Id = user.Id,
+                UsuarioId = user.Id.ToString(),
+                UserName = user.UserName,
+                TipoUsuario = (TipoUsuario)user.UserType,
+                MyCedula = user.IdNumber,
+                MyNombre = user.Name,
+                MyApellidoPaterno = user.LastName,
+                MyApellidoMaterno = user.MiddleName,
+                MyTelefono = user.PhoneNumber,
+                MyMail = user.Mail,
+                MyNotas = user.Memo,
+                MyClave = user.Password,
+                MyActivo = user.Active
+            };
+        }
+
+        private static User ToUser(Usuario usuario, bool isNew)
+        {
+            var user = new User
+            {
+                UserName = usuario.UserName,
+                UserType = (UserType)usuario.TipoUsuario,
+                IdNumber = usuario.MyCedula,
+                Name = usuario.MyNombre,
+                LastName = usuario.MyApellidoPaterno,
+                MiddleName = usuario.MyApellidoMaterno,
+                PhoneNumber = usuario.MyTelefono,
+                Mail = usuario.MyMail,
+                Memo = usuario.MyNotas,
+                Password = usuario.MyClave,
+                Active = usuario.MyActivo,
+                UpdatedBy = GlobalConfig.User.Id
+            };
+
+            if (!isNew && int.TryParse(usuario.UsuarioId, out var id) && id > 0)
+                user.Id = id;
+            else if (!isNew)
+                user.Id = usuario.Id;
+
+            return user;
+        }
     }
 }

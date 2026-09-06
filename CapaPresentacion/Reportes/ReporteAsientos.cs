@@ -26,12 +26,14 @@ namespace CapaPresentacion.Reportes
 
         public ReporteAsientos()
         {
-
-            var ff = new FinancialService(null); 
             InitializeComponent();
-            IUnitOfWork unit = new UnitOfWork(GlobalConfig.ConnectionString);
-            _financialReportService = new FinancialReportService(unit);
-            _financialService = new FinancialService(unit);
+        }
+
+        public ReporteAsientos(IFinancialService financialService, IFinancialReportService financialReportService)
+            : this()
+        {
+            _financialReportService = financialReportService;
+            _financialService = financialService;
         }
 
         private void ReporteAsientos_Load(object sender, EventArgs e)

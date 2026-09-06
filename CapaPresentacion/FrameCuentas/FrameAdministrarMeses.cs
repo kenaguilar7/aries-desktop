@@ -27,9 +27,13 @@ namespace CapaPresentacion.FrameCuentas
         public FrameAdministrarMeses()
         {
             InitializeComponent();
-            IUnitOfWork unit = new UnitOfWork(GlobalConfig.ConnectionString);
-            _financialService = new FinancialService(unit);
-            _financialReportService = new FinancialReportService(unit); 
+        }
+
+        public FrameAdministrarMeses(IFinancialService financialService, IFinancialReportService financialReportService)
+            : this()
+        {
+            _financialService = financialService;
+            _financialReportService = financialReportService; 
         }
 
         private void FrameAdministrarMeses_Load(object sender, EventArgs e)

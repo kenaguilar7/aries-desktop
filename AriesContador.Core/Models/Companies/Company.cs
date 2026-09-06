@@ -4,7 +4,6 @@ using System.Collections;
 using System.Collections.Generic;
 using AriesContador.Core.Models.PostingPeriods;
 using AriesContador.Core.Models.Accounts;
-using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace AriesContador.Core.Models.Companies
 {
@@ -12,6 +11,13 @@ namespace AriesContador.Core.Models.Companies
     {
         public string CopyFrom { get; set; }
         public string Code { get; set; }
+
+        /// <summary>Alias 2.0 de CreatedBy (companies.user_id). AdministrationQuery mapea user_id AS CreatedBy.</summary>
+        public int UserId
+        {
+            get => CreatedBy;
+            set => CreatedBy = value;
+        }
 
         public string CompanyName { get; set; }
 

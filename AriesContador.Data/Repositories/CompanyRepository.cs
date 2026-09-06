@@ -70,7 +70,18 @@ namespace AriesContador.Data.Repositories
             string query = "SELECT c.company_id as Code FROM companies c ORDER BY c.company_id DESC LIMIT 1";
             MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
             var output = await dataAccess.ExecuteQuery<Company>(query);
+            if (output == null || output.Count == 0 || string.IsNullOrEmpty(output.First().Code))
+                return "C000";
             return output.First().Code;
+        }
+
+        public async Task<IEnumerable<string>> GetCodesAllowedForUser(int userId)
+        {
+            var dataAccess = new MySqlDataAccessAsync(_connectionString);
+            var rows = await dataAccess.ExecuteQuery<Company, object>(
+                Query.Query.AdministrationQuery.CompanyCodesAllowedForUser,
+                new { UserId = userId });
+            return rows.Select(x => x.Code);
         }
 
         public async Task Remove(Company entity)

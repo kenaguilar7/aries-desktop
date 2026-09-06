@@ -27,9 +27,13 @@ namespace CapaPresentacion.Reportes
         public FrameReporteComprobación()
         {
             InitializeComponent();
-            IUnitOfWork unit = new UnitOfWork(GlobalConfig.ConnectionString);
-            _financialReportService = new FinancialReportService(unit);
-            _financialService = new FinancialService(unit);
+        }
+
+        public FrameReporteComprobación(IFinancialService financialService, IFinancialReportService financialReportService)
+            : this()
+        {
+            _financialService = financialService;
+            _financialReportService = financialReportService;
         }
 
         private void FrameReporteComprobacion_Load(object sender, EventArgs e)

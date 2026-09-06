@@ -1,14 +1,19 @@
 ﻿using System;
 using System.Windows.Forms;
+using AriesContador.Core;
 using AriesContador.Core.Services;
+using AriesContador.Data;
 using AriesContador.Services;
 using Microsoft.Extensions.DependencyInjection;
+
 namespace CapaPresentacion
 {
     static class Program
     {
         /// <summary>
         /// Punto de entrada principal para la aplicación.
+        /// Login y maestros de compañías/usuarios van in-process (MySQL).
+        /// Asientos HTTP se mantienen hasta la unificación de ese módulo.
         /// </summary>
         [STAThread]
         static void Main()
@@ -18,19 +23,20 @@ namespace CapaPresentacion
             GlobalConfig globalConfig = new GlobalConfig();
 
             var services = new ServiceCollection();
-            //services.AddSingleton<IFinancialService, FinancialService>();
-            services.AddSingleton<IHttpAdministrationService, HttpAdministrationService>();
+            services.AddSingleton<IConnectionString>(GlobalConfig.ConnectionString);
+            services.AddSingleton<IUnitOfWork>(sp => new UnitOfWork(sp.GetRequiredService<IConnectionString>()));
+            services.AddSingleton<IAdministrationService, AdministrationService>();
+            services.AddSingleton<IFinancialService, FinancialService>();
+            services.AddSingleton<IFinancialReportService, FinancialReportService>();
             services.AddSingleton<IHttpFinancialService, HttpFinancialService>();
             services.AddSingleton<IHttpClientService, HttpClientService>();
             services.AddSingleton<FrameMenu>();
-            
+
             var serviceProvider = services.BuildServiceProvider();
-            var form = serviceProvider.GetService<FrameMenu>();
+            GlobalConfig.Services = serviceProvider;
+            var form = serviceProvider.GetRequiredService<FrameMenu>();
             Application.Run(form);
-
-            //Application.Run(new FrameMenu());
         }
-
     }
 }
 

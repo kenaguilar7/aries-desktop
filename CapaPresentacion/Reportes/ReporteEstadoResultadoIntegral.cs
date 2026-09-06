@@ -28,9 +28,13 @@ namespace CapaPresentacion.Reportes
         public ReporteEstadoResultadoIntegral()
         {
             InitializeComponent();
-            IUnitOfWork unit = new UnitOfWork(GlobalConfig.ConnectionString);
-            _financialReportService = new FinancialReportService(unit);
-            _financialService = new FinancialService(unit);
+        }
+
+        public ReporteEstadoResultadoIntegral(IFinancialService financialService, IFinancialReportService financialReportService)
+            : this()
+        {
+            _financialService = financialService;
+            _financialReportService = financialReportService;
         }
 
         private void ReporteEstadoResultadoIntegral_Load(object sender, EventArgs e)

@@ -10,6 +10,7 @@ using CapaPresentacion.Reportes;
 using CapaPresentacion.AdminAsientos;
 using CapaPresentacion.FrameUsuarios;
 using CapaPresentacion.Restore;
+using AriesContador.Core.Services;
 using AriesContador.Services;
 using AriesContador.Core.Models;
 
@@ -17,17 +18,25 @@ namespace CapaPresentacion
 {
     public partial class FrameMenu : Form
     {
-        private readonly IHttpAdministrationService _httpAdministrationService;
+        private readonly IAdministrationService _administrationService;
+        private readonly IFinancialService _financialService;
+        private readonly IFinancialReportService _financialReportService;
         private readonly IHttpFinancialService _httpFinancialService;
 
         public Boolean comParametro { set { CargarCompañia(); } }
-        public FrameMenu(IHttpAdministrationService companyService, IHttpFinancialService httpFinancialService)
+        public FrameMenu(
+            IAdministrationService administrationService,
+            IFinancialService financialService,
+            IFinancialReportService financialReportService,
+            IHttpFinancialService httpFinancialService)
         {
-            this._httpAdministrationService = companyService;
+            this._administrationService = administrationService;
+            this._financialService = financialService;
+            this._financialReportService = financialReportService;
             this._httpFinancialService = httpFinancialService;
             InitializeComponent();
 
-            LoginForm n = new LoginForm(_httpAdministrationService);
+            LoginForm n = new LoginForm(_administrationService);
             n.FormClosing += N_FormClosing;
 
                 n.ShowDialog();
@@ -63,7 +72,7 @@ namespace CapaPresentacion
 
         private void MaestroDeCompañiasToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            FrameMaestroCompañia n = new FrameMaestroCompañia(_httpAdministrationService);
+            FrameMaestroCompañia n = new FrameMaestroCompañia(_administrationService);
             n.MdiParent = this;
             n.Show();
         }
@@ -89,7 +98,7 @@ namespace CapaPresentacion
                 {
                     if (!CheckForDuplicate(VentanaInfo.FormAsientos))
                     {
-                        FrameAsientos n = new FrameAsientos(_httpFinancialService);
+                        FrameAsientos n = new FrameAsientos(_httpFinancialService, _financialService, _financialReportService);
                         n.MdiParent = this;
                         n.Show();
                     }
@@ -107,7 +116,7 @@ namespace CapaPresentacion
         }
         private void MaestroDeUsaurio(object sender, EventArgs e)
         {
-            FrameMaestroUsuario n = new FrameMaestroUsuario();
+            FrameMaestroUsuario n = new FrameMaestroUsuario(_administrationService);
             n.MdiParent = this;
             n.Show();
         }
@@ -115,7 +124,7 @@ namespace CapaPresentacion
         {
             try
             {
-                FrameSeleccionCompañia n = new FrameSeleccionCompañia(this, _httpAdministrationService);
+                FrameSeleccionCompañia n = new FrameSeleccionCompañia(this, _administrationService);
                 n.ShowDialog();
             }
             catch (Exception ex)
@@ -128,7 +137,7 @@ namespace CapaPresentacion
 
             if (GlobalConfig.Company != null)
             {
-                FrameAdministrarMeses n = new FrameAdministrarMeses();
+                FrameAdministrarMeses n = new FrameAdministrarMeses(_financialService, _financialReportService);
                 n.MdiParent = this;
                 n.Show();
             }
@@ -141,7 +150,7 @@ namespace CapaPresentacion
         {
             try
             {
-                FrameSeleccionCompañia n = new FrameSeleccionCompañia(this, _httpAdministrationService);
+                FrameSeleccionCompañia n = new FrameSeleccionCompañia(this, _administrationService);
                 n.ShowDialog();
             }
             catch (Exception ex)
@@ -155,7 +164,7 @@ namespace CapaPresentacion
             {
                 if (GlobalConfig.Company != null)
                 {
-                    FrameReporteComprobación n = new FrameReporteComprobación();
+                    FrameReporteComprobación n = new FrameReporteComprobación(_financialService, _financialReportService);
                     n.MdiParent = this;
                     n.Show();
 
@@ -282,7 +291,7 @@ namespace CapaPresentacion
         {
             if (GlobalConfig.Company != null)
             {
-                ReporteEstadoResultadoIntegral form = new ReporteEstadoResultadoIntegral
+                ReporteEstadoResultadoIntegral form = new ReporteEstadoResultadoIntegral(_financialService, _financialReportService)
                 {
                     MdiParent = this
                 };
@@ -365,7 +374,7 @@ namespace CapaPresentacion
 
             if (GlobalConfig.Company != null)
             {
-                var n = new RestoreJournalEntry();
+                var n = new RestoreJournalEntry(_financialService);
                 n.MdiParent = this;
                 n.Show();
             }
@@ -377,11 +386,13 @@ namespace CapaPresentacion
 
         private void tokenToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var scriptInfo = 
-                "Token Actual: "
-                + EnvironmentVariable.ApiToken.Token
+            var scriptInfo =
+                "Login: in-process (MySQL)"
                 + Environment.NewLine
-                + "Conectado a API: "
+                + "Token: "
+                + (EnvironmentVariable.ApiToken?.Token ?? "(ninguno)")
+                + Environment.NewLine
+                + "API asientos: "
                 + EnvironmentVariable.ApiUrl; 
             MessageBox.Show(scriptInfo, "Token info",MessageBoxButtons.OK, MessageBoxIcon.Information); 
         }

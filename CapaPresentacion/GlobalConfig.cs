@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Configuration;
 using System.Threading.Tasks;
+using System;
 using AriesContador.Core.Models;
 using AriesContador.Core.Models.Companies;
 using AriesContador.Core.Models.Users;
@@ -9,7 +10,9 @@ using CapaEntidad.Entidades.Seguridad;
 using CapaEntidad.Entidades.Usuarios;
 using CapaEntidad.Entidades.Ventanas;
 using CapaEntidad.Enumeradores;
+using CapaLogica;
 using CapaPresentacion.Conf;
+using Microsoft.Extensions.DependencyInjection;
 using Squirrel;
 
 namespace CapaPresentacion
@@ -121,7 +124,9 @@ namespace CapaPresentacion
 
         public static ConnectionString ConnectionString = new ConnectionString();
 
-        public static string BaseUrl = ConfigurationManager.ConnectionStrings["HttpBaseUrl"].ConnectionString;
+        public static IServiceProvider Services { get; set; }
+
+        public static string BaseUrl = ConfigurationManager.ConnectionStrings["HttpBaseUrl"]?.ConnectionString;
 
 
 
@@ -151,7 +156,16 @@ namespace CapaPresentacion
                     TipoUsuario = (TipoUsuario)value.UserType,
                     MyNombre = value.Name, 
                     Id = value.Id
-                }; 
+                };
+
+                try
+                {
+                    Usuario.Modulos = new PermisoCL().GetAllModules(Usuario);
+                }
+                catch
+                {
+                    Usuario.Modulos = new List<Modulo>();
+                }
 
                 user = value; 
             }
