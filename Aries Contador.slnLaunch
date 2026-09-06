@@ -1,0 +1,24 @@
+[
+  {
+    "Name": "Escritorio + API (Local)",
+    "Projects": [
+      {
+        "Path": "CapaPresentacion\\CapaPresentacion.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "Aries.WebAPI\\Aries.WebAPI.csproj",
+        "Action": "Start"
+      }
+    ]
+  },
+  {
+    "Name": "Solo escritorio (Local)",
+    "Projects": [
+      {
+        "Path": "CapaPresentacion\\CapaPresentacion.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

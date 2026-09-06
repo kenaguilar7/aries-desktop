@@ -42,6 +42,6 @@ jobs:
         run: |
           ./scripts/Verify-DesktopPublish.ps1 `
             -OutputDir "CapaPresentacion/bin/Release" `
-            -AppConfig "CapaPresentacion/app.config" `
+            -AppConfig "CapaPresentacion/App.Production.config" `
             -ProjectFile "CapaPresentacion/CapaPresentacion.csproj" `
             -CheckDns

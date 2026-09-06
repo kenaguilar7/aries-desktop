@@ -102,7 +102,8 @@ erDiagram
 
 **Modelo:** `User`. **Legacy:** `Usuario`.  
 **SP en dump:** `SP_GetAllUsers`, `SP_FindUserById`.  
-**SP Fase 1** (`scripts/mysql/fase1`): `SP_InsertUser` (OUT `@Id` = `LAST_INSERT_ID()`), `SP_UpdateUser`. Password sigue en texto plano.
+**SP Fase 1** (`scripts/mysql/fase1`): `SP_InsertUser` (OUT `@Id` = `LAST_INSERT_ID()`), `SP_UpdateUser`. Password sigue en texto plano.  
+**Login Fase 5:** `UserRepository.FindByUserName` (SQL parametrizado `AdministrationQuery.FindUserByUserName`, equivalente a `UsuarioDao.Login`). No usa `SP_GetAllUsers`. El hash de password sigue siendo un paso posterior.
 
 #### `accounts_names`
 
@@ -438,7 +439,7 @@ Soft delete uniforme: `active = 0`. Restore = `active = 1`. No hay `DELETE` fís
 | Área | Escritorio legacy (`CapaDatos`) | Escritorio Dapper (`AriesContador.Data`) | API (`AriesWebApi`) |
 |---|---|---|---|
 | Compañías | SQL embebido `CompañiaDao` | `SP_InsertCompany` / `SP_UpdateCompany` (fase 1) + SQL `LatestCode` | mismos repos Data |
-| Usuarios | `UsuarioDao` SQL | `SP_GetAllUsers` / `SP_FindUserById` / `SP_InsertUser` / `SP_UpdateUser` (fase 1) | login = `GetAllUsers` + compare password |
+| Usuarios | `UsuarioDao` SQL | `SP_GetAllUsers` / `SP_FindUserById` / `SP_InsertUser` / `SP_UpdateUser` (fase 1); login = `FindByUserName` (SQL parametrizado, mismo criterio que `UsuarioDao.Login`) | `Aries.WebAPI` Minimal APIs: mismas rutas, JWT `UserId` |
 | Cuentas | `CuentaDao` SQL | SPs account* | `AccountService` |
 | Periodos | `FechaTransaccionDao` | SPs posting period | `PostingPeriodService` |
 | Asientos / líneas | DAOs casi comentados | SPs journal* | JournalEntry(Line)Service |

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using System.Diagnostics;
 using System.Windows.Forms;
 using CapaEntidad.Entidades.Ventanas;
@@ -58,7 +59,7 @@ namespace CapaPresentacion
         {
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
             FileVersionInfo versionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
-            this.Text += $" v.{versionInfo.FileVersion}";
+            this.Text += $" v.{versionInfo.FileVersion} [{GlobalConfig.EnvironmentName}]";
             ///fo
         }
         private void CargarCompañia()
@@ -382,13 +383,34 @@ namespace CapaPresentacion
 
         private void tokenToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            var db = ConfigurationManager.ConnectionStrings["DBconnectionString"]
+                ?? ConfigurationManager.ConnectionStrings["DBconnectionstring"];
+            var server = "(sin Server)";
+            if (db != null)
+            {
+                foreach (var part in db.ConnectionString.Split(';'))
+                {
+                    var trimmed = part.Trim();
+                    if (trimmed.StartsWith("Server=", StringComparison.OrdinalIgnoreCase)
+                        || trimmed.StartsWith("Host=", StringComparison.OrdinalIgnoreCase))
+                    {
+                        server = trimmed.Substring(trimmed.IndexOf('=') + 1).Trim();
+                        break;
+                    }
+                }
+            }
+
             var scriptInfo =
-                "Login: in-process (MySQL)"
+                "Ambiente: " + GlobalConfig.EnvironmentName
+                + Environment.NewLine
+                + "MySQL: " + server
+                + Environment.NewLine
+                + "Login / maestros / asientos: in-process (no necesitan API)"
                 + Environment.NewLine
                 + "Token: "
                 + (EnvironmentVariable.ApiToken?.Token ?? "(ninguno)")
                 + Environment.NewLine
-                + "API asientos: "
+                + "API (si la arrancas): "
                 + EnvironmentVariable.ApiUrl; 
             MessageBox.Show(scriptInfo, "Token info",MessageBoxButtons.OK, MessageBoxIcon.Information); 
         }

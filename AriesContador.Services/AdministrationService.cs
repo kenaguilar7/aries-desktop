@@ -25,13 +25,8 @@ namespace AriesContador.Services
             if (param == null || string.IsNullOrWhiteSpace(param.UserId))
                 return new WebToken();
 
-            var user = _unitOfWork.UserRepository.GetAll()
-                .FirstOrDefault(u =>
-                    u.Active
-                    && string.Equals(u.UserName, param.UserId, StringComparison.OrdinalIgnoreCase)
-                    && u.Password == param.Password);
-
-            if (user == null)
+            var user = _unitOfWork.UserRepository.FindByUserName(param.UserId);
+            if (user == null || !user.Active || user.Password != param.Password)
                 return new WebToken();
 
             return new WebToken
@@ -140,8 +135,8 @@ namespace AriesContador.Services
             if (string.IsNullOrWhiteSpace(userName))
                 return false;
 
-            return GetAllUsers().Any(u =>
-                string.Equals(u.UserName, userName, StringComparison.OrdinalIgnoreCase));
+            var existing = _unitOfWork.UserRepository.FindByUserName(userName);
+            return existing != null;
         }
 
         private void ValidateNewUser(User usuario)

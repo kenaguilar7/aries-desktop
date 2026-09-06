@@ -57,6 +57,28 @@ FROM companies_permission AS T1
 WHERE T1.user_id = @UserId AND T1.active = 1 AND T1.deleted = 0
 ";
 
+            public const string FindUserByUserName = @"
+SELECT
+T0.user_id AS Id,
+T0.user_name AS UserName,
+T0.user_type+0 AS UserType,
+T0.number_id AS IdNumber,
+T0.name AS Name,
+T0.lastname_p AS LastName,
+T0.lastname_m AS MiddleName,
+T0.phone_number AS PhoneNumber,
+T0.mail AS Mail,
+T0.notes AS Memo,
+T0.password AS Password,
+T0.created_at AS CreatedAt,
+T0.updated_at AS UpdateAt,
+T0.updated_by AS UpdatedBy,
+T0.active AS Active
+FROM users AS T0
+WHERE T0.user_name = @UserName
+LIMIT 1
+";
+
         }
     }
 }

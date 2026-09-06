@@ -9,7 +9,17 @@ namespace CapaDatos.Conexion
     public class Manejador
     {
         private MySqlConnection databaseConnection =
-            new MySqlConnection(ConfigurationManager.ConnectionStrings["DBconnectionString"].ConnectionString);
+            new MySqlConnection(ResolveConnectionString());
+
+        private static string ResolveConnectionString()
+        {
+            var db = ConfigurationManager.ConnectionStrings["DBconnectionString"]
+                ?? ConfigurationManager.ConnectionStrings["DBconnectionstring"];
+            if (db == null || string.IsNullOrWhiteSpace(db.ConnectionString))
+                throw new ConfigurationErrorsException(
+                    "Falta connectionString 'DBconnectionString' en CapaPresentacion.exe.config.");
+            return db.ConnectionString;
+        }
 
         public void OpenConnection()
         {

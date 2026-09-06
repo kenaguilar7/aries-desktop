@@ -36,7 +36,9 @@ namespace AriesContador.Tests.Fakes
 
     public class FakeCompanyRepository : ICompanyRepository
     {
-        public void Add(Company entity) { }
+        public List<Company> Added { get; } = new List<Company>();
+
+        public void Add(Company entity) => Added.Add(entity);
         public Task AddAsync(Company entity) { Add(entity); return Task.CompletedTask; }
         public void Update(Company entity) { }
         public Task Remove(Company entity) => Task.CompletedTask;
@@ -49,6 +51,7 @@ namespace AriesContador.Tests.Fakes
     public class FakeUserRepository : IUserRepository
     {
         public List<User> Items { get; } = new List<User>();
+        public int GetAllCalls { get; set; }
 
         public void Add(User entity)
         {
@@ -63,7 +66,13 @@ namespace AriesContador.Tests.Fakes
         }
         public Task Remove(User entity) => Task.CompletedTask;
         public User GetById(int id) => Items.FirstOrDefault(x => x.Id == id);
-        public IEnumerable<User> GetAll() => Items;
+        public User FindByUserName(string userName) =>
+            Items.FirstOrDefault(u => string.Equals(u.UserName, userName, StringComparison.OrdinalIgnoreCase));
+        public IEnumerable<User> GetAll()
+        {
+            GetAllCalls++;
+            return Items;
+        }
     }
 
     public class FakeAccountRepository : IAccountRepository

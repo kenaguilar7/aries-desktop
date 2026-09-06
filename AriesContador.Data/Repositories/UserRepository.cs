@@ -41,6 +41,18 @@ namespace AriesContador.Data.Repositories
             return output.FirstOrDefault();
         }
 
+        public User FindByUserName(string userName)
+        {
+            if (string.IsNullOrWhiteSpace(userName))
+                return null;
+
+            var dataAccess = new MySqlDataAccessAsync(_connectionString);
+            var output = dataAccess.ExecuteQuery<User, object>(
+                Query.Query.AdministrationQuery.FindUserByUserName,
+                new { UserName = userName }).GetAwaiter().GetResult();
+            return output.FirstOrDefault();
+        }
+
         public async Task Remove(User entity)
         {
             throw new NotImplementedException();

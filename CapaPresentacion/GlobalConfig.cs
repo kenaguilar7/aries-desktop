@@ -124,6 +124,12 @@ namespace CapaPresentacion
 
         public static ConnectionString ConnectionString = new ConnectionString();
 
+        public static string EnvironmentName =>
+            ConfigurationManager.AppSettings["EnvironmentName"] ?? "Local";
+
+        public static bool IsLocalEnvironment =>
+            string.Equals(EnvironmentName, "Local", StringComparison.OrdinalIgnoreCase);
+
         public static IServiceProvider Services { get; set; }
 
         public static string BaseUrl = ConfigurationManager.ConnectionStrings["HttpBaseUrl"]?.ConnectionString;

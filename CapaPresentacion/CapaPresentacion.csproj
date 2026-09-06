@@ -471,7 +471,9 @@
       <DependentUpon>ReporteCuenta.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="app.config" />
-    <None Include="App.Development.config" />
+    <None Include="App.Production.config" />
+    <None Include="App.Local.config.example" />
+    <None Include="App.Local.config" Condition="Exists('App.Local.config')" />
     <None Include="packages.config" />
     <None Include="Properties\app.manifest" />
     <None Include="Properties\Settings.settings">
@@ -633,11 +635,21 @@
     <Error Condition="!Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props'))" />
   </Target>
   <Import Project="..\packages\squirrel.windows.1.9.1\build\squirrel.windows.targets" Condition="Exists('..\packages\squirrel.windows.1.9.1\build\squirrel.windows.targets')" />
+  <Target Name="ApplyEnvironmentAppConfig" AfterTargets="CopyAppConfigFile" BeforeTargets="VerifyDesktopOutput">
+    <PropertyGroup>
+      <_EnvConfig Condition="'$(Configuration)' == 'Release'">$(MSBuildThisFileDirectory)App.Production.config</_EnvConfig>
+      <_EnvConfig Condition="'$(Configuration)' != 'Release' And Exists('$(MSBuildThisFileDirectory)App.Local.config')">$(MSBuildThisFileDirectory)App.Local.config</_EnvConfig>
+    </PropertyGroup>
+    <Copy Condition="'$(_EnvConfig)' != '' And Exists('$(_EnvConfig)')" SourceFiles="$(_EnvConfig)" DestinationFiles="$(TargetPath).config" OverwriteReadOnlyFiles="true" />
+    <Message Condition="'$(_EnvConfig)' != '' And Exists('$(_EnvConfig)')" Importance="high" Text="Ambiente $(Configuration): $(_EnvConfig) -&gt; $(TargetFileName).config" />
+  </Target>
   <Target Name="VerifyDesktopOutput" AfterTargets="CopyFilesToOutputDirectory">
     <PropertyGroup>
       <_VerifyScript>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\scripts\Verify-DesktopPublish.ps1'))</_VerifyScript>
       <_VerifyOutputDir>$([System.IO.Path]::GetDirectoryName('$(TargetPath)'))</_VerifyOutputDir>
+      <_VerifyAppConfig Condition="'$(Configuration)' == 'Release'">$(MSBuildThisFileDirectory)App.Production.config</_VerifyAppConfig>
+      <_VerifyAppConfig Condition="'$(Configuration)' != 'Release'">$(MSBuildThisFileDirectory)app.config</_VerifyAppConfig>
     </PropertyGroup>
-    <Exec Command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File &quot;$(_VerifyScript)&quot; -OutputDir &quot;$(_VerifyOutputDir)&quot; -AppConfig &quot;$(MSBuildThisFileDirectory)app.config&quot; -ProjectFile &quot;$(MSBuildThisFileFullPath)&quot;" />
+    <Exec Command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File &quot;$(_VerifyScript)&quot; -OutputDir &quot;$(_VerifyOutputDir)&quot; -AppConfig &quot;$(_VerifyAppConfig)&quot; -ProjectFile &quot;$(MSBuildThisFileFullPath)&quot;" />
   </Target>
 </Project>
