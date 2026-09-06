@@ -11,7 +11,6 @@ using CapaPresentacion.AdminAsientos;
 using CapaPresentacion.FrameUsuarios;
 using CapaPresentacion.Restore;
 using AriesContador.Core.Services;
-using AriesContador.Services;
 using AriesContador.Core.Models;
 
 namespace CapaPresentacion
@@ -21,19 +20,16 @@ namespace CapaPresentacion
         private readonly IAdministrationService _administrationService;
         private readonly IFinancialService _financialService;
         private readonly IFinancialReportService _financialReportService;
-        private readonly IHttpFinancialService _httpFinancialService;
 
         public Boolean comParametro { set { CargarCompañia(); } }
         public FrameMenu(
             IAdministrationService administrationService,
             IFinancialService financialService,
-            IFinancialReportService financialReportService,
-            IHttpFinancialService httpFinancialService)
+            IFinancialReportService financialReportService)
         {
             this._administrationService = administrationService;
             this._financialService = financialService;
             this._financialReportService = financialReportService;
-            this._httpFinancialService = httpFinancialService;
             InitializeComponent();
 
             LoginForm n = new LoginForm(_administrationService);
@@ -80,7 +76,7 @@ namespace CapaPresentacion
         {
             if (GlobalConfig.Company != null)
             {
-                FrameMaestroCuenta n = new FrameMaestroCuenta();
+                FrameMaestroCuenta n = new FrameMaestroCuenta(_financialService);
                 n.MdiParent = this;
                 n.Show();
             }
@@ -98,7 +94,7 @@ namespace CapaPresentacion
                 {
                     if (!CheckForDuplicate(VentanaInfo.FormAsientos))
                     {
-                        FrameAsientos n = new FrameAsientos(_httpFinancialService, _financialService, _financialReportService);
+                        FrameAsientos n = new FrameAsientos(_financialService, _financialReportService);
                         n.MdiParent = this;
                         n.Show();
                     }
@@ -186,7 +182,7 @@ namespace CapaPresentacion
             {
                 if (GlobalConfig.Company != null)
                 {
-                    FrameReporteAuxiliares frame = new FrameReporteAuxiliares();
+                    FrameReporteAuxiliares frame = new FrameReporteAuxiliares(_financialService);
                     frame.MdiParent = this;
                     frame.Show();
                 }
@@ -307,7 +303,7 @@ namespace CapaPresentacion
 
             if (GlobalConfig.Company != null)
             {
-                ReporteBalanceSituacion form = new ReporteBalanceSituacion
+                ReporteBalanceSituacion form = new ReporteBalanceSituacion(_financialService)
                 {
                     MdiParent = this
                 };

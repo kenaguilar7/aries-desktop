@@ -4,13 +4,17 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text;
 
 namespace AriesContador.Data.Internal.DataAccess
 {
     internal class MySqlDataAccess : IDisposable
     {
         private readonly IConnectionString _connectionString;
+        private IDbConnection _connection;
+        private IDbTransaction _transaction;
+        private bool _transactionOpen;
+        private bool _completed;
+
         public MySqlDataAccess(IConnectionString connectionString)
         {
             this._connectionString = connectionString;
@@ -35,7 +39,7 @@ namespace AriesContador.Data.Internal.DataAccess
 
             using (IDbConnection connection = new MySqlConnection(connectionString))
             {
-                List<T> rows = connection.Query<T>(storedProcedure, commandType: 
+                List<T> rows = connection.Query<T>(storedProcedure, commandType:
                     CommandType.StoredProcedure).ToList();
 
                 return rows;
@@ -45,7 +49,7 @@ namespace AriesContador.Data.Internal.DataAccess
         public void SaveData<T>(string storedProcedure, T parameters)
         {
             string connectionString = _connectionString.MySQLDefault;
-            
+
             using (IDbConnection connection = new MySqlConnection(connectionString))
             {
                 connection.Execute(storedProcedure, parameters,
@@ -63,7 +67,7 @@ namespace AriesContador.Data.Internal.DataAccess
 
             using (IDbConnection connection = new MySqlConnection(connectionString))
             {
-                var id = connection.Execute(storedProcedure, _params,
+                connection.Execute(storedProcedure, _params,
                     commandType: CommandType.StoredProcedure);
                 var retVal = _params.Get<Q>("Id");
 
@@ -71,16 +75,13 @@ namespace AriesContador.Data.Internal.DataAccess
             }
         }
 
-        private IDbConnection _connection;
-        private IDbTransaction _transaction;
-
         public void SaveDataInTransaction<T>(string storedProcedure, T parameters)
         {
             _connection.Execute(storedProcedure, parameters,
                 commandType: CommandType.StoredProcedure, transaction: _transaction);
         }
 
-        public Q SaveDataInTransaction<T,Q>(string storedProcedure, T parameters)
+        public Q SaveDataInTransaction<T, Q>(string storedProcedure, T parameters)
         {
             DynamicParameters _params = new DynamicParameters();
             _params.Add($"@Id", direction: ParameterDirection.Output);
@@ -108,23 +109,45 @@ namespace AriesContador.Data.Internal.DataAccess
             _connection = new MySqlConnection(connectionString);
             _connection.Open();
             _transaction = _connection.BeginTransaction();
+            _transactionOpen = true;
+            _completed = false;
         }
 
         public void CommitTransaction()
         {
-            _transaction?.Commit();
-            _connection?.Close();
+            if (_transactionOpen && !_completed)
+            {
+                _transaction?.Commit();
+                _completed = true;
+                _transactionOpen = false;
+            }
+            CloseConnection();
         }
 
         public void RollBackTransaction()
         {
-            _transaction?.Rollback();
-            _connection?.Close();
+            if (_transactionOpen && !_completed)
+            {
+                _transaction?.Rollback();
+                _completed = true;
+                _transactionOpen = false;
+            }
+            CloseConnection();
         }
 
         public void Dispose()
         {
-            CommitTransaction();
+            if (_transactionOpen && !_completed)
+                RollBackTransaction();
+            else
+                CloseConnection();
+        }
+
+        private void CloseConnection()
+        {
+            _connection?.Close();
+            _connection = null;
+            _transaction = null;
         }
     }
 }

@@ -22,7 +22,54 @@ namespace AriesContador.Tests.JournalTests
 
             svc.CreateJournalEntry(unbalanced);
 
-            Assert.Single(uow.JournalEntries.Items);
+            var saved = Assert.Single(uow.JournalEntries.Items);
+            Assert.Equal(saved.Id, unbalanced.JournalEntryLines.Single().JournalEntryId);
+            Assert.Empty(uow.JournalEntryLines.Items);
+        }
+
+        [Fact]
+        public void CreateJournalEntry_persists_header_and_lines_together()
+        {
+            var uow = new FakeUnitOfWork();
+            var svc = new FinancialService(uow);
+            var entry = new JournalEntry
+            {
+                JournalEntryLines =
+                {
+                    new JournalEntryLine { Amount = 10, DebOrCred = AriesContador.Core.Models.Utils.DebOrCred.Debito },
+                    new JournalEntryLine { Amount = 10, DebOrCred = AriesContador.Core.Models.Utils.DebOrCred.Credito }
+                }
+            };
+
+            svc.CreateJournalEntry(entry);
+
+            var saved = Assert.Single(uow.JournalEntries.Items);
+            Assert.Equal(2, saved.JournalEntryLines.Count);
+            Assert.All(saved.JournalEntryLines, line =>
+            {
+                Assert.Equal(saved.Id, line.JournalEntryId);
+                Assert.NotEqual(0, line.Id);
+            });
+            Assert.Empty(uow.JournalEntryLines.Items);
+        }
+
+        [Fact]
+        public void CreateJournalEntry_does_not_keep_header_when_line_insert_fails()
+        {
+            var uow = new FakeUnitOfWork();
+            uow.JournalEntries.FailAfterHeader = true;
+            var svc = new FinancialService(uow);
+            var entry = new JournalEntry
+            {
+                JournalEntryLines =
+                {
+                    new JournalEntryLine { Amount = 10 },
+                    new JournalEntryLine { Amount = 10 }
+                }
+            };
+
+            Assert.Throws<InvalidOperationException>(() => svc.CreateJournalEntry(entry));
+            Assert.Empty(uow.JournalEntries.Items);
         }
 
         [Fact]

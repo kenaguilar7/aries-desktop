@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using AriesContador.Core.Models.Accounts;
 using AriesContador.Core.Models.Companies;
 using CapaDatos.Daos;
 using CapaEntidad.Entidades.Cuentas;
@@ -9,9 +10,16 @@ using CapaEntidad.Entidades.FechaTransacciones;
 using CapaEntidad.Entidades.Usuarios;
 using CapaEntidad.Enumeradores;
 using CapaEntidad.Interfaces;
+using CapaEntidad.Mappers;
 
 namespace CapaLogica
 {
+    /// <summary>
+    /// Excel reports and old closing still call this by design (fase 4).
+    /// Account CRUD for WinForms goes through IFinancialService.
+    /// Pure rules delegate to AccountRules so there is one implementation.
+    /// </summary>
+    [Obsolete("Prefer IFinancialService for account CRUD. Classic Excel reports still use this.")]
     public class CuentaCL
     {
         private CuentaDao _cuentaDao;
@@ -36,9 +44,9 @@ namespace CapaLogica
         }
         public Boolean Deleted(Cuenta cuenta, Usuario usuario, out String mensaje)
         {
-            if (!cuenta.Editable || cuenta.Indicador != IndicadorCuenta.Cuenta_Auxiliar)
+            var account = CuentaMapper.ToAccount(cuenta);
+            if (!AccountRules.CanDelete(account, out mensaje))
             {
-                mensaje = (cuenta.Editable) ? $"Cuentas con la propiedad: {cuenta.Indicador.ToString().Replace('_', ' ') } \n No pueden ser eliminadas" : $"Cuentas del sistema no pueden ser eliminadas.";  ;
                 return false;
             }
             return cuentaDao.Deleted(cuenta, usuario, out mensaje);
@@ -50,21 +58,13 @@ namespace CapaLogica
         }
         public Boolean Insert(ref Cuenta nuevaCuenta, Cuenta cuentaPadre, out String Mensaje, Usuario user)
         {
-
             if (VerificarNombre(nuevaCuenta, nuevaCuenta.Nombre, out Mensaje, nuevaCuenta.MyCompania))
             {
-
-                ///Reglas de negocio para heredar saldo
-                /// Si la cuenta es auxiliar tiene que heredar el saldo de la anterior
-                /// en el siguiente codigo estamos heredandole los debitos y credito y saldos anteriores
-                /// aunque esos saldos no se vayan a insertar en la base de datos, lo jacemos para retornarla
-                /// y el callingform pueda ver reflejada esos movimientos
-                ///
                 HeredarSaldosSiPadreEsAuxiliar(nuevaCuenta, cuentaPadre);
 
                 if (cuentaDao.Insert(ref nuevaCuenta, cuentaPadre, user, out Mensaje))
                 {
-                    Mensaje = "Cuenta guardada exitosamente";
+                    Mensaje = AccountRules.CreateSuccessMessage;
                     return true;
                 }
                 else
@@ -96,7 +96,6 @@ namespace CapaLogica
                 decimal debito = String.IsNullOrWhiteSpace(item["Debito"].ToString()) ? 0m : Convert.ToDecimal(item["Debito"]);
                 ITipoCuenta tpcnta = Cuenta.GenerarTipoCuenta(Convert.ToInt32(rw));
                 lastSaldoActual = tpcnta.SaldoActual(saldo: lastSaldoActual, debito: debito, credito: string.IsNullOrWhiteSpace(item["Credito"].ToString()) ? 0m : Convert.ToDecimal(item["Credito"]));
-                //acumulado += lastSaldoActual;
 
                 item["Saldo Actual"] = string.Format("{0:n}", lastSaldoActual);
             }
@@ -106,9 +105,8 @@ namespace CapaLogica
         {
             try
             {
-                if (String.IsNullOrWhiteSpace(nuevoNombre))
+                if (!AccountRules.ValidateName(nuevoNombre, out mensaje))
                 {
-                    mensaje = "INGRESE UN NOMBRE VALIDO";
                     return false;
                 }
                 else
@@ -127,7 +125,7 @@ namespace CapaLogica
                     }
                     else
                     {
-                        mensaje = "Ya existe otra cuenta con este nombre, intente uno diferente";
+                        mensaje = AccountRules.NameTakenMessage;
                         return false;
                     }
 
@@ -145,24 +143,14 @@ namespace CapaLogica
             return cuentaDao.UpdatesettInfo(t, user, out mensaje); 
         }
 
-        /// <summary>
-        /// Vefica que no hayan mas cuentas con el mismo nombre 
-        /// </summary>
-        /// <param name="nombre"></param>
-        /// <param name="tipoCuenta"></param>
-        /// <param name="mensaje"></param>
-        /// <param name="lst"></param>
-        /// <returns></returns>
-        public Boolean VerificarNombre(Cuenta cuenta, String nombre, out String mensaje, Company compañia)///mejorar 
+        public Boolean VerificarNombre(Cuenta cuenta, String nombre, out String mensaje, Company compañia)
         {
-            if (String.IsNullOrWhiteSpace(nombre))
+            if (!AccountRules.ValidateName(nombre, out mensaje))
             {
-                mensaje = "INGRESE UN NOMBRE VALIDO";
                 return false;
             }
             else
             {
-
                 if (cuentaDao.VerificarNombre(cuenta, nombre, compañia))
                 {
                     mensaje = "El nombre puede ser utilizado";
@@ -170,19 +158,15 @@ namespace CapaLogica
                 }
                 else
                 {
-                    mensaje = "El nombre no puede ser utilizado";
+                    mensaje = AccountRules.NameCannotBeUsedMessage;
                     return false;
                 }
-
-
             }
         }
         public void LLenarConSaldos(DateTime fechaInicio, DateTime fechaFinal, List<Cuenta> lst, Company compañia)
         {
             lst.ForEach(delegate (Cuenta c)
             {
-                //c.SaldoAnteriorColones = 0.00;
-                //c.SaldoAnteriorDolares = 0.00;
                 c.DebitosColones = 0.00m;
                 c.CreditosColones = 0.00m;
                 c.DebitosDolares = 0.00m;
@@ -193,44 +177,19 @@ namespace CapaLogica
             AplicarRollUpHaciaPadres(lst);
         }
 
-        /// <summary>
-        /// Auxiliar bajo auxiliar: la nueva cuenta hereda saldos y movimientos del padre.
-        /// Extraído de Insert para poder caracterizarlo sin ir a MySQL.
-        /// </summary>
         public void HeredarSaldosSiPadreEsAuxiliar(Cuenta nuevaCuenta, Cuenta cuentaPadre)
         {
-            if (cuentaPadre == null || nuevaCuenta == null) return;
-            if (cuentaPadre.Indicador != IndicadorCuenta.Cuenta_Auxiliar) return;
-
-            nuevaCuenta.SaldoAnteriorColones = cuentaPadre.SaldoAnteriorColones;
-            nuevaCuenta.SaldoAnteriorDolares = cuentaPadre.SaldoAnteriorDolares;
-            nuevaCuenta.DebitosColones = cuentaPadre.DebitosColones;
-            nuevaCuenta.CreditosColones = cuentaPadre.CreditosColones;
-            nuevaCuenta.DebitosDolares = cuentaPadre.DebitosDolares;
-            nuevaCuenta.CreditosDolares = cuentaPadre.CreditosDolares;
+            var child = CuentaMapper.ToAccount(nuevaCuenta);
+            var parent = CuentaMapper.ToAccount(cuentaPadre);
+            AccountRules.InheritBalancesIfParentIsAuxiliar(child, parent);
+            CuentaMapper.CopyBalancesToCuenta(child, nuevaCuenta);
         }
 
-        /// <summary>
-        /// Roll-up de débitos/créditos de auxiliares hacia padres (mayor y título).
-        /// No suma saldo anterior. Extraído de LLenarConSaldos.
-        /// </summary>
         public void AplicarRollUpHaciaPadres(List<Cuenta> lst)
         {
-            foreach (var item in lst)
-            {
-                if (item.Indicador == IndicadorCuenta.Cuenta_Auxiliar)
-                {
-                    var dummy = item;
-
-                    while ((dummy = BuscarCuentaPadre(lst, dummy)) != null)
-                    {
-                        dummy.DebitosColones += item.DebitosColones;
-                        dummy.CreditosColones += item.CreditosColones;
-                        dummy.DebitosDolares += item.DebitosDolares;
-                        dummy.CreditosDolares += item.CreditosDolares;
-                    }
-                }
-            }
+            var accounts = lst.Select(CuentaMapper.ToAccount).ToList();
+            AccountRules.ApplyRollUp(accounts);
+            CuentaMapper.CopyBalancesToCuentas(accounts, lst);
         }
         public Cuenta BuscarCuentaPadre(List<Cuenta> lst, Cuenta cuentaHija)
         {
@@ -253,43 +212,10 @@ namespace CapaLogica
         }
         public List<Cuenta> Ordernar(List<Cuenta> lst)
         {
-
-            List<Cuenta> retorno = new List<Cuenta>();
-
-            ///Recorremos la lista para obtener solamente 
-            ///Las cuentas guias
-            foreach (Cuenta item in lst)
-            {
-                if (item.Indicador == IndicadorCuenta.Cuenta_Titulo)
-                {
-                    ///Por cada cuenta guia buscamos su hija
-                    CargarNodos(item);
-                }
-            }
-
-            ///buscamos las cuentas hijas 
-            void CargarNodos(Cuenta cuenta)
-            {
-                ///toda cuenta que sea pasada por parametro sera agregada 
-                ///de tal modo que siempre que se encuentre una hija
-                ///esta sera agregada usara recursividas y si encuentra mas 
-                ///el proceso se repetira
-                retorno.Add(cuenta);
-
-                var sql = from c in lst where c.Padre == cuenta.Id select c;
-
-                ///devuelve todas las cuentas hijas
-                var cueHijas = sql.ToArray<Cuenta>();
-
-                ///recorremos todas
-                foreach (Cuenta item in cueHijas)
-                {
-                    ///Usamos recursividad para buscar todas las cuentas hijas
-                    CargarNodos(item);
-                }
-            }
-
-            return retorno;
+            var accounts = lst.Select(CuentaMapper.ToAccount).ToList();
+            var ordered = AccountRules.OrderByTree(accounts);
+            var byId = lst.ToDictionary(c => c.Id);
+            return ordered.Select(a => byId[a.Id]).ToList();
         }
         public Boolean VerificarSiEsApta(Cuenta cuentaPadre, out String Mensaje)
         {
@@ -300,45 +226,26 @@ namespace CapaLogica
                 var cuentaDummy = cuentaPadre.DeepCopy();
                 var dummy = new List<Cuenta> { cuentaDummy };
 
-                LLenarConSaldos(meses.Last().Fecha, meses[0].Fecha, dummy, cuentaPadre.MyCompania);
+                LLenarConSaldos(meses[0].Fecha, meses.Last().Fecha, dummy, cuentaPadre.MyCompania);
 
-                if (cuentaDummy.Indicador == IndicadorCuenta.Cuenta_Auxiliar && cuentaDummy.CuentaConMovientos())
+                var dummyAccount = CuentaMapper.ToAccount(cuentaDummy);
+                if (dummyAccount.AccountType == AccountType.Cuenta_Auxiliar && AccountRules.HasMovement(dummyAccount))
                 {
-                    Mensaje = $"Esta cuenta posee movimientos, si continua estos seran heredados a la nueva cuenta\n" +
-                               $"Saldo Anterior      {string.Format("{0:₡###,###,###,##0.00##}", cuentaDummy.SaldoAnteriorColones)}\n" +
-                               $"Debitos             {string.Format("{0:₡###,###,###,##0.00##}", cuentaDummy.DebitosColones)}\n" +
-                               $"Creditos            {string.Format("{0:₡###,###,###,##0.00##}", cuentaDummy.CreditosColones)}\n" +
-                               $"¿Desea continuar y crear una cuenta nueva?";
+                    Mensaje = AccountRules.ParentHasMovementsWarning(dummyAccount);
                     return false;
                 }
             }
 
             Mensaje = "";
             return true;
-
-
         }
-        /// <summary>
-        /// Retorna una copia de la lista 
-        /// sin las cuentas que no tienen saldos
-        /// segun la logica de negocio
-        /// </summary>
-        /// <param name="lis"></param>
-        /// <returns></returns>
+
         public List<Cuenta> QuitarCuentasSinSaldos(List<Cuenta> lis)
         {
-
-            var retorno = new List<Cuenta>();
-
-            foreach (var item in lis)
-            {
-                if (item.CuentaConMovientos() || !item.CuentaConMovientos() && item.Indicador == IndicadorCuenta.Cuenta_Titulo)
-                {
-                    retorno.Add(item.DeepCopy());
-                }
-            }
-
-            return retorno;
+            var accounts = lis.Select(CuentaMapper.ToAccount).ToList();
+            var filtered = AccountRules.RemoveAccountsWithoutBalances(accounts);
+            var byId = lis.ToDictionary(c => c.Id);
+            return filtered.Select(a => byId[a.Id].DeepCopy()).ToList();
         }
 
         public Boolean GenerarSaldosEnCeroParaCierreDeAsieto(Cuenta cuentaSaldoAsiento, Company compañia, Usuario usuario, int limitSec) {

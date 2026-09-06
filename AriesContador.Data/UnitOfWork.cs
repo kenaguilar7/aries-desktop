@@ -46,12 +46,11 @@ namespace AriesContador.Data
 
         public int Commit()
         {
-            throw new NotImplementedException(); 
+            return 0;
         }
 
         public void Dispose()
         {
-            throw new NotImplementedException();
         }
     }
 }

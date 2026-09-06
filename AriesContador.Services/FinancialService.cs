@@ -22,12 +22,12 @@ namespace AriesContador.Services
         public IEnumerable<Account> GetAccounts(string companyId)
         {
             var output = _unitOfWork.AccountRepository.FindByCompanyId(companyId);
-            return output;
+            return AccountRules.OrderByTree(output);
         }
 
         public Account FindAccount(int id)
         {
-          throw new NotImplementedException();
+            return _unitOfWork.AccountRepository.GetById(id).GetAwaiter().GetResult();
         }
 
         public IEnumerable<Account> GetDefaultAccounts()
@@ -38,55 +38,153 @@ namespace AriesContador.Services
 
         public void CreateAccount(Account account)
         {
-            _unitOfWork.AccountRepository.Add(account);
+            Account parent = null;
+            if (account != null && account.FatherAccount.HasValue && account.FatherAccount.Value != 0
+                && !string.IsNullOrEmpty(account.CompanyId))
+            {
+                parent = _unitOfWork.AccountRepository.FindByCompanyId(account.CompanyId)
+                    .FirstOrDefault(x => x.Id == account.FatherAccount.Value);
+            }
+
+            CreateAccount(account, parent);
+        }
+
+        public void CreateAccount(Account account, Account parent)
+        {
+            if (account == null)
+                throw new InvalidOperationException(AccountRules.BlankNameMessage);
+
+            if (!AccountRules.ValidateName(account.Name, out var nameMessage))
+                throw new InvalidOperationException(nameMessage);
+
+            if (_unitOfWork.AccountRepository.NameTaken(account.Id, account.CompanyId, account.Name))
+                throw new InvalidOperationException(AccountRules.NameCannotBeUsedMessage);
+
+            account.AccountType = AccountType.Cuenta_Auxiliar;
+            var parentWasAuxiliar = parent != null && parent.AccountType == AccountType.Cuenta_Auxiliar;
+            if (parent != null)
+            {
+                account.FatherAccount = parent.Id;
+                account.AccountTag = parent.AccountTag;
+                if (string.IsNullOrEmpty(account.CompanyId))
+                    account.CompanyId = parent.CompanyId;
+                AccountRules.InheritBalancesIfParentIsAuxiliar(account, parent);
+            }
+
+            _unitOfWork.AccountRepository.AddChild(account);
+
+            if (parentWasAuxiliar)
+                parent.AccountType = AccountType.Cuenta_De_Mayor;
         }
 
         public void UpdateAccount(Account account)
         {
-            _unitOfWork.AccountRepository.Update(account);
+            if (account == null)
+                throw new InvalidOperationException(AccountRules.BlankNameMessage);
+
+            if (!AccountRules.ValidateName(account.Name, out var nameMessage))
+                throw new InvalidOperationException(nameMessage);
+
+            if (_unitOfWork.AccountRepository.NameTaken(account.Id, account.CompanyId, account.Name))
+                throw new InvalidOperationException(AccountRules.NameTakenMessage);
+
+            _unitOfWork.AccountRepository.UpdateNameInfo(account);
         }
 
         public void DeleteAccount(Account account)
         {
-            _unitOfWork.AccountRepository.Remove(account);
+            if (!AccountRules.CanDelete(account, out var message))
+                throw new InvalidOperationException(message);
+
+            if (_unitOfWork.AccountRepository.HasOpenPeriodMovements(account.Id))
+                throw new InvalidOperationException(AccountRules.DeleteWithMovementsMessage);
+
+            _unitOfWork.AccountRepository.Remove(account).GetAwaiter().GetResult();
+        }
+
+        public bool EvaluateParentForNewChild(Account parent, out string message)
+        {
+            message = "";
+            if (parent == null)
+                return true;
+
+            var periods = GetPostingPeriods(parent.CompanyId).ToList();
+            if (periods.Count == 0)
+                return true;
+
+            var dummy = CloneAccountBalances(parent);
+            FillAccountsWithBalances(new List<Account> { dummy }, periods[0].Date, periods[periods.Count - 1].Date);
+
+            if (dummy.AccountType == AccountType.Cuenta_Auxiliar && AccountRules.HasMovement(dummy))
+            {
+                message = AccountRules.ParentHasMovementsWarning(dummy);
+                return false;
+            }
+
+            return true;
+        }
+
+        public void FillAccountsWithBalances(IList<Account> accounts, DateTime from, DateTime to)
+        {
+            if (accounts == null || accounts.Count == 0)
+                return;
+
+            foreach (var account in accounts)
+            {
+                account.DebitBalance = 0m;
+                account.CreditBalance = 0m;
+                account.DebitBalanceForeign = 0m;
+                account.CreditBalanceForeign = 0m;
+            }
+
+            var companyId = accounts.Select(a => a.CompanyId).FirstOrDefault(id => !string.IsNullOrEmpty(id));
+            if (string.IsNullOrEmpty(companyId))
+                return;
+
+            var rows = _unitOfWork.AccountRepository.GetBalancesFromAccountInfo(companyId, from, to);
+            var byId = rows.ToDictionary(x => x.Id);
+            foreach (var account in accounts)
+            {
+                if (!byId.TryGetValue(account.Id, out var row))
+                    continue;
+                account.DebitBalance = row.DebitBalance;
+                account.CreditBalance = row.CreditBalance;
+                account.DebitBalanceForeign = row.DebitBalanceForeign;
+                account.CreditBalanceForeign = row.CreditBalanceForeign;
+            }
+
+            AccountRules.ApplyRollUp(accounts);
         }
 
         public IEnumerable<Account> GetAccountBalance(string companyId, IEnumerable<PostingPeriod> postingPeriods)
         {
-            //var accounts = _unitOfWork.AccountRepository.FindByCompanyId(companyId);
-            //var filledAccountsBalance = BuildAccountBalance(accounts, postingPeriods);
-            //return filledAccountsBalance;
             throw new NotImplementedException();
         }
 
         public Account GetAccountBalance(Account account, IEnumerable<PostingPeriod> postingPeriods)
         {
-            //var accounts = GetAccounts(account.CompanyId).ToList().GetLowLevelAccounts(account.Id); 
-            //var filledAccountsBalance = BuildAccountBalance(accounts, postingPeriods);
-            //return filledAccountsBalance.First(x=>x.Id == account.Id);
-            throw new NotImplementedException(); 
+            throw new NotImplementedException();
         }
 
-        //private IEnumerable<Account> BuildAccountBalance(IEnumerable<Account> accounts, IEnumerable<PostingPeriod> postingPeriods)
-        //{
-        //    foreach (var months in postingPeriods)
-        //    {
-        //        FillAccountWithJournalEntryLineByMonthId(accounts, months);
-        //    }
-        //    return accounts.BuildAccountsBalance();
-        //}
-
-        //private void FillAccountWithJournalEntryLineByMonthId(IEnumerable<Account> accounts, PostingPeriod months)
-        //{
-        //    var searhAccounts = accounts.Where(x => x.AccountType == AccountType.Cuenta_Auxiliar); 
-        //    foreach (var account in searhAccounts)
-        //    {
-        //        var jEnLines = _unitOfWork.JournalEntryLineRepository
-        //                                    .FindByAccountIdAndPostingPeriodId(account.Id, months.Id);
-        //        account.JournalEntryLines.AddRange(jEnLines);
-        //    }
-        //}
-
+        private static Account CloneAccountBalances(Account source)
+        {
+            return new Account
+            {
+                Id = source.Id,
+                Name = source.Name,
+                CompanyId = source.CompanyId,
+                FatherAccount = source.FatherAccount,
+                AccountType = source.AccountType,
+                AccountTag = source.AccountTag,
+                Editable = source.Editable,
+                PriorBalance = source.PriorBalance,
+                PriorBalanceForeign = source.PriorBalanceForeign,
+                DebitBalance = source.DebitBalance,
+                CreditBalance = source.CreditBalance,
+                DebitBalanceForeign = source.DebitBalanceForeign,
+                CreditBalanceForeign = source.CreditBalanceForeign
+            };
+        }
 
         #endregion
 
@@ -215,7 +313,7 @@ namespace AriesContador.Services
 
         public void DeleteJournalEntry(JournalEntry journalEntry)
         {
-            _unitOfWork.JournalEntryRepository.Remove(journalEntry);
+            _unitOfWork.JournalEntryRepository.Remove(journalEntry).GetAwaiter().GetResult();
         }
 
         public void UpdatedJournalEntryPeriod(JournalEntry journalEntry)
@@ -257,7 +355,7 @@ namespace AriesContador.Services
 
         public void DeleteJournalEntryLine(JournalEntryLine journalEntryLine)
         {
-            _unitOfWork.JournalEntryLineRepository.Remove(journalEntryLine);
+            _unitOfWork.JournalEntryLineRepository.Remove(journalEntryLine).GetAwaiter().GetResult();
         }
 
         #endregion

@@ -1,9 +1,11 @@
-﻿using CapaEntidad.Entidades.Cuentas;
+﻿using AriesContador.Core.Services;
+using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Enumeradores;
 using CapaEntidad.Interfaces;
+using CapaEntidad.Mappers;
 using CapaEntidad.Textos;
-using CapaLogica;
 using CapaPresentacion.cods;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -13,23 +15,36 @@ namespace CapaPresentacion.FrameCuentas
 {
     public partial class FrameSeleccionCuenta : Form, ICallingForm
     {
+        private readonly IFinancialService _financialService;
         private List<Cuenta> LstCuentas { get; set; }
         private ICallingForm _getCuenta;
+
         public FrameSeleccionCuenta(ICallingForm callingForm)
+            : this(callingForm, GlobalConfig.Services.GetRequiredService<IFinancialService>())
+        {
+        }
+
+        public FrameSeleccionCuenta(ICallingForm callingForm, IFinancialService financialService)
         {
             _getCuenta = callingForm as ICallingForm;
+            _financialService = financialService;
             InitializeComponent();
             CargarCuentas();
         }
+
         private void CargarCuentas()
         {
-            LstCuentas = new CuentaCL().GetAll(GlobalConfig.Company);
+            LstCuentas = CuentaMapper.ToCuentaList(
+                _financialService.GetAccounts(GlobalConfig.Company.Code),
+                GlobalConfig.Company);
             treeCuentas.Nodes.AddRange(TreeViewCuentas.CrearTreeView(LstCuentas));
         }
+
         private void SeleccionaCuentaEnTreeView(object sender, EventArgs e)
         {
             DevolverCuenta();
         }
+
         private void DevolverCuenta()
         {
             try
@@ -51,10 +66,12 @@ namespace CapaPresentacion.FrameCuentas
                 MessageBox.Show(ex.Message, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
         private void CerrarClick(object sender, EventArgs e)
         {
             this.Close();
         }
+
         private void SeleccionarClick(object sender, EventArgs e)
         {
             if (treeCuentas.SelectedNode != null)
@@ -66,14 +83,17 @@ namespace CapaPresentacion.FrameCuentas
                 MessageBox.Show("Seleccione una cuenta", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             }
         }
+
         private void ExpandirArbol(object sender, EventArgs e)
         {
             treeCuentas.ExpandAll();
         }
+
         private void ContraerArbol(object sender, EventArgs e)
         {
             treeCuentas.CollapseAll();
         }
+
         private void CrearNuevaCuenta(object sender, EventArgs e)
         {
             try
@@ -82,7 +102,6 @@ namespace CapaPresentacion.FrameCuentas
                 {
                     MessageBox.Show("Seleccione una cuenta ", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                     return;
-
                 }
                 else if (!(treeCuentas.SelectedNode.Tag is Cuenta cuenta) || cuenta.Indicador == IndicadorCuenta.Cuenta_Titulo)
                 {
@@ -91,17 +110,17 @@ namespace CapaPresentacion.FrameCuentas
                 }
                 else
                 {
-                    FrameNuevaCuenta nv = new FrameNuevaCuenta(this, cuenta);
+                    FrameNuevaCuenta nv = new FrameNuevaCuenta(this, cuenta, _financialService);
                     nv.lstCuentas = LstCuentas;
                     nv.ShowDialog();
                 }
-
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
         private void BucarNodes(object sender, KeyEventArgs e)
         {
             var t = txtNombreCuenta.Text;
@@ -117,6 +136,7 @@ namespace CapaPresentacion.FrameCuentas
                 treeCuentas.SelectedNode = null;
             }
         }
+
         private void TxtNombreCuentaKeyPress(object sender, KeyPressEventArgs e)
         {
             if ((Keys)e.KeyChar == Keys.Enter)

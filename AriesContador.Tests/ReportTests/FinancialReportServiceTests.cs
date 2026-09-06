@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using AriesContador.Core.Models.Accounts;
 using AriesContador.Core.Models.JournalEntries;
@@ -108,6 +109,17 @@ namespace AriesContador.Tests.ReportTests
                 .PreviousClosurePostingPeriodBalance(new BasicReportParam { CompanyId = "C001" });
 
             Assert.Equal(275m, balance.Amount);
+        }
+
+        [Fact]
+        public void AccountMoving_points_to_classic_excel_path()
+        {
+            var uow = new FakeUnitOfWork();
+            var svc = new FinancialReportService(uow);
+            Action call = () => { svc.AccountMoving(); };
+
+            var ex = Assert.Throws<InvalidOperationException>(call);
+            Assert.Contains("CuentaCL.GetInfoCompleta", ex.Message);
         }
 
         [Fact]

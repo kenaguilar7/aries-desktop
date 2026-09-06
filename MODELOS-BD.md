@@ -363,6 +363,28 @@ El dump original de `SP_InsertCompany` hacía `SET NewCompanyId = CompanyId` (va
 
 `GetCompanyConsecutive` **no es SP**: `CompanyRepository.LatestCode()` (`SELECT company_id … LIMIT 1`) + formato `"C" + n` en `AdministrationService`.
 
+### 5.3 Huecos de dump cubiertos en Fase 3
+
+SPs de cuentas para el maestro WinForms. Aplicar `scripts/mysql/fase3/` solo en copia. **`SP_InsertAccount` no se toca** (copia de plan al crear compañía).
+
+| SP | Qué cubre del escritorio |
+|---|---|
+| `SP_InsertChildAccount` | `CuentaDao.Insert`: nombre, `previous_balance_*`, si el padre es auxiliar mueve líneas y lo pasa a mayor |
+| `SP_UpdateAccountNameInfo` | `CuentaDao.UpdateNameInfo` |
+| `SP_AccountNameTaken` | Unique name con `account_type = 1` (ACTIVO) |
+| `SP_AccountHasOpenPeriodMovements` | Guard de `CuentaDao.Deleted` (meses abiertos) |
+| `SP_GetAccountBalancesFromAccountInfo` | Vista `account_info` YYYYMM como `CuentaConSaldos` |
+
+#### Contrato Dapper (fase 3)
+
+| SP | Parámetros | Notas |
+|---|---|---|
+| `SP_InsertChildAccount` | `Name`, `PriorBalance`, `PriorBalanceForeign`, `FatherAccount`, `CompanyId`, `AccountType` (guía), `AccountTag` (activo…), `Memo`, `Editable`, `UpdatedBy`, OUT `Id` | cruce igual que `SP_InsertAccount` |
+| `SP_UpdateAccountNameInfo` | `Id`, `Name`, `Memo`, `CompanyId`, `UpdatedBy` | |
+| `SP_AccountNameTaken` | `AccountId`, `CompanyId`, `Name` | SELECT `Taken` 0/1 |
+| `SP_AccountHasOpenPeriodMovements` | `AccountId` | SELECT `HasMovements` 0/1 |
+| `SP_GetAccountBalancesFromAccountInfo` | `CompanyId`, `FromPeriod`, `ToPeriod` | `FromPeriod`/`ToPeriod` = `yyyyMM` |
+
 #### Contrato Dapper (`ToInsertParams` / `ToUpdateParams`)
 
 | SP | Parámetros (nombres que envía Data) | Columnas BD |

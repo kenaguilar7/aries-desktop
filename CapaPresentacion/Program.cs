@@ -12,8 +12,7 @@ namespace CapaPresentacion
     {
         /// <summary>
         /// Punto de entrada principal para la aplicación.
-        /// Login y maestros de compañías/usuarios van in-process (MySQL).
-        /// Asientos HTTP se mantienen hasta la unificación de ese módulo.
+        /// Escritorio in-process (MySQL): login, maestros, cuentas, periodos y asientos.
         /// </summary>
         [STAThread]
         static void Main()
@@ -28,8 +27,6 @@ namespace CapaPresentacion
             services.AddSingleton<IAdministrationService, AdministrationService>();
             services.AddSingleton<IFinancialService, FinancialService>();
             services.AddSingleton<IFinancialReportService, FinancialReportService>();
-            services.AddSingleton<IHttpFinancialService, HttpFinancialService>();
-            services.AddSingleton<IHttpClientService, HttpClientService>();
             services.AddSingleton<FrameMenu>();
 
             var serviceProvider = services.BuildServiceProvider();

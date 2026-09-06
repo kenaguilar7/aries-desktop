@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -67,16 +68,80 @@ namespace AriesContador.Tests.Fakes
 
     public class FakeAccountRepository : IAccountRepository
     {
+        public List<Account> Items { get; } = new List<Account>();
+        public List<Account> Removed { get; } = new List<Account>();
+        public List<Account> Updated { get; } = new List<Account>();
+        public List<int> PromotedFatherIds { get; } = new List<int>();
         public List<Account> AccountsWithBalance { get; } = new List<Account>();
+        public List<Account> BalanceRows { get; } = new List<Account>();
+        public bool? NameTakenOverride { get; set; }
+        public bool HasOpenPeriodMovementsResult { get; set; }
 
-        public void Add(Account entity) { }
+        public void Add(Account entity)
+        {
+            if (entity.Id == 0)
+                entity.Id = Items.Count == 0 ? 1 : Items.Max(x => x.Id) + 1;
+            Items.Add(entity);
+        }
+
+        public void AddChild(Account entity)
+        {
+            Add(entity);
+            if (!entity.FatherAccount.HasValue || entity.FatherAccount.Value == 0)
+                return;
+
+            var father = Items.FirstOrDefault(x => x.Id == entity.FatherAccount.Value);
+            if (father != null && father.AccountType == AccountType.Cuenta_Auxiliar)
+            {
+                father.AccountType = AccountType.Cuenta_De_Mayor;
+                PromotedFatherIds.Add(father.Id);
+            }
+        }
+
         public Task AddAsync(Account entity) { Add(entity); return Task.CompletedTask; }
-        public void Update(Account entity) { }
-        public Task Remove(Account entity) => Task.CompletedTask;
-        public Task<Account> GetById(int id) => Task.FromResult<Account>(null);
-        public IEnumerable<Account> FindByCompanyId(string companyId) => Enumerable.Empty<Account>();
+
+        public void Update(Account entity) => UpdateNameInfo(entity);
+
+        public void UpdateNameInfo(Account entity)
+        {
+            Updated.Add(entity);
+            var i = Items.FindIndex(x => x.Id == entity.Id);
+            if (i >= 0) Items[i] = entity;
+        }
+
+        public Task Remove(Account entity)
+        {
+            Removed.Add(entity);
+            return Task.CompletedTask;
+        }
+
+        public Task<Account> GetById(int id) =>
+            Task.FromResult(Items.FirstOrDefault(x => x.Id == id));
+
+        public IEnumerable<Account> FindByCompanyId(string companyId) =>
+            Items.Where(x => x.CompanyId == companyId).ToList();
+
         public IEnumerable<Account> GetDefaultAccounts() => Enumerable.Empty<Account>();
-        public IEnumerable<Account> AccountsWithBalanceByDateRange(BasicReportParam reportParam) => AccountsWithBalance;
+
+        public IEnumerable<Account> AccountsWithBalanceByDateRange(BasicReportParam reportParam) =>
+            AccountsWithBalance;
+
+        public bool NameTaken(int accountId, string companyId, string name)
+        {
+            if (NameTakenOverride.HasValue)
+                return NameTakenOverride.Value;
+
+            return Items.Any(x =>
+                x.Id != accountId
+                && x.CompanyId == companyId
+                && x.AccountTag == AccountTag.Activo
+                && string.Equals(x.Name, name, StringComparison.Ordinal));
+        }
+
+        public bool HasOpenPeriodMovements(int accountId) => HasOpenPeriodMovementsResult;
+
+        public IEnumerable<Account> GetBalancesFromAccountInfo(string companyId, DateTime from, DateTime to) =>
+            BalanceRows;
     }
 
     public class FakePostingPeriodRepository : IPostingPeriodRepository
@@ -103,9 +168,29 @@ namespace AriesContador.Tests.Fakes
         public List<JournalEntry> Removed { get; } = new List<JournalEntry>();
         public int ConsecutiveNumber { get; set; } = 1;
 
+        public bool FailAfterHeader { get; set; }
+
         public void Add(JournalEntry entity)
         {
-            if (entity.Id == 0) entity.Id = Items.Count + 1;
+            if (entity.Id == 0)
+                entity.Id = Items.Count == 0 ? 1 : Items.Max(x => x.Id) + 1;
+
+            if (FailAfterHeader)
+                throw new InvalidOperationException("Fallo al insertar línea");
+
+            if (entity.JournalEntryLines != null)
+            {
+                var nextId = 1;
+                foreach (var line in entity.JournalEntryLines)
+                {
+                    line.JournalEntryId = entity.Id;
+                    if (line.Id == 0)
+                        line.Id = nextId++;
+                    else if (line.Id >= nextId)
+                        nextId = line.Id + 1;
+                }
+            }
+
             Items.Add(entity);
         }
 

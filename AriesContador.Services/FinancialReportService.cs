@@ -115,7 +115,8 @@ namespace AriesContador.Services
 
         public Task<DataTable> AccountMoving()
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException(
+                "El movimiento de cuenta clásico sigue en CuentaCL.GetInfoCompleta (Excel), no en FinancialReportService.");
         }
         //public IEnumerable<Core.Models.Reports.BalanceComprobacionReport> BalanceComprobacionReport(Core.Models.JournalEntries.BasicReportParam reportParam)
         //{

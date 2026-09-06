@@ -14,8 +14,11 @@ namespace AriesContador.Core.Services
         Account GetAccountBalance(Account account, IEnumerable<PostingPeriod> postingPeriods);
         IEnumerable<Account> GetDefaultAccounts();
         void CreateAccount(Account account);
+        void CreateAccount(Account account, Account parent);
         void UpdateAccount(Account account);
         IEnumerable<Account> GetAccounts(string companyId);
+        bool EvaluateParentForNewChild(Account parent, out string message);
+        void FillAccountsWithBalances(IList<Account> accounts, DateTime from, DateTime to);
         #endregion
 
         #region Posting Periods

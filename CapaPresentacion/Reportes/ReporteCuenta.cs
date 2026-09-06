@@ -1,7 +1,9 @@
 ﻿using AriesContador.Core.Models.Companies;
+using AriesContador.Core.Services;
 using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Entidades.FechaTransacciones;
 using CapaEntidad.Entidades.Usuarios;
+using CapaEntidad.Mappers;
 using CapaEntidad.Reportes;
 using CapaEntidad.Textos;
 using CapaLogica;
@@ -20,13 +22,14 @@ namespace CapaPresentacion.Reportes
         private Usuario _usuario = new Usuario();
         private List<Cuenta> _lstCuentas = new List<Cuenta>();
         private List<Cuenta> _lstCuentasFiltradas = new List<Cuenta>();
-        private FechaTransaccionCL _fechaTransaccion = new FechaTransaccionCL();
         private List<FechaTransaccion> lstFechas = new List<FechaTransaccion>();
         private CuentaCL _cuentaCL = new CuentaCL();
+        private readonly IFinancialService _financialService;
         int cont = 0;
         private Boolean ConSaldo { set { LlenarTabla(value); } }
-        public ReporteCuenta(Company compañia, Usuario usuario)
+        public ReporteCuenta(Company compañia, Usuario usuario, IFinancialService financialService)
         {
+            _financialService = financialService;
             InitializeComponent();
             CargarDatos(compañia, usuario);
             
@@ -43,7 +46,8 @@ namespace CapaPresentacion.Reportes
             _compania = compañia;
             _lstCuentas = _cuentaCL.GetAll(compañia); ;
             _usuario = usuario;
-            lstFechas = _fechaTransaccion.GetAllActive(compañia, null);
+            lstFechas = CuentaMapper.ToFechaTransaccionList(
+                _financialService.GetPostingPeriods(compañia.Code));
             this.lstMesesAbiertos.DataSource = lstFechas;
             LlenarTabla(false);
         }

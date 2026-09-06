@@ -9,6 +9,8 @@ using System.Linq;
 using CapaLogica;
 using System;
 using CapaEntidad.Reportes;
+using CapaEntidad.Mappers;
+using AriesContador.Core.Services;
 using System.ComponentModel;
 using System.Drawing;
 using System.Text;
@@ -18,12 +20,14 @@ namespace CapaPresentacion.Reportes
 {
     public partial class ReporteBalanceSituacion : Form
     {
+        private readonly IFinancialService _financialService;
         private CuentaCL CuentaCL { get; } = new CuentaCL();
         private List<Cuenta> ListaCuentas { get; set; }
         private IEnumerable<Cuenta> ListaCuentasBalancePerdida { get; set; }
         private IEnumerable<Cuenta> ListaCuentasBalanceSitucion { get; set; }
-        public ReporteBalanceSituacion()
+        public ReporteBalanceSituacion(IFinancialService financialService)
         {
+            _financialService = financialService;
             InitializeComponent();
             CargarDatos();
         }
@@ -32,7 +36,8 @@ namespace CapaPresentacion.Reportes
         private void CargarDatos()
         {
             ListaCuentas = CuentaCL.GetAll(GlobalConfig.Company);
-            var lstDts = new FechaTransaccionCL().GetAllActive(GlobalConfig.Company, GlobalConfig.Usuario);
+            var lstDts = CuentaMapper.ToFechaTransaccionList(
+                _financialService.GetPostingPeriods(GlobalConfig.Company.Code));
 
             AFechaFinal.DataSource = lstDts;
 

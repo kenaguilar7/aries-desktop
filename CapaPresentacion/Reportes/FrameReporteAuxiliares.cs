@@ -1,5 +1,7 @@
-﻿using CapaEntidad.Entidades.Cuentas;
+﻿using AriesContador.Core.Services;
+using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Entidades.FechaTransacciones;
+using CapaEntidad.Mappers;
 using CapaEntidad.Reportes;
 using CapaLogica;
 using System;
@@ -17,19 +19,20 @@ namespace CapaPresentacion.Reportes
     public partial class FrameReporteAuxiliares : Form
     {
 
-        FechaTransaccionCL fechaTransaccionCL = new FechaTransaccionCL();
+        private readonly IFinancialService _financialService;
         CuentaCL cuentaCL = new CuentaCL();
         private List<FechaTransaccion> fechaTransaccions = new List<FechaTransaccion>();
 
-        public FrameReporteAuxiliares()
+        public FrameReporteAuxiliares(IFinancialService financialService)
         {
+            _financialService = financialService;
             InitializeComponent();
             CargarDatos();
         }
         private void CargarDatos()
         {
-
-            var lstMeses = fechaTransaccionCL.GetAll(GlobalConfig.Company, GlobalConfig.Usuario);
+            var lstMeses = CuentaMapper.ToFechaTransaccionList(
+                _financialService.GetPostingPeriods(GlobalConfig.Company.Code));
             fechaTransaccions = lstMeses;
             this.lstMesInicio.DataSource = lstMeses;
         }

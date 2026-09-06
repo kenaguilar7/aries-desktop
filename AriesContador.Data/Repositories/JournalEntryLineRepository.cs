@@ -96,7 +96,8 @@ namespace AriesContador.Data.Repositories
 
         public Task AddAsync(JournalEntryLine entity)
         {
-            throw new NotImplementedException();
+            Add(entity);
+            return Task.CompletedTask;
         }
     }
 }

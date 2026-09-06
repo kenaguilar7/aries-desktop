@@ -40,6 +40,8 @@ namespace AriesContador.Data.Repositories
 
                         childAccounts.ForEach(x => x.FatherAccount = newID);
                     }
+
+                    dataAccess.CommitTransaction();
                 }
                 catch (Exception)
                 {

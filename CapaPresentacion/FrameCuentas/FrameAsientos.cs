@@ -8,7 +8,6 @@ using AriesContador.Core;
 using AriesContador.Core.Models.JournalEntries;
 using AriesContador.Core.Models.PostingPeriods;
 using AriesContador.Core.Services;
-using AriesContador.Services;
 using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Enumeradores;
 using CapaEntidad.Interfaces;
@@ -16,7 +15,6 @@ using CapaEntidad.Textos;
 using CapaPresentacion.Reportes;
 using CapaPresentacion.Utils;
 using AriesContador.Core.Models.Utils;
-using System.Threading.Tasks;
 
 namespace CapaPresentacion.FrameCuentas 
 {
@@ -24,7 +22,6 @@ namespace CapaPresentacion.FrameCuentas
     {
         private JournalEntry _journalEntry;
         private JournalEntryLine _journalEntryLineOnEdit = new JournalEntryLine();
-        private readonly IHttpFinancialService _httpFinancialService;
         private readonly IFinancialService _financialService;
         private readonly IFinancialReportService _financialReportService;
         private int PreventMesesAbiertosIndex = 0;
@@ -41,25 +38,24 @@ namespace CapaPresentacion.FrameCuentas
 
         private PostingPeriod PostingPeriodSelected => (PostingPeriod) lstMesesAbiertos.SelectedItem;
 
-        public FrameAsientos(IHttpFinancialService httpFinancialService, IFinancialService financialService, IFinancialReportService financialReportService)
+        public FrameAsientos(IFinancialService financialService, IFinancialReportService financialReportService)
         {
             InitializeComponent();
-            _httpFinancialService = httpFinancialService;
             _financialService = financialService;
             _financialReportService = financialReportService;
         }
 
-        private async void FrameAsientos_Load(object sender, EventArgs e)
+        private void FrameAsientos_Load(object sender, EventArgs e)
         {
             ConfigExchangeController(GlobalConfig.Company.CurrencyType);
-            await LoadAccountingPeriodList();
+            LoadAccountingPeriodList();
         }
 
-        private async Task LoadAccountingPeriodList()
+        private void LoadAccountingPeriodList()
         {
             try
             {
-                var lstResult = await _httpFinancialService.GetPostingPeriods(GlobalConfig.Company.Code); 
+                var lstResult = _financialService.GetPostingPeriods(GlobalConfig.Company.Code); 
                 lstMesesAbiertos.DataSource = lstResult.OrderByDescending(p => p.Date).ToList();
 
                 lstTipoCambio.SelectedIndex = 0;
@@ -110,9 +106,9 @@ namespace CapaPresentacion.FrameCuentas
             //}
         }
 
-        private async Task<IEnumerable<JournalEntry>> ConfigAsientoBorrador(IEnumerable<JournalEntry> asientos)
+        private IEnumerable<JournalEntry> ConfigAsientoBorrador(IEnumerable<JournalEntry> asientos)
         {
-            var newEntryNum = await _httpFinancialService.CreateJournalEntryConsecutive(PostingPeriodSelected.Id);
+            var newEntryNum = _financialService.CreateJournalEntryConsecutive(PostingPeriodSelected.Id);
 
             var newJEnt = new JournalEntry()
             {
@@ -130,12 +126,12 @@ namespace CapaPresentacion.FrameCuentas
             return jEntries.OrderByDescending(x => x.Number).ToArray();
         }
 
-        private async void LstMesesAbiertos_SelectedIndexChanged(object sender, EventArgs e)
+        private void LstMesesAbiertos_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (EqualDebAndCredONJournalEntry())
             {
-                var lst = await _httpFinancialService.GetJournalEntries(PostingPeriodSelected.Id);
-                lstNumeroAsientos.DataSource = await ConfigAsientoBorrador(lst);
+                var lst = _financialService.GetJournalEntries(PostingPeriodSelected.Id);
+                lstNumeroAsientos.DataSource = ConfigAsientoBorrador(lst);
                 this.PreventMesesAbiertosIndex = lstMesesAbiertos.SelectedIndex;
             }
             else
@@ -149,7 +145,7 @@ namespace CapaPresentacion.FrameCuentas
 
 
         #region CRUD JournalEntry
-        private async void btnNuevoAsiento_Click(object sender, EventArgs e)
+        private void btnNuevoAsiento_Click(object sender, EventArgs e)
         {
             try
             {
@@ -157,7 +153,7 @@ namespace CapaPresentacion.FrameCuentas
                 
                 if (_journalEntry.Id == 0)
                 {
-                    await _httpFinancialService.CreateJournalEntry(_journalEntry);
+                    _financialService.CreateJournalEntry(_journalEntry);
                 }
                 LstMesesAbiertos_SelectedIndexChanged(null, null);
 
@@ -168,20 +164,11 @@ namespace CapaPresentacion.FrameCuentas
             }
         }
 
-        private async Task<JournalEntry> ValidateBookEntryForInsert(JournalEntry asiento)
-        {
-            if (asiento.Id == 0)
-            {
-                asiento.Id = await _httpFinancialService.CreateJournalEntry(asiento);
-            }
-            return asiento;
-        }
-
         #endregion
 
         #region JournalEntryLine
 
-        private async  void DeleteJournalEntryLine_Event_Click(object sender, EventArgs e)
+        private void DeleteJournalEntryLine_Event_Click(object sender, EventArgs e)
         {
             var selectedRows = this.GridDatos.SelectedRows;
 
@@ -191,7 +178,7 @@ namespace CapaPresentacion.FrameCuentas
                     TextoGeneral.NombreApp, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
                     DeleteTransactions(selectedRows);
-                    await ValidateEqualDebAndCred();
+                    ValidateEqualDebAndCred();
                     UpdateView();
                     RemoveAccountOnEdit();
                 }
@@ -203,20 +190,20 @@ namespace CapaPresentacion.FrameCuentas
             }
         }
 
-        private async Task ValidateEqualDebAndCred()
+        private void ValidateEqualDebAndCred()
         {
             _journalEntry.ApplyStatusFromBalance();
-            await _httpFinancialService.UpdateJournalEntry(_journalEntry);
+            _financialService.UpdateJournalEntry(_journalEntry);
         }
 
-        private async void DeleteTransactions(DataGridViewSelectedRowCollection selectedRows)
+        private void DeleteTransactions(DataGridViewSelectedRowCollection selectedRows)
         {
             try
             {
                 for (int i = 0; i < selectedRows.Count; i++)
                 {
                     var jEnL = (JournalEntryLine) selectedRows[i].Tag;
-                    await _httpFinancialService.DeleteJournalEntryLine(jEnL);
+                    _financialService.DeleteJournalEntryLine(jEnL);
                     _journalEntry.JournalEntryLines.Remove(jEnL);
                 }
             }
@@ -255,7 +242,7 @@ namespace CapaPresentacion.FrameCuentas
             return jELine;
         }
 
-        private async void BtnAgregarTransaccion(object sender, EventArgs e)
+        private void BtnAgregarTransaccion(object sender, EventArgs e)
         {
             try
             {
@@ -263,12 +250,20 @@ namespace CapaPresentacion.FrameCuentas
                 {
                     if (ValidateChildren())
                     {
-                        await ValidateBookEntryForInsert(_journalEntry);
                         var newJEntry = CreateJournalEntryLineModel();
-                        newJEntry.Id = await _httpFinancialService.CreateJournalEntryLine(newJEntry);
-                        _journalEntry.JournalEntryLines.Add(newJEntry);
+                        if (_journalEntry.Id == 0)
+                        {
+                            _journalEntry.JournalEntryLines.Add(newJEntry);
+                            _financialService.CreateJournalEntry(_journalEntry);
+                        }
+                        else
+                        {
+                            newJEntry.JournalEntryId = _journalEntry.Id;
+                            _financialService.CreateJournalEntryLine(newJEntry);
+                            _journalEntry.JournalEntryLines.Add(newJEntry);
+                        }
 
-                        await UpdateJournalEntryState();
+                        UpdateJournalEntryState();
 
                         _journalEntryLineOnEdit = new JournalEntryLine();
                         this.LimpiarPanelDatosAsiento();
@@ -291,19 +286,22 @@ namespace CapaPresentacion.FrameCuentas
 
         }
 
-        private async Task UpdateJournalEntryState()
+        private void UpdateJournalEntryState()
         {
             _journalEntry.ApplyStatusFromBalance();
-            await _httpFinancialService.UpdateJournalEntry(_journalEntry);
+            _financialService.UpdateJournalEntry(_journalEntry);
         }
 
-        private async void LstNumeroAsientos_SelectedIndexChanged(object sender, EventArgs e)
+        private void LstNumeroAsientos_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (EqualDebAndCredONJournalEntry())
             {
                 _journalEntry = (JournalEntry) lstNumeroAsientos.SelectedItem;
-                var journalEntryLines = await _httpFinancialService.GetJournalEntryLineByJournalEntryId(_journalEntry.Id);
-                _journalEntry.JournalEntryLines = journalEntryLines.ToList();
+                if (_journalEntry.Id != 0)
+                {
+                    var journalEntryLines = _financialService.GetJournalEntryLineByJournalEntryId(_journalEntry.Id);
+                    _journalEntry.JournalEntryLines = journalEntryLines.ToList();
+                }
 
 
                 //_journalEntry.Transaccions = _transaccionCL.GetCompleto(_journalEntry);
@@ -346,7 +344,7 @@ namespace CapaPresentacion.FrameCuentas
             }
         }
 
-        private async void BtnEliminar_Click(object sender, EventArgs e)
+        private void BtnEliminar_Click(object sender, EventArgs e)
         {
             try
             {
@@ -358,7 +356,7 @@ namespace CapaPresentacion.FrameCuentas
                 else if (MessageBox.Show("Se eliminara este asiento desea continuar", TextoGeneral.NombreApp,
                     MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
-                    await _httpFinancialService.DeleteJournalEntry(_journalEntry);
+                    _financialService.DeleteJournalEntry(_journalEntry);
                     //_asientoCL.Delete(_journalEntry, GlobalConfig.Usuario);
                     MessageBox.Show("Asiento eliminado correctamente", TextoGeneral.NombreApp, MessageBoxButtons.OK,
                         MessageBoxIcon.Information);
@@ -374,7 +372,7 @@ namespace CapaPresentacion.FrameCuentas
                     MessageBoxIcon.Exclamation);
             }
         }
-        private async void btnEditarLinea_Click(object sender, EventArgs e)
+        private void btnEditarLinea_Click(object sender, EventArgs e)
         {
             var adummy = this.GridDatos.SelectedRows;
 
@@ -385,7 +383,7 @@ namespace CapaPresentacion.FrameCuentas
             else
             {
                 var dummy = (JournalEntryLine)this.GridDatos.SelectedRows[0].Tag;
-                await CargarDatosPanelTransaction(dummy);
+                CargarDatosPanelTransaction(dummy);
                 //btnAgregarTransa.Text = "Actualizar";
                 btnAgregarTransa.Visible = false; 
                 btnUpdateJELine.Visible = true; 
@@ -393,7 +391,7 @@ namespace CapaPresentacion.FrameCuentas
 
 
         }
-        private async void btnUpdateJELine_Click(object sender, EventArgs e)
+        private void btnUpdateJELine_Click(object sender, EventArgs e)
         {
             if (ValidateChildren())
             {
@@ -404,13 +402,13 @@ namespace CapaPresentacion.FrameCuentas
 
                 try
                 {
-                    await _httpFinancialService.UpdateJournalEntryLine(jenLine);
+                    _financialService.UpdateJournalEntryLine(jenLine);
 
                     var index = _journalEntry.JournalEntryLines.IndexOf(_journalEntryLineOnEdit);
                     _journalEntry.JournalEntryLines.Remove(_journalEntryLineOnEdit);
                     _journalEntry.JournalEntryLines.Insert(index, jenLine);
 
-                    await UpdateJournalEntryState();
+                    UpdateJournalEntryState();
                     this.LimpiarPanelDatosAsiento();
                     txtBoxReferencia.Focus();
                     btnUpdateJELine.Visible = false; 
@@ -553,12 +551,12 @@ namespace CapaPresentacion.FrameCuentas
             btnAgregarTransa.Text = "Agregar";
         }
 
-        private async Task CargarDatosPanelTransaction(JournalEntryLine dummy)
+        private void CargarDatosPanelTransaction(JournalEntryLine dummy)
         {
 
             _journalEntryLineOnEdit = dummy;
 
-            var account = await _httpFinancialService.FindAccount(dummy.AccountId);
+            var account = _financialService.FindAccount(dummy.AccountId);
 
             var accountDTO = new Cuenta()
             {
@@ -918,12 +916,12 @@ namespace CapaPresentacion.FrameCuentas
             return EqualDebAndCredONJournalEntry(); 
         }
 
-        private async void BtnRefreshGrid(object sender, EventArgs e)
+        private void BtnRefreshGrid(object sender, EventArgs e)
         {
             _journalEntry = (JournalEntry)lstNumeroAsientos.SelectedItem;
-            if(_journalEntry != null)
+            if(_journalEntry != null && _journalEntry.Id != 0)
             {
-                var lstEntryLines = await _httpFinancialService.GetJournalEntryLineByJournalEntryId(_journalEntry.Id);
+                var lstEntryLines = _financialService.GetJournalEntryLineByJournalEntryId(_journalEntry.Id);
                 _journalEntry.JournalEntryLines = lstEntryLines.ToList();
             }
 
