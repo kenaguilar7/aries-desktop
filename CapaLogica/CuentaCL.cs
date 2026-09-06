@@ -14,8 +14,26 @@ namespace CapaLogica
 {
     public class CuentaCL
     {
-        CuentaDao cuentaDao = new CuentaDao();
-        FechaTransaccionCL _fechaTransaccionCL = new FechaTransaccionCL();
+        private CuentaDao _cuentaDao;
+        private FechaTransaccionCL _fechaTransaccionCL;
+
+        private CuentaDao cuentaDao
+        {
+            get
+            {
+                if (_cuentaDao == null) _cuentaDao = new CuentaDao();
+                return _cuentaDao;
+            }
+        }
+
+        private FechaTransaccionCL FechaTransaccion
+        {
+            get
+            {
+                if (_fechaTransaccionCL == null) _fechaTransaccionCL = new FechaTransaccionCL();
+                return _fechaTransaccionCL;
+            }
+        }
         public Boolean Deleted(Cuenta cuenta, Usuario usuario, out String mensaje)
         {
             if (!cuenta.Editable || cuenta.Indicador != IndicadorCuenta.Cuenta_Auxiliar)
@@ -42,17 +60,7 @@ namespace CapaLogica
                 /// aunque esos saldos no se vayan a insertar en la base de datos, lo jacemos para retornarla
                 /// y el callingform pueda ver reflejada esos movimientos
                 ///
-                if (cuentaPadre.Indicador == IndicadorCuenta.Cuenta_Auxiliar)
-                {
-                    nuevaCuenta.SaldoAnteriorColones = cuentaPadre.SaldoAnteriorColones;
-                    nuevaCuenta.SaldoAnteriorDolares = cuentaPadre.SaldoAnteriorDolares;
-                    nuevaCuenta.DebitosColones = cuentaPadre.DebitosColones;
-                    nuevaCuenta.CreditosColones = cuentaPadre.CreditosColones;
-                    nuevaCuenta.DebitosDolares = cuentaPadre.DebitosDolares;
-                    nuevaCuenta.CreditosDolares = cuentaPadre.CreditosDolares;
-                    //cambiarle el estado despues de insertar en la base de datos
-                    //cuentaPadre.Indicador = IndicadorCuenta.Cuenta_De_Mayor; 
-                }
+                HeredarSaldosSiPadreEsAuxiliar(nuevaCuenta, cuentaPadre);
 
                 if (cuentaDao.Insert(ref nuevaCuenta, cuentaPadre, user, out Mensaje))
                 {
@@ -182,33 +190,47 @@ namespace CapaLogica
             });
 
             cuentaDao.CuentaConSaldos(lst, compañia, fechaInicio, fechaFinal);
+            AplicarRollUpHaciaPadres(lst);
+        }
 
-            ///Pasar este codigo a un metodo independiente
+        /// <summary>
+        /// Auxiliar bajo auxiliar: la nueva cuenta hereda saldos y movimientos del padre.
+        /// Extraído de Insert para poder caracterizarlo sin ir a MySQL.
+        /// </summary>
+        public void HeredarSaldosSiPadreEsAuxiliar(Cuenta nuevaCuenta, Cuenta cuentaPadre)
+        {
+            if (cuentaPadre == null || nuevaCuenta == null) return;
+            if (cuentaPadre.Indicador != IndicadorCuenta.Cuenta_Auxiliar) return;
 
-            ///LLenamos tambien la cuenta padre
-            ///Como solo trae el saldo de las cuentas axiliares 
-            ///entonces llenamos el arbol de cuentas hacia arriba
+            nuevaCuenta.SaldoAnteriorColones = cuentaPadre.SaldoAnteriorColones;
+            nuevaCuenta.SaldoAnteriorDolares = cuentaPadre.SaldoAnteriorDolares;
+            nuevaCuenta.DebitosColones = cuentaPadre.DebitosColones;
+            nuevaCuenta.CreditosColones = cuentaPadre.CreditosColones;
+            nuevaCuenta.DebitosDolares = cuentaPadre.DebitosDolares;
+            nuevaCuenta.CreditosDolares = cuentaPadre.CreditosDolares;
+        }
+
+        /// <summary>
+        /// Roll-up de débitos/créditos de auxiliares hacia padres (mayor y título).
+        /// No suma saldo anterior. Extraído de LLenarConSaldos.
+        /// </summary>
+        public void AplicarRollUpHaciaPadres(List<Cuenta> lst)
+        {
             foreach (var item in lst)
             {
                 if (item.Indicador == IndicadorCuenta.Cuenta_Auxiliar)
                 {
-
                     var dummy = item;
 
                     while ((dummy = BuscarCuentaPadre(lst, dummy)) != null)
                     {
-                        //dummy.SaldoAnteriorColones += item.SaldoAnteriorColones;
-                        //dummy.SaldoAnteriorDolares += item.SaldoAnteriorDolares; 
                         dummy.DebitosColones += item.DebitosColones;
                         dummy.CreditosColones += item.CreditosColones;
                         dummy.DebitosDolares += item.DebitosDolares;
                         dummy.CreditosDolares += item.CreditosDolares;
-
                     }
                 }
             }
-
-
         }
         public Cuenta BuscarCuentaPadre(List<Cuenta> lst, Cuenta cuentaHija)
         {
@@ -271,7 +293,7 @@ namespace CapaLogica
         }
         public Boolean VerificarSiEsApta(Cuenta cuentaPadre, out String Mensaje)
         {
-            List<FechaTransaccion> meses = _fechaTransaccionCL.GetAllActive(cuentaPadre.MyCompania, null);
+            List<FechaTransaccion> meses = FechaTransaccion.GetAllActive(cuentaPadre.MyCompania, null);
 
             if (meses.Count != 0)
             {

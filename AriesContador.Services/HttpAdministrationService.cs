@@ -1,13 +1,9 @@
 ﻿using AriesContador.Core.Models;
 using AriesContador.Core.Models.Companies;
 using AriesContador.Core.Models.Users;
-using AriesContador.Services.Models.Company;
-using DocumentFormat.OpenXml.ExtendedProperties;
-using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
-using Company = AriesContador.Core.Models.Companies.Company; 
+using Company = AriesContador.Core.Models.Companies.Company;
 
 namespace AriesContador.Services
 {
@@ -50,6 +46,5 @@ namespace AriesContador.Services
             var response = await _httpClientService.PostAsync<WebToken, Login>(string.Concat(EnvironmentVariable.ApiUrl, "auth/login"), param);
             return response;
         }
-
     }
 }

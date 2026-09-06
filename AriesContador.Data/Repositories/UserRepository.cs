@@ -19,7 +19,7 @@ namespace AriesContador.Data.Repositories
         public void Add(User entity)
         {
             MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            entity.Id = dataAccess.SaveData<User, int>("SP_InsertUser", entity);
+            entity.Id = dataAccess.SaveData<object, int>("SP_InsertUser", ToInsertParams(entity));
         }
 
         public IEnumerable<User> GetAll()
@@ -44,7 +44,46 @@ namespace AriesContador.Data.Repositories
         public void Update(User entity)
         {
             MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            dataAccess.SaveData<User>("SP_UpdateUser", entity); 
+            dataAccess.SaveData("SP_UpdateUser", ToUpdateParams(entity));
+        }
+
+        private static object ToInsertParams(User entity)
+        {
+            return new
+            {
+                entity.UserName,
+                UserType = (int)entity.UserType,
+                entity.IdNumber,
+                entity.Name,
+                entity.LastName,
+                entity.MiddleName,
+                entity.PhoneNumber,
+                entity.Mail,
+                entity.Memo,
+                entity.Password,
+                entity.UpdatedBy,
+                Active = entity.Active
+            };
+        }
+
+        private static object ToUpdateParams(User entity)
+        {
+            return new
+            {
+                entity.Id,
+                entity.UserName,
+                UserType = (int)entity.UserType,
+                entity.IdNumber,
+                entity.Name,
+                entity.LastName,
+                entity.MiddleName,
+                entity.PhoneNumber,
+                entity.Mail,
+                entity.Memo,
+                entity.Password,
+                entity.UpdatedBy,
+                Active = entity.Active
+            };
         }
     }
 }

@@ -67,7 +67,7 @@ namespace Aries.WebServices.AdministrationServices
         public async Task<string> GetCompanyConsecutive()
         {
             var lastCompany = await _unitOfWork.CompanyRepository.LatestCode();
-            return "C" + (int.Parse(lastCompany.Substring(1, 3)) + 1).ToString("000"); 
+            return "C" + (int.Parse(lastCompany.Substring(1, 3)) + 1).ToString("000");
         }
 
         public void InactivateUser(User usuario)

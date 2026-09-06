@@ -5,7 +5,6 @@ using AriesContador.Data.Internal.DataAccess;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace AriesContador.Data.Repositories
@@ -27,7 +26,7 @@ namespace AriesContador.Data.Repositories
                 try
                 {
                     dataAccess.StartTransaction();
-                    dataAccess.SaveDataInTransaction<Company>("SP_InsertCompany", entity);
+                    dataAccess.SaveDataInTransaction("SP_InsertCompany", ToInsertParams(entity));
 
                     foreach (var account in accounts)
                     {
@@ -40,18 +39,14 @@ namespace AriesContador.Data.Repositories
                                              select acn).ToList();
 
                         childAccounts.ForEach(x => x.FatherAccount = newID);
-
                     }
-
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     dataAccess.RollBackTransaction();
-                    throw ex;
+                    throw;
                 }
-
             }
-
         }
 
         public async Task<IEnumerable<Company>> GetAll()
@@ -61,7 +56,7 @@ namespace AriesContador.Data.Repositories
             var lst1 = await dataAccess.ExecuteQuery<Company>(Query.Query.AdministrationQuery.JuridicPerson);
             var lst2 = await dataAccess.ExecuteQuery<Company>(Query.Query.AdministrationQuery.FisicPerson);
             lst1.AddRange(lst2);
-            return await Task.FromResult(lst1); 
+            return lst1;
         }
 
         public async Task<string> LatestCode()
@@ -69,7 +64,7 @@ namespace AriesContador.Data.Repositories
             string query = "SELECT c.company_id as Code FROM companies c ORDER BY c.company_id DESC LIMIT 1";
             MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
             var output = await dataAccess.ExecuteQuery<Company>(query);
-            return output.First().Code; 
+            return output.First().Code;
         }
 
         public async Task Remove(Company entity)
@@ -89,15 +84,57 @@ delete T0 from posting_period_end_closing T0 where T0.company_id = @Code;
 delete T0 from accounting_months T0 where T0.company_id = @Code; 
   
 delete from companies where company_id = @Code
-"; 
-           MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
-           await dataAccess.ExecuteSingle(query, entity);
+";
+            MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
+            await dataAccess.ExecuteSingle(query, entity);
         }
 
         public void Update(Company entity)
         {
             MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            dataAccess.SaveData<Company>("SP_UpdateCompany", entity);
+            dataAccess.SaveData("SP_UpdateCompany", ToUpdateParams(entity));
+        }
+
+        private static object ToInsertParams(Company entity)
+        {
+            return new
+            {
+                entity.Code,
+                TypeId = (int)entity.IdType,
+                entity.NumberId,
+                entity.CompanyName,
+                MoneyType = (int)entity.MoneyType,
+                entity.Op1,
+                entity.Op2,
+                entity.Address,
+                Website = entity.WebSite,
+                entity.Mail,
+                entity.PhoneNumber1,
+                entity.PhoneNumber2,
+                entity.Notes,
+                UserId = entity.CreatedBy,
+                IsActive = entity.Active
+            };
+        }
+
+        private static object ToUpdateParams(Company entity)
+        {
+            return new
+            {
+                entity.Code,
+                entity.CompanyName,
+                MoneyType = (int)entity.MoneyType,
+                entity.Op1,
+                entity.Op2,
+                entity.Address,
+                Website = entity.WebSite,
+                entity.Mail,
+                entity.PhoneNumber1,
+                entity.PhoneNumber2,
+                entity.Notes,
+                UserId = entity.CreatedBy,
+                IsActive = entity.Active
+            };
         }
     }
 }

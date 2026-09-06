@@ -203,18 +203,8 @@ namespace CapaPresentacion.FrameCuentas
 
         private void ValidateEqualDebAndCred()
         {
-            if (_journalEntry.Cuadrado)
-            {
-                _journalEntry.JournalEntryStatus =
-                    JournalEntryStatus.Approved; 
-                _financialSercie.UpdateJournalEntry(_journalEntry);
-            }
-            else
-            {
-                _journalEntry.JournalEntryStatus =
-                    JournalEntryStatus.Progress; 
-                _financialSercie.UpdateJournalEntry(_journalEntry);
-            }
+            _journalEntry.ApplyStatusFromBalance();
+            _financialSercie.UpdateJournalEntry(_journalEntry);
         }
 
         private void DeleteTransactions(DataGridViewSelectedRowCollection selectedRows)
@@ -249,20 +239,13 @@ namespace CapaPresentacion.FrameCuentas
                 UpdatedBy = GlobalConfig.Usuario.Id,
             };
 
-            if (lstTipoCambio.SelectedItem is AriesContador.Core.Models.Utils.Currency.colones)
+            if (lstTipoCambio.SelectedItem is AriesContador.Core.Models.Utils.Currency currency)
             {
-                jELine.Currency = AriesContador.Core.Models.Utils.Currency.colones;
-                jELine.RateAmount = 1.00m;
-                jELine.Amount = Convert.ToDecimal(txtMontoTotalTransaccion.Text);
-            }
-            else if (lstTipoCambio.SelectedItem is AriesContador.Core.Models.Utils.Currency.dolares)
-            {
-                jELine.Currency = AriesContador.Core.Models.Utils.Currency.dolares;
-                jELine.RateAmount = Convert.ToDecimal(txtTipoCambio.Text);
-                jELine.ForeignAmount = Convert.ToDecimal(txtMontoTotalTransaccion.Text);
-
-                var foreignAmount = jELine.ForeignAmount * jELine.RateAmount;
-                jELine.Amount = Math.Truncate(100 * foreignAmount) / 100;
+                var enteredAmount = Convert.ToDecimal(txtMontoTotalTransaccion.Text);
+                var enteredRate = currency == AriesContador.Core.Models.Utils.Currency.dolares
+                    ? Convert.ToDecimal(txtTipoCambio.Text)
+                    : 1.00m;
+                JournalEntryLineAmount.Apply(jELine, currency, enteredAmount, enteredRate);
             }
 
             jELine.DebOrCred = (rDebitos.Checked) ? AriesContador.Core.Models.Utils.DebOrCred.Debito : AriesContador.Core.Models.Utils.DebOrCred.Credito;
@@ -308,16 +291,8 @@ namespace CapaPresentacion.FrameCuentas
 
         private void UpdateJournalEntryState()
         {
-            if (_journalEntry.Cuadrado)
-            {
-                _journalEntry.JournalEntryStatus = JournalEntryStatus.Approved;
-                _financialSercie.UpdateJournalEntry(_journalEntry);
-            }
-            else
-            {
-                _journalEntry.JournalEntryStatus = JournalEntryStatus.Progress;
-                _financialSercie.UpdateJournalEntry(_journalEntry);
-            }
+            _journalEntry.ApplyStatusFromBalance();
+            _financialSercie.UpdateJournalEntry(_journalEntry);
         }
 
         private void LstNumeroAsientos_SelectedIndexChanged(object sender, EventArgs e)
@@ -719,7 +694,7 @@ namespace CapaPresentacion.FrameCuentas
         }
         private bool EqualDebAndCredONJournalEntry()
         {
-            if (_journalEntry != null && _journalEntry.Id != 0 && !_journalEntry.Cuadrado)
+            if (_journalEntry != null && !_journalEntry.CanNavigateAway())
             {
                 this.WindowState = FormWindowState.Normal;
                 MessageBox.Show("Este asiento se encuentra descuadrado, cuadre el asiento antes de salir", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);

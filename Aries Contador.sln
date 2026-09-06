@@ -19,6 +19,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AriesContador.Services", "A
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AriesContador.Tests", "AriesContador.Tests\AriesContador.Tests.csproj", "{A54B5E12-4470-4FFF-9E22-6C17BAF5F26C}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aries.Desktop.Tests", "Aries.Desktop.Tests\Aries.Desktop.Tests.csproj", "{8F3A1B2C-4D5E-6789-ABCD-EF0123456789}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FEC16CC2-C46F-46BE-BA20-52CCBFE73D1A}"
 	ProjectSection(SolutionItems) = preProject
 		apprunner.yaml = apprunner.yaml
@@ -130,6 +132,18 @@ Global
 		{A54B5E12-4470-4FFF-9E22-6C17BAF5F26C}.Release|x64.Build.0 = Release|Any CPU
 		{A54B5E12-4470-4FFF-9E22-6C17BAF5F26C}.Release|x86.ActiveCfg = Release|Any CPU
 		{A54B5E12-4470-4FFF-9E22-6C17BAF5F26C}.Release|x86.Build.0 = Release|Any CPU
+		{8F3A1B2C-4D5E-6789-ABCD-EF0123456789}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F3A1B2C-4D5E-6789-ABCD-EF0123456789}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F3A1B2C-4D5E-6789-ABCD-EF0123456789}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8F3A1B2C-4D5E-6789-ABCD-EF0123456789}.Debug|x64.Build.0 = Debug|Any CPU
+		{8F3A1B2C-4D5E-6789-ABCD-EF0123456789}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8F3A1B2C-4D5E-6789-ABCD-EF0123456789}.Debug|x86.Build.0 = Debug|Any CPU
+		{8F3A1B2C-4D5E-6789-ABCD-EF0123456789}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F3A1B2C-4D5E-6789-ABCD-EF0123456789}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F3A1B2C-4D5E-6789-ABCD-EF0123456789}.Release|x64.ActiveCfg = Release|Any CPU
+		{8F3A1B2C-4D5E-6789-ABCD-EF0123456789}.Release|x64.Build.0 = Release|Any CPU
+		{8F3A1B2C-4D5E-6789-ABCD-EF0123456789}.Release|x86.ActiveCfg = Release|Any CPU
+		{8F3A1B2C-4D5E-6789-ABCD-EF0123456789}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

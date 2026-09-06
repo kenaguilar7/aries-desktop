@@ -11,7 +11,15 @@ namespace CapaLogica
 {
     public class UsuarioCL
     {
-        UsuarioDao usuarioDao = new UsuarioDao();
+        private UsuarioDao _usuarioDao;
+        private UsuarioDao usuarioDao
+        {
+            get
+            {
+                if (_usuarioDao == null) _usuarioDao = new UsuarioDao();
+                return _usuarioDao;
+            }
+        }
         public Boolean Insert(Usuario u, Usuario user, out String mensaje)
         {
 

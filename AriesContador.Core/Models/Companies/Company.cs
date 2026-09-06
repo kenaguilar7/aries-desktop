@@ -4,20 +4,36 @@ using System.Collections;
 using System.Collections.Generic;
 using AriesContador.Core.Models.PostingPeriods;
 using AriesContador.Core.Models.Accounts;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace AriesContador.Core.Models.Companies
 {
     public class Company : BaseModel
     {
+        public string CopyFrom { get; set; }
         public string Code { get; set; }
 
-        public string Name { get; set; }
+        public string CompanyName { get; set; }
+
+        /// <summary>Alias legacy (WinForms / CapaEntidad) de CompanyName.</summary>
+        public string Name
+        {
+            get => CompanyName;
+            set => CompanyName = value;
+        }
 
         public CompanyType CompanyType { get; set;  }
 
         public IdType IdType { get; set; }
 
-        public string IdNumber { get; set; }
+        public string NumberId { get; set; }
+
+        /// <summary>Alias legacy de NumberId.</summary>
+        public string IdNumber
+        {
+            get => NumberId;
+            set => NumberId = value;
+        }
 
         public string Op1 { get; set; }
 
@@ -31,11 +47,32 @@ namespace AriesContador.Core.Models.Companies
 
         public string PhoneNumber2 { get; set; }
 
-        public string Memo { get; set; }
+        public string Notes { get; set; }
 
-        public string Web { get; set; }
+        /// <summary>Alias legacy de Notes.</summary>
+        public string Memo
+        {
+            get => Notes;
+            set => Notes = value;
+        }
 
-        public CurrencyTypeCompany CurrencyType { get; set; }
+        public string WebSite { get; set; }
+
+        /// <summary>Alias legacy de WebSite.</summary>
+        public string Web
+        {
+            get => WebSite;
+            set => WebSite = value;
+        }
+
+        public CurrencyTypeCompany MoneyType { get; set; }
+
+        /// <summary>Alias legacy de MoneyType.</summary>
+        public CurrencyTypeCompany CurrencyType
+        {
+            get => MoneyType;
+            set => MoneyType = value;
+        }
 
         public IEnumerable<PostingPeriod> PostingPeriods { get; set; } = new List<PostingPeriod>();
 
@@ -43,7 +80,7 @@ namespace AriesContador.Core.Models.Companies
 
         public override string ToString()
         {
-            return $"{ Name.ToUpper()}-{Code}";
+            return $"{ CompanyName.ToUpper()}-{Code}";
         }
 
         public Company() { }
@@ -52,15 +89,15 @@ namespace AriesContador.Core.Models.Companies
         {
             this.Code = codigo;
             this.IdType = tipoID;
-            this.IdNumber = numeroId;
-            this.Name = nombre;
-            this.CurrencyType = TipoMoneda;
+            this.NumberId = numeroId;
+            this.CompanyName = nombre;
+            this.MoneyType = TipoMoneda;
             this.Address = direccion;
             this.PhoneNumber1 = telefono[0];
             this.PhoneNumber2 = telefono[1];
-            this.Web = web;
+            this.WebSite = web;
             this.Mail = correo;
-            this.Memo = observaciones;
+            this.Notes = observaciones;
             this.Active = activo;
         }
     }

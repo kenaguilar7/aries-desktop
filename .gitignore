@@ -259,6 +259,5 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
-/CapaPresentacion/App.config
 /Aries.WebAPI/appsettings.json
 /Aries.WebAPI/out

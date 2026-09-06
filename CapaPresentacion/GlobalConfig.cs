@@ -23,17 +23,75 @@ namespace CapaPresentacion
 
         public GlobalConfig()
         {
+            LoadHttpBaseUrl();
+            LoadDatabaseConnectionString();
             CheckForUpdates();
+        }
+
+        private static void LoadHttpBaseUrl()
+        {
+            var httpBase = ConfigurationManager.ConnectionStrings["HttpBaseUrl"];
+            if (httpBase == null || string.IsNullOrWhiteSpace(httpBase.ConnectionString))
+            {
+                throw new ConfigurationErrorsException(
+                    "Falta connectionString 'HttpBaseUrl' en CapaPresentacion.exe.config (copia de app.config).");
+            }
+
+            EnvironmentVariable.ApiUrl = httpBase.ConnectionString;
+        }
+
+        private static void LoadDatabaseConnectionString()
+        {
+            var db = ConfigurationManager.ConnectionStrings["DBconnectionString"]
+                ?? ConfigurationManager.ConnectionStrings["DBconnectionstring"];
+            if (db == null || string.IsNullOrWhiteSpace(db.ConnectionString))
+            {
+                throw new ConfigurationErrorsException(
+                    "Falta connectionString 'DBconnectionString' en CapaPresentacion.exe.config (copia de app.config).");
+            }
+
+            var server = ReadConnectionPart(db.ConnectionString, "Server")
+                ?? ReadConnectionPart(db.ConnectionString, "Data Source")
+                ?? ReadConnectionPart(db.ConnectionString, "Host");
+            if (string.IsNullOrWhiteSpace(server))
+            {
+                throw new ConfigurationErrorsException(
+                    "DBconnectionString no tiene Server=. El login HTTP no prueba RDS; Maestro de Cuentas y Asientos fallarán.");
+            }
+        }
+
+        private static string ReadConnectionPart(string connectionString, string key)
+        {
+            foreach (var part in connectionString.Split(';'))
+            {
+                var trimmed = part.Trim();
+                var eq = trimmed.IndexOf('=');
+                if (eq <= 0)
+                    continue;
+                var name = trimmed.Substring(0, eq).Trim();
+                if (name.Equals(key, System.StringComparison.OrdinalIgnoreCase))
+                    return trimmed.Substring(eq + 1).Trim();
+            }
+            return null;
         }
 
         private async Task CheckForUpdates()
         {
-
-            using (var manager = new UpdateManager(ConfigurationManager.ConnectionStrings["UpdateServerString"].ConnectionString))
+            try
             {
-                await manager.UpdateApp();
+                var updateUrl = ConfigurationManager.ConnectionStrings["UpdateServerString"]?.ConnectionString;
+                if (string.IsNullOrWhiteSpace(updateUrl))
+                    return;
+
+                using (var manager = new UpdateManager(updateUrl))
+                {
+                    await manager.UpdateApp();
+                }
             }
-            EnvironmentVariable.ApiUrl = ConfigurationManager.ConnectionStrings["HttpBaseUrl"].ConnectionString;
+            catch
+            {
+                // Squirrel/S3 no debe impedir el login.
+            }
         }
 
         public static List<Modulo> Permisos = new List<Modulo>();

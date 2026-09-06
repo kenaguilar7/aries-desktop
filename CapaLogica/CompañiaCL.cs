@@ -10,7 +10,15 @@ namespace CapaLogica
 {
     public class CompañiaCL
     {
-        CompañiaDao compañiaDao = new CompañiaDao();
+        private CompañiaDao _compañiaDao;
+        private CompañiaDao compañiaDao
+        {
+            get
+            {
+                if (_compañiaDao == null) _compañiaDao = new CompañiaDao();
+                return _compañiaDao;
+            }
+        }
         /// <summary>
         /// Se inserta la compañia en la base de datos
         /// </summary>
@@ -24,7 +32,7 @@ namespace CapaLogica
             {
 
                 ///Mandemos estas verificaciones a la capa entida
-                if (!VerificaString.VerificarID(t.IdNumber, t.IdType, out mensaje))
+                if (!VerificaString.VerificarID(t.NumberId, t.IdType, out mensaje))
                 {
                     return false;
                 }

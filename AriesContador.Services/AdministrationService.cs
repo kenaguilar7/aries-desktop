@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace AriesContador.Services
 {   
     public class AdministrationService : IAdministrationService
-    {
+        {
         private readonly IUnitOfWork _unitOfWork;
         public AdministrationService(IUnitOfWork unitOfWork)
         {

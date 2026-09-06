@@ -2,20 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="FinancialTests\postingPeriods.json" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Include="FinancialTests\Resources\postingPeriods.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="FinancialTests\PostingPeriodsTests.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
@@ -34,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AriesContador.Core\AriesContador.Core.csproj" />
+    <ProjectReference Include="..\AriesContador.Services\AriesContador.Services.csproj" />
   </ItemGroup>
 
 </Project>
