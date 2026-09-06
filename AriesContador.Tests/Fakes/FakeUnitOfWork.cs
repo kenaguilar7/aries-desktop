@@ -36,6 +36,7 @@ namespace AriesContador.Tests.Fakes
     public class FakeCompanyRepository : ICompanyRepository
     {
         public void Add(Company entity) { }
+        public Task AddAsync(Company entity) { Add(entity); return Task.CompletedTask; }
         public void Update(Company entity) { }
         public Task Remove(Company entity) => Task.CompletedTask;
         public Task<IEnumerable<Company>> GetAll() => Task.FromResult(Enumerable.Empty<Company>());
@@ -45,6 +46,7 @@ namespace AriesContador.Tests.Fakes
     public class FakeUserRepository : IUserRepository
     {
         public void Add(User entity) { }
+        public Task AddAsync(User entity) { Add(entity); return Task.CompletedTask; }
         public void Update(User entity) { }
         public Task Remove(User entity) => Task.CompletedTask;
         public User GetById(int id) => null;
@@ -56,9 +58,10 @@ namespace AriesContador.Tests.Fakes
         public List<Account> AccountsWithBalance { get; } = new List<Account>();
 
         public void Add(Account entity) { }
+        public Task AddAsync(Account entity) { Add(entity); return Task.CompletedTask; }
         public void Update(Account entity) { }
         public Task Remove(Account entity) => Task.CompletedTask;
-        public Account GetById(int id) => null;
+        public Task<Account> GetById(int id) => Task.FromResult<Account>(null);
         public IEnumerable<Account> FindByCompanyId(string companyId) => Enumerable.Empty<Account>();
         public IEnumerable<Account> GetDefaultAccounts() => Enumerable.Empty<Account>();
         public IEnumerable<Account> AccountsWithBalanceByDateRange(BasicReportParam reportParam) => AccountsWithBalance;
@@ -70,10 +73,13 @@ namespace AriesContador.Tests.Fakes
         public List<PostingPeriodEndClosing> Closed { get; } = new List<PostingPeriodEndClosing>();
 
         public void Add(PostingPeriod entity) => Items.Add(entity);
+        public Task AddAsync(PostingPeriod entity) { Add(entity); return Task.CompletedTask; }
         public void Update(PostingPeriod entity) { }
         public Task Remove(PostingPeriod entity) => Task.CompletedTask;
         public IEnumerable<PostingPeriod> FindByCompanyId(string companyId) =>
             Items.Where(x => x.CompanyId == companyId).ToList();
+        public Task<IEnumerable<PostingPeriod>> FindByCompanyIdAsync(string companyId) =>
+            Task.FromResult(FindByCompanyId(companyId));
         public void ClosePostingPeriod(PostingPeriodEndClosing postingPeriod) => Closed.Add(postingPeriod);
     }
 
@@ -91,7 +97,25 @@ namespace AriesContador.Tests.Fakes
             Items.Add(entity);
         }
 
+        public Task AddAsync(JournalEntry entity)
+        {
+            Add(entity);
+            return Task.CompletedTask;
+        }
+
+        public Task<int> AddAsyncReturningId(JournalEntry journalEntry)
+        {
+            Add(journalEntry);
+            return Task.FromResult(journalEntry.Id);
+        }
+
         public void Update(JournalEntry entity) => Updated.Add(entity);
+
+        public Task UpdateAsync(JournalEntry entity)
+        {
+            Update(entity);
+            return Task.CompletedTask;
+        }
 
         public Task Remove(JournalEntry entity)
         {
@@ -104,7 +128,13 @@ namespace AriesContador.Tests.Fakes
         public IEnumerable<JournalEntry> FindByPostingPeriodId(int postPeriodId) =>
             Items.Where(x => x.PostingPeriodId == postPeriodId).ToList();
 
+        public Task<IEnumerable<JournalEntry>> FindByPostingPeriodIdAsync(int pstPeriodId) =>
+            Task.FromResult(FindByPostingPeriodId(pstPeriodId));
+
         public int GetConsecutiveNumber(int postingPeriodId) => ConsecutiveNumber;
+
+        public Task<int> GetConsecutiveNumberAsync(int postingPeriodId) =>
+            Task.FromResult(GetConsecutiveNumber(postingPeriodId));
 
         public IEnumerable<JournalEntryDeletedReport> GetDeletedItemByDateRange(BasicReportParam reportParam) =>
             Enumerable.Empty<JournalEntryDeletedReport>();
@@ -124,7 +154,21 @@ namespace AriesContador.Tests.Fakes
             Items.Add(entity);
         }
 
+        public Task AddAsync(JournalEntryLine entity)
+        {
+            Add(entity);
+            return Task.CompletedTask;
+        }
+
+        public Task<int> AddAsyncWithReturnId(JournalEntryLine entity)
+        {
+            Add(entity);
+            return Task.FromResult(entity.Id);
+        }
+
         public void Update(JournalEntryLine entity) { }
+
+        public Task UpdateAsync(JournalEntryLine entity) => Task.CompletedTask;
 
         public Task Remove(JournalEntryLine entity)
         {
@@ -136,6 +180,9 @@ namespace AriesContador.Tests.Fakes
 
         public IEnumerable<JournalEntryLine> FindByJournalEntryId(int journalEntryId) =>
             Items.Where(x => x.JournalEntryId == journalEntryId).ToList();
+
+        public Task<IEnumerable<JournalEntryLine>> FindByJournalEntryIdAsync(int journalEntryId) =>
+            Task.FromResult(FindByJournalEntryId(journalEntryId));
 
         public IEnumerable<JournalEntryLine> FindByAccountIdAndPostingPeriodId(int accountId, int postingPeriodId) =>
             Enumerable.Empty<JournalEntryLine>();

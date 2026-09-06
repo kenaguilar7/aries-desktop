@@ -20,7 +20,6 @@ namespace CapaEntidad.Entidades.Cuentas
         /// <returns></returns>
         public decimal SaldoMensual(decimal debito, decimal credito)
         {
-                /// credito - debito
             return (credito - debito);
         }
     }

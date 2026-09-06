@@ -38,6 +38,14 @@ namespace AriesContador.Data.Repositories
             return jEntryLines;
         }
 
+        public async Task<IEnumerable<JournalEntryLine>> FindByJournalEntryIdAsync(int journalEntryId)
+        {
+            MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
+            var jEntryLines = await  dataAccess.LoadData<JournalEntryLine, dynamic>
+                                ("SP_GetJournalEntryLineByJournalEntryId", new { JournalEntryId = journalEntryId });
+            return jEntryLines;
+        }
+
         public JournalEntryLine GetById(int id)
         {
             MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
@@ -58,6 +66,13 @@ namespace AriesContador.Data.Repositories
 
         }
 
+        public async Task UpdateAsync(JournalEntryLine entity)
+        {
+            MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
+            await dataAccess.SaveData<JournalEntryLine>("SP_UpdateJournalEntryLine", entity);
+
+        }
+
         public IEnumerable<JournalEntryLineDeletedReport> GetDeletedItemByDateRange(BasicReportParam reportParam)
         {
             MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
@@ -72,5 +87,16 @@ namespace AriesContador.Data.Repositories
             dataAccess.SaveData("SP_RestoreJournalEntryLine", entryLine);
         }
 
+        public async Task<int> AddAsyncWithReturnId(JournalEntryLine entity)
+        {
+            MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
+            var id = await dataAccess.SaveData<JournalEntryLine, int>("SP_InsertJournalEntryLine", entity);
+            return id;
+        }
+
+        public Task AddAsync(JournalEntryLine entity)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

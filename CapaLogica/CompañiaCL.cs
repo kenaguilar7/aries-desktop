@@ -65,6 +65,8 @@ namespace CapaLogica
             }
 
         }
+
+
         public Boolean Update(Company t, Usuario user, out String mensaje)
         {
             try
@@ -101,10 +103,7 @@ namespace CapaLogica
 
             
         }
-        public string NuevoCodigo()
-        {
-            return compañiaDao.NuevoCodigo();
-        }
+
         /// <summary>
         /// Devuleve la lista con todas las compañias, Esta lista trae en 
         /// las primeras posiciones las personas fisicas y despues las juridicas 

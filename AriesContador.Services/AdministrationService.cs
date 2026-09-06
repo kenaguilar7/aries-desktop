@@ -16,9 +16,10 @@ namespace AriesContador.Services
             _unitOfWork = unitOfWork;
         }
 
-        public void CreateCompany(Company compañia)
+        public Task CreateCompany(Company compañia)
         {
             _unitOfWork.CompanyRepository.Add(compañia);
+            return Task.CompletedTask;
         }
 
         public void CreateUser(User usuario)
@@ -28,7 +29,7 @@ namespace AriesContador.Services
 
         public Task DeleteCompany(Company company)
         {
-            throw new NotImplementedException();
+            return _unitOfWork.CompanyRepository.Remove(company);
         }
 
         public Company FindByCode(string code)
@@ -79,9 +80,10 @@ namespace AriesContador.Services
             _unitOfWork.UserRepository.Update(usuario);
         }
 
-        Task<string> IAdministrationService.GetCompanyConsecutive()
+        public async Task<string> GetCompanyConsecutive()
         {
-            throw new NotImplementedException();
+            var lastCompany = await _unitOfWork.CompanyRepository.LatestCode();
+            return "C" + (int.Parse(lastCompany.Substring(1, 3)) + 1).ToString("000");
         }
 
     }

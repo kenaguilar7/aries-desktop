@@ -18,11 +18,13 @@ namespace CapaPresentacion
     public partial class FrameMenu : Form
     {
         private readonly IHttpAdministrationService _httpAdministrationService;
+        private readonly IHttpFinancialService _httpFinancialService;
 
         public Boolean comParametro { set { CargarCompañia(); } }
-        public FrameMenu(IHttpAdministrationService companyService)
+        public FrameMenu(IHttpAdministrationService companyService, IHttpFinancialService httpFinancialService)
         {
             this._httpAdministrationService = companyService;
+            this._httpFinancialService = httpFinancialService;
             InitializeComponent();
 
             LoginForm n = new LoginForm(_httpAdministrationService);
@@ -87,7 +89,7 @@ namespace CapaPresentacion
                 {
                     if (!CheckForDuplicate(VentanaInfo.FormAsientos))
                     {
-                        FrameAsientos n = new FrameAsientos();
+                        FrameAsientos n = new FrameAsientos(_httpFinancialService);
                         n.MdiParent = this;
                         n.Show();
                     }

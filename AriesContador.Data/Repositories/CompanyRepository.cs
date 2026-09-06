@@ -49,6 +49,12 @@ namespace AriesContador.Data.Repositories
             }
         }
 
+        public Task AddAsync(Company entity)
+        {
+            Add(entity);
+            return Task.CompletedTask;
+        }
+
         public async Task<IEnumerable<Company>> GetAll()
         {
             var dataAccess = new MySqlDataAccessAsync(_connectionString);

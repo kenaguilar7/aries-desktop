@@ -16,9 +16,9 @@ namespace Aries.WebServices.AdministrationServices
             _unitOfWork = unitOfWork;
         }
 
-        public void CreateCompany(Company compañia)
+        public Task CreateCompany(Company company)
         {
-            _unitOfWork.CompanyRepository.Add(compañia);
+            return _unitOfWork.CompanyRepository.AddAsync(company);
         }
 
         public void CreateUser(User usuario)

@@ -27,8 +27,7 @@ namespace AriesContador.Services
 
         public Account FindAccount(int id)
         {
-            var account = _unitOfWork.AccountRepository.GetById(id);
-            return account;
+          throw new NotImplementedException();
         }
 
         public IEnumerable<Account> GetDefaultAccounts()
