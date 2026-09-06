@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using MySqlConnector;
 using System.Configuration;
 
 namespace CapaDatos.Conexion
