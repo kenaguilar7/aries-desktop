@@ -33,6 +33,7 @@ namespace Aries.Data.Tests
         {
             Assert.Equal(ExpectedSchema.Tables.Distinct().Count(), ExpectedSchema.Tables.Length);
             Assert.Equal(ExpectedSchema.ProceduresCalledByCode.Distinct().Count(), ExpectedSchema.ProceduresCalledByCode.Length);
+            Assert.Equal(ExpectedSchema.ProceduresCreatedByMigrations.Distinct().Count(), ExpectedSchema.ProceduresCreatedByMigrations.Length);
             Assert.Equal(ExpectedSchema.Functions.Distinct().Count(), ExpectedSchema.Functions.Length);
         }
 
@@ -40,6 +41,7 @@ namespace Aries.Data.Tests
         public void Initial_set_includes_scripts_missing_from_dump()
         {
             var ids = SchemaMigrations.All.Select(m => m.Id).ToArray();
+            Assert.Contains("000_BaselineDumpTables", ids);
             Assert.Contains("002_CompanyProcedures", ids);
             Assert.Contains("003_AccountMaestroProcedures", ids);
             Assert.Contains("004_UserPasswordAndProcedures", ids);
