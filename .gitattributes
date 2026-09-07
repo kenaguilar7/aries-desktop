@@ -1,0 +1,3 @@
+# Visual Studio 2022 treats LF .sln files as broken: solution folders show as (incompatible).
+*.sln text eol=crlf
+*.slnLaunch text eol=crlf

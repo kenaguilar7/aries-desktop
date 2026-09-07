@@ -6,11 +6,9 @@
 **/obj
 **/*Tests*
 AriesWebApi
-CapaPresentacion
-CapaDatos
-CapaEntidad
-CapaLogica
-CapaNegocio
+src/desktop
+archive
+Recursos
 packages
 scripts
 docs

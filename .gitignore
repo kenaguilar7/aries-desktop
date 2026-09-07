@@ -9,10 +9,13 @@
 
 # Local environment (secrets / machine overrides)
 .env
-CapaPresentacion/App.Local.config
-CapaPresentacion/App.Production.local.config
-Aries.WebAPI/appsettings.Local.json
-Aries.WebAPI/out
+src/desktop/Aries.Desktop/App.Local.config
+src/desktop/Aries.Desktop/App.Production.local.config
+src/hosts/Aries.WebAPI/appsettings.Local.json
+src/hosts/Aries.WebAPI/out
+AriesWebApi/
+updatePackages/
+updatePackagesBeta/
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -268,4 +271,4 @@ __pycache__/
 *.pyc
 
 # Squirrel packaging leftovers
-CapaPresentacion/SquirrelTemp/
+src/desktop/Aries.Desktop/SquirrelTemp/

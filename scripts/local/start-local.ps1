@@ -99,5 +99,5 @@ if ($DockerOnly) {
 
 Write-Host ""
 Write-Host "Siguiente:"
-Write-Host "  Escritorio: F5 en CapaPresentacion (Debug). MySQL :3307, HttpBaseUrl http://localhost:$apiPort/"
+Write-Host "  Escritorio: F5 en Aries.Desktop (Debug). MySQL :3307, HttpBaseUrl http://localhost:$apiPort/"
 Write-Host "  Login HTTP de prueba: kenneth / 96321 contra POST http://localhost:$apiPort/auth/login"

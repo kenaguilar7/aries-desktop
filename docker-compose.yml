@@ -36,7 +36,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: Aries.WebAPI/Dockerfile
+      dockerfile: src/hosts/Aries.WebAPI/Dockerfile
     image: aries-webapi:local
     container_name: aries_api_local
     ports:

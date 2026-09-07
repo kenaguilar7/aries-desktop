@@ -40,7 +40,7 @@
     {
       "label": "build-api",
       "type": "dotnet",
-      "project": "${workspaceFolder}/Aries.WebAPI/Aries.WebAPI.csproj"
+      "project": "${workspaceFolder}/src/hosts/Aries.WebAPI/Aries.WebAPI.csproj"
     }
   ]
 }

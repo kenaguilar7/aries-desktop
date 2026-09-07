@@ -120,7 +120,15 @@ if ($ProjectFile) {
     }
     else {
         $projectDir = Split-Path -Parent $ProjectFile
-        $repoRoot = (Resolve-Path (Join-Path $projectDir '..')).Path
+        $repoRoot = $projectDir
+        while ($repoRoot -and -not (Test-Path -LiteralPath (Join-Path $repoRoot 'nuget.config'))) {
+            $parent = Split-Path -Parent $repoRoot
+            if ($parent -eq $repoRoot) { break }
+            $repoRoot = $parent
+        }
+        if (-not (Test-Path -LiteralPath (Join-Path $repoRoot 'nuget.config'))) {
+            Add-Failure "No se encontró nuget.config subiendo desde $projectDir"
+        }
         $hintMatches = Select-String -LiteralPath $ProjectFile -Pattern '<HintPath>([^<]+)</HintPath>' -AllMatches
         foreach ($m in $hintMatches) {
             $hint = $m.Matches[0].Groups[1].Value

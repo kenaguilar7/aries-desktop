@@ -40,7 +40,7 @@ No hay job automático contra RDS. Un backup de RDS se baja **fuera** de este re
 
 ### Escritorio
 
-Proyecto de inicio **CapaPresentacion**, configuración **Debug**. Login, maestros y asientos van **in-process** a MySQL `:3307`. `HttpBaseUrl` es solo diagnóstico.
+Proyecto de inicio **Aries.Desktop** (`src/desktop/Aries.Desktop`, output `CapaPresentacion.exe`), configuración **Debug**. Login, maestros y asientos van **in-process** a MySQL `:3307`. `HttpBaseUrl` es solo diagnóstico.
 
 Tras fase 7, el primer login de un usuario en plano deja la fila hasheada (`pbkdf2$...`).
 
@@ -56,8 +56,8 @@ Tras fase 7, el primer login de un usuario en plano deja la fila hasheada (`pbkd
 |---|---|
 | `.env.example` → `.env` | Docker (MySQL, puerto API, JWT) |
 | `docker-compose.yml` | MySQL 8 + `Aries.WebAPI` |
-| `CapaPresentacion/app.config` | Debug / Local (Docker `:3307`) |
-| `CapaPresentacion/App.Production.config` | Release sin secretos |
-| `CapaPresentacion/App.Production.local.config` | Secretos de máquina (gitignored) |
-| `Aries.WebAPI/appsettings.Development.json` | Fallback local |
-| `Aries.WebAPI/appsettings.Production.json` | Vacío; secretos por env |
+| `src/desktop/Aries.Desktop/app.config` | Debug / Local (Docker `:3307`) |
+| `src/desktop/Aries.Desktop/App.Production.config` | Release sin secretos |
+| `src/desktop/Aries.Desktop/App.Production.local.config` | Secretos de máquina (gitignored) |
+| `src/hosts/Aries.WebAPI/appsettings.Development.json` | Fallback local |
+| `src/hosts/Aries.WebAPI/appsettings.Production.json` | Vacío; secretos por env |

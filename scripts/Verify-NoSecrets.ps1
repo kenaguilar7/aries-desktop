@@ -7,11 +7,11 @@ $ErrorActionPreference = 'Stop'
 $failures = New-Object System.Collections.Generic.List[string]
 
 $tracked = @(
-    'CapaPresentacion/app.config',
-    'CapaPresentacion/App.Production.config',
-    'Aries.WebAPI/appsettings.json',
-    'Aries.WebAPI/appsettings.Development.json',
-    'Aries.WebAPI/appsettings.Production.json'
+    'src/desktop/Aries.Desktop/app.config',
+    'src/desktop/Aries.Desktop/App.Production.config',
+    'src/hosts/Aries.WebAPI/appsettings.json',
+    'src/hosts/Aries.WebAPI/appsettings.Development.json',
+    'src/hosts/Aries.WebAPI/appsettings.Production.json'
 )
 
 $banned = @(
@@ -35,7 +35,7 @@ foreach ($rel in $tracked) {
     }
 }
 
-$prodApi = Join-Path $RepoRoot 'Aries.WebAPI/appsettings.Production.json'
+$prodApi = Join-Path $RepoRoot 'src/hosts/Aries.WebAPI/appsettings.Production.json'
 if (Test-Path -LiteralPath $prodApi) {
     $prod = Get-Content -LiteralPath $prodApi -Raw
     if ($prod -match 'Password=') {
