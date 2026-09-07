@@ -1,0 +1,38 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Aries.WebAPI (Local)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "docker-mysql",
+      "program": "${workspaceFolder}/src/hosts/Aries.WebAPI/bin/Debug/net8.0/Aries.WebAPI.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/hosts/Aries.WebAPI",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5088"
+      },
+      "launchBrowser": {
+        "enabled": true,
+        "args": "${auto-detect-url}"
+      }
+    },
+    {
+      "name": "Aries.WebAPI (Production)",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/hosts/Aries.WebAPI/bin/Debug/net8.0/Aries.WebAPI.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/hosts/Aries.WebAPI",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Production",
+        "ASPNETCORE_URLS": "http://localhost:5088"
+      },
+      "launchBrowser": {
+        "enabled": true,
+        "args": "${auto-detect-url}"
+      }
+    }
+  ]
+}

@@ -94,8 +94,14 @@ foreach ($add in @($csEntries)) {
             break
         }
     }
+    if ($cs -match 'ariescontrol\.cn28u0mqcci2' -or $cs -match '116390867') {
+        Add-Failure "DBconnectionString versionado no puede llevar host RDS ni password real"
+    }
     if ([string]::IsNullOrWhiteSpace($server)) {
         Add-Failure "DBconnectionString no tiene Server="
+    }
+    elseif ($server -eq 'SET_ON_MACHINE') {
+        Write-Host "OK  Server placeholder SET_ON_MACHINE (secreto fuera de git)"
     }
     elseif ($CheckDns) {
         try {
@@ -113,8 +119,14 @@ if ($ProjectFile) {
         Add-Failure "ProjectFile no existe: $ProjectFile"
     }
     else {
-        $projectDir = Split-Path -Parent $ProjectFile
-        $repoRoot = (Resolve-Path (Join-Path $projectDir '..')).Path
+        $projectFileFull = (Resolve-Path -LiteralPath $ProjectFile).Path
+        $projectDir = Split-Path -Parent $projectFileFull
+        # scripts/ lives at repo root; don't walk relative parents (pwsh 7 Join-Path rejects '').
+        $repoRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
+        $nugetConfig = Join-Path $repoRoot 'nuget.config'
+        if (-not (Test-Path -LiteralPath $nugetConfig)) {
+            Add-Failure "No se encontró nuget.config en $repoRoot (desde $projectDir)"
+        }
         $hintMatches = Select-String -LiteralPath $ProjectFile -Pattern '<HintPath>([^<]+)</HintPath>' -AllMatches
         foreach ($m in $hintMatches) {
             $hint = $m.Matches[0].Groups[1].Value

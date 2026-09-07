@@ -1,0 +1,8 @@
+# Copia a App.Local.config (gitignored) solo si tu MySQL local
+# usa otra clave, puerto o base que app.config.
+# El archivo debe ser un app.config completo (incluye binding redirects).
+# Arranque: copy app.config App.Local.config  y edita connectionStrings.
+#
+# Valores por defecto (deben coincidir con .env y appsettings.Development.json):
+#   Server=127.0.0.1;Port=3307;User id=kenneth;Password=1234;Database=aries;Allow User Variables=True
+#   HttpBaseUrl=http://localhost:5088/

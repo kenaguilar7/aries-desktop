@@ -1,0 +1,16 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Aries.Reporting.Enumeradores
+{
+    //public enum IdType
+    //{
+    //    CEDULA_JURIDICA = 1,
+    //    CEDULA_NACIONAL = 2,
+    //    DIMEX = 3,
+    //    NITE = 4,
+    //}
+}

@@ -7,6 +7,19 @@
 *.userosscache
 *.sln.docstates
 
+# Local environment (secrets / machine overrides)
+.env
+src/desktop/Aries.Desktop/App.Local.config
+src/desktop/Aries.Desktop/App.Production.local.config
+src/hosts/Aries.WebAPI/appsettings.Local.json
+src/hosts/Aries.WebAPI/out
+AriesWebApi/
+updatePackages/
+updatePackagesBeta/
+publish/updates/**
+!publish/updates/README.md
+!publish/updates/.gitkeep
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
@@ -259,5 +272,6 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
-/Aries.WebAPI/appsettings.json
-/Aries.WebAPI/out
+
+# Squirrel packaging leftovers
+src/desktop/Aries.Desktop/SquirrelTemp/

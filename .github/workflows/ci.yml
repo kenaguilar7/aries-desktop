@@ -1,0 +1,122 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main, dev]
+  pull_request:
+    branches: [master, main, dev]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version-file: global.json
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Setup NuGet
+        uses: nuget/setup-nuget@v2
+
+      - name: Cache NuGet
+        uses: actions/cache@v4
+        with:
+          path: |
+            packages
+            ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('nuget.config', '**/packages.config', '**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Restore
+        run: nuget restore Aries.sln
+
+      - name: Guard secrets
+        shell: pwsh
+        run: ./scripts/Verify-NoSecrets.ps1
+
+      - name: Build Release
+        run: msbuild Aries.sln /p:Configuration=Release /p:Platform="Any CPU" /m
+
+      - name: Test Core
+        run: dotnet test tests\AriesContador.Tests\AriesContador.Tests.csproj --configuration Release --nologo
+
+      - name: Test Desktop
+        run: dotnet test tests\Aries.Desktop.Tests\Aries.Desktop.Tests.csproj --configuration Release --nologo
+
+      - name: Test API contract
+        run: dotnet test tests\Aries.WebAPI.Tests\Aries.WebAPI.Tests.csproj --configuration Release --nologo
+
+      - name: Verify publish folder
+        shell: pwsh
+        run: |
+          ./scripts/Verify-DesktopPublish.ps1 `
+            -OutputDir "src/desktop/Aries.Desktop/bin/Release" `
+            -AppConfig "src/desktop/Aries.Desktop/App.Production.config" `
+            -ProjectFile "src/desktop/Aries.Desktop/Aries.Desktop.csproj"
+
+  linux-mysql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: aries_root_pwd
+          MYSQL_ROOT_HOST: '%'
+          MYSQL_DATABASE: aries
+          MYSQL_USER: kenneth
+          MYSQL_PASSWORD: 1234
+        ports:
+          - 3307:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -paries_root_pwd --silent"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+          --health-start-period=20s
+    env:
+      ARIES_MYSQL_CONNECTION: Server=127.0.0.1;Port=3307;User id=kenneth;Password=1234;Database=aries;Allow User Variables=True
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version-file: global.json
+
+      - name: Cache NuGet
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('nuget.config', '**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Restore test projects
+        run: |
+          dotnet restore tests/Aries.Data.Tests/Aries.Data.Tests.csproj --configfile nuget.config
+          dotnet restore tests/Aries.WebAPI.Tests/Aries.WebAPI.Tests.csproj --configfile nuget.config
+
+      - name: Prepare MySQL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mysql-client
+          mysql -h 127.0.0.1 -P 3307 -uroot -paries_root_pwd -e "SET GLOBAL log_bin_trust_function_creators=1; GRANT SYSTEM_USER ON *.* TO 'kenneth'@'%'; FLUSH PRIVILEGES;"
+
+      - name: Test database migrations
+        run: dotnet test tests/Aries.Data.Tests/Aries.Data.Tests.csproj --configuration Release --nologo
+
+      - name: Test API contract
+        run: dotnet test tests/Aries.WebAPI.Tests/Aries.WebAPI.Tests.csproj --configuration Release --nologo
