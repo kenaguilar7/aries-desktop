@@ -3,6 +3,7 @@ using AriesContador.Core.Repositories;
 using AriesContador.Data.Internal.DataAccess;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AriesContador.Data.Repositories
@@ -12,79 +13,69 @@ namespace AriesContador.Data.Repositories
         private readonly IConnectionString _connectionString;
         public PostingPeriodRepository(IConnectionString connectionString)
         {
-            this._connectionString = connectionString;
+            _connectionString = connectionString;
         }
 
-        public void Add(PostingPeriod entity)
+        public async Task AddAsync(PostingPeriod entity, CancellationToken cancellationToken = default)
         {
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            entity.Id = dataAccess.SaveData<PostingPeriod, int>("SP_InsertPostingPeriod", entity);
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            entity.Id = await dataAccess.SaveDataAsync<PostingPeriod, int>("SP_InsertPostingPeriod", entity, cancellationToken)
+                .ConfigureAwait(false);
         }
 
-        public Task AddAsync(PostingPeriod entity)
+        public async Task ClosePostingPeriodAsync(PostingPeriodEndClosing postingPeriod, CancellationToken cancellationToken = default)
         {
-            Add(entity);
-            return Task.CompletedTask;
-        }
-
-        public void ClosePostingPeriod(PostingPeriodEndClosing postingPeriod)
-        {
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
+            var dataAccess = new MySqlDataAccess(_connectionString);
             var saveMyPostingPeriod = postingPeriod.PostingPeriods;
             try
             {
-                dataAccess.StartTransaction();
+                await dataAccess.StartTransactionAsync(cancellationToken).ConfigureAwait(false);
                 foreach (var period in saveMyPostingPeriod)
                 {
-                    dataAccess.SaveDataInTransaction<PostingPeriod>("SP_ClosePeriod", period);
+                    await dataAccess.SaveDataInTransactionAsync("SP_ClosePeriod", period, cancellationToken)
+                        .ConfigureAwait(false);
                 }
 
                 postingPeriod.PostingPeriods = null;
-                postingPeriod.Id = dataAccess.SaveDataInTransaction<PostingPeriodEndClosing, int>(
+                postingPeriod.Id = await dataAccess.SaveDataInTransactionAsync<PostingPeriodEndClosing, int>(
                     "SP_InsertClosingPostingPeriod",
-                    postingPeriod);
+                    postingPeriod,
+                    cancellationToken).ConfigureAwait(false);
                 postingPeriod.PostingPeriods = saveMyPostingPeriod;
 
-                dataAccess.CommitTransaction();
+                await dataAccess.CommitTransactionAsync(cancellationToken).ConfigureAwait(false);
             }
             catch (Exception)
             {
                 postingPeriod.PostingPeriods = saveMyPostingPeriod;
-                dataAccess.RollBackTransaction();
+                await dataAccess.RollBackTransactionAsync(cancellationToken).ConfigureAwait(false);
                 throw;
             }
-
         }
 
-        public IEnumerable<PostingPeriod> FindByCompanyId(string companyId)
-        {
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            var output = dataAccess.LoadData<PostingPeriod, dynamic>("SP_GetAllPostingPeriod", new { CompanyId = companyId });
-            return output;
-        }
-
-        public async Task<IEnumerable<PostingPeriod>> FindByCompanyIdAsync(string companyId)
-        {
-            var dataAccess = new MySqlDataAccessAsync(_connectionString);
-            var output = await dataAccess.LoadData<PostingPeriod, dynamic>("SP_GetAllPostingPeriod", new { CompanyId = companyId });
-            return output;
-        }
-
-        public Task Remove(PostingPeriod entity)
+        public async Task<IEnumerable<PostingPeriod>> FindByCompanyIdAsync(string companyId, CancellationToken cancellationToken = default)
         {
             var dataAccess = new MySqlDataAccess(_connectionString);
-            dataAccess.ExecuteText(
+            return await dataAccess.LoadDataAsync<PostingPeriod, dynamic>("SP_GetAllPostingPeriod", new { CompanyId = companyId }, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        public async Task RemoveAsync(PostingPeriod entity, CancellationToken cancellationToken = default)
+        {
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            await dataAccess.ExecuteTextAsync(
                 "UPDATE accounting_months SET active = 0, updated_by = @UpdatedBy, updated_at = NOW() WHERE accounting_months_id = @Id",
-                new { entity.Id, entity.UpdatedBy });
-            return Task.CompletedTask;
+                new { entity.Id, entity.UpdatedBy },
+                cancellationToken).ConfigureAwait(false);
         }
 
-        public void Update(PostingPeriod entity)
+        public async Task UpdateAsync(PostingPeriod entity, CancellationToken cancellationToken = default)
         {
             var dataAccess = new MySqlDataAccess(_connectionString);
-            dataAccess.ExecuteText(
+            await dataAccess.ExecuteTextAsync(
                 "UPDATE accounting_months SET closed = @ClosedMySQL, updated_by = @UpdatedBy, updated_at = NOW() WHERE accounting_months_id = @Id",
-                new { entity.Id, entity.ClosedMySQL, entity.UpdatedBy });
+                new { entity.Id, entity.ClosedMySQL, entity.UpdatedBy },
+                cancellationToken).ConfigureAwait(false);
         }
     }
 }

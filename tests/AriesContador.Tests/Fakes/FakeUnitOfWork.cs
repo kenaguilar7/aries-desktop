@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AriesContador.Core;
 using AriesContador.Core.Models.Accounts;
@@ -44,36 +45,46 @@ namespace AriesContador.Tests.Fakes
         public int LastTargetUserId { get; private set; }
         public int LastUpdatedBy { get; private set; }
 
-        public IList<ModulePermission> GetModules(int userId) => Modules;
-        public bool AssignCompanies(IEnumerable<string> companyCodes, int targetUserId, int updatedByUserId)
+        public Task<IList<ModulePermission>> GetModulesAsync(int userId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IList<ModulePermission>>(Modules);
+
+        public Task<bool> AssignCompaniesAsync(IEnumerable<string> companyCodes, int targetUserId, int updatedByUserId, CancellationToken cancellationToken = default)
         {
             LastTargetUserId = targetUserId;
             LastUpdatedBy = updatedByUserId;
             AssignedCodes.AddRange(companyCodes);
-            return true;
+            return Task.FromResult(true);
         }
-        public bool RemoveCompanies(IEnumerable<string> companyCodes, int targetUserId, int updatedByUserId) => true;
-        public bool UpdateWindowPermissions(IList<ModulePermission> modules, int targetUserId, int updatedByUserId) => true;
+
+        public Task<bool> RemoveCompaniesAsync(IEnumerable<string> companyCodes, int targetUserId, int updatedByUserId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(true);
+
+        public Task<bool> UpdateWindowPermissionsAsync(IList<ModulePermission> modules, int targetUserId, int updatedByUserId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(true);
     }
 
     public class FakeEmailRepository : IEmailRepository
     {
-        public DataTable GetLog() => new DataTable();
-        public bool Insert(MailMessageLog message) => true;
+        public Task<DataTable> GetLogAsync(CancellationToken cancellationToken = default) => Task.FromResult(new DataTable());
+        public Task<bool> InsertAsync(MailMessageLog message, CancellationToken cancellationToken = default) => Task.FromResult(true);
     }
 
     public class FakeCompanyRepository : ICompanyRepository
     {
         public List<Company> Added { get; } = new List<Company>();
 
-        public void Add(Company entity) => Added.Add(entity);
-        public Task AddAsync(Company entity) { Add(entity); return Task.CompletedTask; }
-        public void Update(Company entity) { }
-        public Task Remove(Company entity) => Task.CompletedTask;
-        public Task<IEnumerable<Company>> GetAll() => Task.FromResult(Enumerable.Empty<Company>());
-        public IEnumerable<Company> GetAllBlocking() => Added;
-        public Task<string> LatestCode() => Task.FromResult("C001");
-        public Task<IEnumerable<string>> GetCodesAllowedForUser(int userId) =>
+        public Task AddAsync(Company entity, CancellationToken cancellationToken = default)
+        {
+            Added.Add(entity);
+            return Task.CompletedTask;
+        }
+
+        public Task UpdateAsync(Company entity, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task RemoveAsync(Company entity, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task<IEnumerable<Company>> GetAllAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult<IEnumerable<Company>>(Added);
+        public Task<string> LatestCodeAsync(CancellationToken cancellationToken = default) => Task.FromResult("C001");
+        public Task<IEnumerable<string>> GetCodesAllowedForUserAsync(int userId, CancellationToken cancellationToken = default) =>
             Task.FromResult(Enumerable.Empty<string>());
     }
 
@@ -87,20 +98,33 @@ namespace AriesContador.Tests.Fakes
             if (entity.Id == 0) entity.Id = Items.Count + 1;
             Items.Add(entity);
         }
-        public Task AddAsync(User entity) { Add(entity); return Task.CompletedTask; }
-        public void Update(User entity)
+
+        public Task AddAsync(User entity, CancellationToken cancellationToken = default)
+        {
+            if (entity.Id == 0) entity.Id = Items.Count + 1;
+            Items.Add(entity);
+            return Task.CompletedTask;
+        }
+
+        public Task UpdateAsync(User entity, CancellationToken cancellationToken = default)
         {
             var i = Items.FindIndex(x => x.Id == entity.Id);
             if (i >= 0) Items[i] = entity;
+            return Task.CompletedTask;
         }
-        public Task Remove(User entity) => Task.CompletedTask;
-        public User GetById(int id) => Items.FirstOrDefault(x => x.Id == id);
-        public User FindByUserName(string userName) =>
-            Items.FirstOrDefault(u => string.Equals(u.UserName, userName, StringComparison.OrdinalIgnoreCase));
-        public IEnumerable<User> GetAll()
+
+        public Task RemoveAsync(User entity, CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+        public Task<User> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Items.FirstOrDefault(x => x.Id == id));
+
+        public Task<User> FindByUserNameAsync(string userName, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Items.FirstOrDefault(u => string.Equals(u.UserName, userName, StringComparison.OrdinalIgnoreCase)));
+
+        public Task<IEnumerable<User>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             GetAllCalls++;
-            return Items;
+            return Task.FromResult<IEnumerable<User>>(Items);
         }
     }
 
@@ -115,18 +139,21 @@ namespace AriesContador.Tests.Fakes
         public bool? NameTakenOverride { get; set; }
         public bool HasOpenPeriodMovementsResult { get; set; }
 
-        public void Add(Account entity)
+        public Task AddAsync(Account entity, CancellationToken cancellationToken = default)
         {
             if (entity.Id == 0)
                 entity.Id = Items.Count == 0 ? 1 : Items.Max(x => x.Id) + 1;
             Items.Add(entity);
+            return Task.CompletedTask;
         }
 
-        public void AddChild(Account entity)
+        public Task AddChildAsync(Account entity, CancellationToken cancellationToken = default)
         {
-            Add(entity);
+            if (entity.Id == 0)
+                entity.Id = Items.Count == 0 ? 1 : Items.Max(x => x.Id) + 1;
+            Items.Add(entity);
             if (!entity.FatherAccount.HasValue || entity.FatherAccount.Value == 0)
-                return;
+                return Task.CompletedTask;
 
             var father = Items.FirstOrDefault(x => x.Id == entity.FatherAccount.Value);
             if (father != null && father.AccountType == AccountType.Cuenta_Auxiliar)
@@ -134,54 +161,57 @@ namespace AriesContador.Tests.Fakes
                 father.AccountType = AccountType.Cuenta_De_Mayor;
                 PromotedFatherIds.Add(father.Id);
             }
+            return Task.CompletedTask;
         }
 
-        public Task AddAsync(Account entity) { Add(entity); return Task.CompletedTask; }
+        public Task UpdateAsync(Account entity, CancellationToken cancellationToken = default) =>
+            UpdateNameInfoAsync(entity, cancellationToken);
 
-        public void Update(Account entity) => UpdateNameInfo(entity);
-
-        public void UpdateNameInfo(Account entity)
+        public Task UpdateNameInfoAsync(Account entity, CancellationToken cancellationToken = default)
         {
             Updated.Add(entity);
             var i = Items.FindIndex(x => x.Id == entity.Id);
             if (i >= 0) Items[i] = entity;
+            return Task.CompletedTask;
         }
 
-        public Task Remove(Account entity)
+        public Task RemoveAsync(Account entity, CancellationToken cancellationToken = default)
         {
             Removed.Add(entity);
             return Task.CompletedTask;
         }
 
-        public Task<Account> GetById(int id) =>
+        public Task<Account> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
             Task.FromResult(Items.FirstOrDefault(x => x.Id == id));
 
-        public IEnumerable<Account> FindByCompanyId(string companyId) =>
-            Items.Where(x => x.CompanyId == companyId).ToList();
+        public Task<IEnumerable<Account>> FindByCompanyIdAsync(string companyId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IEnumerable<Account>>(Items.Where(x => x.CompanyId == companyId).ToList());
 
         public IEnumerable<Account> GetDefaultAccounts() => DefaultChartOfAccounts.Create();
 
-        public IEnumerable<Account> AccountsWithBalanceByDateRange(BasicReportParam reportParam) =>
-            AccountsWithBalance;
+        public Task<IEnumerable<Account>> AccountsWithBalanceByDateRangeAsync(BasicReportParam reportParam, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IEnumerable<Account>>(AccountsWithBalance);
 
-        public bool NameTaken(int accountId, string companyId, string name)
+        public Task<bool> NameTakenAsync(int accountId, string companyId, string name, CancellationToken cancellationToken = default)
         {
             if (NameTakenOverride.HasValue)
-                return NameTakenOverride.Value;
+                return Task.FromResult(NameTakenOverride.Value);
 
-            return Items.Any(x =>
+            return Task.FromResult(Items.Any(x =>
                 x.Id != accountId
                 && x.CompanyId == companyId
                 && x.AccountTag == AccountTag.Activo
-                && string.Equals(x.Name, name, StringComparison.Ordinal));
+                && string.Equals(x.Name, name, StringComparison.Ordinal)));
         }
 
-        public bool HasOpenPeriodMovements(int accountId) => HasOpenPeriodMovementsResult;
+        public Task<bool> HasOpenPeriodMovementsAsync(int accountId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(HasOpenPeriodMovementsResult);
 
-        public IEnumerable<Account> GetBalancesFromAccountInfo(string companyId, DateTime from, DateTime to) =>
-            BalanceRows;
+        public Task<IEnumerable<Account>> GetBalancesFromAccountInfoAsync(string companyId, DateTime from, DateTime to, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IEnumerable<Account>>(BalanceRows);
 
-        public DataTable GetMovementReport(int accountId, bool auxiliar) => new DataTable();
+        public Task<DataTable> GetMovementReportAsync(int accountId, bool auxiliar, CancellationToken cancellationToken = default) =>
+            Task.FromResult(new DataTable());
     }
 
     public class FakePostingPeriodRepository : IPostingPeriodRepository
@@ -189,15 +219,21 @@ namespace AriesContador.Tests.Fakes
         public List<PostingPeriod> Items { get; } = new List<PostingPeriod>();
         public List<PostingPeriodEndClosing> Closed { get; } = new List<PostingPeriodEndClosing>();
 
-        public void Add(PostingPeriod entity) => Items.Add(entity);
-        public Task AddAsync(PostingPeriod entity) { Add(entity); return Task.CompletedTask; }
-        public void Update(PostingPeriod entity) { }
-        public Task Remove(PostingPeriod entity) => Task.CompletedTask;
-        public IEnumerable<PostingPeriod> FindByCompanyId(string companyId) =>
-            Items.Where(x => x.CompanyId == companyId).ToList();
-        public Task<IEnumerable<PostingPeriod>> FindByCompanyIdAsync(string companyId) =>
-            Task.FromResult(FindByCompanyId(companyId));
-        public void ClosePostingPeriod(PostingPeriodEndClosing postingPeriod) => Closed.Add(postingPeriod);
+        public Task AddAsync(PostingPeriod entity, CancellationToken cancellationToken = default)
+        {
+            Items.Add(entity);
+            return Task.CompletedTask;
+        }
+
+        public Task UpdateAsync(PostingPeriod entity, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task RemoveAsync(PostingPeriod entity, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task<IEnumerable<PostingPeriod>> FindByCompanyIdAsync(string companyId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IEnumerable<PostingPeriod>>(Items.Where(x => x.CompanyId == companyId).ToList());
+        public Task ClosePostingPeriodAsync(PostingPeriodEndClosing postingPeriod, CancellationToken cancellationToken = default)
+        {
+            Closed.Add(postingPeriod);
+            return Task.CompletedTask;
+        }
     }
 
     public class FakeJournalEntryRepository : IJournalEntryRepository
@@ -207,10 +243,9 @@ namespace AriesContador.Tests.Fakes
         public List<JournalEntry> Restored { get; } = new List<JournalEntry>();
         public List<JournalEntry> Removed { get; } = new List<JournalEntry>();
         public int ConsecutiveNumber { get; set; } = 1;
-
         public bool FailAfterHeader { get; set; }
 
-        public void Add(JournalEntry entity)
+        public Task AddAsync(JournalEntry entity, CancellationToken cancellationToken = default)
         {
             if (entity.Id == 0)
                 entity.Id = Items.Count == 0 ? 1 : Items.Max(x => x.Id) + 1;
@@ -232,51 +267,38 @@ namespace AriesContador.Tests.Fakes
             }
 
             Items.Add(entity);
-        }
-
-        public Task AddAsync(JournalEntry entity)
-        {
-            Add(entity);
             return Task.CompletedTask;
         }
 
-        public Task<int> AddAsyncReturningId(JournalEntry journalEntry)
+        public Task UpdateAsync(JournalEntry entity, CancellationToken cancellationToken = default)
         {
-            Add(journalEntry);
-            return Task.FromResult(journalEntry.Id);
-        }
-
-        public void Update(JournalEntry entity) => Updated.Add(entity);
-
-        public Task UpdateAsync(JournalEntry entity)
-        {
-            Update(entity);
+            Updated.Add(entity);
             return Task.CompletedTask;
         }
 
-        public Task Remove(JournalEntry entity)
+        public Task RemoveAsync(JournalEntry entity, CancellationToken cancellationToken = default)
         {
             Removed.Add(entity);
             return Task.CompletedTask;
         }
 
-        public JournalEntry GetById(int jEntryId) => Items.FirstOrDefault(x => x.Id == jEntryId);
+        public Task<JournalEntry> GetByIdAsync(int jEntryId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Items.FirstOrDefault(x => x.Id == jEntryId));
 
-        public IEnumerable<JournalEntry> FindByPostingPeriodId(int postPeriodId) =>
-            Items.Where(x => x.PostingPeriodId == postPeriodId).ToList();
+        public Task<IEnumerable<JournalEntry>> FindByPostingPeriodIdAsync(int postPeriodId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IEnumerable<JournalEntry>>(Items.Where(x => x.PostingPeriodId == postPeriodId).ToList());
 
-        public Task<IEnumerable<JournalEntry>> FindByPostingPeriodIdAsync(int pstPeriodId) =>
-            Task.FromResult(FindByPostingPeriodId(pstPeriodId));
+        public Task<int> GetConsecutiveNumberAsync(int postingPeriodId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(ConsecutiveNumber);
 
-        public int GetConsecutiveNumber(int postingPeriodId) => ConsecutiveNumber;
+        public Task<IEnumerable<JournalEntryDeletedReport>> GetDeletedItemByDateRangeAsync(BasicReportParam reportParam, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Enumerable.Empty<JournalEntryDeletedReport>());
 
-        public Task<int> GetConsecutiveNumberAsync(int postingPeriodId) =>
-            Task.FromResult(GetConsecutiveNumber(postingPeriodId));
-
-        public IEnumerable<JournalEntryDeletedReport> GetDeletedItemByDateRange(BasicReportParam reportParam) =>
-            Enumerable.Empty<JournalEntryDeletedReport>();
-
-        public void RestoreJournalEntry(JournalEntry entryLine) => Restored.Add(entryLine);
+        public Task RestoreJournalEntryAsync(JournalEntry entryLine, CancellationToken cancellationToken = default)
+        {
+            Restored.Add(entryLine);
+            return Task.CompletedTask;
+        }
     }
 
     public class FakeJournalEntryLineRepository : IJournalEntryLineRepository
@@ -285,49 +307,45 @@ namespace AriesContador.Tests.Fakes
         public List<JournalEntryLine> Restored { get; } = new List<JournalEntryLine>();
         public List<JournalEntryLine> Removed { get; } = new List<JournalEntryLine>();
 
-        public void Add(JournalEntryLine entity)
+        public Task AddAsync(JournalEntryLine entity, CancellationToken cancellationToken = default)
         {
             if (entity.Id == 0) entity.Id = Items.Count + 1;
             Items.Add(entity);
-        }
-
-        public Task AddAsync(JournalEntryLine entity)
-        {
-            Add(entity);
             return Task.CompletedTask;
         }
 
-        public Task<int> AddAsyncWithReturnId(JournalEntryLine entity)
+        public Task<int> AddAsyncWithReturnId(JournalEntryLine entity, CancellationToken cancellationToken = default)
         {
-            Add(entity);
+            if (entity.Id == 0) entity.Id = Items.Count + 1;
+            Items.Add(entity);
             return Task.FromResult(entity.Id);
         }
 
-        public void Update(JournalEntryLine entity) { }
+        public Task UpdateAsync(JournalEntryLine entity, CancellationToken cancellationToken = default) => Task.CompletedTask;
 
-        public Task UpdateAsync(JournalEntryLine entity) => Task.CompletedTask;
-
-        public Task Remove(JournalEntryLine entity)
+        public Task RemoveAsync(JournalEntryLine entity, CancellationToken cancellationToken = default)
         {
             Removed.Add(entity);
             return Task.CompletedTask;
         }
 
-        public JournalEntryLine GetById(int id) => Items.FirstOrDefault(x => x.Id == id);
+        public Task<JournalEntryLine> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Items.FirstOrDefault(x => x.Id == id));
 
-        public IEnumerable<JournalEntryLine> FindByJournalEntryId(int journalEntryId) =>
-            Items.Where(x => x.JournalEntryId == journalEntryId).ToList();
+        public Task<IEnumerable<JournalEntryLine>> FindByJournalEntryIdAsync(int journalEntryId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IEnumerable<JournalEntryLine>>(Items.Where(x => x.JournalEntryId == journalEntryId).ToList());
 
-        public Task<IEnumerable<JournalEntryLine>> FindByJournalEntryIdAsync(int journalEntryId) =>
-            Task.FromResult(FindByJournalEntryId(journalEntryId));
+        public Task<IEnumerable<JournalEntryLine>> FindByAccountIdAndPostingPeriodIdAsync(int accountId, int postingPeriodId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Enumerable.Empty<JournalEntryLine>());
 
-        public IEnumerable<JournalEntryLine> FindByAccountIdAndPostingPeriodId(int accountId, int postingPeriodId) =>
-            Enumerable.Empty<JournalEntryLine>();
+        public Task<IEnumerable<JournalEntryLineDeletedReport>> GetDeletedItemByDateRangeAsync(BasicReportParam reportParam, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Enumerable.Empty<JournalEntryLineDeletedReport>());
 
-        public IEnumerable<JournalEntryLineDeletedReport> GetDeletedItemByDateRange(BasicReportParam reportParam) =>
-            Enumerable.Empty<JournalEntryLineDeletedReport>();
-
-        public void RestoreJournalEntryLine(JournalEntryLine entryLine) => Restored.Add(entryLine);
+        public Task RestoreJournalEntryLineAsync(JournalEntryLine entryLine, CancellationToken cancellationToken = default)
+        {
+            Restored.Add(entryLine);
+            return Task.CompletedTask;
+        }
     }
 
     public class FakeFinancialReportRepository : IFinancialReportRepository
@@ -335,15 +353,16 @@ namespace AriesContador.Tests.Fakes
         public List<Account> EstadoResultadoAccounts { get; } = new List<Account>();
         public List<JournalEntryReport> JournalReports { get; } = new List<JournalEntryReport>();
 
-        public IEnumerable<JournalEntryReport> JournalEntryReport(BasicReportParam jEParams) => JournalReports;
+        public Task<IEnumerable<JournalEntryReport>> JournalEntryReportAsync(BasicReportParam jEParams, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IEnumerable<JournalEntryReport>>(JournalReports);
 
-        public IEnumerable<Account> EstadoResultadoIntegralAccounts(BasicReportParam reportParam) =>
-            EstadoResultadoAccounts;
+        public Task<IEnumerable<Account>> EstadoResultadoIntegralAccountsAsync(BasicReportParam reportParam, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IEnumerable<Account>>(EstadoResultadoAccounts);
 
-        public IEnumerable<PostingPeriodInfo> PostingPeriodReport(string companyId) =>
-            Enumerable.Empty<PostingPeriodInfo>();
+        public Task<IEnumerable<PostingPeriodInfo>> PostingPeriodReportAsync(string companyId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Enumerable.Empty<PostingPeriodInfo>());
 
-        public IEnumerable<ClosingPostingPeriodReport> ClosingPostingPeriodReport(string companyId) =>
-            Enumerable.Empty<ClosingPostingPeriodReport>();
+        public Task<IEnumerable<ClosingPostingPeriodReport>> ClosingPostingPeriodReportAsync(string companyId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Enumerable.Empty<ClosingPostingPeriodReport>());
     }
 }

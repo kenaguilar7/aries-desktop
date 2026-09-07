@@ -10,27 +10,27 @@ namespace Aries.WebAPI.Endpoints
         {
             var group = app.MapGroup("/user").RequireAuthorization();
 
-            group.MapGet("/GetAllUsers", (IAdministrationService svc) =>
-                Results.Ok(svc.GetAllUsers()));
+            group.MapGet("/GetAllUsers", async (HttpContext http, IAdministrationService svc) =>
+                Results.Ok(await svc.GetAllUsersAsync(http.RequestAborted)));
 
-            group.MapPost("/Create", (HttpContext http, User user, IAdministrationService svc) =>
-                EndpointRun.Try(() =>
+            group.MapPost("/Create", async (HttpContext http, User user, IAdministrationService svc) =>
+                await EndpointRun.TryAsync(async () =>
                 {
                     var userId = http.TryGetUserId();
                     if (userId.HasValue && user.UpdatedBy == 0)
                         user.UpdatedBy = userId.Value;
-                    svc.CreateUser(user);
+                    await svc.CreateUserAsync(user, http.RequestAborted);
                     user.Password = null;
                     return Results.Ok(user);
                 }));
 
-            group.MapPost("/Update", (HttpContext http, User user, IAdministrationService svc) =>
-                EndpointRun.Try(() =>
+            group.MapPost("/Update", async (HttpContext http, User user, IAdministrationService svc) =>
+                await EndpointRun.TryAsync(async () =>
                 {
                     var userId = http.TryGetUserId();
                     if (userId.HasValue && user.UpdatedBy == 0)
                         user.UpdatedBy = userId.Value;
-                    svc.UpdateUser(user);
+                    await svc.UpdateUserAsync(user, http.RequestAborted);
                     return Results.Ok();
                 }));
 

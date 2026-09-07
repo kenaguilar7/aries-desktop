@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Aries.Desktop.FrameCuentas
@@ -29,13 +30,18 @@ namespace Aries.Desktop.FrameCuentas
             _getCuenta = callingForm as ICallingForm;
             _financialService = financialService;
             InitializeComponent();
-            CargarCuentas();
+            Load += FrameSeleccionCuenta_Load;
         }
 
-        private void CargarCuentas()
+        private async void FrameSeleccionCuenta_Load(object sender, EventArgs e)
+        {
+            await CargarCuentasAsync();
+        }
+
+        private async Task CargarCuentasAsync()
         {
             LstCuentas = CuentaMapper.ToCuentaList(
-                _financialService.GetAccounts(GlobalConfig.Company.Code),
+                await _financialService.GetAccountsAsync(GlobalConfig.Company.Code),
                 GlobalConfig.Company);
             treeCuentas.Nodes.AddRange(TreeViewCuentas.CrearTreeView(LstCuentas));
         }

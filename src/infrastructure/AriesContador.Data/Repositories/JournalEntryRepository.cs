@@ -1,9 +1,9 @@
 ﻿using AriesContador.Core.Models.JournalEntries;
 using AriesContador.Core.Repositories;
 using AriesContador.Data.Internal.DataAccess;
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AriesContador.Data.Repositories
@@ -13,31 +13,33 @@ namespace AriesContador.Data.Repositories
         private readonly IConnectionString _connectionString;
         public JournalEntryRepository(IConnectionString connectionString)
         {
-            this._connectionString = connectionString;
+            _connectionString = connectionString;
         }
 
-        public void Add(JournalEntry entity)
+        public async Task AddAsync(JournalEntry entity, CancellationToken cancellationToken = default)
         {
             var originalId = entity.Id;
             var lines = DetachLines(entity);
             try
             {
-                using (MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString))
+                using (var dataAccess = new MySqlDataAccess(_connectionString))
                 {
                     try
                     {
-                        dataAccess.StartTransaction();
-                        entity.Id = dataAccess.SaveDataInTransaction<JournalEntry, int>("SP_InsertJournalEntry", entity);
+                        await dataAccess.StartTransactionAsync(cancellationToken).ConfigureAwait(false);
+                        entity.Id = await dataAccess.SaveDataInTransactionAsync<JournalEntry, int>("SP_InsertJournalEntry", entity, cancellationToken)
+                            .ConfigureAwait(false);
                         foreach (var line in lines)
                         {
                             line.JournalEntryId = entity.Id;
-                            line.Id = dataAccess.SaveDataInTransaction<JournalEntryLine, int>("SP_InsertJournalEntryLine", line);
+                            line.Id = await dataAccess.SaveDataInTransactionAsync<JournalEntryLine, int>("SP_InsertJournalEntryLine", line, cancellationToken)
+                                .ConfigureAwait(false);
                         }
-                        dataAccess.CommitTransaction();
+                        await dataAccess.CommitTransactionAsync(cancellationToken).ConfigureAwait(false);
                     }
                     catch
                     {
-                        dataAccess.RollBackTransaction();
+                        await dataAccess.RollBackTransactionAsync(cancellationToken).ConfigureAwait(false);
                         entity.Id = originalId;
                         throw;
                     }
@@ -49,114 +51,71 @@ namespace AriesContador.Data.Repositories
             }
         }
 
-        public async Task AddAsync(JournalEntry entity)
+        public async Task<IEnumerable<JournalEntry>> FindByPostingPeriodIdAsync(int pstPeriodId, CancellationToken cancellationToken = default)
         {
-            Add(entity);
-            await Task.CompletedTask;
-        }
-
-        public IEnumerable<JournalEntry> FindByPostingPeriodId(int pstPeriodId)
-        {
-
-            using (MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString))
+            using (var dataAccess = new MySqlDataAccess(_connectionString))
             {
-                dataAccess.StartTransaction();
-                var output = dataAccess.LoadDataInTransaction<JournalEntry, dynamic>
-                                ("SP_GetJournalEntryByPostingPeriodId", new { PostingPeriodId = pstPeriodId });
+                await dataAccess.StartTransactionAsync(cancellationToken).ConfigureAwait(false);
+                var output = await dataAccess.LoadDataInTransactionAsync<JournalEntry, dynamic>(
+                    "SP_GetJournalEntryByPostingPeriodId", new { PostingPeriodId = pstPeriodId }, cancellationToken)
+                    .ConfigureAwait(false);
 
                 foreach (var jEntry in output)
                 {
-                    var jELines = dataAccess.LoadDataInTransaction<JournalEntryLine, dynamic>
-                        ("SP_GetJournalEntryLineByJournalEntryId", new { JournalEntryId = jEntry.Id });
+                    var jELines = await dataAccess.LoadDataInTransactionAsync<JournalEntryLine, dynamic>(
+                        "SP_GetJournalEntryLineByJournalEntryId", new { JournalEntryId = jEntry.Id }, cancellationToken)
+                        .ConfigureAwait(false);
                     jEntry.JournalEntryLines = jELines;
                 }
 
-                dataAccess.CommitTransaction();
+                await dataAccess.CommitTransactionAsync(cancellationToken).ConfigureAwait(false);
                 return output;
             }
         }
 
-        public async Task<IEnumerable<JournalEntry>> FindByPostingPeriodIdAsync(int pstPeriodId)
+        public async Task<JournalEntry> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
-            var dataAccess = new MySqlDataAccessAsync(_connectionString);
-            dataAccess.StartTransaction();
-            var output = await dataAccess.LoadDataInTransaction<JournalEntry, dynamic>
-                ("SP_GetJournalEntryByPostingPeriodId", new { PostingPeriodId = pstPeriodId });
-
-            foreach (var jEntry in output)
-            {
-                var jELines = await dataAccess.LoadDataInTransaction<JournalEntryLine, dynamic>
-                    ("SP_GetJournalEntryLineByJournalEntryId", new { JournalEntryId = jEntry.Id });
-                jEntry.JournalEntryLines = jELines;
-            }
-
-            dataAccess.CommitTransaction();
-            return output;
-        }
-
-        public JournalEntry GetById(int id)
-        {
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            var output = dataAccess.LoadData<JournalEntry, dynamic>("SP_GetJournalEntryById", new { Id = id });
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            var output = await dataAccess.LoadDataAsync<JournalEntry, dynamic>("SP_GetJournalEntryById", new { Id = id }, cancellationToken)
+                .ConfigureAwait(false);
             return output.FirstOrDefault();
         }
 
-        public int GetConsecutiveNumber(int postingPeriodId)
+        public async Task<int> GetConsecutiveNumberAsync(int postingPeriodId, CancellationToken cancellationToken = default)
         {
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            var newNumber = dataAccess.LoadData<int, dynamic>("SP_GetJournalEntryConsecutive", new { postingPeriodId });
-
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            var newNumber = await dataAccess.LoadDataAsync<int, dynamic>("SP_GetJournalEntryConsecutive", new { postingPeriodId }, cancellationToken)
+                .ConfigureAwait(false);
             return newNumber.First();
         }
 
-        public async Task<int> GetConsecutiveNumberAsync(int postingPeriodId)
+        public async Task<IEnumerable<JournalEntryDeletedReport>> GetDeletedItemByDateRangeAsync(BasicReportParam reportParam, CancellationToken cancellationToken = default)
         {
-            MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
-            var newNumber = await dataAccess.LoadData<int, dynamic>("SP_GetJournalEntryConsecutive", new { postingPeriodId });
-            return newNumber.First();
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            return await dataAccess.LoadDataAsync<JournalEntryDeletedReport, BasicReportParam>("SP_GetJournalEntryDeletedBydDateRange", reportParam, cancellationToken)
+                .ConfigureAwait(false);
         }
 
-        public IEnumerable<JournalEntryDeletedReport> GetDeletedItemByDateRange(BasicReportParam reportParam)
+        public async Task RestoreJournalEntryAsync(JournalEntry entryLine, CancellationToken cancellationToken = default)
         {
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            return dataAccess.LoadData<JournalEntryDeletedReport, BasicReportParam>("SP_GetJournalEntryDeletedBydDateRange", reportParam); 
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            await dataAccess.SaveDataAsync("SP_RestoreJournalEntry", entryLine, cancellationToken).ConfigureAwait(false);
         }
 
-        public void RestoreJournalEntry(JournalEntry entryLine)
-        {
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            dataAccess.SaveData<JournalEntry>("SP_RestoreJournalEntry", entryLine);
-        }
-
-        public async Task Remove(JournalEntry entity)
+        public async Task RemoveAsync(JournalEntry entity, CancellationToken cancellationToken = default)
         {
             entity.JournalEntryLines = new List<JournalEntryLine>();
-            MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
-            await dataAccess.SaveData<JournalEntry>("SP_DesactivateJournalEntry", entity);
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            await dataAccess.SaveDataAsync("SP_DesactivateJournalEntry", entity, cancellationToken).ConfigureAwait(false);
         }
 
-        public void Update(JournalEntry entity)
+        public async Task UpdateAsync(JournalEntry entity, CancellationToken cancellationToken = default)
         {
             var repoEntities = entity.JournalEntryLines;
             entity.JournalEntryLines = new List<JournalEntryLine>();
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            dataAccess.SaveData<JournalEntry>("SP_UpdateJournalEntry", entity);
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            await dataAccess.SaveDataAsync("SP_UpdateJournalEntry", entity, cancellationToken).ConfigureAwait(false);
             entity.JournalEntryLines = repoEntities;
-        }
-
-        public async Task UpdateAsync(JournalEntry entity)
-        {
-            var repoEntities = entity.JournalEntryLines;
-            entity.JournalEntryLines = new List<JournalEntryLine>();
-            MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
-            await dataAccess.SaveData<JournalEntry>("SP_UpdateJournalEntry", entity);
-            entity.JournalEntryLines = repoEntities;
-        }
-
-        public async Task<int> AddAsyncReturningId(JournalEntry journalEntry)
-        {
-            Add(journalEntry);
-            return journalEntry.Id;
         }
 
         private static List<JournalEntryLine> DetachLines(JournalEntry entity)

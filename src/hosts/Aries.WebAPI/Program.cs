@@ -95,7 +95,7 @@ if (!app.Environment.IsEnvironment("Testing"))
         app.Environment.EnvironmentName, server, port, database);
 
     var connection = app.Services.GetRequiredService<IConnectionString>();
-    var migrated = new DatabaseMigrator(connection.MySQLDefault).ApplyPending();
+    var migrated = await new DatabaseMigrator(connection.MySQLDefault).ApplyPendingAsync();
     if (migrated.HadPending)
         app.Logger.LogInformation("MySQL migraciones aplicadas: {Migrations}", string.Join(", ", migrated.AppliedIds));
     else

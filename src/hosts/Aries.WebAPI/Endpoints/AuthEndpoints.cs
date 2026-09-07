@@ -9,12 +9,13 @@ namespace Aries.WebAPI.Endpoints
         public static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder app)
         {
             var group = app.MapGroup("/auth").AllowAnonymous();
-            group.MapPost("/login", (
+            group.MapPost("/login", async (
+                HttpContext http,
                 Login param,
                 IAdministrationService administration,
                 IJwtTokenService jwt) =>
             {
-                var result = administration.Login(param);
+                var result = await administration.LoginAsync(param, http.RequestAborted);
                 if (result.User == null)
                     return Results.Unauthorized();
 

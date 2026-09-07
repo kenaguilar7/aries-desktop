@@ -9,6 +9,8 @@ using AriesContador.Core.Models.Companies;
 using AriesContador.Core.Models.Utils;
 using AriesContador.Core.Models.Users;
 using AriesContador.Core.Services;
+using Aries.Desktop.Utils;
+using System.Threading.Tasks;
 
 namespace Aries.Desktop.FrameCompañias
 {
@@ -29,8 +31,8 @@ namespace Aries.Desktop.FrameCompañias
 
             lstTipoId.SelectedIndex = 0;
 
-            var lstCompanies = (await _administrationService.GetAllCompanies(GlobalConfig.User)).ToList();
-            var companyNewCode = await _administrationService.GetCompanyConsecutive();
+            var lstCompanies = (await _administrationService.GetAllCompaniesAsync(GlobalConfig.User)).ToList();
+            var companyNewCode = await _administrationService.GetCompanyConsecutiveAsync();
             txtCodigoCia.Text = companyNewCode; 
 
             //eventos
@@ -252,7 +254,7 @@ namespace Aries.Desktop.FrameCompañias
 
                     persona.CopyFrom = copiarde.Code;
                     persona.CreatedBy = GlobalConfig.User.Id;
-                    await _administrationService.CreateCompany(persona);
+                    await UiBusy.Run(this, () => _administrationService.CreateCompanyAsync(persona));
                     MessageBox.Show("Se registro la compañia correctamente", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
                     lst.Add(persona);
                     this.LimpiarFormulario();
@@ -303,7 +305,7 @@ namespace Aries.Desktop.FrameCompañias
             }
         }
 
-        private void ActualizarCompañia(object sender, EventArgs e)
+        private async void ActualizarCompañia(object sender, EventArgs e)
         {
             if (MessageBox.Show("Se actualizaran los datos, ¿Desea continuar?", TextoGeneral.NombreApp, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
@@ -335,7 +337,7 @@ namespace Aries.Desktop.FrameCompañias
                     }
 
                     com.CreatedBy = GlobalConfig.User.Id;
-                    _administrationService.UpdateCompany(com);
+                    await _administrationService.UpdateCompanyAsync(com);
                     MessageBox.Show("Se actualizo la compañia", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                 }
@@ -429,7 +431,7 @@ namespace Aries.Desktop.FrameCompañias
             try
             {
 
-                await _administrationService.DeleteCompany((Company)btnActualizar.Tag);
+                await _administrationService.DeleteCompanyAsync((Company)btnActualizar.Tag);
                 this.LimpiarFormulario(); 
                 FrameMaestroCompañia_Load(null, null); 
             }

@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AriesContador.Data.Repositories
@@ -16,25 +17,28 @@ namespace AriesContador.Data.Repositories
         private readonly IConnectionString _connectionString;
         public CompanyRepository(IConnectionString connectionString)
         {
-            this._connectionString = connectionString;
+            _connectionString = connectionString;
         }
 
-        public void Add(Company entity)
+        public async Task AddAsync(Company entity, CancellationToken cancellationToken = default)
         {
             var accounts = entity.Account ?? Enumerable.Empty<Account>();
             entity.Account = null;
-            using (MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString))
+            using (var dataAccess = new MySqlDataAccess(_connectionString))
             {
                 try
                 {
-                    dataAccess.StartTransaction();
-                    dataAccess.SaveDataInTransaction("SP_InsertCompany", ToInsertCommandParams(entity));
+                    await dataAccess.StartTransactionAsync(cancellationToken).ConfigureAwait(false);
+                    await dataAccess.SaveDataInTransactionAsync("SP_InsertCompany", ToInsertCommandParams(entity), cancellationToken)
+                        .ConfigureAwait(false);
 
                     foreach (var account in accounts)
                     {
                         var oldId = account.Id;
-                        account.Name = ResolveAccountNameId(dataAccess, account.Name);
-                        var newID = dataAccess.SaveDataInTransaction<Account, int>("SP_InsertAccount", account);
+                        account.Name = await ResolveAccountNameIdAsync(dataAccess, account.Name, cancellationToken)
+                            .ConfigureAwait(false);
+                        var newID = await dataAccess.SaveDataInTransactionAsync<Account, int>("SP_InsertAccount", account, cancellationToken)
+                            .ConfigureAwait(false);
                         account.Id = newID;
 
                         var childAccounts = (from acn in accounts
@@ -44,61 +48,48 @@ namespace AriesContador.Data.Repositories
                         childAccounts.ForEach(x => x.FatherAccount = newID);
                     }
 
-                    dataAccess.CommitTransaction();
+                    await dataAccess.CommitTransactionAsync(cancellationToken).ConfigureAwait(false);
                 }
                 catch (Exception)
                 {
-                    dataAccess.RollBackTransaction();
+                    await dataAccess.RollBackTransactionAsync(cancellationToken).ConfigureAwait(false);
                     throw;
                 }
             }
         }
 
-        public Task AddAsync(Company entity)
-        {
-            Add(entity);
-            return Task.CompletedTask;
-        }
-
-        public async Task<IEnumerable<Company>> GetAll()
-        {
-            var dataAccess = new MySqlDataAccessAsync(_connectionString);
-
-            var lst1 = await dataAccess.ExecuteQuery<Company>(Query.Query.AdministrationQuery.JuridicPerson);
-            var lst2 = await dataAccess.ExecuteQuery<Company>(Query.Query.AdministrationQuery.FisicPerson);
-            lst1.AddRange(lst2);
-            return lst1;
-        }
-
-        public IEnumerable<Company> GetAllBlocking()
+        public async Task<IEnumerable<Company>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             var dataAccess = new MySqlDataAccess(_connectionString);
-            var lst1 = dataAccess.ExecuteQuery<Company, object>(Query.Query.AdministrationQuery.JuridicPerson, new { });
-            var lst2 = dataAccess.ExecuteQuery<Company, object>(Query.Query.AdministrationQuery.FisicPerson, new { });
+            var lst1 = await dataAccess.ExecuteQueryAsync<Company>(Query.Query.AdministrationQuery.JuridicPerson, cancellationToken)
+                .ConfigureAwait(false);
+            var lst2 = await dataAccess.ExecuteQueryAsync<Company>(Query.Query.AdministrationQuery.FisicPerson, cancellationToken)
+                .ConfigureAwait(false);
             lst1.AddRange(lst2);
             return lst1;
         }
 
-        public async Task<string> LatestCode()
+        public async Task<string> LatestCodeAsync(CancellationToken cancellationToken = default)
         {
-            string query = "SELECT c.company_id as Code FROM companies c ORDER BY c.company_id DESC LIMIT 1";
-            MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
-            var output = await dataAccess.ExecuteQuery<Company>(query);
+            const string query = "SELECT c.company_id as Code FROM companies c ORDER BY c.company_id DESC LIMIT 1";
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            var output = await dataAccess.ExecuteQueryAsync<Company>(query, cancellationToken).ConfigureAwait(false);
             if (output == null || output.Count == 0 || string.IsNullOrEmpty(output.First().Code))
                 return "C000";
             return output.First().Code;
         }
 
-        public async Task<IEnumerable<string>> GetCodesAllowedForUser(int userId)
+        public async Task<IEnumerable<string>> GetCodesAllowedForUserAsync(int userId, CancellationToken cancellationToken = default)
         {
-            var dataAccess = new MySqlDataAccessAsync(_connectionString);
-            var rows = await dataAccess.ExecuteQuery<Company, object>(
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            var rows = await dataAccess.ExecuteQueryAsync<Company, object>(
                 Query.Query.AdministrationQuery.CompanyCodesAllowedForUser,
-                new { UserId = userId });
+                new { UserId = userId },
+                cancellationToken).ConfigureAwait(false);
             return rows.Select(x => x.Code);
         }
 
-        public async Task Remove(Company entity)
+        public async Task RemoveAsync(Company entity, CancellationToken cancellationToken = default)
         {
             var query = @"
 delete T2 from accounting_months T0 JOIN  
@@ -116,32 +107,32 @@ delete T0 from accounting_months T0 where T0.company_id = @Code;
   
 delete from companies where company_id = @Code
 ";
-            MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
-            await dataAccess.ExecuteSingle(query, entity);
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            await dataAccess.ExecuteSingleAsync(query, entity, cancellationToken).ConfigureAwait(false);
         }
 
-        public void Update(Company entity)
+        public async Task UpdateAsync(Company entity, CancellationToken cancellationToken = default)
         {
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            dataAccess.SaveData("SP_UpdateCompany", ToUpdateParams(entity));
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            await dataAccess.SaveDataAsync("SP_UpdateCompany", ToUpdateParams(entity), cancellationToken)
+                .ConfigureAwait(false);
         }
 
-        private static string ResolveAccountNameId(MySqlDataAccess dataAccess, string name)
+        private static async Task<string> ResolveAccountNameIdAsync(MySqlDataAccess dataAccess, string name, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new InvalidOperationException("La cuenta no tiene nombre");
 
-            var nameId = dataAccess.SaveDataInTransaction<object, int>(
+            var nameId = await dataAccess.SaveDataInTransactionAsync<object, int>(
                 "SP_GetOrCreateAccountName",
-                new { AccountName = name });
+                new { AccountName = name },
+                cancellationToken).ConfigureAwait(false);
             return nameId.ToString();
         }
 
         private static DynamicParameters ToInsertCommandParams(Company entity)
         {
             var parameters = new DynamicParameters(ToInsertParams(entity));
-            // MySqlConnector copies OUT values after CALL; without this it throws
-            // "Parameter 'NewCompanyId' not found in the collection".
             parameters.Add("@NewCompanyId", dbType: DbType.String, size: 5, direction: ParameterDirection.Output);
             return parameters;
         }

@@ -1,9 +1,9 @@
 ﻿using AriesContador.Core.Models.Users;
 using AriesContador.Core.Repositories;
 using AriesContador.Data.Internal.DataAccess;
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AriesContador.Data.Repositories
@@ -13,58 +13,54 @@ namespace AriesContador.Data.Repositories
         private readonly IConnectionString _connectionString;
         public UserRepository(IConnectionString connectionString)
         {
-            this._connectionString = connectionString;
+            _connectionString = connectionString;
         }
 
-        public void Add(User entity)
+        public async Task AddAsync(User entity, CancellationToken cancellationToken = default)
         {
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            entity.Id = dataAccess.SaveData<object, int>("SP_InsertUser", ToInsertParams(entity));
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            entity.Id = await dataAccess.SaveDataAsync<object, int>("SP_InsertUser", ToInsertParams(entity), cancellationToken)
+                .ConfigureAwait(false);
         }
 
-        public Task AddAsync(User entity)
+        public async Task<IEnumerable<User>> GetAllAsync(CancellationToken cancellationToken = default)
         {
-            Add(entity);
-            return Task.CompletedTask;
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            return await dataAccess.LoadDataAsync<User>("SP_GetAllUsers", cancellationToken).ConfigureAwait(false);
         }
 
-        public IEnumerable<User> GetAll()
+        public async Task<User> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            var output = dataAccess.LoadData<User>("SP_GetAllUsers");
-            return output;
-        }
-
-        public User GetById(int id)
-        {
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            var output = dataAccess.LoadData<User, dynamic>("SP_FindUserById", new { Id = id });
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            var output = await dataAccess.LoadDataAsync<User, dynamic>("SP_FindUserById", new { Id = id }, cancellationToken)
+                .ConfigureAwait(false);
             return output.FirstOrDefault();
         }
 
-        public User FindByUserName(string userName)
+        public async Task<User> FindByUserNameAsync(string userName, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(userName))
                 return null;
 
             var dataAccess = new MySqlDataAccess(_connectionString);
-            var output = dataAccess.ExecuteQuery<User, object>(
+            var output = await dataAccess.ExecuteQueryAsync<User, object>(
                 Query.Query.AdministrationQuery.FindUserByUserName,
-                new { UserName = userName });
+                new { UserName = userName },
+                cancellationToken).ConfigureAwait(false);
             return output.FirstOrDefault();
         }
 
-        public Task Remove(User entity)
+        public async Task RemoveAsync(User entity, CancellationToken cancellationToken = default)
         {
             entity.Active = false;
-            Update(entity);
-            return Task.CompletedTask;
+            await UpdateAsync(entity, cancellationToken).ConfigureAwait(false);
         }
 
-        public void Update(User entity)
+        public async Task UpdateAsync(User entity, CancellationToken cancellationToken = default)
         {
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            dataAccess.SaveData("SP_UpdateUser", ToUpdateParams(entity));
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            await dataAccess.SaveDataAsync("SP_UpdateUser", ToUpdateParams(entity), cancellationToken)
+                .ConfigureAwait(false);
         }
 
         private static object ToInsertParams(User entity)

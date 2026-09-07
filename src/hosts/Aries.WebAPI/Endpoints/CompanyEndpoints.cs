@@ -14,13 +14,15 @@ namespace Aries.WebAPI.Endpoints
                 await EndpointRun.TryAsync(async () =>
                 {
                     var userId = http.TryGetUserId();
-                    var current = userId.HasValue ? svc.FinUserById(userId.Value) : null;
-                    var list = await svc.GetAllCompanies(current);
+                    var current = userId.HasValue
+                        ? await svc.FinUserByIdAsync(userId.Value, http.RequestAborted)
+                        : null;
+                    var list = await svc.GetAllCompaniesAsync(current, http.RequestAborted);
                     return Results.Ok(list);
                 }));
 
-            group.MapGet("/BuildCode", async (IAdministrationService svc) =>
-                Results.Ok(new Company { Code = await svc.GetCompanyConsecutive() }));
+            group.MapGet("/BuildCode", async (HttpContext http, IAdministrationService svc) =>
+                Results.Ok(new Company { Code = await svc.GetCompanyConsecutiveAsync(http.RequestAborted) }));
 
             group.MapPost("/Create", async (HttpContext http, Company company, IAdministrationService svc) =>
                 await EndpointRun.TryAsync(async () =>
@@ -28,14 +30,14 @@ namespace Aries.WebAPI.Endpoints
                     var userId = http.TryGetUserId();
                     if (userId.HasValue && company.CreatedBy == 0)
                         company.CreatedBy = userId.Value;
-                    await svc.CreateCompany(company);
+                    await svc.CreateCompanyAsync(company, http.RequestAborted);
                     return Results.Ok(company);
                 }));
 
-            group.MapDelete("/delete/{code}", async (string code, IAdministrationService svc) =>
+            group.MapDelete("/delete/{code}", async (HttpContext http, string code, IAdministrationService svc) =>
                 await EndpointRun.TryAsync(async () =>
                 {
-                    await svc.DeleteCompany(new Company { Code = code });
+                    await svc.DeleteCompanyAsync(new Company { Code = code }, http.RequestAborted);
                     return Results.Ok();
                 }));
 

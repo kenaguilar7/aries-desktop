@@ -7,6 +7,7 @@ using AriesContador.Core.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Aries.Desktop.Seguridad
@@ -21,7 +22,12 @@ namespace Aries.Desktop.Seguridad
             _administrationService = administrationService;
             InitializeComponent();
             CargarEventos();
-            CargarDatos();
+            Load += FrameMaestroUsuario_Load;
+        }
+
+        private async void FrameMaestroUsuario_Load(object sender, EventArgs e)
+        {
+            await CargarDatosAsync();
         }
         /// <summary>
         /// Carga los eventos 
@@ -46,10 +52,10 @@ namespace Aries.Desktop.Seguridad
         /// Carga datos 
         /// </summary>
         /// <param name="usuario"></param>
-        private void CargarDatos()
+        private async Task CargarDatosAsync()
         {
             lstUsuarios.Items.Clear();
-            var lst = _administrationService.GetAllUsers().Select(ToUsuario).ToList();
+            var lst = (await _administrationService.GetAllUsersAsync()).Select(ToUsuario).ToList();
             lstUsuarios.Items.AddRange(lst.ToArray());
             ListUsuarios = lst;
 
@@ -59,7 +65,7 @@ namespace Aries.Desktop.Seguridad
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void GuardarUsuario(object sender, EventArgs e)
+        private async void GuardarUsuario(object sender, EventArgs e)
         {
             try
             {
@@ -86,9 +92,9 @@ namespace Aries.Desktop.Seguridad
                         usuario.TipoUsuario = TipoUsuario.Administrador;
                     }
 
-                    _administrationService.CreateUser(ToUser(usuario, isNew: true));
+                    await _administrationService.CreateUserAsync(ToUser(usuario, isNew: true));
                     MessageBox.Show("Datos guardados correctamente", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    LimpiarFormulario(null, null);
+                    await LimpiarFormularioAsync();
 
                 //}
 
@@ -128,7 +134,7 @@ namespace Aries.Desktop.Seguridad
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void ActualizarUsuario(object sender, EventArgs e)
+        private async void ActualizarUsuario(object sender, EventArgs e)
         {
             try
             {
@@ -160,9 +166,9 @@ namespace Aries.Desktop.Seguridad
 
                     userUpd.TipoUsuario = (rdbUsuarioAdmin.Checked) ? TipoUsuario.Administrador : TipoUsuario.Usuario;
 
-                    _administrationService.UpdateUser(ToUser(userUpd, isNew: false));
+                    await _administrationService.UpdateUserAsync(ToUser(userUpd, isNew: false));
                     MessageBox.Show("Usuario actulizado correctamente", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    LimpiarFormulario(null, null);
+                    await LimpiarFormularioAsync();
 
                 }
 
@@ -189,7 +195,12 @@ namespace Aries.Desktop.Seguridad
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void LimpiarFormulario(object sender, EventArgs e)
+        private async void LimpiarFormulario(object sender, EventArgs e)
+        {
+            await LimpiarFormularioAsync();
+        }
+
+        private async Task LimpiarFormularioAsync()
         {
             this.txtErrorUserName.Visible = false;
             this.txtErrorCedula.Visible = false;
@@ -210,7 +221,7 @@ namespace Aries.Desktop.Seguridad
             this.txtBoxUsuario.Clear();
             this.txtBoxUsuario.Enabled = true;
             this.txtBoxID.Enabled = true; 
-            CargarDatos();
+            await CargarDatosAsync();
         }
         /// <summary>
         /// Esta funcion la llamamos cada vez que alguien presione una tecla
@@ -302,11 +313,11 @@ namespace Aries.Desktop.Seguridad
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void TxtBoxUsuario_Leave(object sender, EventArgs e)
+        private async void TxtBoxUsuario_Leave(object sender, EventArgs e)
         {
             if (this.Visible && txtBoxUsuario.Enabled)
             {
-                if (_administrationService.UserNameTaken(txtBoxUsuario.Text) || !VerificaString.IsNullOrWhiteSpace(txtBoxUsuario.Text, "nombre de usuario", out String mensaje))
+                if (await _administrationService.UserNameTakenAsync(txtBoxUsuario.Text) || !VerificaString.IsNullOrWhiteSpace(txtBoxUsuario.Text, "nombre de usuario", out String mensaje))
                 {
                     MessageBox.Show("Nombre de usuario no valido", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                     txtErrorUserName.Visible = true;

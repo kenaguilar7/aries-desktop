@@ -10,43 +10,43 @@ namespace Aries.WebAPI.Endpoints
         {
             var group = app.MapGroup("/postingPeriod").RequireAuthorization();
 
-            group.MapGet("/GetPostingPeriods/{companyId}", (string companyId, IFinancialService svc) =>
-                Results.Ok(svc.GetPostingPeriods(companyId)));
+            group.MapGet("/GetPostingPeriods/{companyId}", async (HttpContext http, string companyId, IFinancialService svc) =>
+                Results.Ok(await svc.GetPostingPeriodsAsync(companyId, http.RequestAborted)));
 
-            group.MapGet("/GetAvailablePostingPeriodsForBeCreated/{companyId}", (string companyId, IFinancialService svc) =>
-                Results.Ok(svc.GetAvailablePostingPeriodsForBeCreated(companyId)));
+            group.MapGet("/GetAvailablePostingPeriodsForBeCreated/{companyId}", async (HttpContext http, string companyId, IFinancialService svc) =>
+                Results.Ok(await svc.GetAvailablePostingPeriodsForBeCreatedAsync(companyId, http.RequestAborted)));
 
-            group.MapPost("/Create", (HttpContext http, PostingPeriod period, IFinancialService svc) =>
-                EndpointRun.Try(() =>
+            group.MapPost("/Create", async (HttpContext http, PostingPeriod period, IFinancialService svc) =>
+                await EndpointRun.TryAsync(async () =>
                 {
                     var userId = http.TryGetUserId();
                     if (userId.HasValue && period.CreatedBy == 0)
                         period.CreatedBy = userId.Value;
-                    svc.CreatePostingPeriod(period);
+                    await svc.CreatePostingPeriodAsync(period, http.RequestAborted);
                     return Results.Ok();
                 }));
 
-            group.MapPost("/Update", (PostingPeriod period, IFinancialService svc) =>
-                EndpointRun.Try(() =>
+            group.MapPost("/Update", async (HttpContext http, PostingPeriod period, IFinancialService svc) =>
+                await EndpointRun.TryAsync(async () =>
                 {
-                    svc.UpdatePostingPeriod(period);
+                    await svc.UpdatePostingPeriodAsync(period, http.RequestAborted);
                     return Results.Ok();
                 }));
 
-            group.MapPost("/Delete", (PostingPeriod period, IFinancialService svc) =>
-                EndpointRun.Try(() =>
+            group.MapPost("/Delete", async (HttpContext http, PostingPeriod period, IFinancialService svc) =>
+                await EndpointRun.TryAsync(async () =>
                 {
-                    svc.DeletePostingPeriod(period);
+                    await svc.DeletePostingPeriodAsync(period, http.RequestAborted);
                     return Results.Ok();
                 }));
 
-            group.MapPost("/ClosePostingPeriod", (HttpContext http, PostingPeriodEndClosing closing, IFinancialService svc) =>
-                EndpointRun.Try(() =>
+            group.MapPost("/ClosePostingPeriod", async (HttpContext http, PostingPeriodEndClosing closing, IFinancialService svc) =>
+                await EndpointRun.TryAsync(async () =>
                 {
                     var userId = http.TryGetUserId();
                     if (userId.HasValue && closing.CreatedBy == 0)
                         closing.CreatedBy = userId.Value;
-                    svc.ClosePostingPeriod(closing);
+                    await svc.ClosePostingPeriodAsync(closing, http.RequestAborted);
                     return Results.Ok();
                 }));
 

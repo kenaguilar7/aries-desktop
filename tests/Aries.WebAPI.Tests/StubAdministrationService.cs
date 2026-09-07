@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AriesContador.Core.Models.Companies;
 using AriesContador.Core.Models.Users;
@@ -12,11 +13,11 @@ namespace Aries.WebAPI.Tests
         public Company LastCreated { get; private set; }
         public string LastDeletedCode { get; private set; }
 
-        public WebToken Login(Login param)
+        public Task<WebToken> LoginAsync(Login param, CancellationToken cancellationToken = default)
         {
             if (param != null && param.UserId == "kenneth" && param.Password == "96321")
             {
-                return new WebToken
+                return Task.FromResult(new WebToken
                 {
                     Token = "local",
                     User = new User
@@ -27,57 +28,64 @@ namespace Aries.WebAPI.Tests
                         Active = true,
                         UserType = UserType.Administrador
                     }
-                };
+                });
             }
 
-            return new WebToken();
+            return Task.FromResult(new WebToken());
         }
 
-        public Task<string> GetCompanyConsecutive() => Task.FromResult("C002");
+        public Task<string> GetCompanyConsecutiveAsync(CancellationToken cancellationToken = default) => Task.FromResult("C002");
 
-        public Task CreateCompany(Company company)
+        public Task CreateCompanyAsync(Company company, CancellationToken cancellationToken = default)
         {
             LastCreated = company;
             return Task.CompletedTask;
         }
 
-        public void CreateUser(User user) { }
+        public Task CreateUserAsync(User user, CancellationToken cancellationToken = default) => Task.CompletedTask;
 
-        public Task<IEnumerable<Company>> GetAllCompanies() =>
+        public Task<IEnumerable<Company>> GetAllCompaniesAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult<IEnumerable<Company>>(new[]
             {
                 new Company { Code = "C001", CompanyName = "Demo", Active = true }
             });
 
-        public Task<IEnumerable<Company>> GetAllCompanies(User currentUser) => GetAllCompanies();
+        public Task<IEnumerable<Company>> GetAllCompaniesAsync(User currentUser, CancellationToken cancellationToken = default) =>
+            GetAllCompaniesAsync(cancellationToken);
 
-        public Task DeleteCompany(Company company)
+        public Task DeleteCompanyAsync(Company company, CancellationToken cancellationToken = default)
         {
             LastDeletedCode = company.Code;
             return Task.CompletedTask;
         }
 
-        public Company FindByCode(string code) =>
-            GetAllCompanies().GetAwaiter().GetResult().FirstOrDefault(c => c.Code == code);
+        public async Task<Company> FindByCodeAsync(string code, CancellationToken cancellationToken = default)
+        {
+            var all = await GetAllCompaniesAsync(cancellationToken);
+            return all.FirstOrDefault(c => c.Code == code);
+        }
 
-        public IEnumerable<User> GetAllUsers() =>
-            new[]
+        public Task<IEnumerable<User>> GetAllUsersAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult<IEnumerable<User>>(new[]
             {
                 new User { Id = 7, UserName = "kenneth", Active = true, UserType = UserType.Administrador }
-            };
+            });
 
-        public IEnumerable<Company> GetAllInactiveCompanies() => Enumerable.Empty<Company>();
+        public Task<IEnumerable<Company>> GetAllInactiveCompaniesAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(Enumerable.Empty<Company>());
 
-        public IEnumerable<User> GetAllInactiveUsers() => Enumerable.Empty<User>();
+        public Task<IEnumerable<User>> GetAllInactiveUsersAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(Enumerable.Empty<User>());
 
-        public User FinUserById(int id) => GetAllUsers().FirstOrDefault(u => u.Id == id);
+        public async Task<User> FinUserByIdAsync(int id, CancellationToken cancellationToken = default)
+        {
+            var users = await GetAllUsersAsync(cancellationToken);
+            return users.FirstOrDefault(u => u.Id == id);
+        }
 
-        public void InactivateUser(User user) { }
-
-        public void UpdateCompany(Company company) { }
-
-        public void UpdateUser(User user) { }
-
-        public bool UserNameTaken(string userName) => false;
+        public Task InactivateUserAsync(User user, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task UpdateCompanyAsync(Company company, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task UpdateUserAsync(User user, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task<bool> UserNameTakenAsync(string userName, CancellationToken cancellationToken = default) => Task.FromResult(false);
     }
 }

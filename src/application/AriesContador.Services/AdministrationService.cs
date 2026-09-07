@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mail;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AriesContador.Services
@@ -21,12 +22,12 @@ namespace AriesContador.Services
             _unitOfWork = unitOfWork;
         }
 
-        public WebToken Login(Login param)
+        public async Task<WebToken> LoginAsync(Login param, CancellationToken cancellationToken = default)
         {
             if (param == null || string.IsNullOrWhiteSpace(param.UserId))
                 return new WebToken();
 
-            var user = _unitOfWork.UserRepository.FindByUserName(param.UserId);
+            var user = await _unitOfWork.UserRepository.FindByUserNameAsync(param.UserId, cancellationToken).ConfigureAwait(false);
             if (user == null || !user.Active || !PasswordMatches(user, param.Password))
                 return new WebToken();
 
@@ -34,7 +35,7 @@ namespace AriesContador.Services
             {
                 user.Password = PasswordHasher.Hash(param.Password);
                 user.UpdatedBy = user.Id;
-                _unitOfWork.UserRepository.Update(user);
+                await _unitOfWork.UserRepository.UpdateAsync(user, cancellationToken).ConfigureAwait(false);
             }
 
             return new WebToken
@@ -44,116 +45,121 @@ namespace AriesContador.Services
             };
         }
 
-        public async Task CreateCompany(Company compañia)
+        public async Task CreateCompanyAsync(Company compañia, CancellationToken cancellationToken = default)
         {
             ValidateCompany(compañia);
             FlattenPersonFields(compañia);
 
             if (string.IsNullOrWhiteSpace(compañia.Code))
-                compañia.Code = await GetCompanyConsecutive();
+                compañia.Code = await GetCompanyConsecutiveAsync(cancellationToken).ConfigureAwait(false);
 
-            compañia.Account = LoadAccountsForNewCompany(compañia);
-            _unitOfWork.CompanyRepository.Add(compañia);
+            compañia.Account = await LoadAccountsForNewCompanyAsync(compañia, cancellationToken).ConfigureAwait(false);
+            await _unitOfWork.CompanyRepository.AddAsync(compañia, cancellationToken).ConfigureAwait(false);
         }
 
-        public void CreateUser(User usuario)
+        public async Task CreateUserAsync(User usuario, CancellationToken cancellationToken = default)
         {
-            ValidateNewUser(usuario);
+            await ValidateNewUserAsync(usuario, cancellationToken).ConfigureAwait(false);
             if (!string.IsNullOrEmpty(usuario.Password) && !PasswordHasher.LooksHashed(usuario.Password))
                 usuario.Password = PasswordHasher.Hash(usuario.Password);
-            _unitOfWork.UserRepository.Add(usuario);
+            await _unitOfWork.UserRepository.AddAsync(usuario, cancellationToken).ConfigureAwait(false);
         }
 
-        public Task DeleteCompany(Company company)
+        public Task DeleteCompanyAsync(Company company, CancellationToken cancellationToken = default)
         {
-            return _unitOfWork.CompanyRepository.Remove(company);
+            return _unitOfWork.CompanyRepository.RemoveAsync(company, cancellationToken);
         }
 
-        public Company FindByCode(string code)
+        public async Task<Company> FindByCodeAsync(string code, CancellationToken cancellationToken = default)
         {
-            var all = _unitOfWork.CompanyRepository.GetAllBlocking();
+            var all = await _unitOfWork.CompanyRepository.GetAllAsync(cancellationToken).ConfigureAwait(false);
             return Hydrate(all.FirstOrDefault(c => c.Code == code));
         }
 
-        public User FinUserById(int id)
+        public async Task<User> FinUserByIdAsync(int id, CancellationToken cancellationToken = default)
         {
-            var user = _unitOfWork.UserRepository.GetById(id);
+            var user = await _unitOfWork.UserRepository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
             if (user != null)
                 user.Password = null;
             return user;
         }
 
-        public Task<IEnumerable<Company>> GetAllCompanies()
+        public Task<IEnumerable<Company>> GetAllCompaniesAsync(CancellationToken cancellationToken = default)
         {
-            return GetAllCompanies(currentUser: null);
+            return GetAllCompaniesAsync(currentUser: null, cancellationToken);
         }
 
-        public async Task<IEnumerable<Company>> GetAllCompanies(User currentUser)
+        public async Task<IEnumerable<Company>> GetAllCompaniesAsync(User currentUser, CancellationToken cancellationToken = default)
         {
-            var companies = (await _unitOfWork.CompanyRepository.GetAll()).Select(Hydrate).ToList();
+            var companies = (await _unitOfWork.CompanyRepository.GetAllAsync(cancellationToken).ConfigureAwait(false))
+                .Select(Hydrate).ToList();
 
             if (currentUser != null && currentUser.UserType == UserType.Usuario)
             {
-                var allowed = new HashSet<string>(await _unitOfWork.CompanyRepository.GetCodesAllowedForUser(currentUser.Id));
+                var allowed = new HashSet<string>(
+                    await _unitOfWork.CompanyRepository.GetCodesAllowedForUserAsync(currentUser.Id, cancellationToken).ConfigureAwait(false));
                 companies = companies.Where(c => allowed.Contains(c.Code)).ToList();
             }
 
             return companies;
         }
 
-        public IEnumerable<Company> GetAllInactiveCompanies()
+        public async Task<IEnumerable<Company>> GetAllInactiveCompaniesAsync(CancellationToken cancellationToken = default)
         {
-            return _unitOfWork.CompanyRepository.GetAllBlocking().Select(Hydrate).Where(c => !c.Active);
+            var all = await _unitOfWork.CompanyRepository.GetAllAsync(cancellationToken).ConfigureAwait(false);
+            return all.Select(Hydrate).Where(c => !c.Active);
         }
 
-        public IEnumerable<User> GetAllInactiveUsers()
+        public async Task<IEnumerable<User>> GetAllInactiveUsersAsync(CancellationToken cancellationToken = default)
         {
-            return GetAllUsers().Where(u => !u.Active);
+            var users = await GetAllUsersAsync(cancellationToken).ConfigureAwait(false);
+            return users.Where(u => !u.Active);
         }
 
-        public IEnumerable<User> GetAllUsers()
+        public async Task<IEnumerable<User>> GetAllUsersAsync(CancellationToken cancellationToken = default)
         {
-            return StripPasswords(_unitOfWork.UserRepository.GetAll());
+            var users = await _unitOfWork.UserRepository.GetAllAsync(cancellationToken).ConfigureAwait(false);
+            return StripPasswords(users);
         }
 
-        public void InactivateUser(User usuario)
+        public async Task InactivateUserAsync(User usuario, CancellationToken cancellationToken = default)
         {
             usuario.Active = false;
-            PreserveStoredPassword(usuario);
-            _unitOfWork.UserRepository.Update(usuario);
+            await PreserveStoredPasswordAsync(usuario, cancellationToken).ConfigureAwait(false);
+            await _unitOfWork.UserRepository.UpdateAsync(usuario, cancellationToken).ConfigureAwait(false);
         }
 
-        public void UpdateCompany(Company compania)
+        public async Task UpdateCompanyAsync(Company compania, CancellationToken cancellationToken = default)
         {
             ValidateCompany(compania);
             FlattenPersonFields(compania);
-            _unitOfWork.CompanyRepository.Update(compania);
+            await _unitOfWork.CompanyRepository.UpdateAsync(compania, cancellationToken).ConfigureAwait(false);
         }
 
-        public void UpdateUser(User usuario)
+        public async Task UpdateUserAsync(User usuario, CancellationToken cancellationToken = default)
         {
             if (usuario == null || string.IsNullOrWhiteSpace(usuario.Name) || string.IsNullOrWhiteSpace(usuario.UserName))
                 throw new InvalidOperationException("No se puede guardar usuarios con nombes en blanco");
 
             if (string.IsNullOrEmpty(usuario.Password))
-                PreserveStoredPassword(usuario);
+                await PreserveStoredPasswordAsync(usuario, cancellationToken).ConfigureAwait(false);
             else if (!PasswordHasher.LooksHashed(usuario.Password))
                 usuario.Password = PasswordHasher.Hash(usuario.Password);
-            _unitOfWork.UserRepository.Update(usuario);
+            await _unitOfWork.UserRepository.UpdateAsync(usuario, cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<string> GetCompanyConsecutive()
+        public async Task<string> GetCompanyConsecutiveAsync(CancellationToken cancellationToken = default)
         {
-            var lastCompany = await _unitOfWork.CompanyRepository.LatestCode();
+            var lastCompany = await _unitOfWork.CompanyRepository.LatestCodeAsync(cancellationToken).ConfigureAwait(false);
             return "C" + (int.Parse(lastCompany.Substring(1, 3)) + 1).ToString("000");
         }
 
-        public bool UserNameTaken(string userName)
+        public async Task<bool> UserNameTakenAsync(string userName, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(userName))
                 return false;
 
-            var existing = _unitOfWork.UserRepository.FindByUserName(userName);
+            var existing = await _unitOfWork.UserRepository.FindByUserNameAsync(userName, cancellationToken).ConfigureAwait(false);
             return existing != null;
         }
 
@@ -182,11 +188,11 @@ namespace AriesContador.Services
             };
         }
 
-        private void PreserveStoredPassword(User usuario)
+        private async Task PreserveStoredPasswordAsync(User usuario, CancellationToken cancellationToken)
         {
             if (usuario == null || usuario.Id <= 0)
                 return;
-            var stored = _unitOfWork.UserRepository.GetById(usuario.Id);
+            var stored = await _unitOfWork.UserRepository.GetByIdAsync(usuario.Id, cancellationToken).ConfigureAwait(false);
             if (stored != null)
                 usuario.Password = stored.Password;
         }
@@ -208,12 +214,12 @@ namespace AriesContador.Services
             }
         }
 
-        private void ValidateNewUser(User usuario)
+        private async Task ValidateNewUserAsync(User usuario, CancellationToken cancellationToken)
         {
             if (usuario == null || string.IsNullOrWhiteSpace(usuario.Name) || string.IsNullOrWhiteSpace(usuario.UserName))
                 throw new InvalidOperationException("No se puede guardar usuarios con nombes en blanco");
 
-            if (UserNameTaken(usuario.UserName))
+            if (await UserNameTakenAsync(usuario.UserName, cancellationToken).ConfigureAwait(false))
                 throw new InvalidOperationException("El nombre de usuario ya se encuentra registrado, intente con otro");
         }
 
@@ -341,7 +347,7 @@ namespace AriesContador.Services
             dest.CopyFrom = source.CopyFrom;
         }
 
-        private IEnumerable<Account> LoadAccountsForNewCompany(Company company)
+        private async Task<IEnumerable<Account>> LoadAccountsForNewCompanyAsync(Company company, CancellationToken cancellationToken)
         {
             var copyFrom = company.CopyFrom;
             if (string.IsNullOrWhiteSpace(copyFrom) || copyFrom == "POR DEFECTO")
@@ -358,7 +364,7 @@ namespace AriesContador.Services
                 return defaults;
             }
 
-            var source = _unitOfWork.AccountRepository.FindByCompanyId(copyFrom).ToList();
+            var source = (await _unitOfWork.AccountRepository.FindByCompanyIdAsync(copyFrom, cancellationToken).ConfigureAwait(false)).ToList();
             if (source.Count == 0)
                 throw new InvalidOperationException("No se pudo clonar el maestro de cuentas");
 

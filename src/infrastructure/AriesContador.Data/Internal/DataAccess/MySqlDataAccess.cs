@@ -4,76 +4,95 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace AriesContador.Data.Internal.DataAccess
 {
     internal class MySqlDataAccess : IDisposable
     {
         private readonly IConnectionString _connectionString;
-        private IDbConnection _connection;
-        private IDbTransaction _transaction;
+        private MySqlConnection _connection;
+        private MySqlTransaction _transaction;
         private bool _transactionOpen;
         private bool _completed;
 
         public MySqlDataAccess(IConnectionString connectionString)
         {
-            this._connectionString = connectionString;
+            _connectionString = connectionString;
         }
 
-        public List<T> LoadData<T, U>(string storedProcedure, U parameters)
+        public async Task<List<T>> LoadDataAsync<T, U>(string storedProcedure, U parameters, CancellationToken cancellationToken = default)
         {
-            string connectionString = _connectionString.MySQLDefault;
-
-            using (IDbConnection connection = new MySqlConnection(connectionString))
+            using (var connection = new MySqlConnection(_connectionString.MySQLDefault))
             {
-                List<T> rows = connection.Query<T>(storedProcedure, parameters,
-                    commandType: CommandType.StoredProcedure).ToList();
-
-                return rows;
+                await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+                var result = await connection.QueryAsync<T>(Proc(storedProcedure, parameters, cancellationToken: cancellationToken))
+                    .ConfigureAwait(false);
+                return result.ToList();
             }
         }
 
-        public List<T> LoadData<T>(string storedProcedure)
+        public async Task<List<T>> LoadDataAsync<T>(string storedProcedure, CancellationToken cancellationToken = default)
         {
-            string connectionString = _connectionString.MySQLDefault;
-
-            using (IDbConnection connection = new MySqlConnection(connectionString))
+            using (var connection = new MySqlConnection(_connectionString.MySQLDefault))
             {
-                List<T> rows = connection.Query<T>(storedProcedure, commandType:
-                    CommandType.StoredProcedure).ToList();
-
-                return rows;
+                await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+                var result = await connection.QueryAsync<T>(Proc(storedProcedure, cancellationToken: cancellationToken))
+                    .ConfigureAwait(false);
+                return result.ToList();
             }
         }
 
-        public List<T> ExecuteQuery<T, U>(string query, U parameters)
+        public async Task<List<T>> ExecuteQueryAsync<T>(string query, CancellationToken cancellationToken = default)
         {
-            string connectionString = _connectionString.MySQLDefault;
-
-            using (IDbConnection connection = new MySqlConnection(connectionString))
+            using (var connection = new MySqlConnection(_connectionString.MySQLDefault))
             {
-                return connection.Query<T>(query, parameters, commandType: CommandType.Text).ToList();
+                await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+                var result = await connection.QueryAsync<T>(Text(query, cancellationToken: cancellationToken))
+                    .ConfigureAwait(false);
+                return result.ToList();
             }
         }
 
-        public int ExecuteText(string sql, object parameters)
+        public async Task<List<T>> ExecuteQueryAsync<T, U>(string query, U parameters, CancellationToken cancellationToken = default)
         {
-            using (IDbConnection connection = new MySqlConnection(_connectionString.MySQLDefault))
+            using (var connection = new MySqlConnection(_connectionString.MySQLDefault))
             {
-                return connection.Execute(sql, parameters, commandType: CommandType.Text);
+                await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+                var result = await connection.QueryAsync<T>(Text(query, parameters, cancellationToken: cancellationToken))
+                    .ConfigureAwait(false);
+                return result.ToList();
             }
         }
 
-        public int ExecuteTextInTransaction(string sql, object parameters)
+        public async Task ExecuteSingleAsync<U>(string query, U parameters, CancellationToken cancellationToken = default)
         {
-            return _connection.Execute(sql, parameters, commandType: CommandType.Text, transaction: _transaction);
+            using (var connection = new MySqlConnection(_connectionString.MySQLDefault))
+            {
+                await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+                await connection.ExecuteAsync(Text(query, parameters, cancellationToken: cancellationToken))
+                    .ConfigureAwait(false);
+            }
         }
 
-        public DataTable QueryTable(string sql, object parameters)
+        public async Task<int> ExecuteTextAsync(string sql, object parameters, CancellationToken cancellationToken = default)
         {
-            using (IDbConnection connection = new MySqlConnection(_connectionString.MySQLDefault))
+            using (var connection = new MySqlConnection(_connectionString.MySQLDefault))
             {
-                using (var reader = connection.ExecuteReader(sql, parameters, commandType: CommandType.Text))
+                await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+                return await connection.ExecuteAsync(Text(sql, parameters, cancellationToken: cancellationToken))
+                    .ConfigureAwait(false);
+            }
+        }
+
+        public async Task<DataTable> QueryTableAsync(string sql, object parameters, CancellationToken cancellationToken = default)
+        {
+            using (var connection = new MySqlConnection(_connectionString.MySQLDefault))
+            {
+                await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+                using (var reader = await connection.ExecuteReaderAsync(Text(sql, parameters, cancellationToken: cancellationToken))
+                    .ConfigureAwait(false))
                 {
                     var table = new DataTable();
                     table.Load(reader);
@@ -82,89 +101,80 @@ namespace AriesContador.Data.Internal.DataAccess
             }
         }
 
-        public void SaveData<T>(string storedProcedure, T parameters)
+        public async Task SaveDataAsync<T>(string storedProcedure, T parameters, CancellationToken cancellationToken = default)
         {
-            string connectionString = _connectionString.MySQLDefault;
-
-            using (IDbConnection connection = new MySqlConnection(connectionString))
+            using (var connection = new MySqlConnection(_connectionString.MySQLDefault))
             {
-                connection.Execute(storedProcedure, parameters,
-                    commandType: CommandType.StoredProcedure);
+                await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+                await connection.ExecuteAsync(Proc(storedProcedure, parameters, cancellationToken: cancellationToken))
+                    .ConfigureAwait(false);
             }
         }
 
-        public Q SaveData<T, Q>(string storedProcedure, T parameters)
+        public async Task<Q> SaveDataAsync<T, Q>(string storedProcedure, T parameters, CancellationToken cancellationToken = default)
         {
-            string connectionString = _connectionString.MySQLDefault;
-
-            DynamicParameters _params = new DynamicParameters();
-            _params.Add($"@Id", direction: ParameterDirection.Output);
-            _params.AddDynamicParams(parameters);
-
-            using (IDbConnection connection = new MySqlConnection(connectionString))
+            var args = WithIdOutput(parameters);
+            using (var connection = new MySqlConnection(_connectionString.MySQLDefault))
             {
-                connection.Execute(storedProcedure, _params,
-                    commandType: CommandType.StoredProcedure);
-                var retVal = _params.Get<Q>("Id");
-
-                return retVal;
+                await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+                await connection.ExecuteAsync(Proc(storedProcedure, args, cancellationToken: cancellationToken))
+                    .ConfigureAwait(false);
+                return args.Get<Q>("Id");
             }
         }
 
-        public void SaveDataInTransaction<T>(string storedProcedure, T parameters)
+        public async Task StartTransactionAsync(CancellationToken cancellationToken = default)
         {
-            _connection.Execute(storedProcedure, parameters,
-                commandType: CommandType.StoredProcedure, transaction: _transaction);
-        }
-
-        public Q SaveDataInTransaction<T, Q>(string storedProcedure, T parameters)
-        {
-            DynamicParameters _params = new DynamicParameters();
-            _params.Add($"@Id", direction: ParameterDirection.Output);
-            _params.AddDynamicParams(parameters);
-
-            _connection.Execute(storedProcedure, _params,
-                commandType: CommandType.StoredProcedure, transaction: _transaction);
-            var retVal = _params.Get<Q>("Id");
-
-            return retVal;
-        }
-
-        public List<T> LoadDataInTransaction<T, U>(string storedProcedure, U parameters)
-        {
-            List<T> rows = _connection.Query<T>(storedProcedure, parameters,
-                commandType: CommandType.StoredProcedure, transaction: _transaction).ToList();
-
-            return rows;
-        }
-
-        public void StartTransaction()
-        {
-            string connectionString = _connectionString.MySQLDefault;
-
-            _connection = new MySqlConnection(connectionString);
-            _connection.Open();
-            _transaction = _connection.BeginTransaction();
+            _connection = new MySqlConnection(_connectionString.MySQLDefault);
+            await _connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+            _transaction = await _connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
             _transactionOpen = true;
             _completed = false;
         }
 
-        public void CommitTransaction()
+        public async Task SaveDataInTransactionAsync<T>(string storedProcedure, T parameters, CancellationToken cancellationToken = default)
+        {
+            await _connection.ExecuteAsync(Proc(storedProcedure, parameters, _transaction, cancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        public async Task<Q> SaveDataInTransactionAsync<T, Q>(string storedProcedure, T parameters, CancellationToken cancellationToken = default)
+        {
+            var args = WithIdOutput(parameters);
+            await _connection.ExecuteAsync(Proc(storedProcedure, args, _transaction, cancellationToken))
+                .ConfigureAwait(false);
+            return args.Get<Q>("Id");
+        }
+
+        public async Task<List<T>> LoadDataInTransactionAsync<T, U>(string storedProcedure, U parameters, CancellationToken cancellationToken = default)
+        {
+            var result = await _connection.QueryAsync<T>(Proc(storedProcedure, parameters, _transaction, cancellationToken))
+                .ConfigureAwait(false);
+            return result.ToList();
+        }
+
+        public async Task<int> ExecuteTextInTransactionAsync(string sql, object parameters, CancellationToken cancellationToken = default)
+        {
+            return await _connection.ExecuteAsync(Text(sql, parameters, _transaction, cancellationToken))
+                .ConfigureAwait(false);
+        }
+
+        public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
         {
             if (_transactionOpen && !_completed)
             {
-                _transaction?.Commit();
+                await _transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
                 _completed = true;
                 _transactionOpen = false;
             }
             CloseConnection();
         }
 
-        public void RollBackTransaction()
+        public async Task RollBackTransactionAsync(CancellationToken cancellationToken = default)
         {
             if (_transactionOpen && !_completed)
             {
-                _transaction?.Rollback();
+                await _transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
                 _completed = true;
                 _transactionOpen = false;
             }
@@ -174,9 +184,19 @@ namespace AriesContador.Data.Internal.DataAccess
         public void Dispose()
         {
             if (_transactionOpen && !_completed)
-                RollBackTransaction();
-            else
-                CloseConnection();
+            {
+                try
+                {
+                    _transaction?.Rollback();
+                }
+                catch
+                {
+                    // last-resort cleanup; callers should RollbackAsync on failure
+                }
+                _completed = true;
+                _transactionOpen = false;
+            }
+            CloseConnection();
         }
 
         private void CloseConnection()
@@ -184,6 +204,24 @@ namespace AriesContador.Data.Internal.DataAccess
             _connection?.Close();
             _connection = null;
             _transaction = null;
+        }
+
+        private static DynamicParameters WithIdOutput<T>(T parameters)
+        {
+            var args = new DynamicParameters();
+            args.Add("@Id", direction: ParameterDirection.Output);
+            args.AddDynamicParams(parameters);
+            return args;
+        }
+
+        private static CommandDefinition Proc(string sql, object parameters = null, IDbTransaction transaction = null, CancellationToken cancellationToken = default)
+        {
+            return new CommandDefinition(sql, parameters, transaction, commandType: CommandType.StoredProcedure, cancellationToken: cancellationToken);
+        }
+
+        private static CommandDefinition Text(string sql, object parameters = null, IDbTransaction transaction = null, CancellationToken cancellationToken = default)
+        {
+            return new CommandDefinition(sql, parameters, transaction, commandType: CommandType.Text, cancellationToken: cancellationToken);
         }
     }
 }

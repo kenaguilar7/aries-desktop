@@ -1,11 +1,13 @@
 ﻿using AriesContador.Core;
 using AriesContador.Core.Models.Accounts;
+using AriesContador.Core.Models.JournalEntries;
 using AriesContador.Core.Models.PostingPeriods;
+using AriesContador.Core.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AriesContador.Core.Services;
-using AriesContador.Core.Models.JournalEntries;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace AriesContador.Services
 {
@@ -19,40 +21,40 @@ namespace AriesContador.Services
         }
 
         #region Account
-        public IEnumerable<Account> GetAccounts(string companyId)
+        public async Task<IEnumerable<Account>> GetAccountsAsync(string companyId, CancellationToken cancellationToken = default)
         {
             if (companyId == "POR DEFECTO")
                 return _unitOfWork.AccountRepository.GetDefaultAccounts();
 
-            var output = _unitOfWork.AccountRepository.FindByCompanyId(companyId);
+            var output = await _unitOfWork.AccountRepository.FindByCompanyIdAsync(companyId, cancellationToken).ConfigureAwait(false);
             return AccountRules.OrderByTree(output);
         }
 
-        public Account FindAccount(int id)
+        public Task<Account> FindAccountAsync(int id, CancellationToken cancellationToken = default)
         {
-            return _unitOfWork.AccountRepository.GetById(id).GetAwaiter().GetResult();
+            return _unitOfWork.AccountRepository.GetByIdAsync(id, cancellationToken);
         }
 
         public IEnumerable<Account> GetDefaultAccounts()
         {
-            var accounts = _unitOfWork.AccountRepository.GetDefaultAccounts();
-            return accounts;
+            return _unitOfWork.AccountRepository.GetDefaultAccounts();
         }
 
-        public void CreateAccount(Account account)
+        public async Task CreateAccountAsync(Account account, CancellationToken cancellationToken = default)
         {
             Account parent = null;
             if (account != null && account.FatherAccount.HasValue && account.FatherAccount.Value != 0
                 && !string.IsNullOrEmpty(account.CompanyId))
             {
-                parent = _unitOfWork.AccountRepository.FindByCompanyId(account.CompanyId)
-                    .FirstOrDefault(x => x.Id == account.FatherAccount.Value);
+                var accounts = await _unitOfWork.AccountRepository.FindByCompanyIdAsync(account.CompanyId, cancellationToken)
+                    .ConfigureAwait(false);
+                parent = accounts.FirstOrDefault(x => x.Id == account.FatherAccount.Value);
             }
 
-            CreateAccount(account, parent);
+            await CreateAccountAsync(account, parent, cancellationToken).ConfigureAwait(false);
         }
 
-        public void CreateAccount(Account account, Account parent)
+        public async Task CreateAccountAsync(Account account, Account parent, CancellationToken cancellationToken = default)
         {
             if (account == null)
                 throw new InvalidOperationException(AccountRules.BlankNameMessage);
@@ -60,7 +62,7 @@ namespace AriesContador.Services
             if (!AccountRules.ValidateName(account.Name, out var nameMessage))
                 throw new InvalidOperationException(nameMessage);
 
-            if (_unitOfWork.AccountRepository.NameTaken(account.Id, account.CompanyId, account.Name))
+            if (await _unitOfWork.AccountRepository.NameTakenAsync(account.Id, account.CompanyId, account.Name, cancellationToken).ConfigureAwait(false))
                 throw new InvalidOperationException(AccountRules.NameCannotBeUsedMessage);
 
             account.AccountType = AccountType.Cuenta_Auxiliar;
@@ -74,13 +76,13 @@ namespace AriesContador.Services
                 AccountRules.InheritBalancesIfParentIsAuxiliar(account, parent);
             }
 
-            _unitOfWork.AccountRepository.AddChild(account);
+            await _unitOfWork.AccountRepository.AddChildAsync(account, cancellationToken).ConfigureAwait(false);
 
             if (parentWasAuxiliar)
                 parent.AccountType = AccountType.Cuenta_De_Mayor;
         }
 
-        public void UpdateAccount(Account account)
+        public async Task UpdateAccountAsync(Account account, CancellationToken cancellationToken = default)
         {
             if (account == null)
                 throw new InvalidOperationException(AccountRules.BlankNameMessage);
@@ -88,46 +90,43 @@ namespace AriesContador.Services
             if (!AccountRules.ValidateName(account.Name, out var nameMessage))
                 throw new InvalidOperationException(nameMessage);
 
-            if (_unitOfWork.AccountRepository.NameTaken(account.Id, account.CompanyId, account.Name))
+            if (await _unitOfWork.AccountRepository.NameTakenAsync(account.Id, account.CompanyId, account.Name, cancellationToken).ConfigureAwait(false))
                 throw new InvalidOperationException(AccountRules.NameTakenMessage);
 
-            _unitOfWork.AccountRepository.UpdateNameInfo(account);
+            await _unitOfWork.AccountRepository.UpdateNameInfoAsync(account, cancellationToken).ConfigureAwait(false);
         }
 
-        public void DeleteAccount(Account account)
+        public async Task DeleteAccountAsync(Account account, CancellationToken cancellationToken = default)
         {
             if (!AccountRules.CanDelete(account, out var message))
                 throw new InvalidOperationException(message);
 
-            if (_unitOfWork.AccountRepository.HasOpenPeriodMovements(account.Id))
+            if (await _unitOfWork.AccountRepository.HasOpenPeriodMovementsAsync(account.Id, cancellationToken).ConfigureAwait(false))
                 throw new InvalidOperationException(AccountRules.DeleteWithMovementsMessage);
 
-            _unitOfWork.AccountRepository.Remove(account).GetAwaiter().GetResult();
+            await _unitOfWork.AccountRepository.RemoveAsync(account, cancellationToken).ConfigureAwait(false);
         }
 
-        public bool EvaluateParentForNewChild(Account parent, out string message)
+        public async Task<(bool CanProceed, string Message)> EvaluateParentForNewChildAsync(Account parent, CancellationToken cancellationToken = default)
         {
-            message = "";
             if (parent == null)
-                return true;
+                return (true, "");
 
-            var periods = GetPostingPeriods(parent.CompanyId).ToList();
+            var periods = (await GetPostingPeriodsAsync(parent.CompanyId, cancellationToken).ConfigureAwait(false)).ToList();
             if (periods.Count == 0)
-                return true;
+                return (true, "");
 
             var dummy = CloneAccountBalances(parent);
-            FillAccountsWithBalances(new List<Account> { dummy }, periods[0].Date, periods[periods.Count - 1].Date);
+            await FillAccountsWithBalancesAsync(new List<Account> { dummy }, periods[0].Date, periods[periods.Count - 1].Date, cancellationToken)
+                .ConfigureAwait(false);
 
             if (dummy.AccountType == AccountType.Cuenta_Auxiliar && AccountRules.HasMovement(dummy))
-            {
-                message = AccountRules.ParentHasMovementsWarning(dummy);
-                return false;
-            }
+                return (false, AccountRules.ParentHasMovementsWarning(dummy));
 
-            return true;
+            return (true, "");
         }
 
-        public void FillAccountsWithBalances(IList<Account> accounts, DateTime from, DateTime to)
+        public async Task FillAccountsWithBalancesAsync(IList<Account> accounts, DateTime from, DateTime to, CancellationToken cancellationToken = default)
         {
             if (accounts == null || accounts.Count == 0)
                 return;
@@ -144,7 +143,8 @@ namespace AriesContador.Services
             if (string.IsNullOrEmpty(companyId))
                 return;
 
-            var rows = _unitOfWork.AccountRepository.GetBalancesFromAccountInfo(companyId, from, to);
+            var rows = await _unitOfWork.AccountRepository.GetBalancesFromAccountInfoAsync(companyId, from, to, cancellationToken)
+                .ConfigureAwait(false);
             var byId = rows.ToDictionary(x => x.Id);
             foreach (var account in accounts)
             {
@@ -159,12 +159,7 @@ namespace AriesContador.Services
             AccountRules.ApplyRollUp(accounts);
         }
 
-        public IEnumerable<Account> GetAccountBalance(string companyId, IEnumerable<PostingPeriod> postingPeriods)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Account GetAccountBalance(Account account, IEnumerable<PostingPeriod> postingPeriods)
+        public Task<Account> GetAccountBalanceAsync(Account account, IEnumerable<PostingPeriod> postingPeriods, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
@@ -192,189 +187,160 @@ namespace AriesContador.Services
         #endregion
 
         #region Posting Periods
-        public IEnumerable<PostingPeriod> GetPostingPeriods(string companyId)
+        public async Task<IEnumerable<PostingPeriod>> GetPostingPeriodsAsync(string companyId, CancellationToken cancellationToken = default)
         {
-            var output = _unitOfWork.PostingPeriodRepository.FindByCompanyId(companyId);
-            return output.OrderBy(x=>x.Date);
+            var output = await _unitOfWork.PostingPeriodRepository.FindByCompanyIdAsync(companyId, cancellationToken).ConfigureAwait(false);
+            return output.OrderBy(x => x.Date);
         }
-        public void CreatePostingPeriod(PostingPeriod postingPeriod)
+
+        public async Task CreatePostingPeriodAsync(PostingPeriod postingPeriod, CancellationToken cancellationToken = default)
         {
-            var postingPeriods = _unitOfWork.PostingPeriodRepository.FindByCompanyId(postingPeriod.CompanyId);
+            var postingPeriods = await _unitOfWork.PostingPeriodRepository.FindByCompanyIdAsync(postingPeriod.CompanyId, cancellationToken)
+                .ConfigureAwait(false);
 
             if (postingPeriods.PeriodExist(postingPeriod))
                 throw new Exception("Periodo contable con fechas repetidas");
 
-            _unitOfWork.PostingPeriodRepository.Add(postingPeriod);
+            await _unitOfWork.PostingPeriodRepository.AddAsync(postingPeriod, cancellationToken).ConfigureAwait(false);
         }
 
-        public void UpdatePostingPeriod(PostingPeriod postingPeriod)
+        public Task UpdatePostingPeriodAsync(PostingPeriod postingPeriod, CancellationToken cancellationToken = default)
         {
-            _unitOfWork.PostingPeriodRepository.Update(postingPeriod);
-        }
-        public void ClosePostingPeriod(PostingPeriodEndClosing postingPeriod)
-        {
-            _unitOfWork.PostingPeriodRepository.ClosePostingPeriod(postingPeriod);
-        }
-        public void DeletePostingPeriod(PostingPeriod postingPeriod)
-        {
-            _unitOfWork.PostingPeriodRepository.Remove(postingPeriod).GetAwaiter().GetResult();
+            return _unitOfWork.PostingPeriodRepository.UpdateAsync(postingPeriod, cancellationToken);
         }
 
-        public List<PostingPeriod> GetAvailablePostingPeriodsForBeCreated(string companyId)
+        public Task ClosePostingPeriodAsync(PostingPeriodEndClosing postingPeriod, CancellationToken cancellationToken = default)
         {
-            var postingPeriods = GetPostingPeriods(companyId);
+            return _unitOfWork.PostingPeriodRepository.ClosePostingPeriodAsync(postingPeriod, cancellationToken);
+        }
+
+        public Task DeletePostingPeriodAsync(PostingPeriod postingPeriod, CancellationToken cancellationToken = default)
+        {
+            return _unitOfWork.PostingPeriodRepository.RemoveAsync(postingPeriod, cancellationToken);
+        }
+
+        public async Task<List<PostingPeriod>> GetAvailablePostingPeriodsForBeCreatedAsync(string companyId, CancellationToken cancellationToken = default)
+        {
+            var postingPeriods = await GetPostingPeriodsAsync(companyId, cancellationToken).ConfigureAwait(false);
             var output = new List<PostingPeriod>();
 
             if (postingPeriods.Any())
             {
-                var exitMovements = HasJournalEntries(postingPeriods);
+                var exitMovements = await HasJournalEntriesAsync(postingPeriods, cancellationToken).ConfigureAwait(false);
                 var pPeriods = new PostingPeriodCreator(postingPeriods.ToList(), exitMovements)
-                    .GetAvailablePostingPeriodForBeCreated(); 
+                    .GetAvailablePostingPeriodForBeCreated();
 
                 output.AddRange(pPeriods);
             }
             else
             {
-                var pPeriod = new PostingPeriodCreator().CreatePostingPeriodForNewCompany(); 
+                var pPeriod = new PostingPeriodCreator().CreatePostingPeriodForNewCompany();
                 output.Add(pPeriod);
             }
 
-            return output; 
+            return output;
         }
 
-        private bool HasJournalEntries(IEnumerable<PostingPeriod> postingPeriods)
+        private async Task<bool> HasJournalEntriesAsync(IEnumerable<PostingPeriod> postingPeriods, CancellationToken cancellationToken)
         {
-
             foreach (var postingP in postingPeriods)
             {
-                postingP.JournalEntries = _unitOfWork.JournalEntryRepository.FindByPostingPeriodId(postingP.Id).ToList();
+                postingP.JournalEntries = (await _unitOfWork.JournalEntryRepository.FindByPostingPeriodIdAsync(postingP.Id, cancellationToken)
+                    .ConfigureAwait(false)).ToList();
             }
 
-            var hasEntries = postingPeriods.Count(x => x.JournalEntries.Count > 0);
-
-            return hasEntries > 0;
+            return postingPeriods.Count(x => x.JournalEntries.Count > 0) > 0;
         }
-
-        //private IEnumerable<PostingPeriod> CreatePreEntityPostingPeriod(DateTime fromDatePeriod)
-        //{
-        //    return new List<PostingPeriod>() { CreatePostingPeriodEntity(fromDatePeriod) };
-        //}
-
-        //private IEnumerable<PostingPeriod> CreatePreEntityPostingPeriod(DateTime fromDatePeriod, DateTime toDatePeriod)
-        //{
-        //    return new List<PostingPeriod>() { CreatePostingPeriodEntity(fromDatePeriod),
-        //                                          CreatePostingPeriodEntity(toDatePeriod) };
-        //}
-
-        //public PostingPeriod CreatePostingPeriodEntity(DateTime PeriodDate)
-        //     => new PostingPeriod() { Date = PeriodDate };
 
         #endregion
 
         #region Journal Entry
-        public IEnumerable<JournalEntry> GetJournalEntries(int postingPeriodId)
+        public Task<IEnumerable<JournalEntry>> GetJournalEntriesAsync(int postingPeriodId, CancellationToken cancellationToken = default)
         {
-            var output = _unitOfWork.JournalEntryRepository.FindByPostingPeriodId(postingPeriodId);
-            return output;
-        }
-        public JournalEntry GetJournalEntryById(int id)
-        {
-            var output = _unitOfWork.JournalEntryRepository.GetById(id);
-            //   output.JournalEntryLines = _unitOfWork.JournalEntryLineRepository.FindByJournalEntryId(id);
-            return output;
+            return _unitOfWork.JournalEntryRepository.FindByPostingPeriodIdAsync(postingPeriodId, cancellationToken);
         }
 
-        public int CreateJournalEntryConsecutive(int postingPeriodId)
+        public Task<JournalEntry> GetJournalEntryByIdAsync(int id, CancellationToken cancellationToken = default)
         {
-            var newNumber = _unitOfWork.JournalEntryRepository.GetConsecutiveNumber(postingPeriodId);
-            return newNumber;
+            return _unitOfWork.JournalEntryRepository.GetByIdAsync(id, cancellationToken);
         }
 
-        public void CreateJournalEntry(JournalEntry journalEntry)
+        public Task<int> CreateJournalEntryConsecutiveAsync(int postingPeriodId, CancellationToken cancellationToken = default)
         {
-            _unitOfWork.JournalEntryRepository.Add(journalEntry);
-        }
-        public void UpdateJournalEntry(JournalEntry journalEntry)
-        {
-            _unitOfWork.JournalEntryRepository.Update(journalEntry);
+            return _unitOfWork.JournalEntryRepository.GetConsecutiveNumberAsync(postingPeriodId, cancellationToken);
         }
 
-        public IEnumerable<JournalEntryDeletedReport> GetAllJournalEntryDeleted(BasicReportParam reportParam)
+        public Task CreateJournalEntryAsync(JournalEntry journalEntry, CancellationToken cancellationToken = default)
         {
-            return _unitOfWork.JournalEntryRepository.GetDeletedItemByDateRange(reportParam); 
+            return _unitOfWork.JournalEntryRepository.AddAsync(journalEntry, cancellationToken);
         }
 
-        public IEnumerable<JournalEntryLineDeletedReport> GetAllJournalEntryLineDeleted(BasicReportParam reportParam)
+        public Task UpdateJournalEntryAsync(JournalEntry journalEntry, CancellationToken cancellationToken = default)
         {
-            return  _unitOfWork.JournalEntryLineRepository.GetDeletedItemByDateRange(reportParam);
+            return _unitOfWork.JournalEntryRepository.UpdateAsync(journalEntry, cancellationToken);
         }
 
-        public void RestoreJournalEntry(JournalEntry journalEntry)
+        public Task<IEnumerable<JournalEntryDeletedReport>> GetAllJournalEntryDeletedAsync(BasicReportParam reportParam, CancellationToken cancellationToken = default)
         {
-            _unitOfWork.JournalEntryRepository.RestoreJournalEntry(journalEntry);
+            return _unitOfWork.JournalEntryRepository.GetDeletedItemByDateRangeAsync(reportParam, cancellationToken);
         }
 
-        public void DeleteJournalEntry(JournalEntry journalEntry)
+        public Task<IEnumerable<JournalEntryLineDeletedReport>> GetAllJournalEntryLineDeletedAsync(BasicReportParam reportParam, CancellationToken cancellationToken = default)
         {
-            _unitOfWork.JournalEntryRepository.Remove(journalEntry).GetAwaiter().GetResult();
+            return _unitOfWork.JournalEntryLineRepository.GetDeletedItemByDateRangeAsync(reportParam, cancellationToken);
         }
 
-        public void UpdatedJournalEntryPeriod(JournalEntry journalEntry)
+        public Task RestoreJournalEntryAsync(JournalEntry journalEntry, CancellationToken cancellationToken = default)
         {
-            var newJournalEntryNumber = _unitOfWork.JournalEntryRepository.GetConsecutiveNumber(journalEntry.PostingPeriodId);
+            return _unitOfWork.JournalEntryRepository.RestoreJournalEntryAsync(journalEntry, cancellationToken);
+        }
+
+        public Task DeleteJournalEntryAsync(JournalEntry journalEntry, CancellationToken cancellationToken = default)
+        {
+            return _unitOfWork.JournalEntryRepository.RemoveAsync(journalEntry, cancellationToken);
+        }
+
+        public async Task UpdatedJournalEntryPeriodAsync(JournalEntry journalEntry, CancellationToken cancellationToken = default)
+        {
+            var newJournalEntryNumber = await _unitOfWork.JournalEntryRepository.GetConsecutiveNumberAsync(journalEntry.PostingPeriodId, cancellationToken)
+                .ConfigureAwait(false);
             journalEntry.Number = newJournalEntryNumber;
-            _unitOfWork.JournalEntryRepository.Update(journalEntry);
+            await _unitOfWork.JournalEntryRepository.UpdateAsync(journalEntry, cancellationToken).ConfigureAwait(false);
         }
 
         #endregion
 
         #region Journal Entry Line
-        public IEnumerable<JournalEntryLine> GetJournalEntryLineByJournalEntryId(int journalEntryId)
+        public Task<IEnumerable<JournalEntryLine>> GetJournalEntryLineByJournalEntryIdAsync(int journalEntryId, CancellationToken cancellationToken = default)
         {
-            var output = _unitOfWork.JournalEntryLineRepository
-                                        .FindByJournalEntryId(journalEntryId);
-
-            return output;
+            return _unitOfWork.JournalEntryLineRepository.FindByJournalEntryIdAsync(journalEntryId, cancellationToken);
         }
 
-        public JournalEntryLine GetJournalEntryLineById(int id)
+        public Task<JournalEntryLine> GetJournalEntryLineByIdAsync(int id, CancellationToken cancellationToken = default)
         {
-            var output = _unitOfWork.JournalEntryLineRepository.GetById(id);
-            return output;
-        }
-        public void CreateJournalEntryLine(JournalEntryLine journalEntryLine)
-        {
-            _unitOfWork.JournalEntryLineRepository.Add(journalEntryLine);
-        }
-        public void UpdateJournalEntryLine(JournalEntryLine journalEntryLine)
-        {
-            _unitOfWork.JournalEntryLineRepository.Update(journalEntryLine);
+            return _unitOfWork.JournalEntryLineRepository.GetByIdAsync(id, cancellationToken);
         }
 
-        public void RestoreJournalEntryLine(JournalEntryLine journalEntryLine)
+        public Task CreateJournalEntryLineAsync(JournalEntryLine journalEntryLine, CancellationToken cancellationToken = default)
         {
-            _unitOfWork.JournalEntryLineRepository.RestoreJournalEntryLine(journalEntryLine);
+            return _unitOfWork.JournalEntryLineRepository.AddAsync(journalEntryLine, cancellationToken);
         }
 
-        public void DeleteJournalEntryLine(JournalEntryLine journalEntryLine)
+        public Task UpdateJournalEntryLineAsync(JournalEntryLine journalEntryLine, CancellationToken cancellationToken = default)
         {
-            _unitOfWork.JournalEntryLineRepository.Remove(journalEntryLine).GetAwaiter().GetResult();
+            return _unitOfWork.JournalEntryLineRepository.UpdateAsync(journalEntryLine, cancellationToken);
+        }
+
+        public Task RestoreJournalEntryLineAsync(JournalEntryLine journalEntryLine, CancellationToken cancellationToken = default)
+        {
+            return _unitOfWork.JournalEntryLineRepository.RestoreJournalEntryLineAsync(journalEntryLine, cancellationToken);
+        }
+
+        public Task DeleteJournalEntryLineAsync(JournalEntryLine journalEntryLine, CancellationToken cancellationToken = default)
+        {
+            return _unitOfWork.JournalEntryLineRepository.RemoveAsync(journalEntryLine, cancellationToken);
         }
 
         #endregion
-
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

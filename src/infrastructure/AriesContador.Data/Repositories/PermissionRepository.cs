@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using AriesContador.Core.Models.Permissions;
 using AriesContador.Core.Repositories;
 using AriesContador.Data.Internal.DataAccess;
@@ -40,19 +42,20 @@ FROM windows T0 WHERE T0.deleted = 0 AND T0.module_id = @ModuleId";
             _connectionString = connectionString;
         }
 
-        public IList<ModulePermission> GetModules(int userId)
+        public async Task<IList<ModulePermission>> GetModulesAsync(int userId, CancellationToken cancellationToken = default)
         {
             var dataAccess = new MySqlDataAccess(_connectionString);
-            var modules = dataAccess.ExecuteQuery<ModulePermission, object>(ModulesSql, new { UserId = userId });
+            var modules = await dataAccess.ExecuteQueryAsync<ModulePermission, object>(ModulesSql, new { UserId = userId }, cancellationToken)
+                .ConfigureAwait(false);
             foreach (var module in modules)
             {
-                module.Windows = dataAccess.ExecuteQuery<WindowPermission, object>(
-                    WindowsSql, new { UserId = userId, ModuleId = module.Id });
+                module.Windows = await dataAccess.ExecuteQueryAsync<WindowPermission, object>(
+                    WindowsSql, new { UserId = userId, ModuleId = module.Id }, cancellationToken).ConfigureAwait(false);
             }
             return modules;
         }
 
-        public bool AssignCompanies(IEnumerable<string> companyCodes, int targetUserId, int updatedByUserId)
+        public async Task<bool> AssignCompaniesAsync(IEnumerable<string> companyCodes, int targetUserId, int updatedByUserId, CancellationToken cancellationToken = default)
         {
             var sql = "INSERT INTO companies_permission (user_id,company_id,updated_by) VALUES (@UserId,@CompanyId,@UpdatedBy) "
                       + "ON DUPLICATE KEY UPDATE updated_by = @UpdatedBy , updated_at = NOW(), active = 1";
@@ -62,13 +65,14 @@ FROM windows T0 WHERE T0.deleted = 0 AND T0.module_id = @ModuleId";
             foreach (var code in companyCodes)
             {
                 pending++;
-                if (dataAccess.ExecuteText(sql, new { UserId = targetUserId, CompanyId = code, UpdatedBy = updatedByUserId }) >= 1)
+                if (await dataAccess.ExecuteTextAsync(sql, new { UserId = targetUserId, CompanyId = code, UpdatedBy = updatedByUserId }, cancellationToken)
+                        .ConfigureAwait(false) >= 1)
                     done++;
             }
             return pending == 0 || done == pending;
         }
 
-        public bool RemoveCompanies(IEnumerable<string> companyCodes, int targetUserId, int updatedByUserId)
+        public async Task<bool> RemoveCompaniesAsync(IEnumerable<string> companyCodes, int targetUserId, int updatedByUserId, CancellationToken cancellationToken = default)
         {
             var sql = "UPDATE companies_permission SET active = 0, updated_by = @UpdatedBy WHERE user_id = @UserId AND company_id = @CompanyId";
             var dataAccess = new MySqlDataAccess(_connectionString);
@@ -77,13 +81,14 @@ FROM windows T0 WHERE T0.deleted = 0 AND T0.module_id = @ModuleId";
             foreach (var code in companyCodes)
             {
                 pending++;
-                if (dataAccess.ExecuteText(sql, new { UserId = targetUserId, CompanyId = code, UpdatedBy = updatedByUserId }) >= 1)
+                if (await dataAccess.ExecuteTextAsync(sql, new { UserId = targetUserId, CompanyId = code, UpdatedBy = updatedByUserId }, cancellationToken)
+                        .ConfigureAwait(false) >= 1)
                     done++;
             }
             return pending == 0 || done == pending;
         }
 
-        public bool UpdateWindowPermissions(IList<ModulePermission> modules, int targetUserId, int updatedByUserId)
+        public async Task<bool> UpdateWindowPermissionsAsync(IList<ModulePermission> modules, int targetUserId, int updatedByUserId, CancellationToken cancellationToken = default)
         {
             const string sql = @"
 INSERT INTO windows_permission(user_id, module_id, window_id, u_insert, u_update, u_remove, u_list, updated_by)
@@ -100,14 +105,14 @@ updated_at = NOW()";
             {
                 try
                 {
-                    dataAccess.StartTransaction();
+                    await dataAccess.StartTransactionAsync(cancellationToken).ConfigureAwait(false);
                     foreach (var module in modules)
                     {
                         if (module?.Windows == null)
                             continue;
                         foreach (var window in module.Windows)
                         {
-                            dataAccess.ExecuteTextInTransaction(sql, new
+                            await dataAccess.ExecuteTextInTransactionAsync(sql, new
                             {
                                 UserId = targetUserId,
                                 ModuleId = module.Id,
@@ -117,15 +122,15 @@ updated_at = NOW()";
                                 window.CanRemove,
                                 window.CanList,
                                 UpdatedBy = updatedByUserId
-                            });
+                            }, cancellationToken).ConfigureAwait(false);
                         }
                     }
-                    dataAccess.CommitTransaction();
+                    await dataAccess.CommitTransactionAsync(cancellationToken).ConfigureAwait(false);
                     return true;
                 }
                 catch (Exception)
                 {
-                    dataAccess.RollBackTransaction();
+                    await dataAccess.RollBackTransactionAsync(cancellationToken).ConfigureAwait(false);
                     throw;
                 }
             }

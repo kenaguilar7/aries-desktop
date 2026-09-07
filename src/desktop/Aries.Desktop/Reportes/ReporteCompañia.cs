@@ -21,13 +21,18 @@ namespace Aries.Desktop.Reportes
         {
             _administrationService = administrationService;
             InitializeComponent();
-            CargarDatos();
+            Load += ReporteCompañia_Load;
         }
 
-        private async Task CargarDatos()
+        private async void ReporteCompañia_Load(object sender, EventArgs e)
+        {
+            await CargarDatosAsync();
+        }
+
+        private async Task CargarDatosAsync()
         {
             lstIds.SelectedIndex = 0;
-            compañias = (await _administrationService.GetAllCompanies(GlobalConfig.User)).ToList();
+            compañias = (await _administrationService.GetAllCompaniesAsync(GlobalConfig.User)).ToList();
             RadiosbuttonChanceStatus(null, null);
         }
 

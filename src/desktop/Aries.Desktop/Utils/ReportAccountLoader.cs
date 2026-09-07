@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using AriesContador.Core.Models.Accounts;
 using AriesContador.Core.Models.Companies;
 using AriesContador.Core.Services;
@@ -11,19 +12,19 @@ namespace Aries.Desktop.Utils
 {
     public static class ReportAccountLoader
     {
-        public static List<Cuenta> Load(IFinancialService financial, Company company)
+        public static async Task<List<Cuenta>> LoadAsync(IFinancialService financial, Company company)
         {
-            var accounts = financial.GetAccounts(company.Code);
+            var accounts = await financial.GetAccountsAsync(company.Code);
             return CuentaMapper.ToCuentaList(accounts, company);
         }
 
-        public static void FillBalances(IFinancialService financial, List<Cuenta> cuentas, DateTime from, DateTime to)
+        public static async Task FillBalancesAsync(IFinancialService financial, List<Cuenta> cuentas, DateTime from, DateTime to)
         {
             if (cuentas == null || cuentas.Count == 0)
                 return;
 
             var accounts = cuentas.Select(CuentaMapper.ToAccount).ToList();
-            financial.FillAccountsWithBalances(accounts, from, to);
+            await financial.FillAccountsWithBalancesAsync(accounts, from, to);
             CuentaMapper.CopyBalancesToCuentas(accounts, cuentas);
         }
 

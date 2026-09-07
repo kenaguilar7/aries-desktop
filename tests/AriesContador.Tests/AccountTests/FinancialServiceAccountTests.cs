@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using AriesContador.Core.Models.Accounts;
 using AriesContador.Core.Models.PostingPeriods;
 using AriesContador.Services;
@@ -12,7 +13,7 @@ namespace AriesContador.Tests.AccountTests
     public class FinancialServiceAccountTests
     {
         [Fact]
-        public void GetAccounts_returns_preorder_tree()
+        public async Task GetAccounts_returns_preorder_tree()
         {
             var uow = new FakeUnitOfWork();
             uow.Accounts.Items.AddRange(new[]
@@ -24,24 +25,24 @@ namespace AriesContador.Tests.AccountTests
             });
             var svc = new FinancialService(uow);
 
-            var ordered = svc.GetAccounts("C001").Select(a => a.Id).ToArray();
+            var ordered = (await svc.GetAccountsAsync("C001")).Select(a => a.Id).ToArray();
 
             Assert.Equal(new[] { 10, 1, 2, 3 }, ordered);
         }
 
         [Fact]
-        public void CreateAccount_rejects_blank_name()
+        public async Task CreateAccount_rejects_blank_name()
         {
             var svc = new FinancialService(new FakeUnitOfWork());
 
-            var ex = Assert.Throws<InvalidOperationException>(() =>
-                svc.CreateAccount(new Account { Name = "  ", CompanyId = "C001" }, parent: null));
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                svc.CreateAccountAsync(new Account { Name = "  ", CompanyId = "C001" }, parent: null));
 
             Assert.Equal(AccountRules.BlankNameMessage, ex.Message);
         }
 
         [Fact]
-        public void CreateAccount_rejects_name_taken_on_activo()
+        public async Task CreateAccount_rejects_name_taken_on_activo()
         {
             var uow = new FakeUnitOfWork();
             uow.Accounts.Items.Add(new Account
@@ -53,14 +54,14 @@ namespace AriesContador.Tests.AccountTests
             });
             var svc = new FinancialService(uow);
 
-            var ex = Assert.Throws<InvalidOperationException>(() =>
-                svc.CreateAccount(new Account { Name = "Caja", CompanyId = "C001" }, parent: null));
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                svc.CreateAccountAsync(new Account { Name = "Caja", CompanyId = "C001" }, parent: null));
 
             Assert.Equal(AccountRules.NameCannotBeUsedMessage, ex.Message);
         }
 
         [Fact]
-        public void CreateAccount_under_auxiliar_inherits_and_promotes_father()
+        public async Task CreateAccount_under_auxiliar_inherits_and_promotes_father()
         {
             var uow = new FakeUnitOfWork();
             var padre = new Account
@@ -77,7 +78,7 @@ namespace AriesContador.Tests.AccountTests
             var svc = new FinancialService(uow);
             var nueva = new Account { Name = "Hija", CompanyId = "C001", UpdatedBy = 7 };
 
-            svc.CreateAccount(nueva, padre);
+            await svc.CreateAccountAsync(nueva, padre);
 
             Assert.Equal(3, nueva.Id);
             Assert.Equal(40, nueva.PriorBalance);
@@ -89,7 +90,7 @@ namespace AriesContador.Tests.AccountTests
         }
 
         [Fact]
-        public void CreateAccount_under_mayor_does_not_copy_balances()
+        public async Task CreateAccount_under_mayor_does_not_copy_balances()
         {
             var uow = new FakeUnitOfWork();
             var padre = new Account
@@ -104,7 +105,7 @@ namespace AriesContador.Tests.AccountTests
             var svc = new FinancialService(uow);
             var nueva = new Account { Name = "Hija", CompanyId = "C001" };
 
-            svc.CreateAccount(nueva, padre);
+            await svc.CreateAccountAsync(nueva, padre);
 
             Assert.Equal(0, nueva.DebitBalance);
             Assert.Empty(uow.Accounts.PromotedFatherIds);
@@ -112,47 +113,47 @@ namespace AriesContador.Tests.AccountTests
         }
 
         [Fact]
-        public void DeleteAccount_rejects_system_and_non_auxiliar()
+        public async Task DeleteAccount_rejects_system_and_non_auxiliar()
         {
             var svc = new FinancialService(new FakeUnitOfWork());
 
-            var systemEx = Assert.Throws<InvalidOperationException>(() =>
-                svc.DeleteAccount(new Account { AccountType = AccountType.Cuenta_Auxiliar, Editable = false }));
+            var systemEx = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                svc.DeleteAccountAsync(new Account { AccountType = AccountType.Cuenta_Auxiliar, Editable = false }));
             Assert.Contains("sistema", systemEx.Message.ToLowerInvariant());
 
-            var titleEx = Assert.Throws<InvalidOperationException>(() =>
-                svc.DeleteAccount(new Account { AccountType = AccountType.Cuenta_Titulo, Editable = true }));
+            var titleEx = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                svc.DeleteAccountAsync(new Account { AccountType = AccountType.Cuenta_Titulo, Editable = true }));
             Assert.Contains("No pueden ser eliminadas", titleEx.Message);
         }
 
         [Fact]
-        public void DeleteAccount_rejects_open_period_movements()
+        public async Task DeleteAccount_rejects_open_period_movements()
         {
             var uow = new FakeUnitOfWork();
             uow.Accounts.HasOpenPeriodMovementsResult = true;
             var svc = new FinancialService(uow);
 
-            var ex = Assert.Throws<InvalidOperationException>(() =>
-                svc.DeleteAccount(new Account { Id = 3, AccountType = AccountType.Cuenta_Auxiliar, Editable = true }));
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                svc.DeleteAccountAsync(new Account { Id = 3, AccountType = AccountType.Cuenta_Auxiliar, Editable = true }));
 
             Assert.Equal(AccountRules.DeleteWithMovementsMessage, ex.Message);
             Assert.Empty(uow.Accounts.Removed);
         }
 
         [Fact]
-        public void DeleteAccount_soft_deletes_auxiliar()
+        public async Task DeleteAccount_soft_deletes_auxiliar()
         {
             var uow = new FakeUnitOfWork();
             var svc = new FinancialService(uow);
             var account = new Account { Id = 3, AccountType = AccountType.Cuenta_Auxiliar, Editable = true };
 
-            svc.DeleteAccount(account);
+            await svc.DeleteAccountAsync(account);
 
             Assert.Same(account, uow.Accounts.Removed.Single());
         }
 
         [Fact]
-        public void UpdateAccount_rejects_duplicate_name()
+        public async Task UpdateAccount_rejects_duplicate_name()
         {
             var uow = new FakeUnitOfWork();
             uow.Accounts.Items.Add(new Account
@@ -164,14 +165,14 @@ namespace AriesContador.Tests.AccountTests
             });
             var svc = new FinancialService(uow);
 
-            var ex = Assert.Throws<InvalidOperationException>(() =>
-                svc.UpdateAccount(new Account { Id = 2, Name = "Caja", CompanyId = "C001" }));
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                svc.UpdateAccountAsync(new Account { Id = 2, Name = "Caja", CompanyId = "C001" }));
 
             Assert.Equal(AccountRules.NameTakenMessage, ex.Message);
         }
 
         [Fact]
-        public void EvaluateParentForNewChild_warns_when_auxiliar_has_movement()
+        public async Task EvaluateParentForNewChild_warns_when_auxiliar_has_movement()
         {
             var uow = new FakeUnitOfWork();
             uow.PostingPeriods.Items.Add(new PostingPeriod
@@ -188,14 +189,14 @@ namespace AriesContador.Tests.AccountTests
             };
             var svc = new FinancialService(uow);
 
-            var apta = svc.EvaluateParentForNewChild(padre, out var message);
+            var result = await svc.EvaluateParentForNewChildAsync(padre);
 
-            Assert.False(apta);
-            Assert.Contains("posee movimientos", message);
+            Assert.False(result.CanProceed);
+            Assert.Contains("posee movimientos", result.Message);
         }
 
         [Fact]
-        public void FillAccountsWithBalances_rolls_up_from_account_info_rows()
+        public async Task FillAccountsWithBalances_rolls_up_from_account_info_rows()
         {
             var uow = new FakeUnitOfWork();
             uow.Accounts.BalanceRows.Add(new Account
@@ -209,7 +210,7 @@ namespace AriesContador.Tests.AccountTests
             var aux = new Account { Id = 3, FatherAccount = 2, CompanyId = "C001", AccountType = AccountType.Cuenta_Auxiliar };
             var svc = new FinancialService(uow);
 
-            svc.FillAccountsWithBalances(new List<Account> { titulo, mayor, aux }, new DateTime(2024, 1, 1), new DateTime(2024, 2, 1));
+            await svc.FillAccountsWithBalancesAsync(new List<Account> { titulo, mayor, aux }, new DateTime(2024, 1, 1), new DateTime(2024, 2, 1));
 
             Assert.Equal(80, aux.DebitBalance);
             Assert.Equal(80, mayor.DebitBalance);

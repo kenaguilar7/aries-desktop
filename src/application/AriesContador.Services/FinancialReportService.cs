@@ -2,21 +2,20 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using AriesContador.Core;
-using AriesContador.Core.Models;
 using AriesContador.Core.Models.Accounts;
 using AriesContador.Core.Models.JournalEntries;
 using AriesContador.Core.Models.PostingPeriods;
 using AriesContador.Core.Models.Reports;
 using AriesContador.Core.Models.Utils;
 using AriesContador.Core.Services;
+
 namespace AriesContador.Services
 {
     public class FinancialReportService : IFinancialReportService
     {
-
         private readonly IUnitOfWork _unitOfWork;
 
         public FinancialReportService(IUnitOfWork unitOfWork)
@@ -24,15 +23,15 @@ namespace AriesContador.Services
             _unitOfWork = unitOfWork;
         }
 
-        public IEnumerable<JournalEntryReport> JournalEntryReport(BasicReportParam jEParams)
+        public Task<IEnumerable<JournalEntryReport>> JournalEntryReportAsync(BasicReportParam jEParams, CancellationToken cancellationToken = default)
         {
-            var output = _unitOfWork.FinancialReportRepository.JournalEntryReport(jEParams);
-            return output;
+            return _unitOfWork.FinancialReportRepository.JournalEntryReportAsync(jEParams, cancellationToken);
         }
 
-        public IEnumerable<BalanceComprobacionReport> BalanceComprobacionReport(BasicReportParam reportParam)
+        public async Task<IEnumerable<BalanceComprobacionReport>> BalanceComprobacionReportAsync(BasicReportParam reportParam, CancellationToken cancellationToken = default)
         {
-            var accounts = _unitOfWork.AccountRepository.AccountsWithBalanceByDateRange(reportParam);
+            var accounts = await _unitOfWork.AccountRepository.AccountsWithBalanceByDateRangeAsync(reportParam, cancellationToken)
+                .ConfigureAwait(false);
             var report = new List<BalanceComprobacionReport>();
 
             foreach (var account in accounts)
@@ -55,11 +54,11 @@ namespace AriesContador.Services
             return report;
         }
 
-        public ResultReportEstadoResultadoIntegral EstadoResultadoIntegral(BasicReportParam reportParam)
+        public async Task<ResultReportEstadoResultadoIntegral> EstadoResultadoIntegralAsync(BasicReportParam reportParam, CancellationToken cancellationToken = default)
         {
             var report = new List<EstadoResultadoIntegralReport>();
-            IEnumerable<Account> accountsReport = new List<Account>();
-            accountsReport = _unitOfWork.FinancialReportRepository.EstadoResultadoIntegralAccounts(reportParam);
+            var accountsReport = await _unitOfWork.FinancialReportRepository.EstadoResultadoIntegralAccountsAsync(reportParam, cancellationToken)
+                .ConfigureAwait(false);
 
             foreach (var account in accountsReport)
             {
@@ -82,15 +81,17 @@ namespace AriesContador.Services
             return new ResultReportEstadoResultadoIntegral() { Results = report, TotalPeridaGanancia = resultAmount };
         }
 
-        public ClosurePostingPeriodBalance PreviousClosurePostingPeriodBalance(BasicReportParam reportParam)
+        public async Task<ClosurePostingPeriodBalance> PreviousClosurePostingPeriodBalanceAsync(BasicReportParam reportParam, CancellationToken cancellationToken = default)
         {
-            var accountsReport = _unitOfWork.FinancialReportRepository.EstadoResultadoIntegralAccounts(reportParam);
+            var accountsReport = await _unitOfWork.FinancialReportRepository.EstadoResultadoIntegralAccountsAsync(reportParam, cancellationToken)
+                .ConfigureAwait(false);
             return new ClosurePostingPeriodBalance() { Amount = accountsReport.GetTotalPeridasYGanancias() };
         }
 
-        public IEnumerable<PostingPeriodInfoReport> PostingPeriodInfo(string companyId)
+        public async Task<IEnumerable<PostingPeriodInfoReport>> PostingPeriodInfoAsync(string companyId, CancellationToken cancellationToken = default)
         {
-            var postingPeriods = _unitOfWork.FinancialReportRepository.PostingPeriodReport(companyId);
+            var postingPeriods = await _unitOfWork.FinancialReportRepository.PostingPeriodReportAsync(companyId, cancellationToken)
+                .ConfigureAwait(false);
             var returnList = new List<PostingPeriodInfoReport>();
 
             foreach (var postingPeriod in postingPeriods)
@@ -108,19 +109,15 @@ namespace AriesContador.Services
             return returnList;
         }
 
-        public IEnumerable<ClosingPostingPeriodReport> ClosingPostingPeriodReport(string companyId)
+        public Task<IEnumerable<ClosingPostingPeriodReport>> ClosingPostingPeriodReportAsync(string companyId, CancellationToken cancellationToken = default)
         {
-            return _unitOfWork.FinancialReportRepository.ClosingPostingPeriodReport(companyId);
+            return _unitOfWork.FinancialReportRepository.ClosingPostingPeriodReportAsync(companyId, cancellationToken);
         }
 
-        public Task<DataTable> AccountMoving()
+        public async Task<DataTable> GetAccountMovementReportAsync(int accountId, bool auxiliar, CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(new DataTable());
-        }
-
-        public DataTable GetAccountMovementReport(int accountId, bool auxiliar)
-        {
-            var table = _unitOfWork.AccountRepository.GetMovementReport(accountId, auxiliar);
+            var table = await _unitOfWork.AccountRepository.GetMovementReportAsync(accountId, auxiliar, cancellationToken)
+                .ConfigureAwait(false);
             decimal lastSaldoActual = 0m;
             foreach (DataRow item in table.Rows)
             {
@@ -135,40 +132,8 @@ namespace AriesContador.Services
 
         private static decimal RunningBalance(int accountTag, decimal saldo, decimal debito, decimal credito)
         {
-            // 1 Activo, 5 Costo venta, 6 Egreso = débito aumenta
             var debitNature = accountTag == 1 || accountTag == 5 || accountTag == 6;
             return debitNature ? saldo + debito - credito : saldo + credito - debito;
         }
-        //public IEnumerable<Core.Models.Reports.BalanceComprobacionReport> BalanceComprobacionReport(Core.Models.JournalEntries.BasicReportParam reportParam)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public IEnumerable<Core.Models.Reports.ClosingPostingPeriodReport> ClosingPostingPeriodReport(string companyId)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public Core.Models.Reports.ResultReportEstadoResultadoIntegral EstadoResultadoIntegral(Core.Models.JournalEntries.BasicReportParam reportParam)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public IEnumerable<Core.Models.JournalEntries.JournalEntryReport> JournalEntryReport(Core.Models.JournalEntries.BasicReportParam jEParams)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public IEnumerable<Core.Models.Reports.PostingPeriodInfoReport> PostingPeriodInfo(string companyId)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public ClosurePostingPeriodBalance PreviousClosurePostingPeriodBalance(Core.Models.JournalEntries.BasicReportParam reportParam)
-        //{
-        //    throw new NotImplementedException();
-        //}
     }
 }
-
-

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using AriesContador.Core;
 using AriesContador.Core.Models.JournalEntries;
@@ -28,15 +29,15 @@ namespace Aries.Desktop.Restore
             _financialService = financialService;
         }
 
-        private void RestoreJournalEntry_Load(object sender, EventArgs e)
+        private async void RestoreJournalEntry_Load(object sender, EventArgs e)
         {
             ConfigGridColumns();
-            LoadStartPostingPeriod();
+            await LoadStartPostingPeriodAsync();
         }
 
-        private void LoadStartPostingPeriod()
+        private async Task LoadStartPostingPeriodAsync()
         {
-            var lstPostingPe = _financialService.GetPostingPeriods(GlobalConfig.Company.Code).ToList();
+            var lstPostingPe = (await _financialService.GetPostingPeriodsAsync(GlobalConfig.Company.Code)).ToList();
             this.PostingPeriods = lstPostingPe;
             var lstP = lstPostingPe.OrderBy(p => p.Date);
             this.lstStarPeriod.DataSource = (from mm in lstP select mm).ToArray();
@@ -50,19 +51,19 @@ namespace Aries.Desktop.Restore
                 select mm).ToArray();
         }
 
-        private void LstEndPostingPeriod_SelectedIndexChanged(object sender, EventArgs e)
+        private async void LstEndPostingPeriod_SelectedIndexChanged(object sender, EventArgs e)
         {
             try
             {
                 if (RestoreJournalsTabControl.SelectedIndex == 0)
                 {
-                    var output = JournalEntryLineReports();
+                    var output = await JournalEntryLineReportsAsync();
                     JournalEntryLineGrid.DataSource = output;
                 }
                 else if (RestoreJournalsTabControl.SelectedIndex == 1)
                 {
                     
-                    var output = JournalEntryReports();
+                    var output = await JournalEntryReportsAsync();
                     JournalEntryGrid.DataSource = output;
                 }
             }
@@ -102,7 +103,7 @@ namespace Aries.Desktop.Restore
 
         }
 
-        private IEnumerable<JournalEntryLineDeletedReport> JournalEntryLineReports()
+        private async Task<IEnumerable<JournalEntryLineDeletedReport>> JournalEntryLineReportsAsync()
         {
             var firstDate = (PostingPeriod)lstStarPeriod.SelectedItem;
             var endDate = (PostingPeriod)lstEndPeriod.SelectedItem;
@@ -114,11 +115,11 @@ namespace Aries.Desktop.Restore
                 EndDate = $"{endDate.Date.Year}{string.Format("{0, 0:D2}", endDate.Date.Month)}"
             };
 
-            var output = _financialService.GetAllJournalEntryLineDeleted(reportParamns);
+            var output = await _financialService.GetAllJournalEntryLineDeletedAsync(reportParamns);
             return output;
         }
 
-        private IEnumerable<JournalEntryDeletedReport> JournalEntryReports()
+        private async Task<IEnumerable<JournalEntryDeletedReport>> JournalEntryReportsAsync()
         {
             var firstDate = (PostingPeriod)lstStarPeriod.SelectedItem;
             var endDate = (PostingPeriod)lstEndPeriod.SelectedItem;
@@ -130,11 +131,11 @@ namespace Aries.Desktop.Restore
                 EndDate = $"{endDate.Date.Year}{string.Format("{0, 0:D2}", endDate.Date.Month)}"
             };
 
-            var output = _financialService.GetAllJournalEntryDeleted(reportParamns);
+            var output = await _financialService.GetAllJournalEntryDeletedAsync(reportParamns);
             return output;
         }
 
-        private void JournalEntryLineGrid_CellClick(object sender, DataGridViewCellEventArgs e)
+        private async void JournalEntryLineGrid_CellClick(object sender, DataGridViewCellEventArgs e)
         {
 
             var senderGrid = (DataGridView)sender;
@@ -145,7 +146,7 @@ namespace Aries.Desktop.Restore
                 var selectedItem = JournalEntryLineGrid.SelectedRows[0].DataBoundItem; 
                 if (selectedItem is JournalEntryLineDeletedReport journalEntryLine)
                 {
-                    RestoreJournalEntryLine(journalEntryLine);
+                    await RestoreJournalEntryLineAsync(journalEntryLine);
                     var sms = $"Entrada de asiento número: {journalEntryLine.JournalEntryNumber} \nCuenta: {journalEntryLine.AccountName} \nPeriodo contable: {journalEntryLine.PostingPeriodName} \nRecuperada exitosamente"; 
                     MessageBox.Show(sms, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information); 
                     LstEndPostingPeriod_SelectedIndexChanged(null, null);
@@ -153,7 +154,7 @@ namespace Aries.Desktop.Restore
             }
         }
 
-        private void JournalEntryGrid_CellClick(object sender, DataGridViewCellEventArgs e)
+        private async void JournalEntryGrid_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             var senderGrid = (DataGridView)sender;
 
@@ -163,7 +164,7 @@ namespace Aries.Desktop.Restore
                 var selectedItem = JournalEntryGrid.SelectedRows[0].DataBoundItem;
                 if (selectedItem is JournalEntryDeletedReport journalEntry)
                 {
-                    RestoreJournalEntryService(journalEntry);
+                    await RestoreJournalEntryServiceAsync(journalEntry);
                     var sms = $"Asiento número: {journalEntry.JournalEntryNumber} \nPeriodo contable: {journalEntry.PostingPeriodName}  \nRecuperado exitosamente"; 
                     MessageBox.Show(sms, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
                     LstEndPostingPeriod_SelectedIndexChanged(null, null);
@@ -171,7 +172,7 @@ namespace Aries.Desktop.Restore
             }
         }
 
-        private void RestoreJournalEntryService(JournalEntryDeletedReport journalEntryLine)
+        private async Task RestoreJournalEntryServiceAsync(JournalEntryDeletedReport journalEntryLine)
         {
             var jEL = new JournalEntry()
             {
@@ -179,10 +180,10 @@ namespace Aries.Desktop.Restore
                 UpdatedBy = GlobalConfig.Usuario.Id
             };
 
-            _financialService.RestoreJournalEntry(jEL);
+            await _financialService.RestoreJournalEntryAsync(jEL);
         }
 
-        private void RestoreJournalEntryLine(JournalEntryLineDeletedReport journalEntryLine)
+        private async Task RestoreJournalEntryLineAsync(JournalEntryLineDeletedReport journalEntryLine)
         {
             var jEL = new JournalEntryLine()
             {
@@ -190,7 +191,7 @@ namespace Aries.Desktop.Restore
                 UpdatedBy = GlobalConfig.Usuario.Id
             };
 
-            _financialService.RestoreJournalEntryLine(jEL);
+            await _financialService.RestoreJournalEntryLineAsync(jEL);
         }
 
         private void RestoreJournalsTabControl_SelectedIndexChanged(object sender, EventArgs e)

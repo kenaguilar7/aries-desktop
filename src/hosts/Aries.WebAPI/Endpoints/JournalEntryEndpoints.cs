@@ -10,55 +10,55 @@ namespace Aries.WebAPI.Endpoints
         {
             var group = app.MapGroup("/journalEntry").RequireAuthorization();
 
-            group.MapPost("/CreateJournalEntry", (HttpContext http, JournalEntry entry, IFinancialService svc) =>
-                EndpointRun.Try(() =>
+            group.MapPost("/CreateJournalEntry", async (HttpContext http, JournalEntry entry, IFinancialService svc) =>
+                await EndpointRun.TryAsync(async () =>
                 {
                     var userId = http.TryGetUserId();
                     if (userId.HasValue && entry.CreatedBy == 0)
                         entry.CreatedBy = userId.Value;
-                    svc.CreateJournalEntry(entry);
+                    await svc.CreateJournalEntryAsync(entry, http.RequestAborted);
                     return Results.Ok(entry.Id);
                 }));
 
-            group.MapPost("/UpdateJournalEntry", (HttpContext http, JournalEntry entry, IFinancialService svc) =>
-                EndpointRun.Try(() =>
+            group.MapPost("/UpdateJournalEntry", async (HttpContext http, JournalEntry entry, IFinancialService svc) =>
+                await EndpointRun.TryAsync(async () =>
                 {
                     var userId = http.TryGetUserId();
                     if (userId.HasValue)
                         entry.UpdatedBy = userId.Value;
-                    svc.UpdateJournalEntry(entry);
+                    await svc.UpdateJournalEntryAsync(entry, http.RequestAborted);
                     return Results.Ok();
                 }));
 
-            group.MapPost("/DeleteJournalEntry", (JournalEntry entry, IFinancialService svc) =>
-                EndpointRun.Try(() =>
+            group.MapPost("/DeleteJournalEntry", async (HttpContext http, JournalEntry entry, IFinancialService svc) =>
+                await EndpointRun.TryAsync(async () =>
                 {
-                    svc.DeleteJournalEntry(entry);
+                    await svc.DeleteJournalEntryAsync(entry, http.RequestAborted);
                     return Results.Ok();
                 }));
 
-            group.MapGet("/GetConsecutiveNumber/{postingPeriodId:int}", (int postingPeriodId, IFinancialService svc) =>
-                Results.Ok(svc.CreateJournalEntryConsecutive(postingPeriodId)));
+            group.MapGet("/GetConsecutiveNumber/{postingPeriodId:int}", async (HttpContext http, int postingPeriodId, IFinancialService svc) =>
+                Results.Ok(await svc.CreateJournalEntryConsecutiveAsync(postingPeriodId, http.RequestAborted)));
 
-            group.MapGet("/GetJournalEntries/{postingPeriodId:int}", (int postingPeriodId, IFinancialService svc) =>
-                Results.Ok(svc.GetJournalEntries(postingPeriodId)));
+            group.MapGet("/GetJournalEntries/{postingPeriodId:int}", async (HttpContext http, int postingPeriodId, IFinancialService svc) =>
+                Results.Ok(await svc.GetJournalEntriesAsync(postingPeriodId, http.RequestAborted)));
 
-            group.MapGet("/GetJournalEntryById/{id:int}", (int id, IFinancialService svc) =>
+            group.MapGet("/GetJournalEntryById/{id:int}", async (HttpContext http, int id, IFinancialService svc) =>
             {
-                var entry = svc.GetJournalEntryById(id);
+                var entry = await svc.GetJournalEntryByIdAsync(id, http.RequestAborted);
                 return entry == null ? Results.NotFound() : Results.Ok(entry);
             });
 
-            group.MapPost("/UpdatedJournalEntryPeriod", (JournalEntry entry, IFinancialService svc) =>
-                EndpointRun.Try(() =>
+            group.MapPost("/UpdatedJournalEntryPeriod", async (HttpContext http, JournalEntry entry, IFinancialService svc) =>
+                await EndpointRun.TryAsync(async () =>
                 {
-                    svc.UpdatedJournalEntryPeriod(entry);
+                    await svc.UpdatedJournalEntryPeriodAsync(entry, http.RequestAborted);
                     return Results.Ok();
                 }));
 
-            group.MapPost("/RestoreJournalEntry", (JournalEntry entry, IFinancialService svc) =>
+            group.MapPost("/RestoreJournalEntry", async (HttpContext http, JournalEntry entry, IFinancialService svc) =>
             {
-                svc.RestoreJournalEntry(entry);
+                await svc.RestoreJournalEntryAsync(entry, http.RequestAborted);
                 return Results.Ok();
             });
 

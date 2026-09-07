@@ -1,7 +1,9 @@
 using Aries.Reporting.Textos;
+using Aries.Desktop.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using AriesContador.Core.Models.JournalEntries;
 using AriesContador.Core.Models.PostingPeriods;
@@ -29,10 +31,10 @@ namespace Aries.Desktop.FrameCuentas
             _financialReportService = financialReportService; 
         }
 
-        private void FrameAdministrarMeses_Load(object sender, EventArgs e)
+        private async void FrameAdministrarMeses_Load(object sender, EventArgs e)
         {
-            LoadDropDowns();
-            LoadDataGrids();
+            await LoadDropDownsAsync();
+            await LoadDataGridsAsync();
             dtRegistros.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dtRegistros.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None;
 
@@ -43,16 +45,16 @@ namespace Aries.Desktop.FrameCuentas
 
         }
 
-        private void LoadDataGrids()
+        private async Task LoadDataGridsAsync()
         {
-            dtRegistros.DataSource = _financialReportService.PostingPeriodInfo(GlobalConfig.Company.Code);
+            dtRegistros.DataSource = await _financialReportService.PostingPeriodInfoAsync(GlobalConfig.Company.Code);
             dtGridClosingPeriodsReport.DataSource =
-                _financialReportService.ClosingPostingPeriodReport(GlobalConfig.Company.Code); 
+                await _financialReportService.ClosingPostingPeriodReportAsync(GlobalConfig.Company.Code); 
         }
 
-        private void LoadDropDowns()
+        private async Task LoadDropDownsAsync()
         {
-            _postingPeriods = _financialService.GetPostingPeriods(GlobalConfig.Company.Code).ToList();
+            _postingPeriods = (await _financialService.GetPostingPeriodsAsync(GlobalConfig.Company.Code)).ToList();
             var olderPeriod = _postingPeriods.Where(x => !x.Closed)
                                              .OrderBy(x => x.Date)
                                              .ToList()
@@ -61,17 +63,17 @@ namespace Aries.Desktop.FrameCuentas
             this.lstFromPeriod.DataSource = new List<PostingPeriod>() { olderPeriod };
 
             var availablePostingPeriods =
-                _financialService.GetAvailablePostingPeriodsForBeCreated(GlobalConfig.Company.Code);
+                await _financialService.GetAvailablePostingPeriodsForBeCreatedAsync(GlobalConfig.Company.Code);
             lstAbrirMes.DataSource = availablePostingPeriods;
         }
 
 
-        private void Btn_Create_PostingPeriod(object sender, EventArgs e)
+        private async void Btn_Create_PostingPeriod(object sender, EventArgs e)
         {
             try
             {
                 btnGuardar.Enabled = false;
-                CreateNewPostingPeriod();
+                await CreateNewPostingPeriodAsync();
             }
             catch (Exception ex)
             {
@@ -79,12 +81,12 @@ namespace Aries.Desktop.FrameCuentas
             }
             finally
             {
-                FrameAdministrarMeses_Load(null, null); 
+                await ReloadFormAsync(); 
                 btnGuardar.Enabled = true;
             }
         }
 
-        private void CreateNewPostingPeriod()
+        private async Task CreateNewPostingPeriodAsync()
         {
             var selectedItem = lstAbrirMes.SelectedItem as PostingPeriod;
             var selectedDate = selectedItem.Date; 
@@ -97,7 +99,7 @@ namespace Aries.Desktop.FrameCuentas
                 UpdatedBy = GlobalConfig.Usuario.Id
             }; 
 
-            _financialService.CreatePostingPeriod(postingPeriod);
+            await _financialService.CreatePostingPeriodAsync(postingPeriod);
         }
 
         private void lstFromPeriod_SelectedIndexChanged(object sender, EventArgs e)
@@ -107,18 +109,18 @@ namespace Aries.Desktop.FrameCuentas
                                                     .GetOlder(startMonth.Date);
         }
 
-        private void BtnCerrarMes_Click(object sender, EventArgs e)
+        private async void BtnCerrarMes_Click(object sender, EventArgs e)
         {
-            var amount = ReporteEstadoResultadoIntegralData();
+            var amount = await ReporteEstadoResultadoIntegralDataAsync();
 
             if (MessageBox.Show($@"Se creará un cierre contable por {String.Format("{0:n}", amount.Amount)}", TextoGeneral.NombreApp,
                 MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) == DialogResult.Yes)
             {
-                ClosePeriodProcess(amount.Amount);
+                await ClosePeriodProcessAsync(amount.Amount);
             }
         }
 
-        private void ClosePeriodProcess(decimal amount)
+        private async Task ClosePeriodProcessAsync(decimal amount)
         {
             var fromDatePeriod = lstFromPeriod.SelectedItem as PostingPeriod;
             var toDatePeriod = lstToPeriod.SelectedItem as PostingPeriod;
@@ -147,8 +149,11 @@ namespace Aries.Desktop.FrameCuentas
             try
             {
                 btnCerrarMes.Enabled = false;
-                _financialService.ClosePostingPeriod(savedModel);
-                CreateNewPostingPeriod();
+                await UiBusy.Run(this, async () =>
+                {
+                    await _financialService.ClosePostingPeriodAsync(savedModel);
+                    await CreateNewPostingPeriodAsync();
+                });
                 txtBoxUserNotes.Text = string.Empty;
             }
             catch (Exception ex)
@@ -157,14 +162,20 @@ namespace Aries.Desktop.FrameCuentas
             }
             finally
             {
-                FrameAdministrarMeses_Load(null, null);
+                await ReloadFormAsync();
                 btnCerrarMes.Enabled = true;
             }
 
         }
+
+        private async Task ReloadFormAsync()
+        {
+            await LoadDropDownsAsync();
+            await LoadDataGridsAsync();
+        }
         
 
-        private ClosurePostingPeriodBalance ReporteEstadoResultadoIntegralData()
+        private async Task<ClosurePostingPeriodBalance> ReporteEstadoResultadoIntegralDataAsync()
         {
             var firstDate = lstFromPeriod.SelectedItem as PostingPeriod;
             var endDate = lstToPeriod.SelectedItem as PostingPeriod;
@@ -176,7 +187,7 @@ namespace Aries.Desktop.FrameCuentas
                 EndDate = $"{endDate.Date.Year}{string.Format("{0, 0:D2}", endDate.Date.Month)}"
             };
 
-            return  _financialReportService.PreviousClosurePostingPeriodBalance(reportParamns);
+            return await _financialReportService.PreviousClosurePostingPeriodBalanceAsync(reportParamns);
         }
 
 

@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Threading.Tasks;
 using AriesContador.Data.Migrations;
 using Xunit;
 
@@ -8,11 +9,11 @@ namespace Aries.Data.Tests
     public class DatabaseMigratorTests
     {
         [MySqlFact]
-        public void ApplyPending_is_idempotent()
+        public async Task ApplyPending_is_idempotent()
         {
             var migrator = new DatabaseMigrator(MySqlTestConnection.ConnectionString);
-            var first = migrator.ApplyPending();
-            var second = migrator.ApplyPending();
+            var first = await migrator.ApplyPendingAsync();
+            var second = await migrator.ApplyPendingAsync();
 
             Assert.Empty(second.AppliedIds);
             Assert.Equal(SchemaMigrations.All.Count, second.AlreadyAppliedIds.Count);
@@ -20,9 +21,9 @@ namespace Aries.Data.Tests
         }
 
         [MySqlFact]
-        public void History_table_has_every_migration_id()
+        public async Task History_table_has_every_migration_id()
         {
-            var applied = new DatabaseMigrator(MySqlTestConnection.ConnectionString).ReadAppliedIds();
+            var applied = await new DatabaseMigrator(MySqlTestConnection.ConnectionString).ReadAppliedIdsAsync();
             foreach (var migration in SchemaMigrations.All)
                 Assert.Contains(migration.Id, applied);
         }

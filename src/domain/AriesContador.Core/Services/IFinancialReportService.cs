@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using AriesContador.Core.Models.JournalEntries;
 using AriesContador.Core.Models.PostingPeriods;
@@ -9,16 +8,14 @@ using AriesContador.Core.Models.Reports;
 
 namespace AriesContador.Core.Services
 {
-    public interface  IFinancialReportService
+    public interface IFinancialReportService
     {
-        IEnumerable<JournalEntryReport> JournalEntryReport(BasicReportParam jEParams);
-        IEnumerable<BalanceComprobacionReport> BalanceComprobacionReport(BasicReportParam reportParam);
-        ResultReportEstadoResultadoIntegral EstadoResultadoIntegral(BasicReportParam reportParam);
-        ClosurePostingPeriodBalance PreviousClosurePostingPeriodBalance(BasicReportParam reportParam);
-        IEnumerable<PostingPeriodInfoReport> PostingPeriodInfo(string companyId);
-        IEnumerable<ClosingPostingPeriodReport> ClosingPostingPeriodReport(string companyId);
-
-        Task<DataTable> AccountMoving();
-        DataTable GetAccountMovementReport(int accountId, bool auxiliar);
+        Task<IEnumerable<JournalEntryReport>> JournalEntryReportAsync(BasicReportParam jEParams, CancellationToken cancellationToken = default);
+        Task<IEnumerable<BalanceComprobacionReport>> BalanceComprobacionReportAsync(BasicReportParam reportParam, CancellationToken cancellationToken = default);
+        Task<ResultReportEstadoResultadoIntegral> EstadoResultadoIntegralAsync(BasicReportParam reportParam, CancellationToken cancellationToken = default);
+        Task<ClosurePostingPeriodBalance> PreviousClosurePostingPeriodBalanceAsync(BasicReportParam reportParam, CancellationToken cancellationToken = default);
+        Task<IEnumerable<PostingPeriodInfoReport>> PostingPeriodInfoAsync(string companyId, CancellationToken cancellationToken = default);
+        Task<IEnumerable<ClosingPostingPeriodReport>> ClosingPostingPeriodReportAsync(string companyId, CancellationToken cancellationToken = default);
+        Task<DataTable> GetAccountMovementReportAsync(int accountId, bool auxiliar, CancellationToken cancellationToken = default);
     }
 }

@@ -26,12 +26,18 @@ namespace Aries.Desktop.Reportes
         {
             _financialService = financialService;
             InitializeComponent();
-            CargarDatos();
+            Load += FrameReporteAuxiliares_Load;
         }
-        private void CargarDatos()
+
+        private async void FrameReporteAuxiliares_Load(object sender, EventArgs e)
+        {
+            await CargarDatosAsync();
+        }
+
+        private async Task CargarDatosAsync()
         {
             var lstMeses = CuentaMapper.ToFechaTransaccionList(
-                _financialService.GetPostingPeriods(GlobalConfig.Company.Code));
+                await _financialService.GetPostingPeriodsAsync(GlobalConfig.Company.Code));
             fechaTransaccions = lstMeses;
             this.lstMesInicio.DataSource = lstMeses;
         }
@@ -43,14 +49,14 @@ namespace Aries.Desktop.Reportes
             lstMesFinal.DataSource = meses;
         }
 
-        private void btnGenerarExcel_Click(object sender, EventArgs e)
+        private async void btnGenerarExcel_Click(object sender, EventArgs e)
         {
             try
             {
 
 
                 var lstCuentas = new Dictionary<FechaTransaccion, List<Cuenta>>();
-                var cuentas = ReportAccountLoader.Load(_financialService, GlobalConfig.Company);
+                var cuentas = await ReportAccountLoader.LoadAsync(_financialService, GlobalConfig.Company);
 
                 //cuentaCL.LLenarConSaldoB(((FechaTransaccion)lstMesInicio.SelectedItem).Fecha, ((FechaTransaccion)lstMesInicio.SelectedItem).Fecha, cuentas, GlobalConfig.Compañia); 
                 foreach (var item in fechaTransaccions)
@@ -64,7 +70,7 @@ namespace Aries.Desktop.Reportes
                             cuentasClonadas.Add(Cuenta.DeepCopy());
                         });
 
-                        ReportAccountLoader.FillBalances(_financialService, cuentasClonadas, item.Fecha, item.Fecha);
+                        await ReportAccountLoader.FillBalancesAsync(_financialService, cuentasClonadas, item.Fecha, item.Fecha);
 
                         cuentasClonadas = ReportAccountLoader.WithoutEmptyBalances(cuentasClonadas);
 

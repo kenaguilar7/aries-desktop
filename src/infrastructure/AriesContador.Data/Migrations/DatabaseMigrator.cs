@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Threading;
+using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
 
 namespace AriesContador.Data.Migrations
@@ -36,19 +38,20 @@ namespace AriesContador.Data.Migrations
 
         public IReadOnlyList<SqlMigration> Migrations => _migrations;
 
-        public MigrationResult ApplyPending()
+        public async Task<MigrationResult> ApplyPendingAsync(CancellationToken cancellationToken = default)
         {
             var appliedNow = new List<string>();
             var already = new List<string>();
 
             using (var connection = new MySqlConnection(_connectionString))
             {
-                connection.Open();
-                EnsureHistoryTable(connection);
+                await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+                await EnsureHistoryTableAsync(connection, cancellationToken).ConfigureAwait(false);
 
-                var applied = GetAppliedIds(connection);
+                var applied = await GetAppliedIdsAsync(connection, cancellationToken).ConfigureAwait(false);
                 foreach (var migration in _migrations)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     if (applied.Contains(migration.Id))
                     {
                         already.Add(migration.Id);
@@ -58,9 +61,9 @@ namespace AriesContador.Data.Migrations
                     try
                     {
                         foreach (var batch in migration.SqlBatches)
-                            Execute(connection, batch);
+                            await ExecuteAsync(connection, batch, cancellationToken).ConfigureAwait(false);
 
-                        Record(connection, migration);
+                        await RecordAsync(connection, migration, cancellationToken).ConfigureAwait(false);
                         appliedNow.Add(migration.Id);
                     }
                     catch (Exception ex)
@@ -80,13 +83,13 @@ namespace AriesContador.Data.Migrations
             return new MigrationResult(appliedNow, already);
         }
 
-        public IReadOnlyCollection<string> ReadAppliedIds()
+        public async Task<IReadOnlyCollection<string>> ReadAppliedIdsAsync(CancellationToken cancellationToken = default)
         {
             using (var connection = new MySqlConnection(_connectionString))
             {
-                connection.Open();
-                EnsureHistoryTable(connection);
-                return GetAppliedIds(connection);
+                await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+                await EnsureHistoryTableAsync(connection, cancellationToken).ConfigureAwait(false);
+                return await GetAppliedIdsAsync(connection, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -97,31 +100,31 @@ namespace AriesContador.Data.Migrations
             return connectionString.Trim().TrimEnd(';') + ";Allow User Variables=True";
         }
 
-        private static void EnsureHistoryTable(MySqlConnection connection)
+        private static Task EnsureHistoryTableAsync(MySqlConnection connection, CancellationToken cancellationToken)
         {
-            Execute(connection, @"
+            return ExecuteAsync(connection, @"
 CREATE TABLE IF NOT EXISTS `" + HistoryTableName + @"` (
   `migration_id` VARCHAR(128) NOT NULL,
   `version` INT NOT NULL,
   `description` VARCHAR(255) NOT NULL,
   `applied_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`migration_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", cancellationToken);
         }
 
-        private static HashSet<string> GetAppliedIds(MySqlConnection connection)
+        private static async Task<HashSet<string>> GetAppliedIdsAsync(MySqlConnection connection, CancellationToken cancellationToken)
         {
             var ids = new HashSet<string>(StringComparer.Ordinal);
             using (var command = new MySqlCommand("SELECT `migration_id` FROM `" + HistoryTableName + "`", connection))
-            using (var reader = command.ExecuteReader())
+            using (var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
             {
-                while (reader.Read())
+                while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
                     ids.Add(reader.GetString(0));
             }
             return ids;
         }
 
-        private static void Record(MySqlConnection connection, SqlMigration migration)
+        private static async Task RecordAsync(MySqlConnection connection, SqlMigration migration, CancellationToken cancellationToken)
         {
             using (var command = new MySqlCommand(
                 "INSERT INTO `" + HistoryTableName + "` (`migration_id`, `version`, `description`) VALUES (@id, @ver, @desc)",
@@ -130,17 +133,17 @@ CREATE TABLE IF NOT EXISTS `" + HistoryTableName + @"` (
                 command.Parameters.AddWithValue("@id", migration.Id);
                 command.Parameters.AddWithValue("@ver", migration.Version);
                 command.Parameters.AddWithValue("@desc", migration.Description ?? string.Empty);
-                command.ExecuteNonQuery();
+                await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
             }
         }
 
-        private static void Execute(MySqlConnection connection, string sql)
+        private static async Task ExecuteAsync(MySqlConnection connection, string sql, CancellationToken cancellationToken)
         {
             using (var command = new MySqlCommand(sql, connection))
             {
                 command.CommandType = CommandType.Text;
                 command.CommandTimeout = 180;
-                command.ExecuteNonQuery();
+                await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
             }
         }
     }

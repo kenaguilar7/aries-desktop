@@ -123,26 +123,34 @@ namespace Aries.Desktop
             set
             {
                 Usuario = UserMapper.ToUsuario(value);
-                try
-                {
-                    if (value != null && Services != null)
-                    {
-                        var permissions = Services.GetRequiredService<IPermissionService>();
-                        Usuario.Modulos = PermissionMapper.ToModulos(permissions.GetModules(value.Id));
-                    }
-                    else if (Usuario != null)
-                    {
-                        Usuario.Modulos = new List<Modulo>();
-                    }
-                }
-                catch
-                {
-                    if (Usuario != null)
-                        Usuario.Modulos = new List<Modulo>();
-                }
-
+                if (Usuario != null)
+                    Usuario.Modulos = new List<Modulo>();
                 user = value;
             }
+        }
+
+        public static async Task SetUserAsync(User value)
+        {
+            Usuario = UserMapper.ToUsuario(value);
+            try
+            {
+                if (value != null && Services != null)
+                {
+                    var permissions = Services.GetRequiredService<IPermissionService>();
+                    Usuario.Modulos = PermissionMapper.ToModulos(await permissions.GetModulesAsync(value.Id));
+                }
+                else if (Usuario != null)
+                {
+                    Usuario.Modulos = new List<Modulo>();
+                }
+            }
+            catch
+            {
+                if (Usuario != null)
+                    Usuario.Modulos = new List<Modulo>();
+            }
+
+            user = value;
         }
     }
 }

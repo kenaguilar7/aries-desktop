@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AriesContador.Data.Repositories
@@ -16,90 +17,93 @@ namespace AriesContador.Data.Repositories
         private readonly IConnectionString _connectionString;
         public AccountRepository(IConnectionString connectionString)
         {
-            this._connectionString = connectionString;
+            _connectionString = connectionString;
         }
 
-        public void Add(Account entity)
+        public async Task AddAsync(Account entity, CancellationToken cancellationToken = default)
         {
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            entity.Id = dataAccess.SaveData<Account, int>("SP_InsertAccount", entity);
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            entity.Id = await dataAccess.SaveDataAsync<Account, int>("SP_InsertAccount", entity, cancellationToken)
+                .ConfigureAwait(false);
         }
 
-        public void AddChild(Account entity)
+        public async Task AddChildAsync(Account entity, CancellationToken cancellationToken = default)
         {
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            entity.Id = dataAccess.SaveData<object, int>("SP_InsertChildAccount", ToChildInsertParams(entity));
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            entity.Id = await dataAccess.SaveDataAsync<object, int>("SP_InsertChildAccount", ToChildInsertParams(entity), cancellationToken)
+                .ConfigureAwait(false);
         }
 
-        public IEnumerable<Account> FindByCompanyId(string companyId)
+        public async Task<IEnumerable<Account>> FindByCompanyIdAsync(string companyId, CancellationToken cancellationToken = default)
         {
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            var output = dataAccess.LoadData<Account, dynamic>("SP_GetAccountsByCompanyId", new { CompanyId = companyId });
-            return output;
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            return await dataAccess.LoadDataAsync<Account, dynamic>("SP_GetAccountsByCompanyId", new { CompanyId = companyId }, cancellationToken)
+                .ConfigureAwait(false);
         }
 
-        public async Task<Account> GetById(int id)
+        public async Task<Account> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
-            MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
-            var output = await dataAccess.LoadData<Account, dynamic>("SP_GetAccountById", new { accountId = id });
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            var output = await dataAccess.LoadDataAsync<Account, dynamic>("SP_GetAccountById", new { accountId = id }, cancellationToken)
+                .ConfigureAwait(false);
             return output.FirstOrDefault();
         }
 
-        public async Task Remove(Account entity)
+        public async Task RemoveAsync(Account entity, CancellationToken cancellationToken = default)
         {
-            MySqlDataAccessAsync dataAccess = new MySqlDataAccessAsync(_connectionString);
-            await dataAccess.SaveData<Account>("SP_DesactivateAccount", entity);
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            await dataAccess.SaveDataAsync("SP_DesactivateAccount", entity, cancellationToken).ConfigureAwait(false);
         }
 
-        public void Update(Account entity)
+        public Task UpdateAsync(Account entity, CancellationToken cancellationToken = default)
         {
-            UpdateNameInfo(entity);
+            return UpdateNameInfoAsync(entity, cancellationToken);
         }
 
-        public void UpdateNameInfo(Account entity)
+        public async Task UpdateNameInfoAsync(Account entity, CancellationToken cancellationToken = default)
         {
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            dataAccess.SaveData("SP_UpdateAccountNameInfo", new
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            await dataAccess.SaveDataAsync("SP_UpdateAccountNameInfo", new
             {
                 entity.Id,
                 entity.Name,
                 entity.Memo,
                 entity.CompanyId,
                 entity.UpdatedBy
-            });
+            }, cancellationToken).ConfigureAwait(false);
         }
 
-        public bool NameTaken(int accountId, string companyId, string name)
+        public async Task<bool> NameTakenAsync(int accountId, string companyId, string name, CancellationToken cancellationToken = default)
         {
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            var rows = dataAccess.LoadData<FlagRow, dynamic>("SP_AccountNameTaken", new
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            var rows = await dataAccess.LoadDataAsync<FlagRow, dynamic>("SP_AccountNameTaken", new
             {
                 AccountId = accountId,
                 CompanyId = companyId,
                 Name = name
-            });
+            }, cancellationToken).ConfigureAwait(false);
             return rows.FirstOrDefault()?.Taken == 1;
         }
 
-        public bool HasOpenPeriodMovements(int accountId)
+        public async Task<bool> HasOpenPeriodMovementsAsync(int accountId, CancellationToken cancellationToken = default)
         {
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            var rows = dataAccess.LoadData<FlagRow, dynamic>("SP_AccountHasOpenPeriodMovements", new
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            var rows = await dataAccess.LoadDataAsync<FlagRow, dynamic>("SP_AccountHasOpenPeriodMovements", new
             {
                 AccountId = accountId
-            });
+            }, cancellationToken).ConfigureAwait(false);
             return rows.FirstOrDefault()?.HasMovements == 1;
         }
 
-        public IEnumerable<Account> GetBalancesFromAccountInfo(string companyId, DateTime from, DateTime to)
+        public async Task<IEnumerable<Account>> GetBalancesFromAccountInfoAsync(string companyId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
         {
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            return dataAccess.LoadData<Account, dynamic>("SP_GetAccountBalancesFromAccountInfo", new
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            return await dataAccess.LoadDataAsync<Account, dynamic>("SP_GetAccountBalancesFromAccountInfo", new
             {
                 CompanyId = companyId,
                 FromPeriod = AccountRules.ToYearMonthKey(from),
                 ToPeriod = AccountRules.ToYearMonthKey(to)
-            });
+            }, cancellationToken).ConfigureAwait(false);
         }
 
         public IEnumerable<Account> GetDefaultAccounts()
@@ -107,21 +111,16 @@ namespace AriesContador.Data.Repositories
             return DefaultChartOfAccounts.Create();
         }
 
-        public IEnumerable<Account> AccountsWithBalanceByDateRange(BasicReportParam reportParam)
+        public async Task<IEnumerable<Account>> AccountsWithBalanceByDateRangeAsync(BasicReportParam reportParam, CancellationToken cancellationToken = default)
         {
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            var output = dataAccess.LoadData<Account, BasicReportParam>("SP_AuxiliaryAccountsWithBalanceByDateRange", reportParam);
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            var output = await dataAccess.LoadDataAsync<Account, BasicReportParam>("SP_AuxiliaryAccountsWithBalanceByDateRange", reportParam, cancellationToken)
+                .ConfigureAwait(false);
             output.BuildAccountsBalance();
             return output.OrderByTree();
         }
 
-        public Task AddAsync(Account entity)
-        {
-            Add(entity);
-            return Task.CompletedTask;
-        }
-
-        public DataTable GetMovementReport(int accountId, bool auxiliar)
+        public async Task<DataTable> GetMovementReportAsync(int accountId, bool auxiliar, CancellationToken cancellationToken = default)
         {
             var filter = auxiliar
                 ? "T3.account_id = @AccountId"
@@ -148,7 +147,8 @@ namespace AriesContador.Data.Repositories
                       + $"WHERE {filter} AND T2.active = 1 AND T3.active = 1 AND T4.active = 1 "
                       + "ORDER BY T5.month_report, T4.entry_id";
             var dataAccess = new MySqlDataAccess(_connectionString);
-            return dataAccess.QueryTable(sql, new { AccountId = accountId });
+            return await dataAccess.QueryTableAsync(sql, new { AccountId = accountId }, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         private static object ToChildInsertParams(Account entity)

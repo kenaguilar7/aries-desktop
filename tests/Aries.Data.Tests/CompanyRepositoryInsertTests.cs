@@ -19,7 +19,7 @@ namespace Aries.Data.Tests
 
             try
             {
-                repo.Add(new Company
+                await repo.AddAsync(new Company
                 {
                     Code = code,
                     IdType = IdType.CEDULA_JURIDICA,
@@ -30,12 +30,12 @@ namespace Aries.Data.Tests
                     Active = true
                 });
 
-                var found = repo.GetAllBlocking();
+                var found = await repo.GetAllAsync();
                 Assert.Contains(found, c => c.Code == code);
             }
             finally
             {
-                await repo.Remove(new Company { Code = code });
+                await repo.RemoveAsync(new Company { Code = code });
             }
         }
 

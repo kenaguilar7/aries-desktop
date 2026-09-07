@@ -31,7 +31,7 @@ namespace AriesContador.Core.Models.Patterns.ActionsWorker
         public async Task Execute()
         {
             CommandWorker worker = new CommandWorker();
-            var lst = new ReportEstadoResultadoIntegralData(financialReportService, reportResultadoPameter).Execute();
+            var lst = await new ReportEstadoResultadoIntegralData(financialReportService, reportResultadoPameter).ExecuteAsync();
             var output = new ToDataTable(lst.Results, lst.TotalPeridaGanancia).Execute();
             var _accountTreeDeep = lst.Results.Max(x => x.AccountPath.Split(new char[] { '¡' }, StringSplitOptions.RemoveEmptyEntries).Length);
 
@@ -48,7 +48,6 @@ namespace AriesContador.Core.Models.Patterns.ActionsWorker
                 workbook.SaveAs(path);
                 Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
             }
-            await Task.CompletedTask;
         }
     }
 
@@ -113,7 +112,7 @@ namespace AriesContador.Core.Models.Patterns.ActionsWorker
         }
     }
 
-    public class ReportEstadoResultadoIntegralData : IActionResult<ResultReportEstadoResultadoIntegral>
+    public class ReportEstadoResultadoIntegralData
     {
         private readonly IFinancialReportService financialReportService;
         private readonly ReportResultadoPameter reportResultadoPameter;
@@ -125,7 +124,7 @@ namespace AriesContador.Core.Models.Patterns.ActionsWorker
             this.reportResultadoPameter = reportResultadoPameter;
         }
 
-        public ResultReportEstadoResultadoIntegral Execute()
+        public Task<ResultReportEstadoResultadoIntegral> ExecuteAsync()
         {
             var firstDate = reportResultadoPameter.FirstDate;
             var endDate = reportResultadoPameter.EndDate;
@@ -137,8 +136,7 @@ namespace AriesContador.Core.Models.Patterns.ActionsWorker
                 EndDate = $"{endDate.Date.Year}{string.Format("{0, 0:D2}", endDate.Date.Month)}"
             };
 
-            var output = financialReportService.EstadoResultadoIntegral(reportParamns);
-            return output;
+            return financialReportService.EstadoResultadoIntegralAsync(reportParamns);
         }
     }
 

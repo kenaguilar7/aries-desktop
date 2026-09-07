@@ -27,13 +27,18 @@ namespace Aries.Desktop
             this._administrationService = administrationService;
             this.fm = fm as FrameMenu;
             InitializeComponent();
-            CargarCompañias();
+            Load += FrameSeleccionCompañia_Load;
         }
 
-        private async void CargarCompañias()
+        private async void FrameSeleccionCompañia_Load(object sender, EventArgs e)
+        {
+            await CargarCompañiasAsync();
+        }
+
+        private async Task CargarCompañiasAsync()
         {
 
-            var _lstCompanies = (await _administrationService.GetAllCompanies(GlobalConfig.User)).ToList();
+            var _lstCompanies = (await _administrationService.GetAllCompaniesAsync(GlobalConfig.User)).ToList();
             _lstCompanies = _lstCompanies.FindAll(x => x.Active == true).OrderBy(x => x.Name).ToList();
             
             lstCompanias.DataSource = _lstCompanies;

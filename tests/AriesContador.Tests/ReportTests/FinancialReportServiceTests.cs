@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using AriesContador.Core.Models.Accounts;
 using AriesContador.Core.Models.JournalEntries;
 using AriesContador.Core.Models.Utils;
@@ -12,7 +13,7 @@ namespace AriesContador.Tests.ReportTests
     public class FinancialReportServiceTests
     {
         [Fact]
-        public void BalanceComprobacion_splits_balances_by_DebOCred()
+        public async Task BalanceComprobacion_splits_balances_by_DebOCred()
         {
             var uow = new FakeUnitOfWork();
             uow.Accounts.AccountsWithBalance.Add(new Account
@@ -34,8 +35,8 @@ namespace AriesContador.Tests.ReportTests
                 CreditBalance = 50
             });
 
-            var report = new FinancialReportService(uow)
-                .BalanceComprobacionReport(new BasicReportParam { CompanyId = "C001" })
+            var report = (await new FinancialReportService(uow)
+                .BalanceComprobacionReportAsync(new BasicReportParam { CompanyId = "C001" }))
                 .ToList();
 
             var caja = report.Single(r => r.Account == "Caja");
@@ -56,7 +57,7 @@ namespace AriesContador.Tests.ReportTests
         }
 
         [Fact]
-        public void EstadoResultadoIntegral_skips_editable_auxiliar_with_zero_balance()
+        public async Task EstadoResultadoIntegral_skips_editable_auxiliar_with_zero_balance()
         {
             var uow = new FakeUnitOfWork();
             uow.FinancialReports.EstadoResultadoAccounts.AddRange(new[]
@@ -85,8 +86,8 @@ namespace AriesContador.Tests.ReportTests
                 }
             });
 
-            var result = new FinancialReportService(uow)
-                .EstadoResultadoIntegral(new BasicReportParam { CompanyId = "C001" });
+            var result = await new FinancialReportService(uow)
+                .EstadoResultadoIntegralAsync(new BasicReportParam { CompanyId = "C001" });
 
             Assert.DoesNotContain(result.Results, r => r.AccountPath.EndsWith("Aux"));
             Assert.Contains(result.Results, r => r.AccountPath.EndsWith("Ventas"));
@@ -95,7 +96,7 @@ namespace AriesContador.Tests.ReportTests
         }
 
         [Fact]
-        public void PreviousClosurePostingPeriodBalance_is_eri_total()
+        public async Task PreviousClosurePostingPeriodBalance_is_eri_total()
         {
             var uow = new FakeUnitOfWork();
             uow.FinancialReports.EstadoResultadoAccounts.AddRange(new[]
@@ -105,32 +106,32 @@ namespace AriesContador.Tests.ReportTests
                 Titulo("Egreso", AccountTag.Egreso, 25)
             });
 
-            var balance = new FinancialReportService(uow)
-                .PreviousClosurePostingPeriodBalance(new BasicReportParam { CompanyId = "C001" });
+            var balance = await new FinancialReportService(uow)
+                .PreviousClosurePostingPeriodBalanceAsync(new BasicReportParam { CompanyId = "C001" });
 
             Assert.Equal(275m, balance.Amount);
         }
 
         [Fact]
-        public void GetAccountMovementReport_returns_table()
+        public async Task GetAccountMovementReport_returns_table()
         {
             var uow = new FakeUnitOfWork();
             var svc = new FinancialReportService(uow);
 
-            var table = svc.GetAccountMovementReport(1, true);
+            var table = await svc.GetAccountMovementReportAsync(1, true);
 
             Assert.NotNull(table);
         }
 
         [Fact]
-        public void JournalEntryReport_is_pass_through()
+        public async Task JournalEntryReport_is_pass_through()
         {
             var uow = new FakeUnitOfWork();
             var row = new JournalEntryReport { JournalEntryNumber = 3, DebitAmount = 10, CreditAmount = 10 };
             uow.FinancialReports.JournalReports.Add(row);
 
-            var output = new FinancialReportService(uow)
-                .JournalEntryReport(new BasicReportParam { CompanyId = "C001" });
+            var output = await new FinancialReportService(uow)
+                .JournalEntryReportAsync(new BasicReportParam { CompanyId = "C001" });
 
             Assert.Same(row, Assert.Single(output));
         }

@@ -42,4 +42,4 @@ Plataformas de solución: **Debug|Any CPU** y **Release|Any CPU** (igual que CI)
 
 Perfiles F5 (`Aries.slnLaunch`): Escritorio + API (Local), Solo escritorio (Local), Solo API (Local).
 
-El escritorio y el API llaman los mismos `AriesContador.Services`. El exe de producción sigue siendo `CapaPresentacion.exe` (Squirrel). Detalle en [`archive/README.md`](../archive/README.md). Cómo abrir en Visual Studio: [`README.md`](../README.md).
+El escritorio y el API llaman los mismos `AriesContador.Services` **async** (`await` + `CancellationToken`). Data usa Dapper `QueryAsync`/`ExecuteAsync`; las transacciones (asiento + líneas, clone de plan de cuentas, cierre de periodo) abren con `OpenAsync`/`BeginTransactionAsync`. El exe de producción sigue siendo `CapaPresentacion.exe` (Squirrel). Detalle en [`archive/README.md`](../archive/README.md). Cómo abrir en Visual Studio: [`README.md`](../README.md).

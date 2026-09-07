@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Aries.Desktop.Reportes
@@ -30,8 +31,14 @@ namespace Aries.Desktop.Reportes
         {
             _financialService = financialService;
             InitializeComponent();
-            CargarDatos(compañia, usuario);
-            
+            _compania = compañia;
+            _usuario = usuario;
+            Load += ReporteCuenta_Load;
+        }
+
+        private async void ReporteCuenta_Load(object sender, EventArgs e)
+        {
+            await CargarDatosAsync();
         }
 
         /// <summary>
@@ -40,13 +47,11 @@ namespace Aries.Desktop.Reportes
         /// <param name="lst"></param>
         /// <param name="compañia"></param>
         /// <param name="usuario"></param>
-        private void CargarDatos(Company compañia, Usuario usuario)
+        private async Task CargarDatosAsync()
         {
-            _compania = compañia;
-            _lstCuentas = ReportAccountLoader.Load(_financialService, compañia);
-            _usuario = usuario;
+            _lstCuentas = await ReportAccountLoader.LoadAsync(_financialService, _compania);
             lstFechas = CuentaMapper.ToFechaTransaccionList(
-                _financialService.GetPostingPeriods(compañia.Code));
+                await _financialService.GetPostingPeriodsAsync(_compania.Code));
             this.lstMesesAbiertos.DataSource = lstFechas;
             LlenarTabla(false);
         }
@@ -196,7 +201,7 @@ namespace Aries.Desktop.Reportes
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void Imprimir_Saldo(object sender, EventArgs e)
+        private async void Imprimir_Saldo(object sender, EventArgs e)
         {
             ///Obtenemos el seleccionado
             var mes = (FechaTransaccion)lstMesesAbiertos.SelectedItem;
@@ -206,7 +211,7 @@ namespace Aries.Desktop.Reportes
 
             var mesFinal = lstFechas.OrderBy(x => x.Fecha).ToList()[0];
 
-            ReportAccountLoader.FillBalances(_financialService, _lstCuentas, mesFinal.Fecha, mes.Fecha);
+            await ReportAccountLoader.FillBalancesAsync(_financialService, _lstCuentas, mesFinal.Fecha, mes.Fecha);
 
             LlenarTabla(ConSaldo: true);
         }

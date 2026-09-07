@@ -1,14 +1,14 @@
 ﻿using AriesContador.Core.Models.Users;
-using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace AriesContador.Core.Repositories
 {
     public interface IUserRepository : IRepository<User>
     {
-        User GetById(int id);
-        User FindByUserName(string userName);
-        IEnumerable<User> GetAll(); 
+        Task<User> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+        Task<User> FindByUserNameAsync(string userName, CancellationToken cancellationToken = default);
+        Task<IEnumerable<User>> GetAllAsync(CancellationToken cancellationToken = default);
     }
 }

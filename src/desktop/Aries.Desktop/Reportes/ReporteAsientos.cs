@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using AriesContador.Core;
 using AriesContador.Core.Models.PostingPeriods;
@@ -35,9 +36,9 @@ namespace Aries.Desktop.Reportes
             _financialService = financialService;
         }
 
-        private void ReporteAsientos_Load(object sender, EventArgs e)
+        private async void ReporteAsientos_Load(object sender, EventArgs e)
         {
-            this.PostingPeriods = _financialService.GetPostingPeriods(GlobalConfig.Company.Code).ToList();
+            this.PostingPeriods = (await _financialService.GetPostingPeriodsAsync(GlobalConfig.Company.Code)).ToList();
             this.lstStarPeriod.DataSource = this.PostingPeriods.DeepClone(); 
         }
 
@@ -47,9 +48,9 @@ namespace Aries.Desktop.Reportes
             lstEndPeriod.DataSource = PostingPeriods.GetOlder(starMonth.Date); 
         }
 
-        private void LstEndPostingPeriod_SelectedIndexChanged(object sender, EventArgs e)
+        private async void LstEndPostingPeriod_SelectedIndexChanged(object sender, EventArgs e)
         {
-            var output = JournalEntryReports(); 
+            var output = await JournalEntryReportsAsync(); 
             GridDatos.DataSource = output;
             ConfigGridColumns();
         }
@@ -78,7 +79,7 @@ namespace Aries.Desktop.Reportes
             }
         }
 
-        private IEnumerable<JournalEntryReport> JournalEntryReports()
+        private async Task<IEnumerable<JournalEntryReport>> JournalEntryReportsAsync()
         {
             var firstDate = (PostingPeriod) lstStarPeriod.SelectedItem;
             var endDate = (PostingPeriod) lstEndPeriod.SelectedItem;
@@ -90,11 +91,11 @@ namespace Aries.Desktop.Reportes
                 EndDate = $"{endDate.Date.Year}{string.Format("{0, 0:D2}", endDate.Date.Month)}"
             };
 
-            var output = _financialReportService.JournalEntryReport(reportParamns);
+            var output = await _financialReportService.JournalEntryReportAsync(reportParamns);
             return output;
         }
 
-        private void BtnExportToExcel_Click(object sender, EventArgs e)
+        private async void BtnExportToExcel_Click(object sender, EventArgs e)
         {
             try
             {
@@ -102,7 +103,7 @@ namespace Aries.Desktop.Reportes
                 {
                     if (sfd.ShowDialog() == DialogResult.OK)
                     {
-                        ExportToExcel(sfd.FileName);
+                        await ExportToExcelAsync(sfd.FileName);
                     }
                 }
             }
@@ -112,9 +113,9 @@ namespace Aries.Desktop.Reportes
             }
         }
 
-        private void ExportToExcel(string path)
+        private async Task ExportToExcelAsync(string path)
         {
-            var output = JournalEntryReports();
+            var output = await JournalEntryReportsAsync();
 
             using (var workbook = new XLWorkbook())
             {

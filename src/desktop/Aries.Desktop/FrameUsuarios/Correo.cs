@@ -24,12 +24,18 @@ namespace Aries.Desktop.FrameUsuarios
         {
             _emailService = emailService;
             InitializeComponent();
-            CargarDatos();
+            Load += Correo_Load;
         }
-        public void CargarDatos()
+
+        private async void Correo_Load(object sender, EventArgs e)
+        {
+            await CargarDatosAsync();
+        }
+
+        public async Task CargarDatosAsync()
         {
             //this.dataGridView1.Columns.Clear();
-            DataTable dt = _emailService.GetLog();
+            DataTable dt = await _emailService.GetLogAsync();
 
             foreach (DataRow row in dt.Rows)
             {
@@ -39,9 +45,9 @@ namespace Aries.Desktop.FrameUsuarios
             }
 
         }
-        public void Insertar(UsuarioTemporal usuario)
+        public async Task Insertar(UsuarioTemporal usuario)
         {
-            _emailService.Insert(ToLog(usuario));
+            await _emailService.InsertAsync(ToLog(usuario));
         }
 
         private void BtnGuardar_Click(object sender, EventArgs e)
@@ -157,7 +163,7 @@ namespace Aries.Desktop.FrameUsuarios
                     TextoGeneral.NombreApp, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
                     var logs = usuariosTemporales.Select(ToLog).ToList();
-                    var rejected = await Task.Run(() => _emailService.SendMail(logs));
+                    var rejected = await _emailService.SendMailAsync(logs);
                     RouteRejed(rejected.Select(FromLog));
                 }
             }
@@ -181,9 +187,9 @@ namespace Aries.Desktop.FrameUsuarios
                 MessageBox.Show("Lista enviada exitosamente", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        private void btnEnviar_Click(object sender, EventArgs e)
+        private async void btnEnviar_Click(object sender, EventArgs e)
         {
-            EnviarAsync();
+            await EnviarAsync();
         }
 
         private static MailMessageLog ToLog(UsuarioTemporal usuario)

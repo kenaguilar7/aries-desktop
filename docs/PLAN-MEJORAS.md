@@ -103,8 +103,9 @@ Rotar el password de RDS es parte de la fase 6, no un “después”. El secreto
 
 - `IUnitOfWork` y servicios registrados como **Singleton** en WinForms: una sola instancia para toda la vida del proceso. Hoy cada repo abre su propia conexión, así que no explota, pero impide un UoW real y es un pie para race conditions si algún día se comparte transacción.
 - `Commit()` no hace nada; las transacciones viven en `JournalEntryRepository` / `CompanyRepository`. Documentar o implementar de verdad, no dejar las dos historias.
-- `NotImplementedException` en `UserRepository.AddAsync/Remove`, `AccountRepository` async, `PostingPeriodRepository` varios métodos. O se implementan o se quitan de las interfaces.
-- `AdministrationService.FindByCode` / `GetAllInactive*` usan `GetAwaiter().GetResult()` (sync-over-async).
+- `NotImplementedException` en repos async: **cerrado.** Contratos `IRepository` / servicios son async-only (`*Async` + `CancellationToken`).
+- `AdministrationService` ya no usa `GetAwaiter().GetResult()`. El escritorio hace `await` en los event handlers.
+- Transacciones MySQL (`JournalEntryRepository.AddAsync`, alta de compañía, cierre de periodo) usan `OpenAsync` / `BeginTransactionAsync`.
 - Clientes HTTP (`HttpAdministrationService`, `HttpFinancialService`, `HttpClientService`) no están en el DI del exe.
 
 ### 3.5 MySQL (bugs reales del dump, no rediseño)
@@ -232,10 +233,10 @@ Orden (de más riesgo contable a menos):
 
 1. WinForms: `IUnitOfWork` y servicios **scoped/transient** por operación, o factory por form. Dejar de ser Singleton. `IConnectionString` sí puede ser singleton.
 2. Decidir `Commit()`: o envuelve una transacción de verdad y los repos la usan, o se elimina de la interfaz y se documenta “transacción en el repo X”. No las dos.
-3. Quitar de interfaces (o implementar) `AddAsync`/`Remove` que solo tiran `NotImplementedException`. El escritorio es síncrono; el API puede llamar el método sync.
+3. **Hecho:** un solo contrato async (`*Async` + `CancellationToken`) en Core → Data → Services → API → WinForms. `MySqlDataAccess` unificado; TX con `OpenAsync`/`BeginTransactionAsync`. Sin `GetResult` en servicios ni forms.
 4. Borrar `HttpAdministrationService`, `HttpFinancialService` y el cliente HTTP si nadie los referencia. El contrato HTTP vive en el host, no en un segundo servicio paralelo.
-5. Sustituir `GetAwaiter().GetResult()` en Administration por APIs sync de los repos (ya existen).
-6. `FindByPostingPeriodIdAsync` hoy no carga líneas: no usarlo o completarlo. El camino sync sí las carga.
+5. **Hecho:** ya no hay `GetAwaiter().GetResult()` en Administration ni en FinancialService.
+6. **Hecho:** `FindByPostingPeriodIdAsync` carga líneas en la misma transacción async.
 
 **Criterio de salida:** cero `NotImplementedException` alcanzables desde UI o Minimal APIs; DI del exe no es todo-Singleton; grep sin `HttpFinancialService`.
 

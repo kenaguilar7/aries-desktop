@@ -28,15 +28,20 @@ namespace Aries.Desktop.Reportes
         {
             _financialService = financialService;
             InitializeComponent();
-            CargarDatos();
+            Load += ReporteBalanceSituacion_Load;
+        }
+
+        private async void ReporteBalanceSituacion_Load(object sender, EventArgs e)
+        {
+            await CargarDatosAsync();
         }
 
 
-        private void CargarDatos()
+        private async Task CargarDatosAsync()
         {
-            ListaCuentas = ReportAccountLoader.Load(_financialService, GlobalConfig.Company);
+            ListaCuentas = await ReportAccountLoader.LoadAsync(_financialService, GlobalConfig.Company);
             var lstDts = CuentaMapper.ToFechaTransaccionList(
-                _financialService.GetPostingPeriods(GlobalConfig.Company.Code));
+                await _financialService.GetPostingPeriodsAsync(GlobalConfig.Company.Code));
 
             AFechaFinal.DataSource = lstDts;
 
@@ -55,12 +60,12 @@ namespace Aries.Desktop.Reportes
             ListaCuentasBalanceSitucion = from c in ListaCuentas where c.TipoCuenta.TipoCuenta != TipoCuenta.Ingreso && c.TipoCuenta.TipoCuenta != TipoCuenta.Egreso && c.TipoCuenta.TipoCuenta != TipoCuenta.Costo_Venta select c;
 
         }
-        private void BtnCalcular(object sender, EventArgs e)
+        private async void BtnCalcular(object sender, EventArgs e)
         {
             DateTime fch1 = ((FechaTransaccion)AFechaInicio.SelectedItem).Fecha;
             DateTime fch2 = ((FechaTransaccion)AFechaFinal.SelectedItem).Fecha;
 
-            ReportAccountLoader.FillBalances(_financialService, ListaCuentas, fch1, fch2);
+            await ReportAccountLoader.FillBalancesAsync(_financialService, ListaCuentas, fch1, fch2);
 
             CargarFormulario();
 

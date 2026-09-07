@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Threading.Tasks;
 using AriesContador.Core.Models.Accounts;
 using AriesContador.Core.Models.Companies;
 using AriesContador.Core.Models.Users;
@@ -13,26 +14,26 @@ namespace AriesContador.Tests
     public class AdministrationServiceTests
     {
         [Fact]
-        public void Login_rejects_wrong_password()
+        public async Task Login_rejects_wrong_password()
         {
             var uow = new FakeUnitOfWork();
             uow.Users.Add(new User { UserName = "kenneth", Password = "96321", Active = true, Name = "K" });
             var svc = new AdministrationService(uow);
 
-            var token = svc.Login(new Login { UserId = "kenneth", Password = "nope" });
+            var token = await svc.LoginAsync(new Login { UserId = "kenneth", Password = "nope" });
 
             Assert.Null(token.User);
             Assert.True(string.IsNullOrEmpty(token.Token));
         }
 
         [Fact]
-        public void Login_returns_local_token_for_active_user()
+        public async Task Login_returns_local_token_for_active_user()
         {
             var uow = new FakeUnitOfWork();
             uow.Users.Add(new User { UserName = "kenneth", Password = "96321", Active = true, Name = "K" });
             var svc = new AdministrationService(uow);
 
-            var token = svc.Login(new Login { UserId = "kenneth", Password = "96321" });
+            var token = await svc.LoginAsync(new Login { UserId = "kenneth", Password = "96321" });
 
             Assert.Equal("local", token.Token);
             Assert.Equal("kenneth", token.User.UserName);
@@ -42,38 +43,38 @@ namespace AriesContador.Tests
         }
 
         [Fact]
-        public void Login_verifies_existing_hash_and_does_not_rehash()
+        public async Task Login_verifies_existing_hash_and_does_not_rehash()
         {
             var hashed = PasswordHasher.Hash("96321");
             var uow = new FakeUnitOfWork();
             uow.Users.Add(new User { UserName = "kenneth", Password = hashed, Active = true, Name = "K" });
             var svc = new AdministrationService(uow);
 
-            var token = svc.Login(new Login { UserId = "kenneth", Password = "96321" });
+            var token = await svc.LoginAsync(new Login { UserId = "kenneth", Password = "96321" });
 
             Assert.Equal("local", token.Token);
             Assert.Equal(hashed, uow.Users.Items[0].Password);
         }
 
         [Fact]
-        public void Login_rejects_inactive_user()
+        public async Task Login_rejects_inactive_user()
         {
             var uow = new FakeUnitOfWork();
             uow.Users.Add(new User { UserName = "kenneth", Password = "96321", Active = false, Name = "K" });
             var svc = new AdministrationService(uow);
 
-            var token = svc.Login(new Login { UserId = "kenneth", Password = "96321" });
+            var token = await svc.LoginAsync(new Login { UserId = "kenneth", Password = "96321" });
 
             Assert.Null(token.User);
         }
 
         [Fact]
-        public void CreateUser_hashes_password()
+        public async Task CreateUser_hashes_password()
         {
             var uow = new FakeUnitOfWork();
             var svc = new AdministrationService(uow);
 
-            svc.CreateUser(new User { UserName = "nuevo", Name = "N", Password = "plain" });
+            await svc.CreateUserAsync(new User { UserName = "nuevo", Name = "N", Password = "plain" });
 
             Assert.True(PasswordHasher.LooksHashed(uow.Users.Items[0].Password));
             Assert.True(PasswordHasher.Verify("plain", uow.Users.Items[0].Password));
@@ -104,7 +105,7 @@ namespace AriesContador.Tests
                 CopyFrom = "C001"
             };
 
-            await svc.CreateCompany(company);
+            await svc.CreateCompanyAsync(company);
 
             var saved = Assert.Single(uow.Companies.Added);
             Assert.Equal(80, saved.Account.Count());
@@ -125,7 +126,7 @@ namespace AriesContador.Tests
                 CopyFrom = "POR DEFECTO"
             };
 
-            await svc.CreateCompany(company);
+            await svc.CreateCompanyAsync(company);
 
             var saved = Assert.Single(uow.Companies.Added);
             var accounts = saved.Account.ToList();
@@ -138,25 +139,25 @@ namespace AriesContador.Tests
         }
 
         [Fact]
-        public void CreateUser_rejects_blank_name_or_username()
+        public async Task CreateUser_rejects_blank_name_or_username()
         {
             var svc = new AdministrationService(new FakeUnitOfWork());
 
-            var ex = Assert.Throws<System.InvalidOperationException>(() =>
-                svc.CreateUser(new User { Name = "  ", UserName = "admin" }));
+            var ex = await Assert.ThrowsAsync<System.InvalidOperationException>(() =>
+                svc.CreateUserAsync(new User { Name = "  ", UserName = "admin" }));
 
             Assert.Contains("blanco", ex.Message);
         }
 
         [Fact]
-        public void CreateUser_rejects_duplicate_username()
+        public async Task CreateUser_rejects_duplicate_username()
         {
             var uow = new FakeUnitOfWork();
             uow.Users.Add(new User { UserName = "admin", Name = "A", Password = "x", Active = true });
             var svc = new AdministrationService(uow);
 
-            var ex = Assert.Throws<System.InvalidOperationException>(() =>
-                svc.CreateUser(new User { UserName = "admin", Name = "Otro", Password = "y" }));
+            var ex = await Assert.ThrowsAsync<System.InvalidOperationException>(() =>
+                svc.CreateUserAsync(new User { UserName = "admin", Name = "Otro", Password = "y" }));
 
             Assert.Contains("registrado", ex.Message);
         }
@@ -173,7 +174,7 @@ namespace AriesContador.Tests
                 Mail = "a@b.com"
             };
 
-            var ex = await Assert.ThrowsAsync<System.InvalidOperationException>(() => svc.CreateCompany(company));
+            var ex = await Assert.ThrowsAsync<System.InvalidOperationException>(() => svc.CreateCompanyAsync(company));
             Assert.Contains("cédula", ex.Message.ToLowerInvariant());
         }
 
@@ -189,7 +190,7 @@ namespace AriesContador.Tests
                 Mail = "a@b.com"
             };
 
-            var ex = await Assert.ThrowsAsync<System.InvalidOperationException>(() => svc.CreateCompany(company));
+            var ex = await Assert.ThrowsAsync<System.InvalidOperationException>(() => svc.CreateCompanyAsync(company));
             Assert.Contains("Nombre", ex.Message);
         }
     }

@@ -1,21 +1,16 @@
 ﻿using AriesContador.Core.Models.JournalEntries;
-using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AriesContador.Core.Repositories
 {
     public interface IJournalEntryRepository : IRepository<JournalEntry>
     {
-        JournalEntry GetById(int jEntryId); 
-        IEnumerable<JournalEntry> FindByPostingPeriodId(int postPeriodId);
-        Task<IEnumerable<JournalEntry>> FindByPostingPeriodIdAsync(int pstPeriodId); 
-        int GetConsecutiveNumber(int postingPeriodId);
-        Task<int> GetConsecutiveNumberAsync(int postingPeriodId); 
-        IEnumerable<JournalEntryDeletedReport> GetDeletedItemByDateRange(BasicReportParam reportParam);
-        void RestoreJournalEntry(JournalEntry entryLine);
-        Task<int> AddAsyncReturningId(JournalEntry journalEntry);
-        Task UpdateAsync(JournalEntry entity); 
+        Task<JournalEntry> GetByIdAsync(int jEntryId, CancellationToken cancellationToken = default);
+        Task<IEnumerable<JournalEntry>> FindByPostingPeriodIdAsync(int postPeriodId, CancellationToken cancellationToken = default);
+        Task<int> GetConsecutiveNumberAsync(int postingPeriodId, CancellationToken cancellationToken = default);
+        Task<IEnumerable<JournalEntryDeletedReport>> GetDeletedItemByDateRangeAsync(BasicReportParam reportParam, CancellationToken cancellationToken = default);
+        Task RestoreJournalEntryAsync(JournalEntry entryLine, CancellationToken cancellationToken = default);
     }
 }

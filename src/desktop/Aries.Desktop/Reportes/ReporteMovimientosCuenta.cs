@@ -9,6 +9,7 @@ using Aries.Reporting.Textos;
 using Aries.Desktop.FrameCuentas;
 using System;
 using System.Data;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Aries.Desktop.Reportes
@@ -46,20 +47,31 @@ namespace Aries.Desktop.Reportes
             {
                 txtBoxCuentaSeleccionada.Text = cuenta.ToString();
                 txtBoxCuentaSeleccionada.Tag = cuenta;
-                CargarDatosAlGrid(cuenta);
+                LoadAccountGrid(cuenta);
                 return true;
             }
             else
                 return false;
         }
+
+        private async void LoadAccountGrid(Cuenta cuenta)
+        {
+            await CargarDatosAlGridAsync(cuenta);
+        }
+
         private void CargarDatosAlGrid(Cuenta cuenta)
+        {
+            LoadAccountGrid(cuenta);
+        }
+
+        private async Task CargarDatosAlGridAsync(Cuenta cuenta)
         {
 
             GridDatos.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.ColumnHeader;
             var auxiliar = cuenta.Indicador == IndicadorCuenta.Cuenta_Auxiliar;
             GridDatos.DataSource = cuenta.Id == 0
                 ? new DataTable()
-                : _financialReportService.GetAccountMovementReport(cuenta.Id, auxiliar);
+                : await _financialReportService.GetAccountMovementReportAsync(cuenta.Id, auxiliar);
             SetEstilosDataDrid();
             AjustarColumnaDolares();
             GridDatos.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;

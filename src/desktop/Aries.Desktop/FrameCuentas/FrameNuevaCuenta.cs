@@ -7,6 +7,7 @@ using Aries.Reporting.Mappers;
 using Aries.Reporting.Textos;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Aries.Desktop.FrameCuentas
@@ -36,7 +37,7 @@ namespace Aries.Desktop.FrameCuentas
             }
         }
 
-        private void CrearCuenta(object sender, EventArgs e)
+        private async void CrearCuenta(object sender, EventArgs e)
         {
             try
             {
@@ -52,9 +53,10 @@ namespace Aries.Desktop.FrameCuentas
                 };
 
                 var parentAccount = CuentaMapper.ToAccount(CuentaPadre);
-                if (!_financialService.EvaluateParentForNewChild(parentAccount, out String Mensaje))
+                var (ok, msg) = await _financialService.EvaluateParentForNewChildAsync(parentAccount);
+                if (!ok)
                 {
-                    if (MessageBox.Show(Mensaje, TextoGeneral.NombreApp, MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) == DialogResult.No)
+                    if (MessageBox.Show(msg, TextoGeneral.NombreApp, MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) == DialogResult.No)
                     {
                         return;
                     }
@@ -62,7 +64,7 @@ namespace Aries.Desktop.FrameCuentas
 
                 var account = CuentaMapper.ToAccount(nuevaCuenta);
                 account.UpdatedBy = GlobalConfig.Usuario.Id;
-                _financialService.CreateAccount(account, parentAccount);
+                await _financialService.CreateAccountAsync(account, parentAccount);
                 CuentaMapper.CopyBalancesToCuenta(account, nuevaCuenta);
                 CuentaPadre.Indicador = (IndicadorCuenta)parentAccount.AccountType;
 

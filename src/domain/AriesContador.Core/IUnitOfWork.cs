@@ -3,7 +3,6 @@ using AriesContador.Core.Models.Companies;
 using AriesContador.Core.Models.PostingPeriods;
 using AriesContador.Core.Models.Users;
 using AriesContador.Core.Repositories;
-using System.Threading.Tasks;
 
 namespace AriesContador.Core
 {

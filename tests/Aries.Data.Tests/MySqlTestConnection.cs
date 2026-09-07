@@ -46,7 +46,8 @@ namespace Aries.Data.Tests
             if (!MySqlTestConnection.IsAvailable)
                 return;
 
-            new AriesContador.Data.Migrations.DatabaseMigrator(MySqlTestConnection.ConnectionString).ApplyPending();
+            new AriesContador.Data.Migrations.DatabaseMigrator(MySqlTestConnection.ConnectionString)
+                .ApplyPendingAsync().ConfigureAwait(false).GetAwaiter().GetResult();
         }
     }
 

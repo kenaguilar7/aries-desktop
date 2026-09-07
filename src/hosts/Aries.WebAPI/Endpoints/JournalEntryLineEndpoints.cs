@@ -10,39 +10,39 @@ namespace Aries.WebAPI.Endpoints
         {
             var group = app.MapGroup("/journalEntryLine").RequireAuthorization();
 
-            group.MapPost("/CreateJournalEntryLine", (HttpContext http, JournalEntryLine line, IFinancialService svc) =>
-                EndpointRun.Try(() =>
+            group.MapPost("/CreateJournalEntryLine", async (HttpContext http, JournalEntryLine line, IFinancialService svc) =>
+                await EndpointRun.TryAsync(async () =>
                 {
                     var userId = http.TryGetUserId();
                     if (userId.HasValue && line.CreatedBy == 0)
                         line.CreatedBy = userId.Value;
-                    svc.CreateJournalEntryLine(line);
+                    await svc.CreateJournalEntryLineAsync(line, http.RequestAborted);
                     return Results.Ok(line.Id);
                 }));
 
-            group.MapPost("/UpdateJournalEntryLine", (HttpContext http, JournalEntryLine line, IFinancialService svc) =>
-                EndpointRun.Try(() =>
+            group.MapPost("/UpdateJournalEntryLine", async (HttpContext http, JournalEntryLine line, IFinancialService svc) =>
+                await EndpointRun.TryAsync(async () =>
                 {
                     var userId = http.TryGetUserId();
                     if (userId.HasValue)
                         line.UpdatedBy = userId.Value;
-                    svc.UpdateJournalEntryLine(line);
+                    await svc.UpdateJournalEntryLineAsync(line, http.RequestAborted);
                     return Results.Ok();
                 }));
 
-            group.MapPost("/DeleteJournalEntryLine", (JournalEntryLine line, IFinancialService svc) =>
-                EndpointRun.Try(() =>
+            group.MapPost("/DeleteJournalEntryLine", async (HttpContext http, JournalEntryLine line, IFinancialService svc) =>
+                await EndpointRun.TryAsync(async () =>
                 {
-                    svc.DeleteJournalEntryLine(line);
+                    await svc.DeleteJournalEntryLineAsync(line, http.RequestAborted);
                     return Results.Ok();
                 }));
 
-            group.MapGet("/FindJournalEntryLine/{journalEntryId:int}", (int journalEntryId, IFinancialService svc) =>
-                Results.Ok(svc.GetJournalEntryLineByJournalEntryId(journalEntryId)));
+            group.MapGet("/FindJournalEntryLine/{journalEntryId:int}", async (HttpContext http, int journalEntryId, IFinancialService svc) =>
+                Results.Ok(await svc.GetJournalEntryLineByJournalEntryIdAsync(journalEntryId, http.RequestAborted)));
 
-            group.MapPost("/RestoreJournalEntryLine", (JournalEntryLine line, IFinancialService svc) =>
+            group.MapPost("/RestoreJournalEntryLine", async (HttpContext http, JournalEntryLine line, IFinancialService svc) =>
             {
-                svc.RestoreJournalEntryLine(line);
+                await svc.RestoreJournalEntryLineAsync(line, http.RequestAborted);
                 return Results.Ok();
             });
 

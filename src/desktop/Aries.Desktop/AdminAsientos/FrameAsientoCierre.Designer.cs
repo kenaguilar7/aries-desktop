@@ -40,7 +40,6 @@ namespace Aries.Desktop.AdminAsientos
             this.label1 = new System.Windows.Forms.Label();
             this.txtSeleccione = new System.Windows.Forms.Label();
             this.lstAbrirMes = new System.Windows.Forms.ComboBox();
-            this.backgroundWorker = new System.ComponentModel.BackgroundWorker();
             this.btnReporte = new System.Windows.Forms.Button();
             this.groupBoxSalir.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
@@ -198,12 +197,6 @@ namespace Aries.Desktop.AdminAsientos
             this.lstAbrirMes.Size = new System.Drawing.Size(233, 24);
             this.lstAbrirMes.TabIndex = 5;
             // 
-            // backgroundWorker
-            // 
-            this.backgroundWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker_DoWork);
-            this.backgroundWorker.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.backgroundWorker_ProgressChanged);
-            this.backgroundWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorker_RunWorkerCompleted);
-            // 
             // btnReporte
             // 
             this.btnReporte.FlatAppearance.BorderSize = 0;
@@ -250,7 +243,6 @@ namespace Aries.Desktop.AdminAsientos
         private System.Windows.Forms.ComboBox lstAbrirMes;
         private System.Windows.Forms.Label txtSeleccione;
         private System.Windows.Forms.Label label1;
-        private System.ComponentModel.BackgroundWorker backgroundWorker;
         private System.Windows.Forms.Button btnSeleccionarCuenta;
         private System.Windows.Forms.Label txtBoxNombreCuenta;
         private System.Windows.Forms.Button btnReporte;

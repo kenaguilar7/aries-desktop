@@ -370,6 +370,7 @@
     </Compile>
     <Compile Include="Utils\INeedValidatedForClose.cs" />
     <Compile Include="Utils\ReportAccountLoader.cs" />
+    <Compile Include="Utils\UiBusy.cs" />
     <EmbeddedResource Include="AdminAsientos\FrameAsientoCierre.resx">
       <DependentUpon>FrameAsientoCierre.cs</DependentUpon>
     </EmbeddedResource>

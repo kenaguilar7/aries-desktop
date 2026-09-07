@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Net;
 using System.Net.Mail;
+using System.Threading;
+using System.Threading.Tasks;
 using AriesContador.Core;
 using AriesContador.Core.Models.Email;
 using AriesContador.Core.Services;
@@ -20,53 +22,56 @@ namespace AriesContador.Services
             _smtp = smtp ?? new SmtpOptions();
         }
 
-        public DataTable GetLog()
+        public Task<DataTable> GetLogAsync(CancellationToken cancellationToken = default)
         {
-            return _unitOfWork.EmailRepository.GetLog();
+            return _unitOfWork.EmailRepository.GetLogAsync(cancellationToken);
         }
 
-        public bool Insert(MailMessageLog message)
+        public Task<bool> InsertAsync(MailMessageLog message, CancellationToken cancellationToken = default)
         {
-            return _unitOfWork.EmailRepository.Insert(message);
+            return _unitOfWork.EmailRepository.InsertAsync(message, cancellationToken);
         }
 
-        public IEnumerable<MailMessageLog> SendMail(IEnumerable<MailMessageLog> messages)
+        public async Task<IEnumerable<MailMessageLog>> SendMailAsync(IEnumerable<MailMessageLog> messages, CancellationToken cancellationToken = default)
         {
             var rejected = new List<MailMessageLog>();
             foreach (var user in messages)
             {
-                user.Sent = Push(user);
+                cancellationToken.ThrowIfCancellationRequested();
+                user.Sent = await PushAsync(user, cancellationToken).ConfigureAwait(false);
                 if (!user.Sent)
                     rejected.Add(user);
-                Insert(user);
+                await InsertAsync(user, cancellationToken).ConfigureAwait(false);
             }
             return rejected;
         }
 
-        private bool Push(MailMessageLog usuario)
+        private async Task<bool> PushAsync(MailMessageLog usuario, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(_smtp.Host) || string.IsNullOrWhiteSpace(_smtp.UserName))
                 return false;
 
             try
             {
-                var client = new SmtpClient(_smtp.Host, _smtp.Port)
+                using (var client = new SmtpClient(_smtp.Host, _smtp.Port)
                 {
                     Credentials = new NetworkCredential(_smtp.UserName, _smtp.Password ?? string.Empty),
                     EnableSsl = true
-                };
-                var mail = new MailMessage();
-                mail.From = new MailAddress(
-                    string.IsNullOrWhiteSpace(_smtp.FromAddress) ? _smtp.UserName : _smtp.FromAddress,
-                    _smtp.FromDisplayName ?? "Sistemas Aries");
-                mail.To.Add(new MailAddress(usuario.ToAddress));
-                if (!string.IsNullOrWhiteSpace(usuario.CcAddress))
-                    mail.CC.Add(new MailAddress(usuario.CcAddress));
-                mail.Subject = usuario.Subject;
-                mail.IsBodyHtml = true;
-                mail.Body = $"<html><nav><h1>{usuario.Title}</h1><span>{usuario.Body}</span><h6></h6></nav></html>";
-                client.Send(mail);
-                return true;
+                })
+                {
+                    var mail = new MailMessage();
+                    mail.From = new MailAddress(
+                        string.IsNullOrWhiteSpace(_smtp.FromAddress) ? _smtp.UserName : _smtp.FromAddress,
+                        _smtp.FromDisplayName ?? "Sistemas Aries");
+                    mail.To.Add(new MailAddress(usuario.ToAddress));
+                    if (!string.IsNullOrWhiteSpace(usuario.CcAddress))
+                        mail.CC.Add(new MailAddress(usuario.CcAddress));
+                    mail.Subject = usuario.Subject;
+                    mail.IsBodyHtml = true;
+                    mail.Body = $"<html><nav><h1>{usuario.Title}</h1><span>{usuario.Body}</span><h6></h6></nav></html>";
+                    await client.SendMailAsync(mail).ConfigureAwait(false);
+                    return true;
+                }
             }
             catch (Exception)
             {

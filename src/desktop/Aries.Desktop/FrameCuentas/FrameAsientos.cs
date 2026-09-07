@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using AriesContador.Core;
 using AriesContador.Core.Models.JournalEntries;
@@ -85,17 +86,17 @@ namespace Aries.Desktop.FrameCuentas
             splitContainerAsientos.SplitterDistance = Math.Max(minLeft, Math.Min(desired, maxLeft));
         }
 
-        private void FrameAsientos_Load(object sender, EventArgs e)
+        private async void FrameAsientos_Load(object sender, EventArgs e)
         {
             ConfigExchangeController(GlobalConfig.Company.CurrencyType);
-            LoadAccountingPeriodList();
+            await LoadAccountingPeriodListAsync();
         }
 
-        private void LoadAccountingPeriodList()
+        private async Task LoadAccountingPeriodListAsync()
         {
             try
             {
-                var lstResult = _financialService.GetPostingPeriods(GlobalConfig.Company.Code); 
+                var lstResult = await _financialService.GetPostingPeriodsAsync(GlobalConfig.Company.Code); 
                 lstMesesAbiertos.DataSource = lstResult.OrderByDescending(p => p.Date).ToList();
 
                 lstTipoCambio.SelectedIndex = 0;
@@ -146,9 +147,9 @@ namespace Aries.Desktop.FrameCuentas
             //}
         }
 
-        private IEnumerable<JournalEntry> ConfigAsientoBorrador(IEnumerable<JournalEntry> asientos)
+        private async Task<IEnumerable<JournalEntry>> ConfigAsientoBorradorAsync(IEnumerable<JournalEntry> asientos)
         {
-            var newEntryNum = _financialService.CreateJournalEntryConsecutive(PostingPeriodSelected.Id);
+            var newEntryNum = await _financialService.CreateJournalEntryConsecutiveAsync(PostingPeriodSelected.Id);
 
             var newJEnt = new JournalEntry()
             {
@@ -166,12 +167,17 @@ namespace Aries.Desktop.FrameCuentas
             return jEntries.OrderByDescending(x => x.Number).ToArray();
         }
 
-        private void LstMesesAbiertos_SelectedIndexChanged(object sender, EventArgs e)
+        private async void LstMesesAbiertos_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            await OnPeriodSelectedAsync();
+        }
+
+        private async Task OnPeriodSelectedAsync()
         {
             if (EqualDebAndCredONJournalEntry())
             {
-                var lst = _financialService.GetJournalEntries(PostingPeriodSelected.Id);
-                lstNumeroAsientos.DataSource = ConfigAsientoBorrador(lst);
+                var lst = await _financialService.GetJournalEntriesAsync(PostingPeriodSelected.Id);
+                lstNumeroAsientos.DataSource = await ConfigAsientoBorradorAsync(lst);
                 this.PreventMesesAbiertosIndex = lstMesesAbiertos.SelectedIndex;
             }
             else
@@ -185,7 +191,7 @@ namespace Aries.Desktop.FrameCuentas
 
 
         #region CRUD JournalEntry
-        private void btnNuevoAsiento_Click(object sender, EventArgs e)
+        private async void btnNuevoAsiento_Click(object sender, EventArgs e)
         {
             try
             {
@@ -193,9 +199,9 @@ namespace Aries.Desktop.FrameCuentas
                 
                 if (_journalEntry.Id == 0)
                 {
-                    _financialService.CreateJournalEntry(_journalEntry);
+                    await _financialService.CreateJournalEntryAsync(_journalEntry);
                 }
-                LstMesesAbiertos_SelectedIndexChanged(null, null);
+                await OnPeriodSelectedAsync();
 
             }
             catch (Exception ex)
@@ -208,7 +214,7 @@ namespace Aries.Desktop.FrameCuentas
 
         #region JournalEntryLine
 
-        private void DeleteJournalEntryLine_Event_Click(object sender, EventArgs e)
+        private async void DeleteJournalEntryLine_Event_Click(object sender, EventArgs e)
         {
             var selectedRows = this.GridDatos.SelectedRows;
 
@@ -217,8 +223,8 @@ namespace Aries.Desktop.FrameCuentas
                 if (MessageBox.Show($"Se van a eliminar {selectedRows.Count} elementos ¿Desea continuar?",
                     TextoGeneral.NombreApp, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
-                    DeleteTransactions(selectedRows);
-                    ValidateEqualDebAndCred();
+                    await DeleteTransactionsAsync(selectedRows);
+                    await ValidateEqualDebAndCredAsync();
                     UpdateView();
                     RemoveAccountOnEdit();
                 }
@@ -230,20 +236,20 @@ namespace Aries.Desktop.FrameCuentas
             }
         }
 
-        private void ValidateEqualDebAndCred()
+        private async Task ValidateEqualDebAndCredAsync()
         {
             _journalEntry.ApplyStatusFromBalance();
-            _financialService.UpdateJournalEntry(_journalEntry);
+            await _financialService.UpdateJournalEntryAsync(_journalEntry);
         }
 
-        private void DeleteTransactions(DataGridViewSelectedRowCollection selectedRows)
+        private async Task DeleteTransactionsAsync(DataGridViewSelectedRowCollection selectedRows)
         {
             try
             {
                 for (int i = 0; i < selectedRows.Count; i++)
                 {
                     var jEnL = (JournalEntryLine) selectedRows[i].Tag;
-                    _financialService.DeleteJournalEntryLine(jEnL);
+                    await _financialService.DeleteJournalEntryLineAsync(jEnL);
                     _journalEntry.JournalEntryLines.Remove(jEnL);
                 }
             }
@@ -282,7 +288,7 @@ namespace Aries.Desktop.FrameCuentas
             return jELine;
         }
 
-        private void BtnAgregarTransaccion(object sender, EventArgs e)
+        private async void BtnAgregarTransaccion(object sender, EventArgs e)
         {
             try
             {
@@ -291,19 +297,22 @@ namespace Aries.Desktop.FrameCuentas
                     if (ValidateChildren())
                     {
                         var newJEntry = CreateJournalEntryLineModel();
-                        if (_journalEntry.Id == 0)
+                        await UiBusy.Run(this, async () =>
                         {
-                            _journalEntry.JournalEntryLines.Add(newJEntry);
-                            _financialService.CreateJournalEntry(_journalEntry);
-                        }
-                        else
-                        {
-                            newJEntry.JournalEntryId = _journalEntry.Id;
-                            _financialService.CreateJournalEntryLine(newJEntry);
-                            _journalEntry.JournalEntryLines.Add(newJEntry);
-                        }
+                            if (_journalEntry.Id == 0)
+                            {
+                                _journalEntry.JournalEntryLines.Add(newJEntry);
+                                await _financialService.CreateJournalEntryAsync(_journalEntry);
+                            }
+                            else
+                            {
+                                newJEntry.JournalEntryId = _journalEntry.Id;
+                                await _financialService.CreateJournalEntryLineAsync(newJEntry);
+                                _journalEntry.JournalEntryLines.Add(newJEntry);
+                            }
 
-                        UpdateJournalEntryState();
+                            await UpdateJournalEntryStateAsync();
+                        });
 
                         _journalEntryLineOnEdit = new JournalEntryLine();
                         this.LimpiarPanelDatosAsiento();
@@ -326,20 +335,20 @@ namespace Aries.Desktop.FrameCuentas
 
         }
 
-        private void UpdateJournalEntryState()
+        private async Task UpdateJournalEntryStateAsync()
         {
             _journalEntry.ApplyStatusFromBalance();
-            _financialService.UpdateJournalEntry(_journalEntry);
+            await _financialService.UpdateJournalEntryAsync(_journalEntry);
         }
 
-        private void LstNumeroAsientos_SelectedIndexChanged(object sender, EventArgs e)
+        private async void LstNumeroAsientos_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (EqualDebAndCredONJournalEntry())
             {
                 _journalEntry = (JournalEntry) lstNumeroAsientos.SelectedItem;
                 if (_journalEntry.Id != 0)
                 {
-                    var journalEntryLines = _financialService.GetJournalEntryLineByJournalEntryId(_journalEntry.Id);
+                    var journalEntryLines = await _financialService.GetJournalEntryLineByJournalEntryIdAsync(_journalEntry.Id);
                     _journalEntry.JournalEntryLines = journalEntryLines.ToList();
                 }
 
@@ -384,7 +393,7 @@ namespace Aries.Desktop.FrameCuentas
             }
         }
 
-        private void BtnEliminar_Click(object sender, EventArgs e)
+        private async void BtnEliminar_Click(object sender, EventArgs e)
         {
             try
             {
@@ -396,11 +405,11 @@ namespace Aries.Desktop.FrameCuentas
                 else if (MessageBox.Show("Se eliminara este asiento desea continuar", TextoGeneral.NombreApp,
                     MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
-                    _financialService.DeleteJournalEntry(_journalEntry);
+                    await _financialService.DeleteJournalEntryAsync(_journalEntry);
                     MessageBox.Show("Asiento eliminado correctamente", TextoGeneral.NombreApp, MessageBoxButtons.OK,
                         MessageBoxIcon.Information);
                     _journalEntry = null;
-                    FrameAsientos_Load(null,null);
+                    await LoadAccountingPeriodListAsync();
                     SetDiferenciaLabel();
                     
                 }
@@ -411,7 +420,7 @@ namespace Aries.Desktop.FrameCuentas
                     MessageBoxIcon.Exclamation);
             }
         }
-        private void btnEditarLinea_Click(object sender, EventArgs e)
+        private async void btnEditarLinea_Click(object sender, EventArgs e)
         {
             var adummy = this.GridDatos.SelectedRows;
 
@@ -422,7 +431,7 @@ namespace Aries.Desktop.FrameCuentas
             else
             {
                 var dummy = (JournalEntryLine)this.GridDatos.SelectedRows[0].Tag;
-                CargarDatosPanelTransaction(dummy);
+                await CargarDatosPanelTransactionAsync(dummy);
                 //btnAgregarTransa.Text = "Actualizar";
                 btnAgregarTransa.Visible = false; 
                 btnUpdateJELine.Visible = true; 
@@ -430,7 +439,7 @@ namespace Aries.Desktop.FrameCuentas
 
 
         }
-        private void btnUpdateJELine_Click(object sender, EventArgs e)
+        private async void btnUpdateJELine_Click(object sender, EventArgs e)
         {
             if (ValidateChildren())
             {
@@ -441,13 +450,16 @@ namespace Aries.Desktop.FrameCuentas
 
                 try
                 {
-                    _financialService.UpdateJournalEntryLine(jenLine);
+                    await UiBusy.Run(this, async () =>
+                    {
+                        await _financialService.UpdateJournalEntryLineAsync(jenLine);
 
-                    var index = _journalEntry.JournalEntryLines.IndexOf(_journalEntryLineOnEdit);
-                    _journalEntry.JournalEntryLines.Remove(_journalEntryLineOnEdit);
-                    _journalEntry.JournalEntryLines.Insert(index, jenLine);
+                        var index = _journalEntry.JournalEntryLines.IndexOf(_journalEntryLineOnEdit);
+                        _journalEntry.JournalEntryLines.Remove(_journalEntryLineOnEdit);
+                        _journalEntry.JournalEntryLines.Insert(index, jenLine);
 
-                    UpdateJournalEntryState();
+                        await UpdateJournalEntryStateAsync();
+                    });
                     this.LimpiarPanelDatosAsiento();
                     txtBoxReferencia.Focus();
                     btnUpdateJELine.Visible = false; 
@@ -555,7 +567,7 @@ namespace Aries.Desktop.FrameCuentas
                 this.txtDiferenciaSaldo.Visible = false;
             }
         }
-        private void BtnLimpiar_Click(object sender, EventArgs e)
+        private async void BtnLimpiar_Click(object sender, EventArgs e)
         {
             if (EqualDebAndCredONJournalEntry())
             {
@@ -573,7 +585,12 @@ namespace Aries.Desktop.FrameCuentas
                 btnAgregarTransa.Text = "Agregar";
                 if (_journalEntry.Id != 0)
                 {
-                    btnNuevoAsiento_Click(null, null);
+                    lstNumeroAsientos.SelectedIndex = 0;
+                    if (_journalEntry.Id == 0)
+                    {
+                        await _financialService.CreateJournalEntryAsync(_journalEntry);
+                    }
+                    await OnPeriodSelectedAsync();
                 }
             }
         }
@@ -590,12 +607,12 @@ namespace Aries.Desktop.FrameCuentas
             btnAgregarTransa.Text = "Agregar";
         }
 
-        private void CargarDatosPanelTransaction(JournalEntryLine dummy)
+        private async Task CargarDatosPanelTransactionAsync(JournalEntryLine dummy)
         {
 
             _journalEntryLineOnEdit = dummy;
 
-            var account = _financialService.FindAccount(dummy.AccountId);
+            var account = await _financialService.FindAccountAsync(dummy.AccountId);
 
             var accountDTO = new Cuenta()
             {
@@ -955,12 +972,12 @@ namespace Aries.Desktop.FrameCuentas
             return EqualDebAndCredONJournalEntry(); 
         }
 
-        private void BtnRefreshGrid(object sender, EventArgs e)
+        private async void BtnRefreshGrid(object sender, EventArgs e)
         {
             _journalEntry = (JournalEntry)lstNumeroAsientos.SelectedItem;
             if(_journalEntry != null && _journalEntry.Id != 0)
             {
-                var lstEntryLines = _financialService.GetJournalEntryLineByJournalEntryId(_journalEntry.Id);
+                var lstEntryLines = await _financialService.GetJournalEntryLineByJournalEntryIdAsync(_journalEntry.Id);
                 _journalEntry.JournalEntryLines = lstEntryLines.ToList();
             }
 

@@ -37,9 +37,9 @@ namespace Aries.Desktop.Reportes
             _financialReportService = financialReportService;
         }
 
-        private void ReporteEstadoResultadoIntegral_Load(object sender, EventArgs e)
+        private async void ReporteEstadoResultadoIntegral_Load(object sender, EventArgs e)
         {
-            this.PostingPeriods = _financialService.GetPostingPeriods(GlobalConfig.Company.Code).ToList();
+            this.PostingPeriods = (await _financialService.GetPostingPeriodsAsync(GlobalConfig.Company.Code)).ToList();
             this.lstStarPeriod.DataSource = PostingPeriods.DeepClone(); 
         }
 
@@ -49,9 +49,9 @@ namespace Aries.Desktop.Reportes
             lstEndPeriod.DataSource = PostingPeriods.GetOlder(starMonth.Date); 
         }
 
-        private void lstEndPeriod_SelectedIndexChanged(object sender, EventArgs e)
+        private async void lstEndPeriod_SelectedIndexChanged(object sender, EventArgs e)
         {
-            var report = ReporteEstadoResultadoIntegralData();
+            var report = await ReporteEstadoResultadoIntegralDataAsync();
             var dt = ToDataTable(report.Results, report.TotalPeridaGanancia);
             
             GridDatos.DataSource = dt;
@@ -63,7 +63,7 @@ namespace Aries.Desktop.Reportes
             ConfigGridColumns();
         }
 
-        private ResultReportEstadoResultadoIntegral ReporteEstadoResultadoIntegralData()
+        private async Task<ResultReportEstadoResultadoIntegral> ReporteEstadoResultadoIntegralDataAsync()
         {
             var firstDate = lstStarPeriod.SelectedItem as PostingPeriod;
             var endDate = lstEndPeriod.SelectedItem as PostingPeriod;
@@ -75,7 +75,7 @@ namespace Aries.Desktop.Reportes
                 EndDate = $"{endDate.Date.Year}{string.Format("{0, 0:D2}", endDate.Date.Month)}"
             };
 
-            var output = _financialReportService.EstadoResultadoIntegral(reportParamns);
+            var output = await _financialReportService.EstadoResultadoIntegralAsync(reportParamns);
             return output;
         }
 
@@ -159,7 +159,7 @@ namespace Aries.Desktop.Reportes
 
         #region
 
-        private void btnExcel_Click(object sender, EventArgs e)
+        private async void btnExcel_Click(object sender, EventArgs e)
         {
             try
             {
@@ -174,8 +174,8 @@ namespace Aries.Desktop.Reportes
                             EndDate = lstEndPeriod.SelectedItem as PostingPeriod,
                             UserName = GlobalConfig.Usuario.ToString()
                         };
-                        var actionReport = new ReportResultadoIntegralActions(_financialReportService, param, sfd.FileName); 
-                        Task.Run(async ()=> { await actionReport.Execute();  } );
+                        var actionReport = new ReportResultadoIntegralActions(_financialReportService, param, sfd.FileName);
+                        await actionReport.Execute();
                     }
                 }
             }

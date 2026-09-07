@@ -3,6 +3,7 @@ using AriesContador.Core.Models.Users;
 using AriesContador.Core.Services;
 using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Aries.Desktop
@@ -18,7 +19,7 @@ namespace Aries.Desktop
             _administrationService = administrationService;
         }
 
-        private void btnAceptar_Click(object sender, EventArgs e)
+        private async void btnAceptar_Click(object sender, EventArgs e)
         {
             try
             {
@@ -28,12 +29,12 @@ namespace Aries.Desktop
                     Password = txtBoxClave.Text
                 };
 
-                var token = _administrationService.Login(param);
+                var token = await _administrationService.LoginAsync(param);
 
                 if (token.Token != null && token.User != null)
                 {
                     EnvironmentVariable.ApiToken = token;
-                    GlobalConfig.User = token.User;
+                    await GlobalConfig.SetUserAsync(token.User);
                     this.Close();
                 }
                 else

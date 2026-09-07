@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using AriesContador.Core;
 using AriesContador.Core.Models.PostingPeriods;
@@ -36,9 +37,9 @@ namespace Aries.Desktop.Reportes
             _financialReportService = financialReportService;
         }
 
-        private void FrameReporteComprobacion_Load(object sender, EventArgs e)
+        private async void FrameReporteComprobacion_Load(object sender, EventArgs e)
         {
-            var lstPostingPe = _financialService.GetPostingPeriods(GlobalConfig.Company.Code).ToList();
+            var lstPostingPe = (await _financialService.GetPostingPeriodsAsync(GlobalConfig.Company.Code)).ToList();
 
             this.PostingPeriods = lstPostingPe;
             var lstP = lstPostingPe.OrderBy(p => p.Date);
@@ -51,9 +52,9 @@ namespace Aries.Desktop.Reportes
             this.FromPeriod.DataSource = lstPostingPe.ToArray();
         }
 
-        private void FromPeriod_SelectedIndexChanged(object sender, EventArgs e)
+        private async void FromPeriod_SelectedIndexChanged(object sender, EventArgs e)
         {
-            var report = JournalEntryReports();
+            var report = await JournalEntryReportsAsync();
             var dt = ToDataTable(report);
             GridDatos.DataSource = dt;
             foreach (DataGridViewColumn col in GridDatos.Columns)
@@ -121,9 +122,9 @@ namespace Aries.Desktop.Reportes
             GridDatos.Columns[nameof(BalanceComprobacionReport.Account)].Visible = false;
         }
 
-        private void ExportToExcel(string path)
+        private async Task ExportToExcelAsync(string path)
         {
-            var output = ToDataTable(JournalEntryReports());
+            var output = ToDataTable(await JournalEntryReportsAsync());
 
             using (var workbook = new XLWorkbook())
             {
@@ -196,7 +197,7 @@ namespace Aries.Desktop.Reportes
             worksheet.Column(_accountTreeDeep + 1).Delete();
         }
 
-        private IEnumerable<BalanceComprobacionReport> JournalEntryReports()
+        private async Task<IEnumerable<BalanceComprobacionReport>> JournalEntryReportsAsync()
         {
             var firstDate = ToPeriod.SelectedItem as PostingPeriod;
             var endDate = FromPeriod.SelectedItem as PostingPeriod;
@@ -208,11 +209,11 @@ namespace Aries.Desktop.Reportes
                 EndDate = $"{endDate.Date.Year}{string.Format("{0, 0:D2}", endDate.Date.Month)}"
             };
 
-            var output = _financialReportService.BalanceComprobacionReport(reportParamns);
+            var output = await _financialReportService.BalanceComprobacionReportAsync(reportParamns);
             return output;
         }
 
-        private void BtnExcel_Click(object sender, EventArgs e)
+        private async void BtnExcel_Click(object sender, EventArgs e)
         {
             try
             {
@@ -220,7 +221,7 @@ namespace Aries.Desktop.Reportes
                 {
                     if (sfd.ShowDialog() == DialogResult.OK)
                     {
-                        ExportToExcel(sfd.FileName);
+                        await ExportToExcelAsync(sfd.FileName);
                     }
                 }
             }

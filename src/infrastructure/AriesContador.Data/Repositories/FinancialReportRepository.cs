@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using AriesContador.Core.Models.Accounts;
+using AriesContador.Core.Models.JournalEntries;
+using AriesContador.Core.Models.PostingPeriods;
+using AriesContador.Core.Models.Reports;
+using AriesContador.Core.Models.Utils;
 using AriesContador.Core.Repositories;
 using AriesContador.Data.Internal.DataAccess;
-using System.Linq;
-using AriesContador.Core.Models.Accounts;
-using AriesContador.Core.Models.PostingPeriods;
-using AriesContador.Core.Models.Utils;
-using AriesContador.Core.Models.JournalEntries;
-using AriesContador.Core.Models.Reports;
 
 namespace AriesContador.Data.Repositories
 {
@@ -17,38 +16,37 @@ namespace AriesContador.Data.Repositories
         private readonly IConnectionString _connectionString;
         public FinancialReportRepository(IConnectionString connectionString)
         {
-            this._connectionString = connectionString;
+            _connectionString = connectionString;
         }
 
-
-        public IEnumerable<JournalEntryReport> JournalEntryReport(BasicReportParam jEParams)
+        public async Task<IEnumerable<JournalEntryReport>> JournalEntryReportAsync(BasicReportParam jEParams, CancellationToken cancellationToken = default)
         {
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            IEnumerable<JournalEntryReport> output = dataAccess.LoadData<JournalEntryReport, BasicReportParam>("SP_JournalEntryReportByDateRange", jEParams);
-            return output;
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            return await dataAccess.LoadDataAsync<JournalEntryReport, BasicReportParam>("SP_JournalEntryReportByDateRange", jEParams, cancellationToken)
+                .ConfigureAwait(false);
         }
 
-        public IEnumerable<Account> EstadoResultadoIntegralAccounts(BasicReportParam reportParam)
+        public async Task<IEnumerable<Account>> EstadoResultadoIntegralAccountsAsync(BasicReportParam reportParam, CancellationToken cancellationToken = default)
         {
-            MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
-            var output = dataAccess.LoadData<Account, BasicReportParam>("SP_EstadoResultadoIntegralReport", reportParam);
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            var output = await dataAccess.LoadDataAsync<Account, BasicReportParam>("SP_EstadoResultadoIntegralReport", reportParam, cancellationToken)
+                .ConfigureAwait(false);
             output.BuildAccountsBalance();
             return output.OrderByDescTree();
-            //return output;
         }
 
-        public IEnumerable<PostingPeriodInfo> PostingPeriodReport(string companyId)
+        public async Task<IEnumerable<PostingPeriodInfo>> PostingPeriodReportAsync(string companyId, CancellationToken cancellationToken = default)
         {
-            var dataAcces = new MySqlDataAccess(_connectionString);
-            var output = dataAcces.LoadData<PostingPeriodInfo, dynamic>("SP_GetPostingPeriodReport", new {CompanyId = companyId});
-            return output; 
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            return await dataAccess.LoadDataAsync<PostingPeriodInfo, dynamic>("SP_GetPostingPeriodReport", new { CompanyId = companyId }, cancellationToken)
+                .ConfigureAwait(false);
         }
 
-        public IEnumerable<ClosingPostingPeriodReport> ClosingPostingPeriodReport(string companyId)
+        public async Task<IEnumerable<ClosingPostingPeriodReport>> ClosingPostingPeriodReportAsync(string companyId, CancellationToken cancellationToken = default)
         {
-            var dataAcces = new MySqlDataAccess(_connectionString);
-            var output = dataAcces.LoadData<ClosingPostingPeriodReport, dynamic>("SP_GetClosingPostingPeriodReport", new { CompanyId = companyId });
-            return output;
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            return await dataAccess.LoadDataAsync<ClosingPostingPeriodReport, dynamic>("SP_GetClosingPostingPeriodReport", new { CompanyId = companyId }, cancellationToken)
+                .ConfigureAwait(false);
         }
     }
 }

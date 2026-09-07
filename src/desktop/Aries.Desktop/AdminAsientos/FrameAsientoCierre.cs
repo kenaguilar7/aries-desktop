@@ -4,13 +4,13 @@ using AriesContador.Core.Services;
 using Aries.Reporting.Entidades.Cuentas;
 using Aries.Reporting.Interfaces;
 using Aries.Reporting.Textos;
-using Aries.Desktop.cods;
 using Aries.Desktop.FrameCuentas;
+using Aries.Desktop.Utils;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Aries.Desktop.AdminAsientos
@@ -28,12 +28,17 @@ namespace Aries.Desktop.AdminAsientos
             _financialService = financialService;
             _financialReportService = financialReportService;
             InitializeComponent();
-            CargarDatos();
+            Load += FrameAsientoCierre_Load;
         }
 
-        private void CargarDatos()
+        private async void FrameAsientoCierre_Load(object sender, EventArgs e)
         {
-            _periodos = _financialService.GetPostingPeriods(GlobalConfig.Company.Code)
+            await CargarDatosAsync();
+        }
+
+        private async Task CargarDatosAsync()
+        {
+            _periodos = (await _financialService.GetPostingPeriodsAsync(GlobalConfig.Company.Code))
                 .Where(p => !p.Closed)
                 .OrderBy(p => p.Date)
                 .ToList();
@@ -51,12 +56,12 @@ namespace Aries.Desktop.AdminAsientos
             return table;
         }
 
-        private void btnCerrarPeriodo_Click(object sender, EventArgs e)
+        private async void btnCerrarPeriodo_Click(object sender, EventArgs e)
         {
-            VerificarMesesPorCerrar();
+            await VerificarMesesPorCerrarAsync();
         }
 
-        private void VerificarMesesPorCerrar()
+        private async Task VerificarMesesPorCerrarAsync()
         {
             var fechaCierre = lstAbrirMes.SelectedItem as PostingPeriod;
             if (fechaCierre == null)
@@ -73,17 +78,7 @@ namespace Aries.Desktop.AdminAsientos
             if (MessageBox.Show($"Se realizara cierre de los siguientes meses: {string.Join(", ", meses)}, ¿Desea continuar?",
                   TextoGeneral.NombreApp, MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
-                CerrarMesesPendientes(meses);
-            }
-        }
-
-        private void CerrarMesesPendientes(IEnumerable<PostingPeriod> meses)
-        {
-            if (!backgroundWorker.IsBusy)
-            {
-                var f = (FrameMenu)this.MdiParent;
-                f.Bar = true;
-                backgroundWorker.RunWorkerAsync(meses);
+                await CerrarMesesPendientesAsync(meses);
             }
         }
 
@@ -93,16 +88,20 @@ namespace Aries.Desktop.AdminAsientos
             this.Close();
         }
 
-        private void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)
+        private async Task CerrarMesesPendientesAsync(IEnumerable<PostingPeriod> meses)
         {
+            var f = (FrameMenu)this.MdiParent;
+            if (f != null)
+                f.Bar = true;
+            btnCerrarPeriodo.Enabled = false;
             try
             {
-                using (new CursorWait(applicationCursor: true, appStarting: true))
+                await UiBusy.Run(this, async () =>
                 {
-                    var meses = ((IEnumerable<PostingPeriod>)e.Argument).OrderBy(x => x.Date).ToList();
-                    var fromDate = meses.First();
-                    var toDate = meses.Last();
-                    foreach (var period in meses)
+                    var ordered = meses.OrderBy(x => x.Date).ToList();
+                    var fromDate = ordered.First();
+                    var toDate = ordered.Last();
+                    foreach (var period in ordered)
                     {
                         period.Closed = true;
                         period.UpdatedBy = GlobalConfig.User != null ? GlobalConfig.User.Id : 0;
@@ -114,9 +113,9 @@ namespace Aries.Desktop.AdminAsientos
                         FirstDate = $"{fromDate.Date.Year}{string.Format("{0, 0:D2}", fromDate.Date.Month)}",
                         EndDate = $"{toDate.Date.Year}{string.Format("{0, 0:D2}", toDate.Date.Month)}"
                     };
-                    var amount = _financialReportService.PreviousClosurePostingPeriodBalance(reportParamns);
+                    var amount = await _financialReportService.PreviousClosurePostingPeriodBalanceAsync(reportParamns);
 
-                    _financialService.ClosePostingPeriod(new PostingPeriodEndClosing
+                    await _financialService.ClosePostingPeriodAsync(new PostingPeriodEndClosing
                     {
                         CompanyId = GlobalConfig.Company.Code,
                         FromPeriodId = fromDate.Id,
@@ -124,26 +123,24 @@ namespace Aries.Desktop.AdminAsientos
                         FromPeriod = fromDate.ToString(),
                         ToPeriod = toDate.ToString(),
                         Amount = amount.Amount,
-                        PostingPeriods = meses,
+                        PostingPeriods = ordered,
                         UpdatedBy = GlobalConfig.User != null ? GlobalConfig.User.Id : 0
                     });
-                }
+                });
+
+                await CargarDatosAsync();
+                MessageBox.Show("Se ha cerrado el periodo exitosamente", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                backgroundWorker.CancelAsync();
                 MessageBox.Show(ex.Message, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-        }
-
-        private void backgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
-        {
-        }
-
-        private void backgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            CargarDatos();
-            MessageBox.Show("Se ha cerrado el periodo exitosamente", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            finally
+            {
+                btnCerrarPeriodo.Enabled = true;
+                if (f != null)
+                    f.Bar = false;
+            }
         }
 
         private void btnSeleccionarCuenta_Click(object sender, EventArgs e)

@@ -1,4 +1,6 @@
 using System.Data;
+using System.Threading;
+using System.Threading.Tasks;
 using AriesContador.Core.Models.Email;
 using AriesContador.Core.Repositories;
 using AriesContador.Data.Internal.DataAccess;
@@ -14,20 +16,20 @@ namespace AriesContador.Data.Repositories
             _connectionString = connectionString;
         }
 
-        public DataTable GetLog()
+        public Task<DataTable> GetLogAsync(CancellationToken cancellationToken = default)
         {
             const string sql = "select nombre,apellido,correo_electronico,correo_copia,asunto,titulo,mensaje,estado,ultimo_envio from usuarios_correo order by mailusuario_id desc";
             var dataAccess = new MySqlDataAccess(_connectionString);
-            return dataAccess.QueryTable(sql, new { });
+            return dataAccess.QueryTableAsync(sql, new { }, cancellationToken);
         }
 
-        public bool Insert(MailMessageLog message)
+        public async Task<bool> InsertAsync(MailMessageLog message, CancellationToken cancellationToken = default)
         {
             const string sql = "insert into usuarios_correo (nombre,apellido,correo_electronico,correo_copia,asunto,titulo,mensaje,estado) "
                                + "VALUES(@FirstName, @LastName, @ToAddress, @CcAddress, @Subject, @Title, @Body, @Estado)";
             var dataAccess = new MySqlDataAccess(_connectionString);
             var estado = message.Sent ? 1 : 2;
-            return dataAccess.ExecuteText(sql, new
+            return await dataAccess.ExecuteTextAsync(sql, new
             {
                 message.FirstName,
                 message.LastName,
@@ -37,7 +39,7 @@ namespace AriesContador.Data.Repositories
                 message.Title,
                 message.Body,
                 Estado = estado
-            }) > 0;
+            }, cancellationToken).ConfigureAwait(false) > 0;
         }
     }
 }

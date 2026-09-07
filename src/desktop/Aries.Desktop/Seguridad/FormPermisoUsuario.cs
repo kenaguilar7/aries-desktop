@@ -34,13 +34,18 @@ namespace Aries.Desktop.Seguridad
             _administrationService = administrationService;
             _permissionService = permissionService;
             InitializeComponent();
-            CargarDatos();
+            Load += FormPermisoUsuario_Load;
         }
 
-        private void CargarDatos()
+        private async void FormPermisoUsuario_Load(object sender, EventArgs e)
+        {
+            await CargarDatosAsync();
+        }
+
+        private async Task CargarDatosAsync()
         {
             ///Cargamos los usuarios,
-            TodosLosUsuarios = _administrationService.GetAllUsers().Select(UserMapper.ToUsuario).ToList();
+            TodosLosUsuarios = (await _administrationService.GetAllUsersAsync()).Select(UserMapper.ToUsuario).ToList();
             lstUsuarios.DataSource = TodosLosUsuarios;
             lstUsuarios.SelectedIndex = -1;
         }
@@ -78,17 +83,18 @@ namespace Aries.Desktop.Seguridad
         /// Cargar los datos del usuario seleccionado
         /// </summary>
         /// <param name="usuario"></param>
-        private void CargarUsuario(Usuario usuario)
+        private async Task CargarUsuarioAsync(Usuario usuario)
         {
 
             ///Traigo todas las compañias que el usuario tenga asignado
             listCompañiasAsignadas.Items.Clear();
             listCompañiasSinAsignar.Items.Clear();
 
-            TodasLasCompañias = _administrationService.GetAllCompanies().GetAwaiter().GetResult().ToList();
-            var target = _administrationService.GetAllUsers().FirstOrDefault(u => u.Id.ToString() == usuario.UsuarioId)
-                         ?? new User { Id = int.TryParse(usuario.UsuarioId, out var parsed) ? parsed : usuario.Id, UserType = (UserType)usuario.TipoUsuario };
-            CompañiasDelUsuario = _administrationService.GetAllCompanies(target).GetAwaiter().GetResult().ToList();
+            TodasLasCompañias = (await _administrationService.GetAllCompaniesAsync()).ToList();
+            var targetId = int.TryParse(usuario.UsuarioId, out var parsedId) ? parsedId : usuario.Id;
+            var target = await _administrationService.FinUserByIdAsync(targetId)
+                         ?? new User { Id = targetId, UserType = (UserType)usuario.TipoUsuario };
+            CompañiasDelUsuario = (await _administrationService.GetAllCompaniesAsync(target)).ToList();
 
             ///Buscamos todas las compañias
             TodasLasCompañias.ForEach((Compañia) =>
@@ -105,21 +111,21 @@ namespace Aries.Desktop.Seguridad
                 }
 
             });
-            CargarModulos();
+            await CargarModulosAsync();
         }
         /// <summary>
         /// Evento que ocurre cuando la lista que contiene los usuarios cambia de indice
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void LstUsuarios_SelectedIndexChanged(object sender, EventArgs e)
+        private async void LstUsuarios_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (this.Visible)
             {
                 var user = (Usuario)lstUsuarios.SelectedItem;
                 if (user != null)
                 {
-                    CargarUsuario(user);
+                    await CargarUsuarioAsync(user);
                 }
                 else
                 {
@@ -132,7 +138,7 @@ namespace Aries.Desktop.Seguridad
         /// y selecciona los asignados al usuario
         /// y los que no tiene asignados
         /// </summary>
-        private void CargarModulos()
+        private async Task CargarModulosAsync()
         {
             treeViewModulos.Nodes.Clear();
             var user = (Usuario)lstUsuarios.SelectedItem;
@@ -140,7 +146,7 @@ namespace Aries.Desktop.Seguridad
             ///no ponerlos en la lista
             panelAsignacionModulos.Enabled = (user.TipoUsuario == TipoUsuario.Administrador) ? false : true;
             var userId = int.TryParse(user.UsuarioId, out var parsed) ? parsed : user.Id;
-            modulos = PermissionMapper.ToModulos(_permissionService.GetModules(userId));
+            modulos = PermissionMapper.ToModulos(await _permissionService.GetModulesAsync(userId));
 
             foreach (var item in modulos)
             {
@@ -185,7 +191,7 @@ namespace Aries.Desktop.Seguridad
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void BtnGuardar_Click(object sender, EventArgs e)
+        private async void BtnGuardar_Click(object sender, EventArgs e)
         {
             ///Primero guarda las compañias 
 
@@ -198,9 +204,9 @@ namespace Aries.Desktop.Seguridad
 
                 var targetId = int.TryParse(user.UsuarioId, out var parsed) ? parsed : user.Id;
                 var updaterId = GlobalConfig.User != null ? GlobalConfig.User.Id : 0;
-                _permissionService.AssignCompanies(nuevas.Select(c => c.Code), targetId, updaterId);
-                _permissionService.RemoveCompanies(remover.Select(c => c.Code), targetId, updaterId);
-                _permissionService.UpdateWindowPermissions(PermissionMapper.ToModulePermissions(modulos), targetId, updaterId);
+                await _permissionService.AssignCompaniesAsync(nuevas.Select(c => c.Code), targetId, updaterId);
+                await _permissionService.RemoveCompaniesAsync(remover.Select(c => c.Code), targetId, updaterId);
+                await _permissionService.UpdateWindowPermissionsAsync(PermissionMapper.ToModulePermissions(modulos), targetId, updaterId);
                 var ss = modulos;
                 MessageBox.Show("Usuario actulizado correctamente", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
             }

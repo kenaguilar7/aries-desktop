@@ -1,5 +1,6 @@
 using System;
 using System.Configuration;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using AriesContador.Core;
 using AriesContador.Core.Models.Email;
@@ -22,7 +23,8 @@ namespace Aries.Desktop
 
             try
             {
-                new DatabaseMigrator(GlobalConfig.ConnectionString.MySQLDefault).ApplyPending();
+                new DatabaseMigrator(GlobalConfig.ConnectionString.MySQLDefault)
+                    .ApplyPendingAsync().ConfigureAwait(false).GetAwaiter().GetResult();
             }
             catch (Exception ex)
             {

@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Aries.Desktop.FrameCuentas
@@ -29,8 +30,13 @@ namespace Aries.Desktop.FrameCuentas
         {
             _financialService = financialService;
             InitializeComponent();
-            CargarDatos();
-            CargarDatosAListas();
+            Load += FrameMaestroCuenta_Load;
+        }
+
+        private async void FrameMaestroCuenta_Load(object sender, EventArgs e)
+        {
+            await CargarDatosAsync();
+            await CargarDatosAListasAsync();
         }
 
         protected override void OnShown(EventArgs e)
@@ -84,22 +90,22 @@ namespace Aries.Desktop.FrameCuentas
         }
 
         #region Carga de datos
-        private void CargarDatos()
+        private async Task CargarDatosAsync()
         {
             _lstCuentas.Clear();
             _lstCuentas = CuentaMapper.ToCuentaList(
-                _financialService.GetAccounts(GlobalConfig.Company.Code),
+                await _financialService.GetAccountsAsync(GlobalConfig.Company.Code),
                 GlobalConfig.Company);
             treeCuentas.Nodes.AddRange(TreeViewCuentas.CrearTreeView(_lstCuentas));
         }
 
-        private void CargarDatosAListas()
+        private async Task CargarDatosAListasAsync()
         {
             AFechaFinal.SelectedIndexChanged -= this.AFechaFinalSelectedIndexChanged;
             BFechaFinal.SelectedIndexChanged -= this.BFechaFinalSelectedIndexChanged;
 
             _lstFechas = CuentaMapper.ToFechaTransaccionList(
-                _financialService.GetPostingPeriods(GlobalConfig.Company.Code));
+                await _financialService.GetPostingPeriodsAsync(GlobalConfig.Company.Code));
             var lstBfchFnl = new List<FechaTransaccion> { (from c1 in _lstFechas select c1).OrderByDescending(x => x.Fecha).LastOrDefault() };
             AFechaInicio.DataSource = lstBfchFnl;
             AFechaFinal.DataSource = (from c1 in _lstFechas select c1).ToList();
@@ -132,14 +138,14 @@ namespace Aries.Desktop.FrameCuentas
             }
         }
 
-        private void FillBalances(DateTime par1, DateTime par2)
+        private async Task FillBalancesAsync(DateTime par1, DateTime par2)
         {
             var accounts = _lstCuentas.Select(CuentaMapper.ToAccount).ToList();
-            _financialService.FillAccountsWithBalances(accounts, par1, par2);
+            await _financialService.FillAccountsWithBalancesAsync(accounts, par1, par2);
             CuentaMapper.CopyBalancesToCuentas(accounts, _lstCuentas);
         }
 
-        private void CargarDatosPanelA()
+        private async Task CargarDatosPanelAAsync()
         {
             if (AFechaFinal.SelectedIndex == -1)
             {
@@ -150,11 +156,11 @@ namespace Aries.Desktop.FrameCuentas
             DateTime par1 = new DateTime(fch1.Year, fch1.Month, 1);
             DateTime par2 = new DateTime(fch2.Year, fch2.Month, 1);
             par2 = (par2.AddMonths(1)).AddDays(-1);
-            FillBalances(par1, par2);
+            await FillBalancesAsync(par1, par2);
             CargarGridA();
         }
 
-        private void CargarDatosPanelB()
+        private async Task CargarDatosPanelBAsync()
         {
             if (BFechaFinal.SelectedIndex == -1)
             {
@@ -165,7 +171,7 @@ namespace Aries.Desktop.FrameCuentas
             DateTime par1 = new DateTime(fch1.Year, fch1.Month, 1);
             DateTime par2 = new DateTime(fch2.Year, fch2.Month, 1);
             par2 = (par2.AddMonths(1)).AddDays(-1);
-            FillBalances(par1, par2);
+            await FillBalancesAsync(par1, par2);
             CargarGridB();
         }
         #endregion
@@ -224,7 +230,7 @@ namespace Aries.Desktop.FrameCuentas
             }
         }
 
-        private void GuardarNuevoNombre(object sender, EventArgs e)
+        private async void GuardarNuevoNombre(object sender, EventArgs e)
         {
             try
             {
@@ -233,7 +239,7 @@ namespace Aries.Desktop.FrameCuentas
                 cEdita.Nombre = txtNombreInfo.Text;
                 var account = CuentaMapper.ToAccount(cEdita);
                 account.UpdatedBy = GlobalConfig.Usuario.Id;
-                _financialService.UpdateAccount(account);
+                await _financialService.UpdateAccountAsync(account);
                 MessageBox.Show(AccountRules.UpdateSuccessMessage, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
                 treeCuentas.SelectedNode.Text = cEdita.Nombre;
 
@@ -255,26 +261,26 @@ namespace Aries.Desktop.FrameCuentas
                 BFechaFinal.DataSource = (from n in _lstFechas where n.Fecha >= inicio.Fecha select n).ToList<FechaTransaccion>();
             }
         }
-        private void TabControlGeneralSelectedIndexChanged(object sender, EventArgs e)
+        private async void TabControlGeneralSelectedIndexChanged(object sender, EventArgs e)
         {
             if (tabControlGeneral.SelectedIndex == 0)
             {
-                CargarDatosPanelA();
+                await CargarDatosPanelAAsync();
             }
             else
             {
-                CargarDatosPanelB();
+                await CargarDatosPanelBAsync();
             }
         }
-        private void AFechaFinalSelectedIndexChanged(object sender, EventArgs e)
+        private async void AFechaFinalSelectedIndexChanged(object sender, EventArgs e)
         {
-            CargarDatosPanelA();
+            await CargarDatosPanelAAsync();
         }
-        private void BFechaFinalSelectedIndexChanged(object sender, EventArgs e)
+        private async void BFechaFinalSelectedIndexChanged(object sender, EventArgs e)
         {
-            CargarDatosPanelB();
+            await CargarDatosPanelBAsync();
         }
-        private void Eliminar_Click(object sender, EventArgs e)
+        private async void Eliminar_Click(object sender, EventArgs e)
         {
             if (CuentaActual is null)
             {
@@ -288,7 +294,7 @@ namespace Aries.Desktop.FrameCuentas
                 {
                     var account = CuentaMapper.ToAccount(CuentaActual);
                     account.UpdatedBy = GlobalConfig.Usuario.Id;
-                    _financialService.DeleteAccount(account);
+                    await _financialService.DeleteAccountAsync(account);
                     MessageBox.Show(AccountRules.DeleteSuccessMessage, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
                     _lstCuentas.Remove(CuentaActual);
                     var padre = treeCuentas.SelectedNode.Parent;

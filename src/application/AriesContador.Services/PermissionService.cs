@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using AriesContador.Core;
 using AriesContador.Core.Models.Permissions;
 using AriesContador.Core.Services;
@@ -14,24 +16,24 @@ namespace AriesContador.Services
             _unitOfWork = unitOfWork;
         }
 
-        public IList<ModulePermission> GetModules(int userId)
+        public Task<IList<ModulePermission>> GetModulesAsync(int userId, CancellationToken cancellationToken = default)
         {
-            return _unitOfWork.PermissionRepository.GetModules(userId);
+            return _unitOfWork.PermissionRepository.GetModulesAsync(userId, cancellationToken);
         }
 
-        public bool AssignCompanies(IEnumerable<string> companyCodes, int targetUserId, int updatedByUserId)
+        public Task<bool> AssignCompaniesAsync(IEnumerable<string> companyCodes, int targetUserId, int updatedByUserId, CancellationToken cancellationToken = default)
         {
-            return _unitOfWork.PermissionRepository.AssignCompanies(companyCodes, targetUserId, updatedByUserId);
+            return _unitOfWork.PermissionRepository.AssignCompaniesAsync(companyCodes, targetUserId, updatedByUserId, cancellationToken);
         }
 
-        public bool RemoveCompanies(IEnumerable<string> companyCodes, int targetUserId, int updatedByUserId)
+        public Task<bool> RemoveCompaniesAsync(IEnumerable<string> companyCodes, int targetUserId, int updatedByUserId, CancellationToken cancellationToken = default)
         {
-            return _unitOfWork.PermissionRepository.RemoveCompanies(companyCodes, targetUserId, updatedByUserId);
+            return _unitOfWork.PermissionRepository.RemoveCompaniesAsync(companyCodes, targetUserId, updatedByUserId, cancellationToken);
         }
 
-        public bool UpdateWindowPermissions(IList<ModulePermission> modules, int targetUserId, int updatedByUserId)
+        public Task<bool> UpdateWindowPermissionsAsync(IList<ModulePermission> modules, int targetUserId, int updatedByUserId, CancellationToken cancellationToken = default)
         {
-            return _unitOfWork.PermissionRepository.UpdateWindowPermissions(modules, targetUserId, updatedByUserId);
+            return _unitOfWork.PermissionRepository.UpdateWindowPermissionsAsync(modules, targetUserId, updatedByUserId, cancellationToken);
         }
     }
 }

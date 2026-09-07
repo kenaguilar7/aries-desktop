@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using AriesContador.Core.Models.JournalEntries;
 using AriesContador.Core.Models.PostingPeriods;
@@ -22,23 +23,23 @@ namespace Aries.Desktop.FrameCuentas
             _financialService = financialService;
         }
 
-        private void SwitchAccountEntryPeriod_Load(object sender, EventArgs e)
+        private async void SwitchAccountEntryPeriod_Load(object sender, EventArgs e)
         {
-            var lst = _financialService.GetPostingPeriods(GlobalConfig.Company.Code).OrderByDescending(p => p.Date).ToList();
+            var lst = (await _financialService.GetPostingPeriodsAsync(GlobalConfig.Company.Code)).OrderByDescending(p => p.Date).ToList();
             lst.RemoveAll(p => p.Id == _postingPeriod.Id || p.Closed); 
             this.lstMesesAbiertos.DataSource = lst; 
             this.txtAccountName.Text = _journalEntry.Number.ToString();
             this.txtCurrentPeriod.Text = _postingPeriod.ToString(); 
         }
 
-        private void btnSave_Click(object sender, EventArgs e)
+        private async void btnSave_Click(object sender, EventArgs e)
         {
             this.btnSave.Enabled = false;
             try
             {
                 var pp = lstMesesAbiertos.SelectedItem as PostingPeriod;
                 _journalEntry.PostingPeriodId = pp.Id;
-                _financialService.UpdatedJournalEntryPeriod(_journalEntry);
+                await _financialService.UpdatedJournalEntryPeriodAsync(_journalEntry);
                 FinishProcess.Invoke(_journalEntry,pp);
                 this.Close();
             }
