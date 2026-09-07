@@ -21,6 +21,9 @@ namespace AriesContador.Services
         #region Account
         public IEnumerable<Account> GetAccounts(string companyId)
         {
+            if (companyId == "POR DEFECTO")
+                return _unitOfWork.AccountRepository.GetDefaultAccounts();
+
             var output = _unitOfWork.AccountRepository.FindByCompanyId(companyId);
             return AccountRules.OrderByTree(output);
         }
@@ -206,7 +209,7 @@ namespace AriesContador.Services
 
         public void UpdatePostingPeriod(PostingPeriod postingPeriod)
         {
-            throw new NotImplementedException();
+            _unitOfWork.PostingPeriodRepository.Update(postingPeriod);
         }
         public void ClosePostingPeriod(PostingPeriodEndClosing postingPeriod)
         {
@@ -214,7 +217,7 @@ namespace AriesContador.Services
         }
         public void DeletePostingPeriod(PostingPeriod postingPeriod)
         {
-            throw new NotImplementedException();
+            _unitOfWork.PostingPeriodRepository.Remove(postingPeriod).GetAwaiter().GetResult();
         }
 
         public List<PostingPeriod> GetAvailablePostingPeriodsForBeCreated(string companyId)

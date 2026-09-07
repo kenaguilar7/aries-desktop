@@ -1,0 +1,6 @@
+# Copia a App.Production.local.config (gitignored) en la máquina/pipeline de release.
+# Debe ser un app.config completo (copia App.Production.config y rellena DBconnectionString).
+# El password de RDS no se commitea. Tras rotar credenciales, actualiza solo este archivo local.
+#
+#   Server=<host-rds>;Port=3306;User id=<user>;Password=<rotado>;Database=aries;Allow User Variables=True
+#   HttpBaseUrl=  (vacío: el exe ya no usa EBS para login)

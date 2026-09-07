@@ -27,6 +27,8 @@ namespace AriesContador.Core.Models.Users
         
         public string Memo { get; set; }
 
+        [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
         public string Password { get; set; }
 
         public string CurrentToken { get; set;  }

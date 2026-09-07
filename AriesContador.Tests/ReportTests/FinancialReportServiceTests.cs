@@ -112,14 +112,14 @@ namespace AriesContador.Tests.ReportTests
         }
 
         [Fact]
-        public void AccountMoving_points_to_classic_excel_path()
+        public void GetAccountMovementReport_returns_table()
         {
             var uow = new FakeUnitOfWork();
             var svc = new FinancialReportService(uow);
-            Action call = () => { svc.AccountMoving(); };
 
-            var ex = Assert.Throws<InvalidOperationException>(call);
-            Assert.Contains("CuentaCL.GetInfoCompleta", ex.Message);
+            var table = svc.GetAccountMovementReport(1, true);
+
+            Assert.NotNull(table);
         }
 
         [Fact]

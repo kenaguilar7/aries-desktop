@@ -4,6 +4,7 @@ using AriesContador.Core.Models.Companies;
 using AriesContador.Core.Models.Users;
 using AriesContador.Core.Models.Utils;
 using AriesContador.Services;
+using AriesContador.Services.Security;
 using AriesContador.Tests.Fakes;
 using Xunit;
 
@@ -35,7 +36,47 @@ namespace AriesContador.Tests
 
             Assert.Equal("local", token.Token);
             Assert.Equal("kenneth", token.User.UserName);
+            Assert.Null(token.User.Password);
             Assert.Equal(0, uow.Users.GetAllCalls);
+            Assert.True(PasswordHasher.LooksHashed(uow.Users.Items[0].Password));
+        }
+
+        [Fact]
+        public void Login_verifies_existing_hash_and_does_not_rehash()
+        {
+            var hashed = PasswordHasher.Hash("96321");
+            var uow = new FakeUnitOfWork();
+            uow.Users.Add(new User { UserName = "kenneth", Password = hashed, Active = true, Name = "K" });
+            var svc = new AdministrationService(uow);
+
+            var token = svc.Login(new Login { UserId = "kenneth", Password = "96321" });
+
+            Assert.Equal("local", token.Token);
+            Assert.Equal(hashed, uow.Users.Items[0].Password);
+        }
+
+        [Fact]
+        public void Login_rejects_inactive_user()
+        {
+            var uow = new FakeUnitOfWork();
+            uow.Users.Add(new User { UserName = "kenneth", Password = "96321", Active = false, Name = "K" });
+            var svc = new AdministrationService(uow);
+
+            var token = svc.Login(new Login { UserId = "kenneth", Password = "96321" });
+
+            Assert.Null(token.User);
+        }
+
+        [Fact]
+        public void CreateUser_hashes_password()
+        {
+            var uow = new FakeUnitOfWork();
+            var svc = new AdministrationService(uow);
+
+            svc.CreateUser(new User { UserName = "nuevo", Name = "N", Password = "plain" });
+
+            Assert.True(PasswordHasher.LooksHashed(uow.Users.Items[0].Password));
+            Assert.True(PasswordHasher.Verify("plain", uow.Users.Items[0].Password));
         }
 
         [Fact]
@@ -68,6 +109,32 @@ namespace AriesContador.Tests
             var saved = Assert.Single(uow.Companies.Added);
             Assert.Equal(80, saved.Account.Count());
             Assert.All(saved.Account, a => Assert.Equal(saved.Code, a.CompanyId));
+        }
+
+        [Fact]
+        public async System.Threading.Tasks.Task CreateCompany_por_defecto_loads_builtin_chart()
+        {
+            var uow = new FakeUnitOfWork();
+            var svc = new AdministrationService(uow);
+            var company = new Company
+            {
+                NumberId = "3-101-123456",
+                IdType = IdType.CEDULA_JURIDICA,
+                CompanyName = "Nueva",
+                Mail = "a@b.com",
+                CopyFrom = "POR DEFECTO"
+            };
+
+            await svc.CreateCompany(company);
+
+            var saved = Assert.Single(uow.Companies.Added);
+            var accounts = saved.Account.ToList();
+            Assert.Equal(DefaultChartOfAccounts.AccountCount, accounts.Count);
+            Assert.All(accounts, a => Assert.Equal(saved.Code, a.CompanyId));
+            Assert.Equal("ACTIVO CORRIENTE", accounts[6].Name);
+            Assert.Equal(1, accounts[6].FatherAccount);
+            Assert.Equal("INGRESO", accounts[54].Name);
+            Assert.Equal(4, accounts[54].FatherAccount);
         }
 
         [Fact]

@@ -1,10 +1,11 @@
-﻿using AriesContador.Core.Models.Utils;
+﻿using AriesContador.Core.Models.Accounts;
+using AriesContador.Core.Models.Utils;
+using AriesContador.Core.Services;
 using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Enumeradores;
 using CapaEntidad.Interfaces;
 using CapaEntidad.Reportes;
 using CapaEntidad.Textos;
-using CapaLogica;
 using CapaPresentacion.FrameCuentas;
 using System;
 using System.Data;
@@ -14,9 +15,10 @@ namespace CapaPresentacion.Reportes
 {
     public partial class ReporteMovimientosCuenta : Form, ICallingForm
     {
-        private CuentaCL _cuentaCL { get; } = new CuentaCL();
-        public ReporteMovimientosCuenta()
+        private readonly IFinancialReportService _financialReportService;
+        public ReporteMovimientosCuenta(IFinancialReportService financialReportService)
         {
+            _financialReportService = financialReportService;
             InitializeComponent();
             CargarDatos();
         }
@@ -54,7 +56,10 @@ namespace CapaPresentacion.Reportes
         {
 
             GridDatos.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.ColumnHeader;
-            GridDatos.DataSource = _cuentaCL.GetInfoCompleta(cuenta);
+            var auxiliar = cuenta.Indicador == IndicadorCuenta.Cuenta_Auxiliar;
+            GridDatos.DataSource = cuenta.Id == 0
+                ? new DataTable()
+                : _financialReportService.GetAccountMovementReport(cuenta.Id, auxiliar);
             SetEstilosDataDrid();
             AjustarColumnaDolares();
             GridDatos.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;

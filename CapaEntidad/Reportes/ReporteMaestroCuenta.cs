@@ -1,6 +1,5 @@
 ﻿using AriesContador.Core.Models.Companies;
 using AriesContador.Core.Models.Utils;
-using CapaEntidad.Entidades.Compañias;
 using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Entidades.FechaTransacciones;
 using CapaEntidad.Entidades.Usuarios;

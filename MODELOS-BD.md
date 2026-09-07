@@ -95,7 +95,7 @@ erDiagram
 | `number_id` | varchar(20) UNIQUE | |
 | `name`, `lastname_p`, `lastname_m` | varchar(50) | Core: `Name`, `LastName`, `MiddleName` |
 | `phone_number`, `mail`, `notes` | | |
-| `password` | varchar(50) NOT NULL | **Texto plano.** Login API compara así. Migración: hash. |
+| `password` | varchar(255) NOT NULL | Hash `pbkdf2$iter$salt$hash` (fase 7). Login acepta plano y rehashea. Script: `scripts/mysql/fase7`. |
 | `created_at`, `updated_at` | timestamp | |
 | `updated_by` | int NULL | **Sin FK.** A veces guarda cédula, no `user_id`. |
 | `active` | tinyint(1) | |
@@ -159,7 +159,7 @@ Eso coincide con los enums C# (`AccountType` = guía título/mayor/auxiliar, `Ac
 | `updated_by` | int unsigned NOT NULL | (sin FK declarada) |
 | `active` | tinyint(1) | `Active` |
 
-No hay unique `(company_id, month_report)`: la unicidad de mes la impone `FechaTransaccionCL` / `FinancialService.CreatePostingPeriod`.
+Unique `(company_id, month_report)`: script `fase11/01`. En la copia Docker de 2026-09 **aún no** se aplicó: `C001` tiene duplicados en 2021-01, 2022-10, 2022-11 y 2022-12. La unicidad de mes en app la impone `FinancialService.CreatePostingPeriod`.
 
 **Legacy:** `FechaTransaccion`.
 
@@ -453,10 +453,12 @@ Al unificar, decisión de migración:
 2. **Permisos y correo** siguen solo en el WinForms; o hay que API-izar `windows_permission` / `companies_permission`.
 3. **No reimplementar** `actividades`/`tareas` salvo que aparezca un uso.
 4. Conservar nombres de SP (typos incluidos) o publicar sinónimos.
-5. Unificar `company_id` varchar(4) vs (5).
-6. Hashear `users.password` y dejar de leer todos los usuarios en login.
-7. FK reales en `companies_permission` y `windows_permission`.
-8. Unique `(company_id, month_report)` en `accounting_months`.
+5. Unificar `company_id` varchar(4) vs (5). Script: `scripts/mysql/fase11/02_unify_company_id_varchar5.sql` (copia Docker primero).
+6. Hashear `users.password` (fase 7: ALTER + PBKDF2 + rehash en login). Login ya no lee todos los usuarios.
+7. FK reales en `companies_permission` y `windows_permission`. Script: `scripts/mysql/fase11/03` + `04`.
+8. Unique `(company_id, month_report)` en `accounting_months`. Script: `scripts/mysql/fase11/00` (inventario) + `01`.
+9. `companies.user_id` NOT NULL: `scripts/mysql/fase11/05` después de asignar admin a nulos.
+10. `users.updated_by` mezcla cédula y `user_id`. No “arreglar” a ciegas; código nuevo escribe `user_id`.
 
 ---
 

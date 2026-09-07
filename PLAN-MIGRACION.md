@@ -2,7 +2,9 @@
 
 Documento de trabajo. Complementa [`ARQUITECTURA.md`](ARQUITECTURA.md) (mapa actual) y [`MODELOS-BD.md`](MODELOS-BD.md) (esquema MySQL y SPs).
 
-**Objetivo principal:** la aplicación de escritorio (`CapaPresentacion`) debe quedar **correcta y estable**. API, Blazor y reorganizaciones de carpetas son secundarios hasta que el exe de producción no se rompa.
+**Estado:** fases **0–5 cerradas**. El escritorio es el camino canónico (in-process + Dapper + SPs). El host HTTP nuevo vive en `Aries.WebAPI/` (Minimal APIs). Siguiente trabajo: [`PLAN-MEJORAS.md`](PLAN-MEJORAS.md) (fases 6+).
+
+**Objetivo principal (histórico):** la aplicación de escritorio (`CapaPresentacion`) debe quedar **correcta y estable**. API, Blazor y reorganizaciones de carpetas son secundarios hasta que el exe de producción no se rompa.
 
 ---
 

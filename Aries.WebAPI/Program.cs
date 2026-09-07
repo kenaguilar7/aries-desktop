@@ -26,16 +26,25 @@ builder.Services.AddProblemDetails();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+var corsOrigins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>()
+                 ?? Array.Empty<string>();
+if (corsOrigins.Length == 0)
+    corsOrigins = new[] { "http://localhost:8080" };
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
-        policy.WithOrigins("http://localhost:8080", "http://54.144.10.65:8080")
+        policy.WithOrigins(corsOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod());
 });
 
-var jwtKey = builder.Configuration["Jwt:Key"]
-             ?? throw new InvalidOperationException("Falta Jwt:Key");
+var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrWhiteSpace(jwtKey))
+    throw new InvalidOperationException("Falta Jwt:Key (env Jwt__Key, user-secrets o appsettings.Local.json).");
+if (builder.Environment.IsProduction()
+    && jwtKey.IndexOf("change-me", StringComparison.OrdinalIgnoreCase) >= 0)
+    throw new InvalidOperationException("Jwt:Key de producción no puede ser el placeholder.");
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "Aries.WebAPI";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "Aries.Desktop";
 
@@ -98,7 +107,7 @@ app.UseExceptionHandler(errorApp =>
     });
 });
 
-if (!app.Environment.IsEnvironment("Testing"))
+if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Local"))
 {
     app.UseSwagger();
     app.UseSwaggerUI(c => c.RoutePrefix = string.Empty);

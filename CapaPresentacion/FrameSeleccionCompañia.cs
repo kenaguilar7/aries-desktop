@@ -1,6 +1,4 @@
-﻿//using CapaEntidad.Entidades.Compañias;
-using CapaLogica;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -35,7 +33,6 @@ namespace CapaPresentacion
         private async void CargarCompañias()
         {
 
-            //var _lstCompanies = (from c in new CompañiaCL().GetAll(GlobalConfig.Usuario) where c.Activo == true orderby c.Nombre select c).ToList<Compañia>();
             var _lstCompanies = (await _administrationService.GetAllCompanies(GlobalConfig.User)).ToList();
             _lstCompanies = _lstCompanies.FindAll(x => x.Active == true).OrderBy(x => x.Name).ToList();
             

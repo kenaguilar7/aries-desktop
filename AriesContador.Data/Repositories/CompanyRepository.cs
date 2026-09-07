@@ -19,7 +19,7 @@ namespace AriesContador.Data.Repositories
 
         public void Add(Company entity)
         {
-            var accounts = entity.Account;
+            var accounts = entity.Account ?? Enumerable.Empty<Account>();
             entity.Account = null;
             using (MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString))
             {
@@ -31,6 +31,7 @@ namespace AriesContador.Data.Repositories
                     foreach (var account in accounts)
                     {
                         var oldId = account.Id;
+                        account.Name = ResolveAccountNameId(dataAccess, account.Name);
                         var newID = dataAccess.SaveDataInTransaction<Account, int>("SP_InsertAccount", account);
                         account.Id = newID;
 
@@ -63,6 +64,15 @@ namespace AriesContador.Data.Repositories
 
             var lst1 = await dataAccess.ExecuteQuery<Company>(Query.Query.AdministrationQuery.JuridicPerson);
             var lst2 = await dataAccess.ExecuteQuery<Company>(Query.Query.AdministrationQuery.FisicPerson);
+            lst1.AddRange(lst2);
+            return lst1;
+        }
+
+        public IEnumerable<Company> GetAllBlocking()
+        {
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            var lst1 = dataAccess.ExecuteQuery<Company, object>(Query.Query.AdministrationQuery.JuridicPerson, new { });
+            var lst2 = dataAccess.ExecuteQuery<Company, object>(Query.Query.AdministrationQuery.FisicPerson, new { });
             lst1.AddRange(lst2);
             return lst1;
         }
@@ -112,6 +122,17 @@ delete from companies where company_id = @Code
         {
             MySqlDataAccess dataAccess = new MySqlDataAccess(_connectionString);
             dataAccess.SaveData("SP_UpdateCompany", ToUpdateParams(entity));
+        }
+
+        private static string ResolveAccountNameId(MySqlDataAccess dataAccess, string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new InvalidOperationException("La cuenta no tiene nombre");
+
+            var nameId = dataAccess.SaveDataInTransaction<object, int>(
+                "SP_GetOrCreateAccountName",
+                new { AccountName = name });
+            return nameId.ToString();
         }
 
         private static object ToInsertParams(Company entity)

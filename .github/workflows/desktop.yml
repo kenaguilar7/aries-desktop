@@ -15,9 +15,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: |
-            3.1.x
-            8.0.x
+          dotnet-version: 8.0.x
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
@@ -28,6 +26,10 @@ jobs:
       - name: Restore
         run: nuget restore "Aries Contador.sln"
 
+      - name: Guard secrets
+        shell: pwsh
+        run: ./scripts/Verify-NoSecrets.ps1
+
       - name: Build Release
         run: msbuild "Aries Contador.sln" /restore /p:Configuration=Release /p:Platform="Any CPU" /m
 
@@ -36,6 +38,9 @@ jobs:
 
       - name: Test Desktop
         run: dotnet test Aries.Desktop.Tests\Aries.Desktop.Tests.csproj --configuration Release --nologo
+
+      - name: Test API contract
+        run: dotnet test Aries.WebAPI.Tests\Aries.WebAPI.Tests.csproj --configuration Release --nologo
 
       - name: Verify publish folder
         shell: pwsh

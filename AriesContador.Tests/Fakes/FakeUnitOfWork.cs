@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using AriesContador.Core;
 using AriesContador.Core.Models.Accounts;
 using AriesContador.Core.Models.Companies;
+using AriesContador.Core.Models.Email;
 using AriesContador.Core.Models.JournalEntries;
+using AriesContador.Core.Models.Permissions;
 using AriesContador.Core.Models.PostingPeriods;
 using AriesContador.Core.Models.Reports;
 using AriesContador.Core.Models.Users;
@@ -30,8 +33,33 @@ namespace AriesContador.Tests.Fakes
         public IJournalEntryRepository JournalEntryRepository => JournalEntries;
         public IJournalEntryLineRepository JournalEntryLineRepository => JournalEntryLines;
         public IFinancialReportRepository FinancialReportRepository => FinancialReports;
+        public IPermissionRepository PermissionRepository { get; } = new FakePermissionRepository();
+        public IEmailRepository EmailRepository { get; } = new FakeEmailRepository();
+    }
 
-        public int Commit() => 0;
+    public class FakePermissionRepository : IPermissionRepository
+    {
+        public List<ModulePermission> Modules { get; } = new List<ModulePermission>();
+        public List<string> AssignedCodes { get; } = new List<string>();
+        public int LastTargetUserId { get; private set; }
+        public int LastUpdatedBy { get; private set; }
+
+        public IList<ModulePermission> GetModules(int userId) => Modules;
+        public bool AssignCompanies(IEnumerable<string> companyCodes, int targetUserId, int updatedByUserId)
+        {
+            LastTargetUserId = targetUserId;
+            LastUpdatedBy = updatedByUserId;
+            AssignedCodes.AddRange(companyCodes);
+            return true;
+        }
+        public bool RemoveCompanies(IEnumerable<string> companyCodes, int targetUserId, int updatedByUserId) => true;
+        public bool UpdateWindowPermissions(IList<ModulePermission> modules, int targetUserId, int updatedByUserId) => true;
+    }
+
+    public class FakeEmailRepository : IEmailRepository
+    {
+        public DataTable GetLog() => new DataTable();
+        public bool Insert(MailMessageLog message) => true;
     }
 
     public class FakeCompanyRepository : ICompanyRepository
@@ -43,6 +71,7 @@ namespace AriesContador.Tests.Fakes
         public void Update(Company entity) { }
         public Task Remove(Company entity) => Task.CompletedTask;
         public Task<IEnumerable<Company>> GetAll() => Task.FromResult(Enumerable.Empty<Company>());
+        public IEnumerable<Company> GetAllBlocking() => Added;
         public Task<string> LatestCode() => Task.FromResult("C001");
         public Task<IEnumerable<string>> GetCodesAllowedForUser(int userId) =>
             Task.FromResult(Enumerable.Empty<string>());
@@ -130,7 +159,7 @@ namespace AriesContador.Tests.Fakes
         public IEnumerable<Account> FindByCompanyId(string companyId) =>
             Items.Where(x => x.CompanyId == companyId).ToList();
 
-        public IEnumerable<Account> GetDefaultAccounts() => Enumerable.Empty<Account>();
+        public IEnumerable<Account> GetDefaultAccounts() => DefaultChartOfAccounts.Create();
 
         public IEnumerable<Account> AccountsWithBalanceByDateRange(BasicReportParam reportParam) =>
             AccountsWithBalance;
@@ -151,6 +180,8 @@ namespace AriesContador.Tests.Fakes
 
         public IEnumerable<Account> GetBalancesFromAccountInfo(string companyId, DateTime from, DateTime to) =>
             BalanceRows;
+
+        public DataTable GetMovementReport(int accountId, bool auxiliar) => new DataTable();
     }
 
     public class FakePostingPeriodRepository : IPostingPeriodRepository

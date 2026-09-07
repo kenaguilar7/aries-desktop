@@ -24,7 +24,8 @@ namespace AriesContador.Data.Repositories
 
         public Task AddAsync(User entity)
         {
-            throw new NotImplementedException();
+            Add(entity);
+            return Task.CompletedTask;
         }
 
         public IEnumerable<User> GetAll()
@@ -53,9 +54,11 @@ namespace AriesContador.Data.Repositories
             return output.FirstOrDefault();
         }
 
-        public async Task Remove(User entity)
+        public Task Remove(User entity)
         {
-            throw new NotImplementedException();
+            entity.Active = false;
+            Update(entity);
+            return Task.CompletedTask;
         }
 
         public void Update(User entity)

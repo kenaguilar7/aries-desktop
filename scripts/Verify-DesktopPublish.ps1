@@ -94,8 +94,14 @@ foreach ($add in @($csEntries)) {
             break
         }
     }
+    if ($cs -match 'ariescontrol\.cn28u0mqcci2' -or $cs -match '116390867') {
+        Add-Failure "DBconnectionString versionado no puede llevar host RDS ni password real"
+    }
     if ([string]::IsNullOrWhiteSpace($server)) {
         Add-Failure "DBconnectionString no tiene Server="
+    }
+    elseif ($server -eq 'SET_ON_MACHINE') {
+        Write-Host "OK  Server placeholder SET_ON_MACHINE (secreto fuera de git)"
     }
     elseif ($CheckDns) {
         try {

@@ -43,6 +43,9 @@ namespace Aries.WebAPI.Tests
             var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token.Token);
             Assert.Equal("7", jwt.Claims.Single(c => c.Type == "UserId").Value);
             Assert.Equal("7", jwt.Claims.Single(c => c.Type == ClaimTypes.NameIdentifier).Value);
+            Assert.True(string.IsNullOrEmpty(token.User.Password));
+            Assert.DoesNotContain("\"Password\"", json.Body);
+            Assert.DoesNotContain("96321", json.Body);
         }
 
         [Fact]

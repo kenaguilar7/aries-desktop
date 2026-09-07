@@ -45,6 +45,46 @@ namespace CapaPresentacion.FrameCuentas
             _financialReportService = financialReportService;
         }
 
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            FitToWorkingArea();
+            BeginInvoke(new Action(AdjustSplitter));
+        }
+
+        private void FitToWorkingArea()
+        {
+            Size available;
+            if (MdiParent != null)
+            {
+                var mdiClient = MdiParent.Controls.OfType<MdiClient>().FirstOrDefault();
+                available = mdiClient != null ? mdiClient.ClientSize : MdiParent.ClientSize;
+            }
+            else
+            {
+                available = Screen.FromControl(this).WorkingArea.Size;
+            }
+
+            if (Width > available.Width || Height > available.Height)
+                WindowState = FormWindowState.Maximized;
+        }
+
+        private void AdjustSplitter()
+        {
+            var width = splitContainerAsientos.Width;
+            if (width <= 0)
+                return;
+
+            var minLeft = splitContainerAsientos.Panel1MinSize;
+            var minRight = splitContainerAsientos.Panel2MinSize;
+            var maxLeft = width - minRight - splitContainerAsientos.SplitterWidth;
+            if (maxLeft < minLeft)
+                return;
+
+            var desired = (int)(width * 0.34);
+            splitContainerAsientos.SplitterDistance = Math.Max(minLeft, Math.Min(desired, maxLeft));
+        }
+
         private void FrameAsientos_Load(object sender, EventArgs e)
         {
             ConfigExchangeController(GlobalConfig.Company.CurrencyType);

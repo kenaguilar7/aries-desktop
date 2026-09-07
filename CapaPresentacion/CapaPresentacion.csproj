@@ -388,6 +388,7 @@
       <DependentUpon>ReporteCuenta.cs</DependentUpon>
     </Compile>
     <Compile Include="Utils\INeedValidatedForClose.cs" />
+    <Compile Include="Utils\ReportAccountLoader.cs" />
     <EmbeddedResource Include="AdminAsientos\FrameAsientoCierre.resx">
       <DependentUpon>FrameAsientoCierre.cs</DependentUpon>
     </EmbeddedResource>
@@ -500,10 +501,6 @@
     <ProjectReference Include="..\CapaEntidad\CapaEntidad.csproj">
       <Project>{e58bf37c-8918-410b-a2f6-faf0f8f3e0a5}</Project>
       <Name>CapaEntidad</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\CapaLogica\CapaLogica.csproj">
-      <Project>{39489103-91c5-4226-83f9-625befe663eb}</Project>
-      <Name>CapaLogica</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -635,7 +632,8 @@
   <Import Project="..\packages\squirrel.windows.1.9.1\build\squirrel.windows.targets" Condition="Exists('..\packages\squirrel.windows.1.9.1\build\squirrel.windows.targets')" />
   <Target Name="ApplyEnvironmentAppConfig" AfterTargets="CopyAppConfigFile" BeforeTargets="VerifyDesktopOutput">
     <PropertyGroup>
-      <_EnvConfig Condition="'$(Configuration)' == 'Release'">$(MSBuildThisFileDirectory)App.Production.config</_EnvConfig>
+      <_EnvConfig Condition="'$(Configuration)' == 'Release' And Exists('$(MSBuildThisFileDirectory)App.Production.local.config')">$(MSBuildThisFileDirectory)App.Production.local.config</_EnvConfig>
+      <_EnvConfig Condition="'$(Configuration)' == 'Release' And !Exists('$(MSBuildThisFileDirectory)App.Production.local.config')">$(MSBuildThisFileDirectory)App.Production.config</_EnvConfig>
       <_EnvConfig Condition="'$(Configuration)' != 'Release' And Exists('$(MSBuildThisFileDirectory)App.Local.config')">$(MSBuildThisFileDirectory)App.Local.config</_EnvConfig>
     </PropertyGroup>
     <Copy Condition="'$(_EnvConfig)' != '' And Exists('$(_EnvConfig)')" SourceFiles="$(_EnvConfig)" DestinationFiles="$(TargetPath).config" OverwriteReadOnlyFiles="true" />

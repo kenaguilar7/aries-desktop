@@ -6,7 +6,7 @@ using CapaEntidad.Entidades.Usuarios;
 using CapaEntidad.Mappers;
 using CapaEntidad.Reportes;
 using CapaEntidad.Textos;
-using CapaLogica;
+using CapaPresentacion.Utils;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -23,7 +23,6 @@ namespace CapaPresentacion.Reportes
         private List<Cuenta> _lstCuentas = new List<Cuenta>();
         private List<Cuenta> _lstCuentasFiltradas = new List<Cuenta>();
         private List<FechaTransaccion> lstFechas = new List<FechaTransaccion>();
-        private CuentaCL _cuentaCL = new CuentaCL();
         private readonly IFinancialService _financialService;
         int cont = 0;
         private Boolean ConSaldo { set { LlenarTabla(value); } }
@@ -44,7 +43,7 @@ namespace CapaPresentacion.Reportes
         private void CargarDatos(Company compañia, Usuario usuario)
         {
             _compania = compañia;
-            _lstCuentas = _cuentaCL.GetAll(compañia); ;
+            _lstCuentas = ReportAccountLoader.Load(_financialService, compañia);
             _usuario = usuario;
             lstFechas = CuentaMapper.ToFechaTransaccionList(
                 _financialService.GetPostingPeriods(compañia.Code));
@@ -69,7 +68,7 @@ namespace CapaPresentacion.Reportes
 
             if (!checkCuentasConSaldo.Checked)
             {
-                _lstCuentasFiltradas = new CuentaCL().QuitarCuentasSinSaldos(_lstCuentas);
+                _lstCuentasFiltradas = ReportAccountLoader.WithoutEmptyBalances(_lstCuentas);
             }
             CrearColumnasParaNombre();
             foreach (var c in _lstCuentasFiltradas)
@@ -207,7 +206,7 @@ namespace CapaPresentacion.Reportes
 
             var mesFinal = lstFechas.OrderBy(x => x.Fecha).ToList()[0];
 
-            _cuentaCL.LLenarConSaldos(mesFinal.Fecha, mes.Fecha, _lstCuentas, GlobalConfig.Company);
+            ReportAccountLoader.FillBalances(_financialService, _lstCuentas, mesFinal.Fecha, mes.Fecha);
 
             LlenarTabla(ConSaldo: true);
         }

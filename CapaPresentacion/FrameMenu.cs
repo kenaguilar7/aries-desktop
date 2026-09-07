@@ -21,16 +21,22 @@ namespace CapaPresentacion
         private readonly IAdministrationService _administrationService;
         private readonly IFinancialService _financialService;
         private readonly IFinancialReportService _financialReportService;
+        private readonly IPermissionService _permissionService;
+        private readonly IEmailService _emailService;
 
         public Boolean comParametro { set { CargarCompañia(); } }
         public FrameMenu(
             IAdministrationService administrationService,
             IFinancialService financialService,
-            IFinancialReportService financialReportService)
+            IFinancialReportService financialReportService,
+            IPermissionService permissionService,
+            IEmailService emailService)
         {
             this._administrationService = administrationService;
             this._financialService = financialService;
             this._financialReportService = financialReportService;
+            this._permissionService = permissionService;
+            this._emailService = emailService;
             InitializeComponent();
 
             LoginForm n = new LoginForm(_administrationService);
@@ -261,7 +267,7 @@ namespace CapaPresentacion
         }
         private void gestorDeVentanasToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            FormPermisoUsuario form = new FormPermisoUsuario
+            FormPermisoUsuario form = new FormPermisoUsuario(_administrationService, _permissionService)
             {
                 MdiParent = this
             };
@@ -272,7 +278,7 @@ namespace CapaPresentacion
 
             if (GlobalConfig.Company != null)
             {
-                ReporteMovimientosCuenta form = new ReporteMovimientosCuenta
+                ReporteMovimientosCuenta form = new ReporteMovimientosCuenta(_financialReportService)
                 {
                     MdiParent = this
                 };
@@ -333,7 +339,7 @@ namespace CapaPresentacion
         {
             if (GlobalConfig.Company != null)
             {
-                FrameAsientoCierre form = new FrameAsientoCierre
+                FrameAsientoCierre form = new FrameAsientoCierre(_financialService, _financialReportService)
                 {
                     MdiParent = this
                 };
@@ -361,7 +367,7 @@ namespace CapaPresentacion
 
         private void gestionDeCorreosToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Correo n = new Correo();
+            Correo n = new Correo(_emailService);
             n.MdiParent = this;
             n.Show(); 
         }

@@ -5,47 +5,50 @@ Hay **dos** configuraciones. F5 / Debug del escritorio queda en Local. El API lo
 | | Escritorio | API + MySQL |
 |---|---|---|
 | **Local** | **Debug** → `app.config` (MySQL `127.0.0.1:3307`, API `http://localhost:5088/`) | `docker compose` → `aries_mysql_local` + `aries_api_local` |
-| **Production** | **Release** → `App.Production.config` (RDS + Elastic Beanstalk) | no usar este compose; es RDS real |
+| **Production** | **Release** → `App.Production.config` (sin password) + `App.Production.local.config` o `ARIES_MYSQL_CONNECTION` | secretos por env / user-secrets, no el JSON versionado |
 
 El título del menú muestra `[Local]` o `[Production]`.
 
 ## Local (Docker)
 
-Topología igual que prod: un contenedor de API y uno de MySQL. El escritorio Debug sigue en el host y entra por los puertos publicados.
-
 ```powershell
 .\scripts\local\start-local.ps1
 ```
-
-Eso deja:
 
 | Contenedor | Puerto en el host |
 |---|---|
 | `aries_mysql_local` | **3307** → MySQL 3306 |
 | `aries_api_local` | **5088** → HTTP 8080 |
 
-Swagger: http://localhost:5088/  
-Salud (incluye ping a MySQL): http://localhost:5088/health
+Salud (incluye ping a MySQL): http://localhost:5088/health  
+Swagger solo en Development/Local: http://localhost:5088/
 
 Si ya tienes `aries_mysql_local` en 3307, el script **no** crea otro MySQL; solo construye y arranca el API.
 
-### Restaurar dump (solo primera vez, copia — nunca RDS)
+### Restaurar dump (copia — nunca RDS producción)
 
-Orden: `users` → `companies` → `accounts_names` → `accounts` → meses / asientos → `aries_routines.sql` → `scripts/mysql/fase1` y `fase3`.
+1. Tener `aries_mysql_local` arriba (`docker compose up -d mysql` o `start-local.ps1`).
+2. Restaurar en este orden: `users` → `companies` → `accounts_names` → `accounts` → meses / asientos → `aries_routines.sql`.
+3. Aplicar scripts de app: `scripts/mysql/fase1`, `fase3`, **`fase7`** (ancho de password) y, si el dump está limpio, `fase11` (inventario de duplicados **antes** del unique).
+4. Ejemplo (host → contenedor):
+
+```powershell
+Get-Content .\dump.sql -Raw | docker exec -i aries_mysql_local mysql -ukenneth -p1234 aries
+```
+
+No hay job automático contra RDS. Un backup de RDS se baja **fuera** de este repo y se restaura solo a Docker.
 
 ### Escritorio
 
-Proyecto de inicio **CapaPresentacion**, configuración **Debug**. Login, maestros y asientos van **in-process** a MySQL `:3307` (no necesitan el API). `HttpBaseUrl` apunta a `http://localhost:5088/` para cuando sí uses HTTP.
+Proyecto de inicio **CapaPresentacion**, configuración **Debug**. Login, maestros y asientos van **in-process** a MySQL `:3307`. `HttpBaseUrl` es solo diagnóstico.
 
-## Production (RDS)
+Tras fase 7, el primer login de un usuario en plano deja la fila hasheada (`pbkdf2$...`).
 
-Release del escritorio usa RDS y Elastic Beanstalk. **No aplicar SPs de fase 1/3 sobre RDS.**
+## Production (máquina / pipeline)
 
-```powershell
-dotnet run --project Aries.WebAPI --launch-profile "Aries.WebAPI (Production)"
-```
+`App.Production.config` **no** lleva password. Copia `App.Production.local.config.example` → `App.Production.local.config` (gitignored) o define `ARIES_MYSQL_CONNECTION`. JWT del API: `Jwt__Key` (mín. 32 bytes), nunca el placeholder.
 
-Eso es el API **en el host** contra RDS, no el contenedor local. Visual Studio: configuración **Release** en CapaPresentacion.
+**No aplicar SPs de fase 1/3/7/11 sobre RDS** desde este workspace. Eso es una ventana de operación aparte.
 
 ## Archivos
 
@@ -53,8 +56,8 @@ Eso es el API **en el host** contra RDS, no el contenedor local. Visual Studio: 
 |---|---|
 | `.env.example` → `.env` | Docker (MySQL, puerto API, JWT) |
 | `docker-compose.yml` | MySQL 8 + `Aries.WebAPI` |
-| `Aries.WebAPI/Dockerfile` | Imagen del API |
-| `CapaPresentacion/app.config` | Debug / Local |
-| `CapaPresentacion/App.Production.config` | Release / Production (RDS) |
-| `Aries.WebAPI/appsettings.Development.json` | Fallback si corres el API fuera de Docker |
-| `Aries.WebAPI/appsettings.Production.json` | API contra RDS (no Docker local) |
+| `CapaPresentacion/app.config` | Debug / Local (Docker `:3307`) |
+| `CapaPresentacion/App.Production.config` | Release sin secretos |
+| `CapaPresentacion/App.Production.local.config` | Secretos de máquina (gitignored) |
+| `Aries.WebAPI/appsettings.Development.json` | Fallback local |
+| `Aries.WebAPI/appsettings.Production.json` | Vacío; secretos por env |

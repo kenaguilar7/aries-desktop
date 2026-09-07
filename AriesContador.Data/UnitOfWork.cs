@@ -15,6 +15,8 @@ namespace AriesContador.Data
         private IJournalEntryLineRepository _asientoLineaRepository;
         private CompanyRepository _companiaRepository;
         private IFinancialReportRepository _financialReportRepository;
+        private IPermissionRepository _permissionRepository;
+        private IEmailRepository _emailRepository;
 
         public UnitOfWork(IConnectionString context)
         {
@@ -44,10 +46,11 @@ namespace AriesContador.Data
         public ICompanyRepository CompanyRepository 
             => _companiaRepository = _companiaRepository ?? new CompanyRepository(_context);
 
-        public int Commit()
-        {
-            return 0;
-        }
+        public IPermissionRepository PermissionRepository
+            => _permissionRepository = _permissionRepository ?? new PermissionRepository(_context);
+
+        public IEmailRepository EmailRepository
+            => _emailRepository = _emailRepository ?? new EmailRepository(_context);
 
         public void Dispose()
         {

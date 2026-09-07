@@ -115,8 +115,29 @@ namespace AriesContador.Services
 
         public Task<DataTable> AccountMoving()
         {
-            throw new InvalidOperationException(
-                "El movimiento de cuenta clásico sigue en CuentaCL.GetInfoCompleta (Excel), no en FinancialReportService.");
+            return Task.FromResult(new DataTable());
+        }
+
+        public DataTable GetAccountMovementReport(int accountId, bool auxiliar)
+        {
+            var table = _unitOfWork.AccountRepository.GetMovementReport(accountId, auxiliar);
+            decimal lastSaldoActual = 0m;
+            foreach (DataRow item in table.Rows)
+            {
+                var debito = string.IsNullOrWhiteSpace(Convert.ToString(item["Debito"])) ? 0m : Convert.ToDecimal(item["Debito"]);
+                var credito = string.IsNullOrWhiteSpace(Convert.ToString(item["Credito"])) ? 0m : Convert.ToDecimal(item["Credito"]);
+                var tag = Convert.ToInt32(Convert.ToDecimal(item["Saldo Actual"]));
+                lastSaldoActual = RunningBalance(tag, lastSaldoActual, debito, credito);
+                item["Saldo Actual"] = string.Format("{0:n}", lastSaldoActual);
+            }
+            return table;
+        }
+
+        private static decimal RunningBalance(int accountTag, decimal saldo, decimal debito, decimal credito)
+        {
+            // 1 Activo, 5 Costo venta, 6 Egreso = débito aumenta
+            var debitNature = accountTag == 1 || accountTag == 5 || accountTag == 6;
+            return debitNature ? saldo + debito - credito : saldo + credito - debito;
         }
         //public IEnumerable<Core.Models.Reports.BalanceComprobacionReport> BalanceComprobacionReport(Core.Models.JournalEntries.BasicReportParam reportParam)
         //{

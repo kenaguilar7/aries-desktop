@@ -1,5 +1,4 @@
 ﻿using CapaEntidad.Interfaces;
-using CapaEntidad.Entidades.Compañias;
 using System;
 using CapaEntidad.Enumeradores;
 using System.Collections.Generic;

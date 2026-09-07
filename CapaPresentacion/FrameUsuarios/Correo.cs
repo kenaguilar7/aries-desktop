@@ -1,6 +1,7 @@
-﻿using CapaEntidad.Entidades.Usuarios;
+﻿using AriesContador.Core.Models.Email;
+using AriesContador.Core.Services;
+using CapaEntidad.Entidades.Usuarios;
 using CapaEntidad.Textos;
-using CapaLogica;
 using ClosedXML.Excel;
 using System;
 using System.Collections.Generic;
@@ -18,16 +19,17 @@ namespace CapaPresentacion.FrameUsuarios
     {
 
 
-        CorreoCL CorreoCL = new CorreoCL();
-        public Correo()
+        private readonly IEmailService _emailService;
+        public Correo(IEmailService emailService)
         {
+            _emailService = emailService;
             InitializeComponent();
             CargarDatos();
         }
         public void CargarDatos()
         {
             //this.dataGridView1.Columns.Clear();
-            DataTable dt = CorreoCL.Get();
+            DataTable dt = _emailService.GetLog();
 
             foreach (DataRow row in dt.Rows)
             {
@@ -39,7 +41,7 @@ namespace CapaPresentacion.FrameUsuarios
         }
         public void Insertar(UsuarioTemporal usuario)
         {
-            CorreoCL.Insert(usuario);
+            _emailService.Insert(ToLog(usuario));
         }
 
         private void BtnGuardar_Click(object sender, EventArgs e)
@@ -154,8 +156,9 @@ namespace CapaPresentacion.FrameUsuarios
                 if (MessageBox.Show($"Enviara un total de {usuariosTemporales.Count()} ¿Desea continuar?",
                     TextoGeneral.NombreApp, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
-                    var rejecList = await Task.Run(() => CorreoCL.SendMail(usuariosTemporales));
-                    RouteRejed(rejecList);
+                    var logs = usuariosTemporales.Select(ToLog).ToList();
+                    var rejected = await Task.Run(() => _emailService.SendMail(logs));
+                    RouteRejed(rejected.Select(FromLog));
                 }
             }
             else
@@ -181,6 +184,33 @@ namespace CapaPresentacion.FrameUsuarios
         private void btnEnviar_Click(object sender, EventArgs e)
         {
             EnviarAsync();
+        }
+
+        private static MailMessageLog ToLog(UsuarioTemporal usuario)
+        {
+            return new MailMessageLog
+            {
+                FirstName = usuario.Nombre,
+                LastName = usuario.Apellido,
+                ToAddress = usuario.CorreoElectronico,
+                CcAddress = usuario.CCopy,
+                Subject = usuario.Asunto,
+                Title = usuario.Titulo,
+                Body = usuario.Cuerpo,
+                Sent = usuario.EstadoEnvio == CapaEntidad.Enumeradores.EstadoEnvio.Correcto
+            };
+        }
+
+        private static UsuarioTemporal FromLog(MailMessageLog log)
+        {
+            return new UsuarioTemporal(
+                nombre: log.FirstName,
+                apellido: log.LastName,
+                correoElectronico: log.ToAddress,
+                ccopy: log.CcAddress,
+                titulo: log.Title,
+                asunto: log.Subject,
+                cuerpo: log.Body);
         }
 
         //private void CreateColumns()

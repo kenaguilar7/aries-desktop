@@ -4,6 +4,7 @@ using AriesContador.Core.Models.Companies;
 using AriesContador.Core.Models.Users;
 using AriesContador.Core.Models.Utils;
 using AriesContador.Core.Services;
+using AriesContador.Services.Security;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,13 +27,20 @@ namespace AriesContador.Services
                 return new WebToken();
 
             var user = _unitOfWork.UserRepository.FindByUserName(param.UserId);
-            if (user == null || !user.Active || user.Password != param.Password)
+            if (user == null || !user.Active || !PasswordMatches(user, param.Password))
                 return new WebToken();
+
+            if (!PasswordHasher.LooksHashed(user.Password))
+            {
+                user.Password = PasswordHasher.Hash(param.Password);
+                user.UpdatedBy = user.Id;
+                _unitOfWork.UserRepository.Update(user);
+            }
 
             return new WebToken
             {
                 Token = "local",
-                User = user
+                User = ForClient(user)
             };
         }
 
@@ -51,6 +59,8 @@ namespace AriesContador.Services
         public void CreateUser(User usuario)
         {
             ValidateNewUser(usuario);
+            if (!string.IsNullOrEmpty(usuario.Password) && !PasswordHasher.LooksHashed(usuario.Password))
+                usuario.Password = PasswordHasher.Hash(usuario.Password);
             _unitOfWork.UserRepository.Add(usuario);
         }
 
@@ -61,13 +71,16 @@ namespace AriesContador.Services
 
         public Company FindByCode(string code)
         {
-            var all = _unitOfWork.CompanyRepository.GetAll().GetAwaiter().GetResult();
+            var all = _unitOfWork.CompanyRepository.GetAllBlocking();
             return Hydrate(all.FirstOrDefault(c => c.Code == code));
         }
 
         public User FinUserById(int id)
         {
-            return _unitOfWork.UserRepository.GetById(id);
+            var user = _unitOfWork.UserRepository.GetById(id);
+            if (user != null)
+                user.Password = null;
+            return user;
         }
 
         public Task<IEnumerable<Company>> GetAllCompanies()
@@ -90,7 +103,7 @@ namespace AriesContador.Services
 
         public IEnumerable<Company> GetAllInactiveCompanies()
         {
-            return GetAllCompanies().GetAwaiter().GetResult().Where(c => !c.Active);
+            return _unitOfWork.CompanyRepository.GetAllBlocking().Select(Hydrate).Where(c => !c.Active);
         }
 
         public IEnumerable<User> GetAllInactiveUsers()
@@ -100,12 +113,13 @@ namespace AriesContador.Services
 
         public IEnumerable<User> GetAllUsers()
         {
-            return _unitOfWork.UserRepository.GetAll();
+            return StripPasswords(_unitOfWork.UserRepository.GetAll());
         }
 
         public void InactivateUser(User usuario)
         {
             usuario.Active = false;
+            PreserveStoredPassword(usuario);
             _unitOfWork.UserRepository.Update(usuario);
         }
 
@@ -121,6 +135,10 @@ namespace AriesContador.Services
             if (usuario == null || string.IsNullOrWhiteSpace(usuario.Name) || string.IsNullOrWhiteSpace(usuario.UserName))
                 throw new InvalidOperationException("No se puede guardar usuarios con nombes en blanco");
 
+            if (string.IsNullOrEmpty(usuario.Password))
+                PreserveStoredPassword(usuario);
+            else if (!PasswordHasher.LooksHashed(usuario.Password))
+                usuario.Password = PasswordHasher.Hash(usuario.Password);
             _unitOfWork.UserRepository.Update(usuario);
         }
 
@@ -137,6 +155,57 @@ namespace AriesContador.Services
 
             var existing = _unitOfWork.UserRepository.FindByUserName(userName);
             return existing != null;
+        }
+
+        private static User ForClient(User user)
+        {
+            if (user == null)
+                return null;
+
+            return new User
+            {
+                Id = user.Id,
+                UserName = user.UserName,
+                UserType = user.UserType,
+                IdNumber = user.IdNumber,
+                Name = user.Name,
+                LastName = user.LastName,
+                MiddleName = user.MiddleName,
+                PhoneNumber = user.PhoneNumber,
+                Mail = user.Mail,
+                Memo = user.Memo,
+                Active = user.Active,
+                CreatedBy = user.CreatedBy,
+                UpdatedBy = user.UpdatedBy,
+                CreatedAt = user.CreatedAt,
+                UpdateAt = user.UpdateAt
+            };
+        }
+
+        private void PreserveStoredPassword(User usuario)
+        {
+            if (usuario == null || usuario.Id <= 0)
+                return;
+            var stored = _unitOfWork.UserRepository.GetById(usuario.Id);
+            if (stored != null)
+                usuario.Password = stored.Password;
+        }
+
+        private static bool PasswordMatches(User user, string password)
+        {
+            if (PasswordHasher.LooksHashed(user.Password))
+                return PasswordHasher.Verify(password, user.Password);
+            return user.Password == password;
+        }
+
+        private static IEnumerable<User> StripPasswords(IEnumerable<User> users)
+        {
+            foreach (var user in users)
+            {
+                if (user != null)
+                    user.Password = null;
+                yield return user;
+            }
         }
 
         private void ValidateNewUser(User usuario)
@@ -277,9 +346,15 @@ namespace AriesContador.Services
             var copyFrom = company.CopyFrom;
             if (string.IsNullOrWhiteSpace(copyFrom) || copyFrom == "POR DEFECTO")
             {
-                var defaults = _unitOfWork.AccountRepository.GetDefaultAccounts().ToList();
+                var defaults = _unitOfWork.AccountRepository.GetDefaultAccounts()
+                    .Where(a => a.Id <= DefaultChartOfAccounts.AccountCount)
+                    .ToList();
                 foreach (var account in defaults)
+                {
                     account.CompanyId = company.Code;
+                    if (account.UpdatedBy == 0)
+                        account.UpdatedBy = company.CreatedBy;
+                }
                 return defaults;
             }
 

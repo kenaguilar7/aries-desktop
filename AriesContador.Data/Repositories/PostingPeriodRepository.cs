@@ -23,7 +23,8 @@ namespace AriesContador.Data.Repositories
 
         public Task AddAsync(PostingPeriod entity)
         {
-            throw new NotImplementedException();
+            Add(entity);
+            return Task.CompletedTask;
         }
 
         public void ClosePostingPeriod(PostingPeriodEndClosing postingPeriod)
@@ -69,14 +70,21 @@ namespace AriesContador.Data.Repositories
             return output;
         }
 
-        public async Task Remove(PostingPeriod entity)
+        public Task Remove(PostingPeriod entity)
         {
-            throw new NotImplementedException();
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            dataAccess.ExecuteText(
+                "UPDATE accounting_months SET active = 0, updated_by = @UpdatedBy, updated_at = NOW() WHERE accounting_months_id = @Id",
+                new { entity.Id, entity.UpdatedBy });
+            return Task.CompletedTask;
         }
 
         public void Update(PostingPeriod entity)
         {
-            throw new NotImplementedException();
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            dataAccess.ExecuteText(
+                "UPDATE accounting_months SET closed = @ClosedMySQL, updated_by = @UpdatedBy, updated_at = NOW() WHERE accounting_months_id = @Id",
+                new { entity.Id, entity.ClosedMySQL, entity.UpdatedBy });
         }
     }
 }

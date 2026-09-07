@@ -8,9 +8,11 @@ using CapaEntidad.Mappers;
 using CapaEntidad.Textos;
 using CapaPresentacion.cods;
 using CapaPresentacion.Reportes;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -29,6 +31,46 @@ namespace CapaPresentacion.FrameCuentas
             InitializeComponent();
             CargarDatos();
             CargarDatosAListas();
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            FitToWorkingArea();
+            BeginInvoke(new Action(AdjustSplitter));
+        }
+
+        private void FitToWorkingArea()
+        {
+            Size available;
+            if (MdiParent != null)
+            {
+                var mdiClient = MdiParent.Controls.OfType<MdiClient>().FirstOrDefault();
+                available = mdiClient != null ? mdiClient.ClientSize : MdiParent.ClientSize;
+            }
+            else
+            {
+                available = Screen.FromControl(this).WorkingArea.Size;
+            }
+
+            if (Width > available.Width || Height > available.Height)
+                WindowState = FormWindowState.Maximized;
+        }
+
+        private void AdjustSplitter()
+        {
+            var width = splitContainer1.Width;
+            if (width <= 0)
+                return;
+
+            var minLeft = splitContainer1.Panel1MinSize;
+            var minRight = splitContainer1.Panel2MinSize;
+            var maxLeft = width - minRight - splitContainer1.SplitterWidth;
+            if (maxLeft < minLeft)
+                return;
+
+            var desired = (int)(width * 0.55);
+            splitContainer1.SplitterDistance = Math.Max(minLeft, Math.Min(desired, maxLeft));
         }
 
         public bool TransferirCuenta(Cuenta cuenta)
@@ -348,7 +390,8 @@ namespace CapaPresentacion.FrameCuentas
         }
         private void btnMovimientosCuenta_Click(object sender, EventArgs e)
         {
-            ReporteMovimientosCuenta frame = new ReporteMovimientosCuenta();
+            ReporteMovimientosCuenta frame = new ReporteMovimientosCuenta(
+                GlobalConfig.Services.GetRequiredService<IFinancialReportService>());
             if (frame.TransferirCuenta(CuentaActual))
             {
                 frame.MdiParent = this.MdiParent;

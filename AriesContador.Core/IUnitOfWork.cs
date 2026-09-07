@@ -16,7 +16,7 @@ namespace AriesContador.Core
         IJournalEntryRepository JournalEntryRepository { get;  }
         IJournalEntryLineRepository JournalEntryLineRepository { get;  }
         IFinancialReportRepository FinancialReportRepository { get; }
-
-        int Commit(); 
+        IPermissionRepository PermissionRepository { get; }
+        IEmailRepository EmailRepository { get; }
     }
 }

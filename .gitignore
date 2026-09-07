@@ -10,6 +10,7 @@
 # Local environment (secrets / machine overrides)
 .env
 CapaPresentacion/App.Local.config
+CapaPresentacion/App.Production.local.config
 Aries.WebAPI/appsettings.Local.json
 Aries.WebAPI/out
 

@@ -3,7 +3,7 @@ using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Entidades.FechaTransacciones;
 using CapaEntidad.Mappers;
 using CapaEntidad.Reportes;
-using CapaLogica;
+using CapaPresentacion.Utils;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -20,7 +20,6 @@ namespace CapaPresentacion.Reportes
     {
 
         private readonly IFinancialService _financialService;
-        CuentaCL cuentaCL = new CuentaCL();
         private List<FechaTransaccion> fechaTransaccions = new List<FechaTransaccion>();
 
         public FrameReporteAuxiliares(IFinancialService financialService)
@@ -51,7 +50,7 @@ namespace CapaPresentacion.Reportes
 
 
                 var lstCuentas = new Dictionary<FechaTransaccion, List<Cuenta>>();
-                var cuentas = cuentaCL.GetAll(GlobalConfig.Company);
+                var cuentas = ReportAccountLoader.Load(_financialService, GlobalConfig.Company);
 
                 //cuentaCL.LLenarConSaldoB(((FechaTransaccion)lstMesInicio.SelectedItem).Fecha, ((FechaTransaccion)lstMesInicio.SelectedItem).Fecha, cuentas, GlobalConfig.Compañia); 
                 foreach (var item in fechaTransaccions)
@@ -65,9 +64,9 @@ namespace CapaPresentacion.Reportes
                             cuentasClonadas.Add(Cuenta.DeepCopy());
                         });
 
-                        new CuentaCL().LLenarConSaldos(item.Fecha, item.Fecha, cuentasClonadas, GlobalConfig.Company);
+                        ReportAccountLoader.FillBalances(_financialService, cuentasClonadas, item.Fecha, item.Fecha);
 
-                        cuentasClonadas = cuentaCL.QuitarCuentasSinSaldos(cuentasClonadas);
+                        cuentasClonadas = ReportAccountLoader.WithoutEmptyBalances(cuentasClonadas);
 
                         lstCuentas.Add(item, cuentasClonadas);
                     }

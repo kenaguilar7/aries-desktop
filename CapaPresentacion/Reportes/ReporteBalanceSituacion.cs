@@ -6,7 +6,7 @@ using System.Windows.Forms;
 using CapaEntidad.Textos;
 using System.Data;
 using System.Linq;
-using CapaLogica;
+using CapaPresentacion.Utils;
 using System;
 using CapaEntidad.Reportes;
 using CapaEntidad.Mappers;
@@ -21,7 +21,6 @@ namespace CapaPresentacion.Reportes
     public partial class ReporteBalanceSituacion : Form
     {
         private readonly IFinancialService _financialService;
-        private CuentaCL CuentaCL { get; } = new CuentaCL();
         private List<Cuenta> ListaCuentas { get; set; }
         private IEnumerable<Cuenta> ListaCuentasBalancePerdida { get; set; }
         private IEnumerable<Cuenta> ListaCuentasBalanceSitucion { get; set; }
@@ -35,7 +34,7 @@ namespace CapaPresentacion.Reportes
 
         private void CargarDatos()
         {
-            ListaCuentas = CuentaCL.GetAll(GlobalConfig.Company);
+            ListaCuentas = ReportAccountLoader.Load(_financialService, GlobalConfig.Company);
             var lstDts = CuentaMapper.ToFechaTransaccionList(
                 _financialService.GetPostingPeriods(GlobalConfig.Company.Code));
 
@@ -61,17 +60,7 @@ namespace CapaPresentacion.Reportes
             DateTime fch1 = ((FechaTransaccion)AFechaInicio.SelectedItem).Fecha;
             DateTime fch2 = ((FechaTransaccion)AFechaFinal.SelectedItem).Fecha;
 
-
-
-            //var cuentasSitucaion = ListaCuentas.;
-            //var cuentasPerdida = lstPerdidas;
-            CuentaCL.LLenarConSaldos(fch1, fch2, ListaCuentas, GlobalConfig.Company);
-            //CuentaCL.LLenarConSaldoB(par1, par2, cuentasPerdida, GlobalConfig.Compañia);
-            //if (!checkCuentasConSaldo.Checked)
-            //{
-            //    ListaCuentas =  new CuentaCL().QuitarCuentasSinSaldos(ListaCuentas);
-            //}
-
+            ReportAccountLoader.FillBalances(_financialService, ListaCuentas, fch1, fch2);
 
             CargarFormulario();
 
@@ -205,7 +194,6 @@ namespace CapaPresentacion.Reportes
                     if (sfd.ShowDialog() == DialogResult.OK)
                     {
                         ReporteExcel.ReporteUtilidadPerdida(ConverRowsToExcel(), Encabezado(), sfd.FileName);
-                        // CapaEntidad.Reportes.ReporteBalanceSituacion.GenerarReporte(sfd.FileName, ListaCuentasBalanceSitucion.ToList(),TotalPerdida,TotalSituacion,  GlobalConfig.Compañia, GlobalConfig.Usuario);
                     }
                 }
             }

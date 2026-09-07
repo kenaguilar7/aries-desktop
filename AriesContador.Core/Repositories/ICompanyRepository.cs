@@ -9,6 +9,7 @@ namespace AriesContador.Core.Repositories
     public interface ICompanyRepository : IRepository<Company>
     {
         Task<IEnumerable<Company>> GetAll();
+        IEnumerable<Company> GetAllBlocking();
         Task<string> LatestCode();
         Task<IEnumerable<string>> GetCodesAllowedForUser(int userId);
     }

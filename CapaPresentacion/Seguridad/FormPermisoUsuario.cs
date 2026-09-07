@@ -1,10 +1,12 @@
 ﻿using AriesContador.Core.Models.Companies;
+using AriesContador.Core.Models.Users;
+using AriesContador.Core.Services;
 using CapaEntidad.Entidades.Seguridad;
 using CapaEntidad.Entidades.Usuarios;
 using CapaEntidad.Entidades.Ventanas;
 using CapaEntidad.Enumeradores;
+using CapaEntidad.Mappers;
 using CapaEntidad.Textos;
-using CapaLogica;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -20,16 +22,17 @@ namespace CapaPresentacion.Seguridad
     public partial class FormPermisoUsuario : Form
     {
 
-        UsuarioCL usuarioCL = new UsuarioCL();
-        CompañiaCL compañiaCL = new CompañiaCL();
-        PermisoCL permisoCL = new PermisoCL();
+        private readonly IAdministrationService _administrationService;
+        private readonly IPermissionService _permissionService;
         private List<Usuario> TodosLosUsuarios = new List<Usuario>();
         private List<Company> CompañiasDelUsuario = new List<Company>();
         private List<Company> TodasLasCompañias = new List<Company>();
         private List<Modulo> modulos = new List<Modulo>();
 
-        public FormPermisoUsuario()
+        public FormPermisoUsuario(IAdministrationService administrationService, IPermissionService permissionService)
         {
+            _administrationService = administrationService;
+            _permissionService = permissionService;
             InitializeComponent();
             CargarDatos();
         }
@@ -37,7 +40,7 @@ namespace CapaPresentacion.Seguridad
         private void CargarDatos()
         {
             ///Cargamos los usuarios,
-            TodosLosUsuarios = usuarioCL.GetAll();
+            TodosLosUsuarios = _administrationService.GetAllUsers().Select(UserMapper.ToUsuario).ToList();
             lstUsuarios.DataSource = TodosLosUsuarios;
             lstUsuarios.SelectedIndex = -1;
         }
@@ -82,8 +85,10 @@ namespace CapaPresentacion.Seguridad
             listCompañiasAsignadas.Items.Clear();
             listCompañiasSinAsignar.Items.Clear();
 
-            TodasLasCompañias = compañiaCL.GetAll(GlobalConfig.Usuario);
-            CompañiasDelUsuario = compañiaCL.GetAll(usuario);
+            TodasLasCompañias = _administrationService.GetAllCompanies().GetAwaiter().GetResult().ToList();
+            var target = _administrationService.GetAllUsers().FirstOrDefault(u => u.Id.ToString() == usuario.UsuarioId)
+                         ?? new User { Id = int.TryParse(usuario.UsuarioId, out var parsed) ? parsed : usuario.Id, UserType = (UserType)usuario.TipoUsuario };
+            CompañiasDelUsuario = _administrationService.GetAllCompanies(target).GetAwaiter().GetResult().ToList();
 
             ///Buscamos todas las compañias
             TodasLasCompañias.ForEach((Compañia) =>
@@ -134,7 +139,8 @@ namespace CapaPresentacion.Seguridad
             ///El usuario admin puede tener acceso a todas las compañias??? si es asi entonces 
             ///no ponerlos en la lista
             panelAsignacionModulos.Enabled = (user.TipoUsuario == TipoUsuario.Administrador) ? false : true;
-            modulos = permisoCL.GetAllModules(user);
+            var userId = int.TryParse(user.UsuarioId, out var parsed) ? parsed : user.Id;
+            modulos = PermissionMapper.ToModulos(_permissionService.GetModules(userId));
 
             foreach (var item in modulos)
             {
@@ -190,9 +196,11 @@ namespace CapaPresentacion.Seguridad
             if (user != null)
             {
 
-                permisoCL.InsertCompany(nuevas, user, GlobalConfig.Usuario);
-                permisoCL.RemoveCompany(remover, user, GlobalConfig.Usuario);
-                permisoCL.UpdatePermisos(modulos, user, GlobalConfig.Usuario);
+                var targetId = int.TryParse(user.UsuarioId, out var parsed) ? parsed : user.Id;
+                var updaterId = GlobalConfig.User != null ? GlobalConfig.User.Id : 0;
+                _permissionService.AssignCompanies(nuevas.Select(c => c.Code), targetId, updaterId);
+                _permissionService.RemoveCompanies(remover.Select(c => c.Code), targetId, updaterId);
+                _permissionService.UpdateWindowPermissions(PermissionMapper.ToModulePermissions(modulos), targetId, updaterId);
                 var ss = modulos;
                 MessageBox.Show("Usuario actulizado correctamente", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
             }

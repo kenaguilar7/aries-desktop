@@ -2,6 +2,7 @@
 using AriesContador.Core.Models.JournalEntries;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -18,5 +19,6 @@ namespace AriesContador.Core.Repositories
         bool HasOpenPeriodMovements(int accountId);
         IEnumerable<Account> GetBalancesFromAccountInfo(string companyId, DateTime from, DateTime to);
         void UpdateNameInfo(Account entity);
+        DataTable GetMovementReport(int accountId, bool auxiliar);
     }
 }

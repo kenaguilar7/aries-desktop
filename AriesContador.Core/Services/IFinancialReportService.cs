@@ -18,6 +18,7 @@ namespace AriesContador.Core.Services
         IEnumerable<PostingPeriodInfoReport> PostingPeriodInfo(string companyId);
         IEnumerable<ClosingPostingPeriodReport> ClosingPostingPeriodReport(string companyId);
 
-        Task<DataTable> AccountMoving(); 
+        Task<DataTable> AccountMoving();
+        DataTable GetAccountMovementReport(int accountId, bool auxiliar);
     }
 }

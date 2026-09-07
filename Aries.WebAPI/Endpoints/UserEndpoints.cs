@@ -20,6 +20,7 @@ namespace Aries.WebAPI.Endpoints
                     if (userId.HasValue && user.UpdatedBy == 0)
                         user.UpdatedBy = userId.Value;
                     svc.CreateUser(user);
+                    user.Password = null;
                     return Results.Ok(user);
                 }));
 

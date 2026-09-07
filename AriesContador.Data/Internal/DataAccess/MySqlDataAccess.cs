@@ -56,6 +56,32 @@ namespace AriesContador.Data.Internal.DataAccess
             }
         }
 
+        public int ExecuteText(string sql, object parameters)
+        {
+            using (IDbConnection connection = new MySqlConnection(_connectionString.MySQLDefault))
+            {
+                return connection.Execute(sql, parameters, commandType: CommandType.Text);
+            }
+        }
+
+        public int ExecuteTextInTransaction(string sql, object parameters)
+        {
+            return _connection.Execute(sql, parameters, commandType: CommandType.Text, transaction: _transaction);
+        }
+
+        public DataTable QueryTable(string sql, object parameters)
+        {
+            using (IDbConnection connection = new MySqlConnection(_connectionString.MySQLDefault))
+            {
+                using (var reader = connection.ExecuteReader(sql, parameters, commandType: CommandType.Text))
+                {
+                    var table = new DataTable();
+                    table.Load(reader);
+                    return table;
+                }
+            }
+        }
+
         public void SaveData<T>(string storedProcedure, T parameters)
         {
             string connectionString = _connectionString.MySQLDefault;

@@ -1,5 +1,4 @@
 ﻿using AriesContador.Core.Models.Companies;
-using CapaEntidad.Entidades.Compañias;
 using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Entidades.Usuarios;
 using ClosedXML.Excel;

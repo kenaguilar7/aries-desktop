@@ -5,23 +5,19 @@ using System;
 using AriesContador.Core.Models;
 using AriesContador.Core.Models.Companies;
 using AriesContador.Core.Models.Users;
+using AriesContador.Core.Services;
 using CapaEntidad.Entidades.Cuentas;
 using CapaEntidad.Entidades.Usuarios;
 using CapaEntidad.Entidades.Ventanas;
-using CapaEntidad.Enumeradores;
-using CapaLogica;
+using CapaEntidad.Mappers;
 using CapaPresentacion.Conf;
+using Microsoft.Extensions.DependencyInjection;
 using Squirrel;
 
 namespace CapaPresentacion
 {
-    /// <summary>
-    /// usar como clase estatica para cargar datos generales 
-    /// a futuro para 
-    /// </summary>
     public class GlobalConfig
     {
-
         public GlobalConfig()
         {
             LoadHttpBaseUrl();
@@ -31,6 +27,13 @@ namespace CapaPresentacion
 
         private static void LoadHttpBaseUrl()
         {
+            var fromEnv = Environment.GetEnvironmentVariable("ARIES_HTTP_BASE_URL");
+            if (!string.IsNullOrWhiteSpace(fromEnv))
+            {
+                EnvironmentVariable.ApiUrl = fromEnv;
+                return;
+            }
+
             var httpBase = ConfigurationManager.ConnectionStrings["HttpBaseUrl"];
             if (httpBase != null && !string.IsNullOrWhiteSpace(httpBase.ConnectionString))
                 EnvironmentVariable.ApiUrl = httpBase.ConnectionString;
@@ -40,15 +43,18 @@ namespace CapaPresentacion
         {
             var db = ConfigurationManager.ConnectionStrings["DBconnectionString"]
                 ?? ConfigurationManager.ConnectionStrings["DBconnectionstring"];
-            if (db == null || string.IsNullOrWhiteSpace(db.ConnectionString))
+            var fromEnv = Environment.GetEnvironmentVariable("ARIES_MYSQL_CONNECTION")
+                          ?? Environment.GetEnvironmentVariable("ConnectionStrings__MySQLDefault");
+            var cs = !string.IsNullOrWhiteSpace(fromEnv) ? fromEnv : db?.ConnectionString;
+            if (string.IsNullOrWhiteSpace(cs))
             {
                 throw new ConfigurationErrorsException(
-                    "Falta connectionString 'DBconnectionString' en CapaPresentacion.exe.config (copia de app.config).");
+                    "Falta connectionString 'DBconnectionString' o ARIES_MYSQL_CONNECTION.");
             }
 
-            var server = ReadConnectionPart(db.ConnectionString, "Server")
-                ?? ReadConnectionPart(db.ConnectionString, "Data Source")
-                ?? ReadConnectionPart(db.ConnectionString, "Host");
+            var server = ReadConnectionPart(cs, "Server")
+                ?? ReadConnectionPart(cs, "Data Source")
+                ?? ReadConnectionPart(cs, "Host");
             if (string.IsNullOrWhiteSpace(server))
             {
                 throw new ConfigurationErrorsException(
@@ -65,7 +71,7 @@ namespace CapaPresentacion
                 if (eq <= 0)
                     continue;
                 var name = trimmed.Substring(0, eq).Trim();
-                if (name.Equals(key, System.StringComparison.OrdinalIgnoreCase))
+                if (name.Equals(key, StringComparison.OrdinalIgnoreCase))
                     return trimmed.Substring(eq + 1).Trim();
             }
             return null;
@@ -94,10 +100,6 @@ namespace CapaPresentacion
 
         public static List<Cuenta> Cuentas { get; set; } = new List<Cuenta>();
         public static List<Company> Compañias { get; set; } = new List<Company>();
-        //public static Usuario Usuario { get; set; }
-        //public static User User { get; set;  }
-        //public static Company Company { get; set; }
-        //public static Company NewCompany { get; set; }
 
         public static ConnectionString ConnectionString = new ConnectionString();
 
@@ -110,45 +112,36 @@ namespace CapaPresentacion
         public static IServiceProvider Services { get; set; }
 
         public static Company Company { get; set; }
-        //private static Company _newCompany; 
-        //public static Company NewCompany 
-        //{
-        //    get { return _newCompany;  }
-        //    set 
-        //    {
-        //        Company = new Company= value;
-        //    }
-        //}
-
 
         public static Usuario Usuario { get; set; }
+
         private static User user;
         public static User User
         {
             get { return user; }
-            set 
+            set
             {
-                Usuario = new Usuario()
-                {
-                    UsuarioId = value.Id.ToString(),
-                    UserName = value.UserName,
-                    TipoUsuario = (TipoUsuario)value.UserType,
-                    MyNombre = value.Name, 
-                    Id = value.Id
-                };
-
+                Usuario = UserMapper.ToUsuario(value);
                 try
                 {
-                    Usuario.Modulos = new PermisoCL().GetAllModules(Usuario);
+                    if (value != null && Services != null)
+                    {
+                        var permissions = Services.GetRequiredService<IPermissionService>();
+                        Usuario.Modulos = PermissionMapper.ToModulos(permissions.GetModules(value.Id));
+                    }
+                    else if (Usuario != null)
+                    {
+                        Usuario.Modulos = new List<Modulo>();
+                    }
                 }
                 catch
                 {
-                    Usuario.Modulos = new List<Modulo>();
+                    if (Usuario != null)
+                        Usuario.Modulos = new List<Modulo>();
                 }
 
-                user = value; 
+                user = value;
             }
         }
-
     }
 }
