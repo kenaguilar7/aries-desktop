@@ -30,6 +30,14 @@ namespace AriesContador.Data.Migrations
             "accounting_entries_info"
         };
 
+        /// <summary>
+        /// Vistas que crean las migraciones. <c>accounting_entries_info</c> solo existe en el dump.
+        /// </summary>
+        public static readonly string[] ViewsCreatedByMigrations =
+        {
+            "account_info"
+        };
+
         public static readonly string[] Functions =
         {
             "F_GetAccountPathForReport",
@@ -83,6 +91,27 @@ namespace AriesContador.Data.Migrations
             "SP_GetJournalEntyLineDeletedByDateRange",
             "SP_JournalEntryReportByDateRange",
             "SP_EstadoResultadoIntegralReport"
+        };
+
+        /// <summary>
+        /// SPs que recrean las migraciones. El resto de <see cref="ProceduresCalledByCode"/> vive en el dump.
+        /// </summary>
+        public static readonly string[] ProceduresCreatedByMigrations =
+        {
+            "SP_InsertCompany",
+            "SP_UpdateCompany",
+            "SP_InsertUser",
+            "SP_UpdateUser",
+            "SP_InsertChildAccount",
+            "SP_AccountHasOpenPeriodMovements",
+            "SP_GetAccountBalancesFromAccountInfo",
+            "SP_InsertAccount",
+            "SP_GetAccountsByCompanyId",
+            "SP_GetAllPostingPeriod",
+            "SP_GetClosingPostingPeriodReport",
+            "SP_GetPostingPeriodReport",
+            "SP_InsertClosingPostingPeriod",
+            "SP_InsertPostingPeriod"
         };
 
         public static readonly ExpectedColumn[] Columns =

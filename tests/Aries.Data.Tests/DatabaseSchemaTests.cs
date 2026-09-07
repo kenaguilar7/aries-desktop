@@ -21,8 +21,14 @@ namespace Aries.Data.Tests
         public void Required_views_exist()
         {
             var views = _schema.ViewNames();
-            foreach (var view in ExpectedSchema.Views)
+            foreach (var view in ExpectedSchema.ViewsCreatedByMigrations)
                 Assert.Contains(view, views);
+
+            if (HasDumpRoutines())
+            {
+                foreach (var view in ExpectedSchema.Views)
+                    Assert.Contains(view, views);
+            }
         }
 
         [MySqlFact]
@@ -37,7 +43,10 @@ namespace Aries.Data.Tests
         public void Procedures_called_by_code_exist()
         {
             var procedures = _schema.ProcedureNames();
-            foreach (var procedure in ExpectedSchema.ProceduresCalledByCode)
+            var required = HasDumpRoutines()
+                ? ExpectedSchema.ProceduresCalledByCode
+                : ExpectedSchema.ProceduresCreatedByMigrations;
+            foreach (var procedure in required)
                 Assert.Contains(procedure, procedures);
         }
 
@@ -90,6 +99,11 @@ namespace Aries.Data.Tests
             var dupes = _schema.DuplicateCompanyMonthCount();
             Assert.True(hasIndex || dupes > 0,
                 "Sin duplicados debería existir uk_accounting_months_company_month");
+        }
+
+        private bool HasDumpRoutines()
+        {
+            return _schema.ProcedureNames().Contains("SP_GetJournalEntryById");
         }
     }
 }
