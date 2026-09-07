@@ -45,10 +45,22 @@ Si ya tienes `aries_mysql_local` en 3307, el script **no** crea otro MySQL; solo
 
 ### Publicar una versión al feed (no es el build)
 
-El build (Actions o `msbuild`) solo deja `bin/Release`. El feed es **otro paso**: empaquetar con Squirrel (`--releasify`) y copiar el resultado:
+El build (Actions o `msbuild`) solo deja `bin/Release`. El feed es **otro paso**: empaquetar con Squirrel y copiar el resultado a `publish/updates`.
+
+Desde un tag `vX.Y.Z` (mismo número que `AssemblyFileVersion`), Actions sube el feed como artefacto `squirrel-feed` y lo adjunta al GitHub Release. En la laptop QA:
+
+1. Baja el zip del Release (o el artefacto `squirrel-feed`) y descomprímelo.
+2. Cópialo al bind mount:
 
 ```powershell
 .\scripts\local\publish-updates.ps1 -SourceDir C:\ruta\al\directorio-con-RELEASES
+```
+
+Para empaquetar en esta máquina (tras un build Release y `nuget restore`):
+
+```powershell
+.\scripts\Pack-Squirrel.ps1
+.\scripts\local\publish-updates.ps1 -SourceDir .\publish\squirrel
 ```
 
 Eso escribe `publish/updates/` (bind mount). Las PCs con `UpdateServerString=http://<laptop>:5088/updates/` se enteran al **siguiente arranque** del exe. Override: variable `ARIES_UPDATE_URL`.

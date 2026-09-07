@@ -23,3 +23,12 @@ Este repo se abre con **Visual Studio Community 2026** (18.x), no con VS 2022. L
    - **Solo API (Local)**
    - **Escritorio + API (Local)**
 5. MySQL local en `:3307`: [`scripts/local/start-local.ps1`](scripts/local/README.md).
+
+## CI / CD
+
+PRs y pushes a `master` / `main` / `dev` corren [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
+
+- **Windows:** `nuget restore` + MSBuild Release, tests de Core / Desktop / WebAPI, `Verify-NoSecrets` y `Verify-DesktopPublish`.
+- **Ubuntu + MySQL 8:** `Aries.Data.Tests` (migraciones e insert de compañía) y otra pasada de `Aries.WebAPI.Tests`.
+
+Un tag `vX.Y.Z` **igual** que `AssemblyFileVersion` en [`AssemblyInfo.cs`](src/desktop/Aries.Desktop/Properties/AssemblyInfo.cs) dispara [`.github/workflows/release.yml`](.github/workflows/release.yml): feed Squirrel (`Setup.exe`, `RELEASES`, `-full.nupkg`) y zip del API como artefactos y GitHub Release. Para copiar ese feed a la laptop QA: [`scripts/local/README.md`](scripts/local/README.md).

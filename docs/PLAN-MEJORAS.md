@@ -51,7 +51,7 @@ Nuevas reglas de este plan:
 | DI WinForms | `IConnectionString` singleton; UoW y servicios **transient**. Transacción en el repo, no `Commit()`. |
 | `HttpAdministrationService` / `HttpFinancialService` | Borrados. |
 | `AriesWebApi/` (git anidado) | Sigue parqueado. El host canónico es `Aries.WebAPI/` en la raíz. |
-| CI | Compila solución + `AriesContador.Tests` (netcoreapp3.1) + `Aries.Desktop.Tests`. **No** corre `Aries.WebAPI.Tests`. |
+| CI | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml): Windows (MSBuild Release + Core/Desktop/WebAPI + `Verify-DesktopPublish`) y Ubuntu+MySQL (`Aries.Data.Tests`). Tag `vX.Y.Z` = `AssemblyFileVersion` → [`release.yml`](../.github/workflows/release.yml) (feed Squirrel + zip API). |
 | Config producción | `App.Production.config` y `appsettings.Production.json` tienen **connection string de RDS** y JWT placeholder. `HttpBaseUrl` apunta al Elastic Beanstalk viejo. |
 
 ---
@@ -121,8 +121,7 @@ Los mismos pendientes de [`MODELOS-BD.md`](MODELOS-BD.md) §8, ahora sí en alca
 
 ### 3.6 Tests y operación
 
-- `AriesContador.Tests` sigue en **netcoreapp3.1** (CI instala 3.1.x solo por eso).
-- `Aries.WebAPI.Tests` no está en `.github/workflows/desktop.yml`.
+- `AriesContador.Tests` está en **net8.0**; CI usa [`global.json`](../global.json) (`8.0.x`). `Aries.WebAPI.Tests` corre en Windows y Ubuntu. `Aries.Data.Tests` solo en Ubuntu+MySQL (en Windows sin MySQL era un verde falso).
 - No hay test de hash, permisos, ni cierre de periodo contra el servicio nuevo.
 - No hay runbook de backup RDS / restore a Docker.
 - Squirrel/S3 no se tocó (correcto en 0–5); sigue siendo el canal de update del exe.
@@ -260,13 +259,13 @@ Scripts versionados en `scripts/mysql/fase11/`, mismo estilo que `fase1` / `fase
 
 **Qué**
 
-1. Subir `AriesContador.Tests` a **net8.0**. Quitar `3.1.x` del workflow.
-2. Meter `Aries.WebAPI.Tests` en CI (colección `http-contract`).
+1. `AriesContador.Tests` ya está en **net8.0**; el workflow usa `global.json` (no instala 3.1.x).
+2. `Aries.WebAPI.Tests` está en `ci.yml` (Windows y Ubuntu).
 3. Tests nuevos: hash (fase 7), permisos (fase 8), cierre de periodo, que el JSON de login no lleva password.
-4. Opcional: job de integración contra MySQL de servicio en GitHub, **nunca** contra RDS.
+4. Job `linux-mysql` en `ci.yml` corre `Aries.Data.Tests` contra MySQL 8 de servicio, **nunca** contra RDS.
 5. Verify-publish: fallar si el `.config` de Release contiene host RDS + password (guardaespaldas de fase 6).
 
-**Criterio de salida:** PR a `dev`/`main` corre desktop + core net8 + API tests; el job de secretos falla si alguien reintroduce la connection string.
+**Criterio de salida:** PR a `dev`/`main` corre desktop + core net8 + API tests + Data.Tests con MySQL; el job de secretos falla si alguien reintroduce la connection string.
 
 ### Fase 13 — API de producción (cuando se necesite)
 
