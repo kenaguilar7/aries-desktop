@@ -51,7 +51,7 @@ Nuevas reglas de este plan:
 | DI WinForms | `IConnectionString` singleton; UoW y servicios **transient**. Transacción en el repo, no `Commit()`. |
 | `HttpAdministrationService` / `HttpFinancialService` | Borrados. |
 | `AriesWebApi/` (git anidado) | Sigue parqueado. El host canónico es `Aries.WebAPI/` en la raíz. |
-| CI | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml): Windows (MSBuild Release + Core/Desktop/WebAPI + `Verify-DesktopPublish`) y Ubuntu+MySQL (`Aries.Data.Tests`). Tag `vX.Y.Z` = `AssemblyFileVersion` → [`release.yml`](../.github/workflows/release.yml) (feed Squirrel + zip API). |
+| CI | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) (workflow **CI**): Windows (MSBuild Release + Core/Desktop/WebAPI + `Verify-DesktopPublish`) y Ubuntu+MySQL (`Aries.Data.Tests`). Tag `vX.Y.Z` = `AssemblyFileVersion` → [`cd.yml`](../.github/workflows/cd.yml) (workflow **CD**: feed Squirrel + zip API). |
 | Config producción | `App.Production.config` y `appsettings.Production.json` tienen **connection string de RDS** y JWT placeholder. `HttpBaseUrl` apunta al Elastic Beanstalk viejo. |
 
 ---
