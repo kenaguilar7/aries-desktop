@@ -64,6 +64,11 @@ if ($SkipApi) {
     exit 0
 }
 
+$updatesDir = Join-Path $root "publish\updates"
+if (-not (Test-Path $updatesDir)) {
+    New-Item -ItemType Directory -Path $updatesDir | Out-Null
+}
+
 Write-Host "Construyendo y levantando Aries.WebAPI en http://localhost:$apiPort/ ..."
 docker compose up -d --build --no-deps api
 if ($LASTEXITCODE -ne 0) {
@@ -92,6 +97,7 @@ if (-not $healthy) {
 }
 
 Write-Host "API lista: $healthUrl  Swagger: http://localhost:$apiPort/"
+Write-Host "Squirrel:  http://localhost:$apiPort/updates/  (publish/updates)"
 
 if ($DockerOnly) {
     exit 0

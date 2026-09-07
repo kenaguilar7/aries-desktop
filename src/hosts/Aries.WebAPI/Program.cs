@@ -7,6 +7,7 @@ using AriesContador.Data;
 using AriesContador.Data.Migrations;
 using AriesContador.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
@@ -121,6 +122,23 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Local"))
     app.UseSwaggerUI(c => c.RoutePrefix = string.Empty);
 }
 
+var updatesRoot = app.Configuration["Updates:Root"];
+if (string.IsNullOrWhiteSpace(updatesRoot))
+    updatesRoot = Path.Combine(app.Environment.ContentRootPath, "updates");
+Directory.CreateDirectory(updatesRoot);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(updatesRoot),
+    RequestPath = "/updates",
+    ServeUnknownFileTypes = true,
+    DefaultContentType = "application/octet-stream",
+    OnPrepareResponse = ctx =>
+    {
+        ctx.Context.Response.Headers.CacheControl = "no-cache";
+    }
+});
+app.Logger.LogInformation("Feed Squirrel: /updates  (carpeta {UpdatesRoot})", updatesRoot);
+
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -137,6 +155,14 @@ app.MapGet("/health", async (IConnectionString cs) =>
     {
         return Results.Json(new { status = "unhealthy", detail = ex.Message }, statusCode: 503);
     }
+}).AllowAnonymous();
+
+app.MapGet("/updates", () =>
+{
+    var names = Directory.Exists(updatesRoot)
+        ? Directory.GetFiles(updatesRoot).Select(Path.GetFileName).OrderBy(n => n).ToArray()
+        : Array.Empty<string>();
+    return Results.Ok(new { path = "/updates", files = names });
 }).AllowAnonymous();
 
 app.MapAuthEndpoints();

@@ -81,7 +81,8 @@ namespace Aries.Desktop
         {
             try
             {
-                var updateUrl = ConfigurationManager.ConnectionStrings["UpdateServerString"]?.ConnectionString;
+                var updateUrl = Environment.GetEnvironmentVariable("ARIES_UPDATE_URL")
+                    ?? ConfigurationManager.ConnectionStrings["UpdateServerString"]?.ConnectionString;
                 if (string.IsNullOrWhiteSpace(updateUrl))
                     return;
 
@@ -92,7 +93,7 @@ namespace Aries.Desktop
             }
             catch
             {
-                // Squirrel/S3 no debe impedir el login.
+                // Squirrel no debe impedir el login.
             }
         }
 

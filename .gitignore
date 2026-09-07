@@ -16,6 +16,9 @@ src/hosts/Aries.WebAPI/out
 AriesWebApi/
 updatePackages/
 updatePackagesBeta/
+publish/updates/**
+!publish/updates/README.md
+!publish/updates/.gitkeep
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

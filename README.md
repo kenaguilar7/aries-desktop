@@ -3,7 +3,7 @@
 Contabilidad de escritorio (.NET Framework 4.8) y API Minimal (`net8.0`) sobre el mismo dominio MySQL.
 
 - Layout: [`docs/LAYOUT.md`](docs/LAYOUT.md)
-- Arranque local (Docker MySQL `:3307` + API): [`scripts/local/README.md`](scripts/local/README.md)
+- Arranque local / laptop QA (Docker MySQL `:3307` + API + feed `/updates/`): [`scripts/local/README.md`](scripts/local/README.md)
 - Arquitectura histórica: [`docs/ARQUITECTURA.md`](docs/ARQUITECTURA.md)
 
 Solución canónica: **`Aries.sln`**. Proyecto de escritorio: `src/desktop/Aries.Desktop` (output `CapaPresentacion.exe`).

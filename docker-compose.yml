@@ -1,8 +1,9 @@
-# Local tipo prod: MySQL + API en contenedores. Nunca RDS.
-# Escritorio Debug sigue en el host y habla con:
-#   MySQL  127.0.0.1:3307
-#   API    http://localhost:5088/
+# Laptop/servidor QA (LAN o VPN). El escritorio en otras PCs habla con:
+#   MySQL     <host>:3307
+#   API       http://<host>:5088/
+#   Squirrel  http://<host>:5088/updates/   (RELEASES + nupkg en publish/updates)
 #
+# Debug en esta misma máquina sigue usando 127.0.0.1.
 # Si ya existe aries_mysql_local en 3307, start-local.ps1 no crea otro MySQL.
 
 name: aries-local
@@ -48,6 +49,9 @@ services:
       Jwt__Key: ${JWT_KEY:-AriesContador-dev-jwt-key-change-me-32}
       Jwt__Issuer: Aries.WebAPI
       Jwt__Audience: Aries.Desktop
+      Updates__Root: /app/updates
+    volumes:
+      - ./publish/updates:/app/updates
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:

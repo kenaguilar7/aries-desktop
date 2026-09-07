@@ -14,7 +14,7 @@ Ver [`scripts/local/README.md`](../../../scripts/local/README.md). El camino loc
 - Salud: `http://localhost:5088/health`
 - Login de prueba: `POST /auth/login` con `{"UserId":"kenneth","Password":"96321"}`
 
-El contenedor `aries_api_local` habla con MySQL en `host.docker.internal:3307` (`aries_mysql_local`). El escritorio Debug usa el mismo MySQL y `HttpBaseUrl=http://localhost:5088/`.
+El contenedor `aries_api_local` habla con MySQL en `host.docker.internal:3307` (`aries_mysql_local`). El escritorio Debug usa el mismo MySQL y `HttpBaseUrl=http://localhost:5088/`. Feed Squirrel del mismo host: `http://localhost:5088/updates/` (ver [`scripts/local/README.md`](../../../scripts/local/README.md)).
 
 Para depurar el API **en el host** (no Docker): `docker compose stop api` y F5 en el perfil `Aries.WebAPI (Local)`. Contra RDS: perfil Production — no es el contenedor local.
 
