@@ -2,8 +2,10 @@
 using AriesContador.Core.Models.Companies;
 using AriesContador.Core.Repositories;
 using AriesContador.Data.Internal.DataAccess;
+using Dapper;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -26,7 +28,7 @@ namespace AriesContador.Data.Repositories
                 try
                 {
                     dataAccess.StartTransaction();
-                    dataAccess.SaveDataInTransaction("SP_InsertCompany", ToInsertParams(entity));
+                    dataAccess.SaveDataInTransaction("SP_InsertCompany", ToInsertCommandParams(entity));
 
                     foreach (var account in accounts)
                     {
@@ -133,6 +135,15 @@ delete from companies where company_id = @Code
                 "SP_GetOrCreateAccountName",
                 new { AccountName = name });
             return nameId.ToString();
+        }
+
+        private static DynamicParameters ToInsertCommandParams(Company entity)
+        {
+            var parameters = new DynamicParameters(ToInsertParams(entity));
+            // MySqlConnector copies OUT values after CALL; without this it throws
+            // "Parameter 'NewCompanyId' not found in the collection".
+            parameters.Add("@NewCompanyId", dbType: DbType.String, size: 5, direction: ParameterDirection.Output);
+            return parameters;
         }
 
         private static object ToInsertParams(Company entity)
