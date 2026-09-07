@@ -4,6 +4,7 @@ using Aries.WebAPI.Infrastructure;
 using AriesContador.Core;
 using AriesContador.Core.Services;
 using AriesContador.Data;
+using AriesContador.Data.Migrations;
 using AriesContador.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -91,6 +92,13 @@ if (!app.Environment.IsEnvironment("Testing"))
     app.Logger.LogInformation(
         "Ambiente {Environment}: MySQL {Server}:{Port} / {Database}",
         app.Environment.EnvironmentName, server, port, database);
+
+    var connection = app.Services.GetRequiredService<IConnectionString>();
+    var migrated = new DatabaseMigrator(connection.MySQLDefault).ApplyPending();
+    if (migrated.HadPending)
+        app.Logger.LogInformation("MySQL migraciones aplicadas: {Migrations}", string.Join(", ", migrated.AppliedIds));
+    else
+        app.Logger.LogInformation("MySQL esquema al día ({Count} migraciones)", migrated.AlreadyAppliedIds.Count);
 }
 
 app.UseExceptionHandler(errorApp =>

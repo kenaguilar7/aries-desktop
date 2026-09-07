@@ -53,6 +53,12 @@ else {
     }
 }
 
+# El dump se restaura como root; sin SYSTEM_USER el usuario de app no puede DROP PROCEDURE.
+$grantSql = Join-Path $root "scripts\mysql\grant_routine_replace.sql"
+if (Test-Path $grantSql) {
+    Get-Content -Raw $grantSql | docker exec -i aries_mysql_local mysql -uroot -paries_root_pwd 2>$null
+}
+
 if ($SkipApi) {
     Write-Host "API omitida (-SkipApi). Escritorio Debug no la necesita (login in-process)."
     exit 0

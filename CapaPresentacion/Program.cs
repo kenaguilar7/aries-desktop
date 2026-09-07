@@ -5,6 +5,7 @@ using AriesContador.Core;
 using AriesContador.Core.Models.Email;
 using AriesContador.Core.Services;
 using AriesContador.Data;
+using AriesContador.Data.Migrations;
 using AriesContador.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -18,6 +19,20 @@ namespace CapaPresentacion
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             GlobalConfig globalConfig = new GlobalConfig();
+
+            try
+            {
+                new DatabaseMigrator(GlobalConfig.ConnectionString.MySQLDefault).ApplyPending();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "No se pudo actualizar la base de datos. La aplicación no puede continuar.\n\n" + ex.Message,
+                    "Aries Contador",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
 
             var services = new ServiceCollection();
             services.AddSingleton<IConnectionString>(GlobalConfig.ConnectionString);

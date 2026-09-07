@@ -42,6 +42,9 @@ jobs:
       - name: Test API contract
         run: dotnet test Aries.WebAPI.Tests\Aries.WebAPI.Tests.csproj --configuration Release --nologo
 
+      - name: Test database migrations
+        run: dotnet test Aries.Data.Tests\Aries.Data.Tests.csproj --configuration Release --nologo
+
       - name: Verify publish folder
         shell: pwsh
         run: |
