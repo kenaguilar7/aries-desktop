@@ -119,15 +119,13 @@ if ($ProjectFile) {
         Add-Failure "ProjectFile no existe: $ProjectFile"
     }
     else {
-        $projectDir = Split-Path -Parent $ProjectFile
-        $repoRoot = $projectDir
-        while ($repoRoot -and -not (Test-Path -LiteralPath (Join-Path $repoRoot 'nuget.config'))) {
-            $parent = Split-Path -Parent $repoRoot
-            if ($parent -eq $repoRoot) { break }
-            $repoRoot = $parent
-        }
-        if (-not (Test-Path -LiteralPath (Join-Path $repoRoot 'nuget.config'))) {
-            Add-Failure "No se encontró nuget.config subiendo desde $projectDir"
+        $projectFileFull = (Resolve-Path -LiteralPath $ProjectFile).Path
+        $projectDir = Split-Path -Parent $projectFileFull
+        # scripts/ lives at repo root; don't walk relative parents (pwsh 7 Join-Path rejects '').
+        $repoRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
+        $nugetConfig = Join-Path $repoRoot 'nuget.config'
+        if (-not (Test-Path -LiteralPath $nugetConfig)) {
+            Add-Failure "No se encontró nuget.config en $repoRoot (desde $projectDir)"
         }
         $hintMatches = Select-String -LiteralPath $ProjectFile -Pattern '<HintPath>([^<]+)</HintPath>' -AllMatches
         foreach ($m in $hintMatches) {
