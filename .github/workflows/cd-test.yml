@@ -6,7 +6,8 @@ name: cd-test
 #
 # Artifact: squirrel-feed-test
 # S3 opcional: s3://ariescontadorcr/updates-test/
-# Secrets: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, ARIES_MYSQL_CONNECTION
+# Secrets: environment GitHub "test" (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, ARIES_MYSQL_CONNECTION)
+# No usar environment production/prod en este workflow.
 
 on:
   workflow_dispatch:
@@ -30,6 +31,7 @@ permissions:
 jobs:
   pack-squirrel:
     runs-on: windows-latest
+    environment: test
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
