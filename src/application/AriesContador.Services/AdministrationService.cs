@@ -53,7 +53,11 @@ namespace AriesContador.Services
             if (string.IsNullOrWhiteSpace(compañia.Code))
                 compañia.Code = await GetCompanyConsecutiveAsync(cancellationToken).ConfigureAwait(false);
 
-            compañia.Account = await LoadAccountsForNewCompanyAsync(compañia, cancellationToken).ConfigureAwait(false);
+            if (CopiesFromExistingCompany(compañia.CopyFrom))
+                compañia.Account = Array.Empty<Account>();
+            else
+                compañia.Account = LoadDefaultAccounts(compañia);
+
             await _unitOfWork.CompanyRepository.AddAsync(compañia, cancellationToken).ConfigureAwait(false);
         }
 
@@ -347,54 +351,23 @@ namespace AriesContador.Services
             dest.CopyFrom = source.CopyFrom;
         }
 
-        private async Task<IEnumerable<Account>> LoadAccountsForNewCompanyAsync(Company company, CancellationToken cancellationToken)
+        private static bool CopiesFromExistingCompany(string copyFrom)
         {
-            var copyFrom = company.CopyFrom;
-            if (string.IsNullOrWhiteSpace(copyFrom) || copyFrom == "POR DEFECTO")
-            {
-                var defaults = _unitOfWork.AccountRepository.GetDefaultAccounts()
-                    .Where(a => a.Id <= DefaultChartOfAccounts.AccountCount)
-                    .ToList();
-                foreach (var account in defaults)
-                {
-                    account.CompanyId = company.Code;
-                    if (account.UpdatedBy == 0)
-                        account.UpdatedBy = company.CreatedBy;
-                }
-                return defaults;
-            }
-
-            var source = (await _unitOfWork.AccountRepository.FindByCompanyIdAsync(copyFrom, cancellationToken).ConfigureAwait(false)).ToList();
-            if (source.Count == 0)
-                throw new InvalidOperationException("No se pudo clonar el maestro de cuentas");
-
-            return source.Select(a => CloneAccount(a, company.Code)).ToList();
+            return !string.IsNullOrWhiteSpace(copyFrom) && copyFrom != "POR DEFECTO";
         }
 
-        private static Account CloneAccount(Account source, string newCompanyId)
+        private IEnumerable<Account> LoadDefaultAccounts(Company company)
         {
-            return new Account
+            var defaults = _unitOfWork.AccountRepository.GetDefaultAccounts()
+                .Where(a => a.Id <= DefaultChartOfAccounts.AccountCount)
+                .ToList();
+            foreach (var account in defaults)
             {
-                Id = source.Id,
-                Name = source.Name,
-                Memo = source.Memo,
-                Editable = source.Editable,
-                AccountTag = source.AccountTag,
-                AccountType = source.AccountType,
-                CompanyId = newCompanyId,
-                PathDirection = source.PathDirection,
-                FatherAccount = source.FatherAccount,
-                DebOCred = source.DebOCred,
-                PriorBalance = source.PriorBalance,
-                PriorBalanceForeign = source.PriorBalanceForeign,
-                DebitBalance = source.DebitBalance,
-                DebitBalanceForeign = source.DebitBalanceForeign,
-                CreditBalance = source.CreditBalance,
-                CreditBalanceForeign = source.CreditBalanceForeign,
-                CreatedBy = source.CreatedBy,
-                UpdatedBy = source.UpdatedBy,
-                Active = source.Active
-            };
+                account.CompanyId = company.Code;
+                if (account.UpdatedBy == 0)
+                    account.UpdatedBy = company.CreatedBy;
+            }
+            return defaults;
         }
     }
 }

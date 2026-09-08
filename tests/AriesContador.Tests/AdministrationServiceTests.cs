@@ -84,17 +84,6 @@ namespace AriesContador.Tests
         public async System.Threading.Tasks.Task CreateCompany_copies_full_chart_not_id_filter()
         {
             var uow = new FakeUnitOfWork();
-            for (var i = 1; i <= 80; i++)
-            {
-                uow.Accounts.Items.Add(new Account
-                {
-                    Id = i,
-                    Name = $"Cuenta {i}",
-                    CompanyId = "C001",
-                    FatherAccount = i == 1 ? 0 : 1
-                });
-            }
-
             var svc = new AdministrationService(uow);
             var company = new Company
             {
@@ -108,8 +97,8 @@ namespace AriesContador.Tests
             await svc.CreateCompanyAsync(company);
 
             var saved = Assert.Single(uow.Companies.Added);
-            Assert.Equal(80, saved.Account.Count());
-            Assert.All(saved.Account, a => Assert.Equal(saved.Code, a.CompanyId));
+            Assert.Equal("C001", saved.CopyFrom);
+            Assert.Empty(saved.Account);
         }
 
         [Fact]

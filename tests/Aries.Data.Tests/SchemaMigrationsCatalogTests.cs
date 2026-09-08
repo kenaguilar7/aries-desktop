@@ -47,6 +47,7 @@ namespace Aries.Data.Tests
             Assert.Contains("006_PermissionForeignKeys", ids);
             Assert.Contains("009_AccountPathFunctions", ids);
             Assert.Contains("010_WidenCompanyIdOnDumpProcedures", ids);
+            Assert.Contains("013_CopyCompanyChart", ids);
         }
 
         [Fact]
