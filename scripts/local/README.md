@@ -4,9 +4,9 @@ Hay **tres** sitios: tu PC de desarrollo, la **laptop/servidor** con Docker (LAN
 
 | | Escritorio | MySQL + API + Squirrel |
 |---|---|---|
-| **Local (esta PC)** | **Debug** → `app.config` (`127.0.0.1:3307`, API `http://localhost:5088/`). `UpdateServerString` vacío: F5 no se auto-actualiza. | `docker compose` en esta misma máquina |
-| **QA (laptop servidor)** | **Release** → `App.Production.local.config` según [`App.Qa.local.config.example`](../../src/desktop/Aries.Desktop/App.Qa.local.config.example). MySQL y updates apuntan al **host de esa laptop**. | El mismo `docker compose` en la laptop. Clientes por VPN/LAN. |
-| **Production (S3)** | `App.Production.config` sigue con el bucket `ariescontador/updates` | No es este Docker |
+| **Local (esta PC)** | **Debug** → `app.config` (Docker `:3307` / `aries`). Otra base: `local-db.json`. | `docker compose` en esta misma máquina |
+| **QA (laptop servidor)** | **Release** → copia `App.Production.config` a `App.Production.local.config` (gitignored): `Server=<laptop>`, puerto **3307**, `UpdateServerString=http://<laptop>:5088/updates/`, `EnvironmentName=Qa`. | El mismo `docker compose` en la laptop. Clientes por VPN/LAN. |
+| **Production (S3)** | `App.Production.config` + pack con secrets. Feed: bucket `ariescontadorcr/updates` | No es este Docker |
 
 El título del menú muestra `[Local]`, `[Qa]` o `[Production]` según `EnvironmentName`.
 
@@ -94,17 +94,26 @@ No hay job automático contra RDS. Un backup de RDS se baja **fuera** de este re
 
 ### Escritorio en esta PC (dev)
 
-Proyecto de inicio **Aries.Desktop** (`src/desktop/Aries.Desktop`, output `CapaPresentacion.exe`), configuración **Debug**. Login, maestros y asientos van **in-process** a MySQL `:3307`. `HttpBaseUrl` es solo diagnóstico.
+Proyecto de inicio **Aries.Desktop** (`src/desktop/Aries.Desktop`, output `CapaPresentacion.exe`), configuración **Debug**. Login, maestros y asientos van **in-process** a MySQL. `HttpBaseUrl` es solo diagnóstico.
+
+**Base de datos en F5:** el primer Debug crea `src/desktop/Aries.Desktop/local-db.json` (gitignored) desde [`local-db.json.example`](local-db.json.example). Cambia solo `"use"`:
+
+| `"use"` | Destino |
+|---|---|
+| `"docker"` | `127.0.0.1:3307`, base `aries` (`app.config`) |
+| `"aries-test"` | el RDS que pongas en ese bloque, base `aries-test` |
+
+Rellena `Server` y `Password` una vez. No uses variables de entorno en local. El título del menú muestra la base (`[Local] aries` o `[AriesTest] aries-test`).
 
 Tras fase 7, el primer login de un usuario en plano deja la fila hasheada (`pbkdf2$...`).
 
 ### Escritorio en otras PCs (QA)
 
-Copia `App.Production.config` → `App.Production.local.config` y rellena como en [`App.Qa.local.config.example`](../../src/desktop/Aries.Desktop/App.Qa.local.config.example): `Server=<laptop>`, puerto **3307**, `UpdateServerString=http://<laptop>:5088/updates/`.
+Copia `App.Production.config` → `App.Production.local.config` (junto al csproj, gitignored). En esta laptop: `Server=127.0.0.1;Port=3307;...` y `UpdateServerString=http://127.0.0.1:5088/updates/`. En otras PCs: `Server=<laptop>` y `UpdateServerString=http://<laptop>:5088/updates/`. `EnvironmentName=Qa`. No uses el bucket S3 de producción.
 
 ## Production (máquina / pipeline S3)
 
-`App.Production.config` **no** lleva password. Copia `App.Production.local.config.example` → `App.Production.local.config` (gitignored) o define `ARIES_MYSQL_CONNECTION`. JWT del API: `Jwt__Key` (mín. 32 bytes), nunca el placeholder.
+`App.Production.config` **no** lleva password. En la máquina de release: copia ese archivo a `App.Production.local.config` (gitignored) y rellena `DBconnectionString`, o define `ARIES_MYSQL_CONNECTION` al empaquetar. JWT del API: `Jwt__Key` (mín. 32 bytes), nunca el placeholder.
 
 **No aplicar SPs de fase 1/3/7/11 sobre RDS** desde este workspace. Eso es una ventana de operación aparte.
 
@@ -115,9 +124,10 @@ Copia `App.Production.config` → `App.Production.local.config` y rellena como e
 | `.env.example` → `.env` | Docker (MySQL, puerto API, JWT) |
 | `docker-compose.yml` | MySQL 8 + `Aries.WebAPI` + volumen `publish/updates` |
 | `publish/updates/` | Feed Squirrel servido en `/updates/` |
-| `src/desktop/Aries.Desktop/app.config` | Debug / Local (Docker `:3307`) |
-| `src/desktop/Aries.Desktop/App.Production.config` | Release; updates aún S3 (prod histórica) |
-| `src/desktop/Aries.Desktop/App.Qa.local.config.example` | Cómo apuntar Release a la laptop |
-| `src/desktop/Aries.Desktop/App.Production.local.config` | Secretos de máquina (gitignored) |
+| `src/desktop/Aries.Desktop/app.config` | Debug / Docker (`:3307`, base `aries`) |
+| `src/desktop/Aries.Desktop/App.Production.config` | Release (sin secretos) |
+| `src/desktop/Aries.Desktop/local-db.json` | F5: `"use": "docker"` o `"aries-test"` (gitignored) |
+| `scripts/local/local-db.json.example` | Plantilla de `local-db.json` |
+| `src/desktop/Aries.Desktop/App.Production.local.config` | Secretos de un Release local (gitignored) |
 | `src/hosts/Aries.WebAPI/appsettings.Development.json` | Fallback local |
 | `src/hosts/Aries.WebAPI/appsettings.Production.json` | Vacío; secretos por env |

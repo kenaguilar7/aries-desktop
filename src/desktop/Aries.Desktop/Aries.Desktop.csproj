@@ -275,22 +275,22 @@
     <Compile Include="FrameCuentas\SwitchAccountEntryPeriod.Designer.cs">
       <DependentUpon>SwitchAccountEntryPeriod.cs</DependentUpon>
     </Compile>
-    <Compile Include="FrameLoginUsuario.cs">
+    <Compile Include="Login\FrameLoginUsuario.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FrameLoginUsuario.Designer.cs">
+    <Compile Include="Login\FrameLoginUsuario.Designer.cs">
       <DependentUpon>FrameLoginUsuario.cs</DependentUpon>
     </Compile>
-    <Compile Include="FrameMenu.cs">
+    <Compile Include="Menu\FrameMenu.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FrameMenu.Designer.cs">
+    <Compile Include="Menu\FrameMenu.Designer.cs">
       <DependentUpon>FrameMenu.cs</DependentUpon>
     </Compile>
-    <Compile Include="FrameSeleccionCompañia.cs">
+    <Compile Include="FrameCompañias\FrameSeleccionCompañia.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FrameSeleccionCompañia.Designer.cs">
+    <Compile Include="FrameCompañias\FrameSeleccionCompañia.Designer.cs">
       <DependentUpon>FrameSeleccionCompañia.cs</DependentUpon>
     </Compile>
     <Compile Include="FrameUsuarios\Correo.cs">
@@ -396,13 +396,13 @@
     <EmbeddedResource Include="FrameCuentas\SwitchAccountEntryPeriod.resx">
       <DependentUpon>SwitchAccountEntryPeriod.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FrameLoginUsuario.resx">
+    <EmbeddedResource Include="Login\FrameLoginUsuario.resx">
       <DependentUpon>FrameLoginUsuario.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FrameMenu.resx">
+    <EmbeddedResource Include="Menu\FrameMenu.resx">
       <DependentUpon>FrameMenu.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FrameSeleccionCompañia.resx">
+    <EmbeddedResource Include="FrameCompañias\FrameSeleccionCompañia.resx">
       <DependentUpon>FrameSeleccionCompañia.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FrameUsuarios\Correo.resx">
@@ -452,11 +452,9 @@
       <DependentUpon>ReporteCuenta.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="app.config" />
-    <None Include="App.Production.config" />
-    <None Include="App.Local.config.example" />
-    <None Include="App.Qa.local.config.example" />
-    <None Include="App.Test.config.example" />
-    <None Include="App.Local.config" Condition="Exists('App.Local.config')" />
+    <None Include="App.Production.config">
+      <DependentUpon>app.config</DependentUpon>
+    </None>
     <None Include="packages.config" />
     <None Include="Properties\app.manifest" />
     <None Include="Properties\Settings.settings">
@@ -601,9 +599,6 @@
   <ItemGroup>
     <None Include="Resources\icons8-exhange-24.png" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="User\" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -616,12 +611,16 @@
   <Import Project="..\..\..\packages\squirrel.windows.1.9.1\build\squirrel.windows.targets" Condition="Exists('..\..\..\packages\squirrel.windows.1.9.1\build\squirrel.windows.targets')" />
   <Target Name="ApplyEnvironmentAppConfig" AfterTargets="CopyAppConfigFile" BeforeTargets="VerifyDesktopOutput">
     <PropertyGroup>
+      <_LocalDbJson>$(MSBuildThisFileDirectory)local-db.json</_LocalDbJson>
+      <_LocalDbExample>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..\..\scripts\local\local-db.json.example'))</_LocalDbExample>
+      <_ApplyLocalDb>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..\..\scripts\local\Apply-LocalDbJson.ps1'))</_ApplyLocalDb>
       <_EnvConfig Condition="'$(Configuration)' == 'Release' And Exists('$(MSBuildThisFileDirectory)App.Production.local.config')">$(MSBuildThisFileDirectory)App.Production.local.config</_EnvConfig>
       <_EnvConfig Condition="'$(Configuration)' == 'Release' And !Exists('$(MSBuildThisFileDirectory)App.Production.local.config')">$(MSBuildThisFileDirectory)App.Production.config</_EnvConfig>
-      <_EnvConfig Condition="'$(Configuration)' != 'Release' And Exists('$(MSBuildThisFileDirectory)App.Local.config')">$(MSBuildThisFileDirectory)App.Local.config</_EnvConfig>
     </PropertyGroup>
     <Copy Condition="'$(_EnvConfig)' != '' And Exists('$(_EnvConfig)')" SourceFiles="$(_EnvConfig)" DestinationFiles="$(TargetPath).config" OverwriteReadOnlyFiles="true" />
     <Message Condition="'$(_EnvConfig)' != '' And Exists('$(_EnvConfig)')" Importance="high" Text="Ambiente $(Configuration): $(_EnvConfig) -&gt; $(TargetFileName).config" />
+    <Copy Condition="'$(Configuration)' != 'Release' And !Exists('$(_LocalDbJson)') And Exists('$(_LocalDbExample)')" SourceFiles="$(_LocalDbExample)" DestinationFiles="$(_LocalDbJson)" />
+    <Exec Condition="'$(Configuration)' != 'Release' And Exists('$(_LocalDbJson)')" Command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File &quot;$(_ApplyLocalDb)&quot; -JsonPath &quot;$(_LocalDbJson)&quot; -ExeConfigPath &quot;$(TargetPath).config&quot;" />
   </Target>
   <Target Name="VerifyDesktopOutput" AfterTargets="CopyFilesToOutputDirectory">
     <PropertyGroup>

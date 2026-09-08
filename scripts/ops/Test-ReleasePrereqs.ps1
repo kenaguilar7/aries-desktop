@@ -72,9 +72,9 @@ if (Test-Path -LiteralPath $prodCfg) {
     }
 }
 
-$localCfg = Join-Path $root 'src\desktop\Aries.Desktop\App.Local.config'
+$localDb = Join-Path $root 'src\desktop\Aries.Desktop\local-db.json'
 $prodLocal = Join-Path $root 'src\desktop\Aries.Desktop\App.Production.local.config'
-if (Test-Path -LiteralPath $localCfg) { Show-Ok "App.Local.config (no se commitea)" } else { Show-Warn "Opcional: App.Local.config para Debug local" }
+if (Test-Path -LiteralPath $localDb) { Show-Ok "local-db.json (F5 local, no se commitea)" } else { Show-Warn "Opcional: local-db.json para cambiar de base en Debug" }
 if (Test-Path -LiteralPath $prodLocal) { Show-Ok "App.Production.local.config (secretos de release, no se commitea)" } else { Show-Warn "Opcional: App.Production.local.config con RDS para un exe Release usable" }
 
 if ($fail -gt 0) {

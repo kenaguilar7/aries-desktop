@@ -10,6 +10,7 @@
 # Local environment (secrets / machine overrides)
 .env
 src/desktop/Aries.Desktop/App.Local.config
+src/desktop/Aries.Desktop/local-db.json
 src/desktop/Aries.Desktop/App.Production.local.config
 src/desktop/Aries.Desktop/App.Test.config
 src/desktop/Aries.Desktop/App.Staging.config

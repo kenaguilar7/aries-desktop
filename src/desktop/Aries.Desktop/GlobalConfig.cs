@@ -41,17 +41,7 @@ namespace Aries.Desktop
 
         private static void LoadDatabaseConnectionString()
         {
-            var db = ConfigurationManager.ConnectionStrings["DBconnectionString"]
-                ?? ConfigurationManager.ConnectionStrings["DBconnectionstring"];
-            var fromEnv = Environment.GetEnvironmentVariable("ARIES_MYSQL_CONNECTION")
-                          ?? Environment.GetEnvironmentVariable("ConnectionStrings__MySQLDefault");
-            var cs = !string.IsNullOrWhiteSpace(fromEnv) ? fromEnv : db?.ConnectionString;
-            if (string.IsNullOrWhiteSpace(cs))
-            {
-                throw new ConfigurationErrorsException(
-                    "Falta connectionString 'DBconnectionString' o ARIES_MYSQL_CONNECTION.");
-            }
-
+            var cs = ConnectionString.MySQLDefault;
             var server = ReadConnectionPart(cs, "Server")
                 ?? ReadConnectionPart(cs, "Data Source")
                 ?? ReadConnectionPart(cs, "Host");
@@ -109,6 +99,15 @@ namespace Aries.Desktop
 
         public static bool IsLocalEnvironment =>
             string.Equals(EnvironmentName, "Local", StringComparison.OrdinalIgnoreCase);
+
+        public static string MySqlDatabase =>
+            ReadConnectionPart(ConnectionString.MySQLDefault, "Database") ?? "(sin Database)";
+
+        public static string MySqlServer =>
+            ReadConnectionPart(ConnectionString.MySQLDefault, "Server")
+            ?? ReadConnectionPart(ConnectionString.MySQLDefault, "Data Source")
+            ?? ReadConnectionPart(ConnectionString.MySQLDefault, "Host")
+            ?? "(sin Server)";
 
         public static IServiceProvider Services { get; set; }
 

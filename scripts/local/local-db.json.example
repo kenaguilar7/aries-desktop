@@ -1,0 +1,11 @@
+{
+  "use": "docker",
+  "aries-test": {
+    "Server": "SET_RDS_HOST",
+    "Port": 3306,
+    "User": "kenneth",
+    "Password": "SET_PASSWORD",
+    "Database": "aries-test",
+    "EnvironmentName": "AriesTest"
+  }
+}

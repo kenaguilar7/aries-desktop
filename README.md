@@ -24,6 +24,15 @@ Este repo se abre con **Visual Studio Community 2026** (18.x), no con VS 2022. L
    - **Escritorio + API (Local)**
 5. MySQL local en `:3307`: [`scripts/local/start-local.ps1`](scripts/local/README.md).
 
+### Cambiar de base en F5 (sin variables de entorno)
+
+GitHub Actions usa secrets. En tu PC: `src/desktop/Aries.Desktop/local-db.json` (gitignored; el primer Debug lo crea desde [`scripts/local/local-db.json.example`](scripts/local/local-db.json.example)).
+
+1. Abre `local-db.json` (junto a `app.config` en disco, no en el proyecto).
+2. Rellena `Server` y `Password` del bloque `aries-test`.
+3. Pon `"use": "aries-test"` o `"use": "docker"` y F5.
+4. El título del menú muestra `[AriesTest] aries-test` o `[Local] aries`.
+
 ## CI / CD
 
 PRs y pushes a `master` / `main` / `dev` corren [`.github/workflows/ci.yml`](.github/workflows/ci.yml):

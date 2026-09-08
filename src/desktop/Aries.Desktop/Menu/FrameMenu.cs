@@ -1,5 +1,4 @@
 using System;
-using System.Configuration;
 using System.Diagnostics;
 using System.Windows.Forms;
 using Aries.Reporting.Entidades.Ventanas;
@@ -65,7 +64,7 @@ namespace Aries.Desktop
         {
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
             FileVersionInfo versionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
-            this.Text += $" v.{versionInfo.FileVersion} [{GlobalConfig.EnvironmentName}]";
+            this.Text += $" v.{versionInfo.FileVersion} [{GlobalConfig.EnvironmentName}] {GlobalConfig.MySqlDatabase}";
             ///fo
         }
         private void CargarCompañia()
@@ -389,27 +388,12 @@ namespace Aries.Desktop
 
         private void tokenToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var db = ConfigurationManager.ConnectionStrings["DBconnectionString"]
-                ?? ConfigurationManager.ConnectionStrings["DBconnectionstring"];
-            var server = "(sin Server)";
-            if (db != null)
-            {
-                foreach (var part in db.ConnectionString.Split(';'))
-                {
-                    var trimmed = part.Trim();
-                    if (trimmed.StartsWith("Server=", StringComparison.OrdinalIgnoreCase)
-                        || trimmed.StartsWith("Host=", StringComparison.OrdinalIgnoreCase))
-                    {
-                        server = trimmed.Substring(trimmed.IndexOf('=') + 1).Trim();
-                        break;
-                    }
-                }
-            }
-
             var scriptInfo =
                 "Ambiente: " + GlobalConfig.EnvironmentName
                 + Environment.NewLine
-                + "MySQL: " + server
+                + "MySQL: " + GlobalConfig.MySqlServer
+                + Environment.NewLine
+                + "Database: " + GlobalConfig.MySqlDatabase
                 + Environment.NewLine
                 + "Login / maestros / asientos: in-process (no necesitan API)"
                 + Environment.NewLine

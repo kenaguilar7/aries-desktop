@@ -17,6 +17,21 @@ JOIN (
 SET c.user_id = a.user_id
 WHERE c.user_id IS NULL;
 -- BATCH
+SET @fk := (
+  SELECT CONSTRAINT_NAME
+  FROM information_schema.KEY_COLUMN_USAGE
+  WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'companies'
+    AND COLUMN_NAME = 'user_id'
+    AND REFERENCED_TABLE_NAME IS NOT NULL
+  LIMIT 1);
+SET @sql := IF(@fk IS NULL,
+  'SELECT 1',
+  CONCAT('ALTER TABLE `companies` DROP FOREIGN KEY `', @fk, '`'));
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+-- BATCH
 SET @nullable := (
   SELECT IF(IS_NULLABLE = 'YES', 1, 0)
   FROM information_schema.COLUMNS
@@ -25,6 +40,19 @@ SET @nullable := (
     AND COLUMN_NAME = 'user_id');
 SET @sql := IF(@nullable = 1,
   'ALTER TABLE `companies` MODIFY COLUMN `user_id` INT UNSIGNED NOT NULL',
+  'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+-- BATCH
+SET @exists := (
+  SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
+  WHERE CONSTRAINT_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'companies'
+    AND CONSTRAINT_NAME = 'fk_companies_user'
+    AND CONSTRAINT_TYPE = 'FOREIGN KEY');
+SET @sql := IF(@exists = 0,
+  'ALTER TABLE `companies` ADD CONSTRAINT `fk_companies_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)',
   'SELECT 1');
 PREPARE stmt FROM @sql;
 EXECUTE stmt;

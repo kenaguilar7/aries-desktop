@@ -176,7 +176,7 @@ Cada fase termina con un **criterio de salida** medible. No se empieza la siguie
 6. Swagger: solo Development/Local. Producción: `/health` sí, UI de Swagger no.
 7. Confirmar que `SquirrelTemp/` sigue fuera de git (ya está en `.gitignore`).
 
-**Criterio de salida:** `git grep` del repo de trabajo no encuentra el host RDS + password. Un clone limpio arranca en Local con `App.Local.config.example` + Docker. RDS responde con la **nueva** credencial. El exe Release no usa el EBS viejo.
+**Criterio de salida:** `git grep` del repo de trabajo no encuentra el host RDS + password. Un clone limpio arranca en Local con Docker + `local-db.json` (`use: docker`). RDS responde con la **nueva** credencial. El exe Release no usa el EBS viejo.
 
 **No hacer:** hash de passwords (fase 7); desplegar el API nuevo a AWS.
 
