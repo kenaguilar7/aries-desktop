@@ -149,7 +149,7 @@ $nuspec = @"
     <description>Aries Contador</description>
   </metadata>
   <files>
-    <file src="**" target="lib\net45" exclude="**\*.xml;**\*.pdb;**\*.log" />
+    <file src="**" target="lib\net45" exclude="**\*.xml;**\*.pdb;**\*.log;**\roslyn\**" />
   </files>
 </package>
 "@
@@ -167,21 +167,63 @@ if (-not $nupkg) {
 }
 
 Write-Host "Squirrel --releasify $($nupkg.Name) -> $OutputDir"
-& $SquirrelExe --releasify $nupkg.FullName --releaseDir=$OutputDir --no-msi
-if ($LASTEXITCODE -ne 0) {
-    throw "Squirrel --releasify fallo (exit $LASTEXITCODE)"
+# Squirrel.exe es una app Win32 (no consola): `& Squirrel.exe` vuelve antes de terminar.
+# Hay que esperar el proceso; si no, OutputDir queda sin Setup.exe/RELEASES.
+$squirrelArgs = @(
+    "--releasify=$($nupkg.FullName)",
+    "--releaseDir=$OutputDir",
+    "--no-msi"
+)
+$proc = Start-Process -FilePath $SquirrelExe -ArgumentList $squirrelArgs -Wait -PassThru -NoNewWindow
+if ($null -eq $proc) {
+    throw "No se pudo iniciar Squirrel.exe"
+}
+if ($proc.ExitCode -ne 0 -and $null -ne $proc.ExitCode) {
+    throw "Squirrel --releasify fallo (exit $($proc.ExitCode))"
 }
 
-$releasesFile = Join-Path $OutputDir 'RELEASES'
-if (-not (Test-Path -LiteralPath $releasesFile)) {
-    $fallback = Join-Path (Get-Location) 'Releases'
-    if (Test-Path -LiteralPath (Join-Path $fallback 'RELEASES')) {
-        Copy-Item -Path (Join-Path $fallback '*') -Destination $OutputDir -Force
+$candidateDirs = @(
+    $OutputDir,
+    (Join-Path (Get-Location) 'Releases'),
+    (Join-Path (Split-Path -Parent $SquirrelExe) 'Releases')
+)
+foreach ($dir in $candidateDirs) {
+    if (-not (Test-Path -LiteralPath $dir)) { continue }
+    if ([string]::Equals((Resolve-Path -LiteralPath $dir).Path, (Resolve-Path -LiteralPath $OutputDir).Path, [StringComparison]::OrdinalIgnoreCase)) {
+        continue
+    }
+    $hasFeed = (Test-Path -LiteralPath (Join-Path $dir 'RELEASES')) -or (Test-Path -LiteralPath (Join-Path $dir 'Setup.exe'))
+    if (-not $hasFeed) { continue }
+    Write-Host "Copiando feed Squirrel desde $dir"
+    Copy-Item -Path (Join-Path $dir '*') -Destination $OutputDir -Force
+}
+
+$deadline = (Get-Date).AddSeconds(45)
+while (-not (Test-Path -LiteralPath (Join-Path $OutputDir 'Setup.exe')) -and (Get-Date) -lt $deadline) {
+    Start-Sleep -Milliseconds 500
+    foreach ($dir in $candidateDirs) {
+        if (-not (Test-Path -LiteralPath (Join-Path $dir 'Setup.exe'))) { continue }
+        Copy-Item -Path (Join-Path $dir '*') -Destination $OutputDir -Force
     }
 }
 
 $setup = Join-Path $OutputDir 'Setup.exe'
 if (-not (Test-Path -LiteralPath $setup)) {
+    Write-Host "Contenido de carpetas Squirrel:"
+    foreach ($dir in $candidateDirs) {
+        Write-Host "--- $dir ---"
+        if (Test-Path -LiteralPath $dir) {
+            Get-ChildItem -LiteralPath $dir | ForEach-Object { Write-Host ("  {0} {1} bytes" -f $_.Name, $_.Length) }
+        }
+        else {
+            Write-Host "  (no existe)"
+        }
+    }
+    $squirrelLog = Join-Path (Split-Path -Parent $SquirrelExe) 'Squirrel-Releasify.log'
+    if (Test-Path -LiteralPath $squirrelLog) {
+        Write-Host "--- $squirrelLog ---"
+        Get-Content -LiteralPath $squirrelLog -Tail 40
+    }
     throw "Squirrel no dejo Setup.exe en $OutputDir"
 }
 
