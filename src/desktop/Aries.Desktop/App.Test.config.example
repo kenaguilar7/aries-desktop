@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Overlay para s3://ariescontadorcr/updates-test/.
      Pack-Squirrel fusiona solo connectionStrings.
-     El password de RDS NO va aqui. En CI vive en el secret ARIES_MYSQL_CONNECTION. -->
+     El password de RDS NO va aqui. En CI: secrets ARIES_MYSQL_CONNECTION y ARIES_UPDATE_URL. -->
 <configuration>
   <connectionStrings>
     <add name="DBconnectionString" connectionString="Server=REPLACE_RDS;port=3306;User id=REPLACE_USER; pwd=REPLACE_PASSWORD; Database=aries; Allow User Variables=True" />

@@ -6,7 +6,7 @@ name: cd-test
 #
 # Artifact: squirrel-feed-test
 # S3 opcional: s3://ariescontadorcr/updates-test/
-# Secrets: environment GitHub "test" (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, ARIES_MYSQL_CONNECTION)
+# Secrets: environment GitHub "test" (ARIES_MYSQL_CONNECTION, ARIES_UPDATE_URL, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
 # No usar environment production/prod en este workflow.
 
 on:
@@ -84,19 +84,24 @@ jobs:
         id: squirrel
         env:
           ARIES_MYSQL_CONNECTION: ${{ secrets.ARIES_MYSQL_CONNECTION }}
+          ARIES_UPDATE_URL: ${{ secrets.ARIES_UPDATE_URL }}
         shell: pwsh
         run: |
           if ([string]::IsNullOrWhiteSpace($env:ARIES_MYSQL_CONNECTION)) {
-            throw 'Falta el secret ARIES_MYSQL_CONNECTION. Settings > Secrets and variables > Actions. Valor = connection string de RDS. No la pongas en git.'
+            throw 'Falta el secret ARIES_MYSQL_CONNECTION. Environment test > Secrets. Valor = connection string de RDS, sin comillas.'
+          }
+          if ([string]::IsNullOrWhiteSpace($env:ARIES_UPDATE_URL)) {
+            throw 'Falta el secret ARIES_UPDATE_URL. Environment test > Secrets. Valor = https://ariescontadorcr.s3.us-east-2.amazonaws.com/updates-test/ (con slash final, sin comillas).'
           }
           function Escape-Xml([string]$s) {
             return ($s -replace '&', '&amp;' -replace '<', '&lt;' -replace '>', '&gt;' -replace '"', '&quot;')
           }
           $db = Escape-Xml $env:ARIES_MYSQL_CONNECTION
+          $updateUrl = Escape-Xml $env:ARIES_UPDATE_URL.Trim()
           $overlay = Join-Path $env:RUNNER_TEMP 'App.Test.pack.config'
           $overlayXml = '<?xml version="1.0" encoding="utf-8"?><configuration><connectionStrings>' +
             "<add name=`"DBconnectionString`" connectionString=`"$db`" />" +
-            '<add name="UpdateServerString" connectionString="https://ariescontadorcr.s3.us-east-2.amazonaws.com/updates-test/" />' +
+            "<add name=`"UpdateServerString`" connectionString=`"$updateUrl`" />" +
             '<add name="HttpBaseUrl" connectionString="http://arieswebapi7-dev.eba-32ctm9kr.us-east-2.elasticbeanstalk.com/" />' +
             '<add name="IsBeta" connectionString="true" /></connectionStrings></configuration>'
           [System.IO.File]::WriteAllText($overlay, $overlayXml, (New-Object System.Text.UTF8Encoding $false))
