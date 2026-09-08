@@ -2,13 +2,13 @@
 # El bucket de clientes es publico; no hace falta perfil AWS para leerlo.
 #
 #   .\scripts\ops\Download-SquirrelFeed.ps1
-#   .\scripts\ops\Download-SquirrelFeed.ps1 -FeedUrl https://s3.us-east-2.amazonaws.com/ariescontador/updates-test/ -OutDir .\publish\squirrel-test-copy
+#   .\scripts\ops\Download-SquirrelFeed.ps1 -FeedUrl https://ariescontadorcr.s3.us-east-2.amazonaws.com/updates-test/ -OutDir .\publish\squirrel-test-copy
 <#
 .SYNOPSIS
     Copia RELEASES + nupkgs de un feed HTTP para ensayar la cadena de update.
 #>
 param(
-    [string]$FeedUrl = 'https://s3.us-east-2.amazonaws.com/ariescontador/updates/',
+    [string]$FeedUrl = 'https://ariescontadorcr.s3.us-east-2.amazonaws.com/updates/',
     [string]$OutDir
 )
 

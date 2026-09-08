@@ -55,14 +55,14 @@ $SecretAccessKey = $null
 Write-Host "Probando sts get-caller-identity..."
 & aws sts get-caller-identity --profile $ProfileName
 if ($LASTEXITCODE -ne 0) {
-    throw "El perfil $ProfileName no pudo autenticar. Revisa la clave IAM (necesita s3:ListBucket y s3:PutObject sobre ariescontador)."
+    throw "El perfil $ProfileName no pudo autenticar. Revisa la clave IAM (necesita s3:ListBucket y s3:PutObject sobre ariescontadorcr)."
 }
 
 $prefix = if ($ProfileName -eq 'aries-prod') { 'updates' } else { 'updates-test' }
-Write-Host "Listando s3://ariescontador/$prefix (puede estar vacio la primera vez)..."
-& aws s3 ls "s3://ariescontador/$prefix/" --profile $ProfileName
+Write-Host "Listando s3://ariescontadorcr/$prefix (puede estar vacio la primera vez)..."
+& aws s3 ls "s3://ariescontadorcr/$prefix/" --profile $ProfileName
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "WARN: no se pudo listar el prefijo. El usuario IAM necesita s3:ListBucket en ariescontador y s3:ListBucket/Get/Put en $prefix/*." -ForegroundColor Yellow
+    Write-Host "WARN: no se pudo listar el prefijo. El usuario IAM necesita s3:ListBucket en ariescontadorcr y s3:ListBucket/Get/Put en $prefix/*." -ForegroundColor Yellow
 }
 
 Write-Host "Perfil $ProfileName listo. Para usarlo: `$env:AWS_PROFILE='$ProfileName'"

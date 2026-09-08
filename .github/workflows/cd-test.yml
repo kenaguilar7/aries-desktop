@@ -1,11 +1,12 @@
 name: cd-test
 
 # Empaqueta el escritorio Release como feed Squirrel.
-# Nunca sube a s3://ariescontador/updates/ (produccion).
-# El exe empaquetado debe apuntar a updates-test.
+# Nunca sube a s3://ariescontadorcr/updates/ (produccion).
+# El exe empaquetado debe apuntar a updates-test en el bucket real de clientes.
 #
 # Artifact: squirrel-feed-test
-# S3 opcional: s3://ariescontador/updates-test/ (secrets AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY)
+# S3 opcional: s3://ariescontadorcr/updates-test/
+# Secrets: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, ARIES_MYSQL_CONNECTION
 
 on:
   workflow_dispatch:
@@ -15,7 +16,7 @@ on:
         type: boolean
         default: false
       publish_to_s3:
-        description: 'Subir el feed a s3://ariescontador/updates-test/'
+        description: 'Subir el feed a s3://ariescontadorcr/updates-test/'
         type: boolean
         default: false
 
@@ -79,10 +80,28 @@ jobs:
 
       - name: Pack Squirrel (AriesUpdater / updates-test)
         id: squirrel
+        env:
+          ARIES_MYSQL_CONNECTION: ${{ secrets.ARIES_MYSQL_CONNECTION }}
         shell: pwsh
         run: |
+          if ([string]::IsNullOrWhiteSpace($env:ARIES_MYSQL_CONNECTION)) {
+            throw @'
+Falta el secret ARIES_MYSQL_CONNECTION.
+Settings > Secrets and variables > Actions > New repository secret.
+Valor: la connection string de RDS (Server=...;pwd=...;Database=aries; Allow User Variables=True).
+No la pongas en git.
+'@
+          }
+          function Escape-Xml([string]$s) {
+            return ($s -replace '&', '&amp;' -replace '<', '&lt;' -replace '>', '&gt;' -replace '"', '&quot;')
+          }
+          $db = Escape-Xml $env:ARIES_MYSQL_CONNECTION
           $overlay = Join-Path $env:RUNNER_TEMP 'App.Test.pack.config'
-          $overlayXml = '<?xml version="1.0" encoding="utf-8"?><configuration><connectionStrings><add name="UpdateServerString" connectionString="https://s3.us-east-2.amazonaws.com/ariescontador/updates-test/" /><add name="IsBeta" connectionString="true" /></connectionStrings></configuration>'
+          $overlayXml = '<?xml version="1.0" encoding="utf-8"?><configuration><connectionStrings>' +
+            "<add name=`"DBconnectionString`" connectionString=`"$db`" />" +
+            '<add name="UpdateServerString" connectionString="https://ariescontadorcr.s3.us-east-2.amazonaws.com/updates-test/" />' +
+            '<add name="HttpBaseUrl" connectionString="http://arieswebapi7-dev.eba-32ctm9kr.us-east-2.elasticbeanstalk.com/" />' +
+            '<add name="IsBeta" connectionString="true" /></connectionStrings></configuration>'
           [System.IO.File]::WriteAllText($overlay, $overlayXml, (New-Object System.Text.UTF8Encoding $false))
 
           $packArgs = @{
@@ -103,9 +122,30 @@ jobs:
           name: squirrel-feed-test
           path: publish/squirrel
 
+      - name: Check AWS secrets
+        if: ${{ inputs.publish_to_s3 }}
+        shell: pwsh
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:AWS_ACCESS_KEY_ID) -or [string]::IsNullOrWhiteSpace($env:AWS_SECRET_ACCESS_KEY)) {
+            throw @'
+Faltan secrets del repositorio. GitHub no encontro AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY.
+
+En el repo: Settings > Secrets and variables > Actions > New repository secret.
+Nombres exactos (tienen que ser Secrets, no Variables):
+  AWS_ACCESS_KEY_ID
+  AWS_SECRET_ACCESS_KEY
+
+Luego vuelve a correr cd-test con publish_to_s3.
+'@
+          }
+          Write-Host "AWS secrets presentes."
+
       - name: Configure AWS
         if: ${{ inputs.publish_to_s3 }}
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

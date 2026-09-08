@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Overlay para s3://ariescontador/updates-test/.
-     Pack-Squirrel fusiona solo connectionStrings; los bindingRedirect salen del build Release.
-     No pongas el password de RDS aqui si vas a commitear una copia.
-     CI genera un overlay temporal con solo UpdateServerString. -->
+<!-- Overlay para s3://ariescontadorcr/updates-test/.
+     Pack-Squirrel fusiona solo connectionStrings.
+     El password de RDS NO va aqui. En CI vive en el secret ARIES_MYSQL_CONNECTION. -->
 <configuration>
   <connectionStrings>
-    <add name="UpdateServerString" connectionString="https://s3.us-east-2.amazonaws.com/ariescontador/updates-test/" />
+    <add name="DBconnectionString" connectionString="Server=REPLACE_RDS;port=3306;User id=REPLACE_USER; pwd=REPLACE_PASSWORD; Database=aries; Allow User Variables=True" />
+    <add name="UpdateServerString" connectionString="https://ariescontadorcr.s3.us-east-2.amazonaws.com/updates-test/" />
+    <add name="HttpBaseUrl" connectionString="http://REPLACE_API/" />
     <add name="IsBeta" connectionString="true" />
   </connectionStrings>
 </configuration>

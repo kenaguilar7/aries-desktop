@@ -16,7 +16,7 @@ param(
     [ValidateSet('Test', 'Staging', 'Production')]
     [string]$Environment = 'Test',
     [string]$FeedDir,
-    [string]$Bucket = 'ariescontador',
+    [string]$Bucket = 'ariescontadorcr',
     [string]$ProfileName,
     [switch]$ConfirmProduction
 )
@@ -31,7 +31,7 @@ if (-not $FeedDir) {
 switch ($Environment) {
     'Production' {
         if (-not $ConfirmProduction) {
-            throw "Produccion exige -ConfirmProduction. Sin eso este script no toca s3://ariescontador/updates/."
+            throw "Produccion exige -ConfirmProduction. Sin eso este script no toca s3://ariescontadorcr/updates/."
         }
         $prefix = 'updates'
         if (-not $ProfileName -and -not $env:GITHUB_ACTIONS) { $ProfileName = 'aries-prod' }
@@ -73,5 +73,5 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "Publish-SquirrelFeed OK -> $dest"
-Write-Host "URL HTTP: https://s3.us-east-2.amazonaws.com/$Bucket/$prefix/"
+Write-Host "URL HTTP: https://$Bucket.s3.us-east-2.amazonaws.com/$prefix/"
 exit 0

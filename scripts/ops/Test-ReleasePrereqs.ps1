@@ -44,9 +44,9 @@ if ($aws) {
     $ident = aws sts get-caller-identity --profile $ProfileName 2>&1
     if ($LASTEXITCODE -eq 0) {
         Show-Ok "Perfil $ProfileName autentica"
-        aws s3 ls "s3://ariescontador/updates-test/" --profile $ProfileName 2>&1 | Out-Host
+        aws s3 ls "s3://ariescontadorcr/updates-test/" --profile $ProfileName 2>&1 | Out-Host
         if ($LASTEXITCODE -eq 0) {
-            Show-Ok "Listado s3://ariescontador/updates-test/"
+            Show-Ok "Listado s3://ariescontadorcr/updates-test/"
         }
         else {
             Show-Warn "El perfil autentica pero no lista updates-test/. Crea el prefijo en S3 o revisa IAM."
@@ -64,7 +64,7 @@ else {
 $prodCfg = Join-Path $root 'src\desktop\Aries.Desktop\App.Production.config'
 if (Test-Path -LiteralPath $prodCfg) {
     $rawCfg = Get-Content -LiteralPath $prodCfg -Raw
-    if ($rawCfg -match 'ariescontador/updates/') {
+    if ($rawCfg -match 'ariescontadorcr\.s3\.') {
         Show-Ok "App.Production.config apunta al canal de produccion (el pack de test usa overlay updates-test)"
     }
     else {
