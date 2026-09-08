@@ -31,4 +31,4 @@ PRs y pushes a `master` / `main` / `dev` corren [`.github/workflows/ci.yml`](.gi
 - **Windows:** `nuget restore` + MSBuild Release, tests de Core / Desktop / WebAPI, `Verify-NoSecrets` y `Verify-DesktopPublish`.
 - **Ubuntu + MySQL 8:** `Aries.Data.Tests` (migraciones e insert de compañía) y otra pasada de `Aries.WebAPI.Tests`.
 
-Un tag `vX.Y.Z` **igual** que `AssemblyFileVersion` en [`AssemblyInfo.cs`](src/desktop/Aries.Desktop/Properties/AssemblyInfo.cs) dispara [`.github/workflows/cd.yml`](.github/workflows/cd.yml): feed Squirrel (`Setup.exe`, `RELEASES`, `-full.nupkg`) y zip del API como artefactos y GitHub Release. Para copiar ese feed a la laptop QA: [`scripts/local/README.md`](scripts/local/README.md).
+El pack de escritorio se dispara a mano en [`.github/workflows/cd-test.yml`](.github/workflows/cd-test.yml) (**cd-test**): feed Squirrel hacia `updates-test`, sin tocar producción. Para copiar ese feed a la laptop QA: [`scripts/local/README.md`](scripts/local/README.md).
