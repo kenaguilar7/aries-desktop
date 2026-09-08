@@ -85,12 +85,7 @@ jobs:
         shell: pwsh
         run: |
           if ([string]::IsNullOrWhiteSpace($env:ARIES_MYSQL_CONNECTION)) {
-            throw @'
-Falta el secret ARIES_MYSQL_CONNECTION.
-Settings > Secrets and variables > Actions > New repository secret.
-Valor: la connection string de RDS (Server=...;pwd=...;Database=aries; Allow User Variables=True).
-No la pongas en git.
-'@
+            throw 'Falta el secret ARIES_MYSQL_CONNECTION. Settings > Secrets and variables > Actions. Valor = connection string de RDS. No la pongas en git.'
           }
           function Escape-Xml([string]$s) {
             return ($s -replace '&', '&amp;' -replace '<', '&lt;' -replace '>', '&gt;' -replace '"', '&quot;')
@@ -130,16 +125,7 @@ No la pongas en git.
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           if ([string]::IsNullOrWhiteSpace($env:AWS_ACCESS_KEY_ID) -or [string]::IsNullOrWhiteSpace($env:AWS_SECRET_ACCESS_KEY)) {
-            throw @'
-Faltan secrets del repositorio. GitHub no encontro AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY.
-
-En el repo: Settings > Secrets and variables > Actions > New repository secret.
-Nombres exactos (tienen que ser Secrets, no Variables):
-  AWS_ACCESS_KEY_ID
-  AWS_SECRET_ACCESS_KEY
-
-Luego vuelve a correr cd-test con publish_to_s3.
-'@
+            throw 'Faltan secrets AWS_ACCESS_KEY_ID y AWS_SECRET_ACCESS_KEY. Settings > Secrets and variables > Actions (Secrets, no Variables).'
           }
           Write-Host "AWS secrets presentes."
 
