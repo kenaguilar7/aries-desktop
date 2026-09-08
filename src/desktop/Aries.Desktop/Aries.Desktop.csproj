@@ -455,6 +455,7 @@
     <None Include="App.Production.config" />
     <None Include="App.Local.config.example" />
     <None Include="App.Qa.local.config.example" />
+    <None Include="App.Test.config.example" />
     <None Include="App.Local.config" Condition="Exists('App.Local.config')" />
     <None Include="packages.config" />
     <None Include="Properties\app.manifest" />

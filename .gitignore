@@ -11,6 +11,8 @@
 .env
 src/desktop/Aries.Desktop/App.Local.config
 src/desktop/Aries.Desktop/App.Production.local.config
+src/desktop/Aries.Desktop/App.Test.config
+src/desktop/Aries.Desktop/App.Staging.config
 src/hosts/Aries.WebAPI/appsettings.Local.json
 src/hosts/Aries.WebAPI/out
 AriesWebApi/

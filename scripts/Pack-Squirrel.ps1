@@ -1,12 +1,21 @@
 # Empaqueta bin/Release del escritorio como feed Squirrel (nupkg full + RELEASES + Setup.exe).
-# No necesita un RELEASES anterior: el primer --releasify basta para artefactos/QA.
+# Exe FIJO: CapaPresentacion.exe. El id por defecto es CapaPresentacion (CD actual).
+# Para el canal de clientes usa -PackageId AriesUpdater.
+#
+#   .\scripts\Pack-Squirrel.ps1
+#   .\scripts\Pack-Squirrel.ps1 -PackageId AriesUpdater -ExpectedUpdateUrlContains updates-test
+#   .\scripts\Pack-Squirrel.ps1 -PreviousFeedDir .\publish\squirrel-previous
 param(
     [string]$BinDir,
     [string]$OutputDir,
     [string]$AssemblyInfo,
     [string]$ExpectedVersion,
     [string]$SquirrelExe,
-    [string]$NuGetExe
+    [string]$NuGetExe,
+    [string]$PreviousFeedDir,
+    [string]$ConnectionStringsConfig,
+    [string]$ExpectedUpdateUrlContains,
+    [string]$PackageId = 'CapaPresentacion'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -71,12 +80,70 @@ if (Test-Path -LiteralPath $OutputDir) {
 }
 New-Item -ItemType Directory -Path $OutputDir | Out-Null
 
-$nuspecPath = Join-Path $work 'CapaPresentacion.nuspec'
+if ($PreviousFeedDir) {
+    if (-not (Test-Path -LiteralPath $PreviousFeedDir)) {
+        throw "PreviousFeedDir no existe: $PreviousFeedDir"
+    }
+    Write-Host "Copiando feed anterior desde $PreviousFeedDir (cadena de update -> $version)"
+    Copy-Item -Path (Join-Path $PreviousFeedDir '*') -Destination $OutputDir -Force
+}
+
+if ($ConnectionStringsConfig) {
+    if (-not (Test-Path -LiteralPath $ConnectionStringsConfig)) {
+        throw "ConnectionStringsConfig no existe: $ConnectionStringsConfig"
+    }
+    $exeConfig = Join-Path $BinDir 'CapaPresentacion.exe.config'
+    if (-not (Test-Path -LiteralPath $exeConfig)) {
+        throw "Falta $exeConfig; no se pueden fusionar connectionStrings."
+    }
+    Write-Host "Fusionando connectionStrings desde $ConnectionStringsConfig (se conservan bindingRedirects del build)"
+    [xml]$built = Get-Content -LiteralPath $exeConfig -Raw
+    [xml]$overlay = Get-Content -LiteralPath $ConnectionStringsConfig -Raw
+    $overlayAdds = @($overlay.configuration.connectionStrings.add)
+    if ($overlayAdds.Count -eq 0) {
+        throw "$ConnectionStringsConfig no tiene connectionStrings/add"
+    }
+    $builtCs = $built.configuration.connectionStrings
+    if (-not $builtCs) {
+        throw "$exeConfig no tiene connectionStrings"
+    }
+    foreach ($src in $overlayAdds) {
+        $name = [string]$src.name
+        $value = [string]$src.connectionString
+        $existing = @($builtCs.add) | Where-Object { $_.name -eq $name } | Select-Object -First 1
+        if ($existing) {
+            $existing.connectionString = $value
+        }
+        else {
+            $node = $built.ImportNode($src, $true)
+            [void]$builtCs.AppendChild($node)
+        }
+    }
+    $built.Save($exeConfig)
+}
+
+if ($ExpectedUpdateUrlContains) {
+    $exeConfig = Join-Path $BinDir 'CapaPresentacion.exe.config'
+    if (-not (Test-Path -LiteralPath $exeConfig)) {
+        throw "Falta $exeConfig; no se puede validar UpdateServerString."
+    }
+    [xml]$packedCfg = Get-Content -LiteralPath $exeConfig -Raw
+    $updateNode = @($packedCfg.configuration.connectionStrings.add) |
+        Where-Object { [string]$_.name -eq 'UpdateServerString' } |
+        Select-Object -First 1
+    $updateUrl = if ($updateNode) { [string]$updateNode.connectionString } else { '' }
+    if ([string]::IsNullOrWhiteSpace($updateUrl) -or ($updateUrl -notlike "*$ExpectedUpdateUrlContains*")) {
+        throw "UpdateServerString='$updateUrl' no contiene '$ExpectedUpdateUrlContains'. Abortando pack para no enviar clientes al canal equivocado."
+    }
+    Write-Host "UpdateServerString OK: $updateUrl"
+}
+
+$nuspecPath = Join-Path $work "$PackageId.nuspec"
 $nuspec = @"
 <?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
-    <id>CapaPresentacion</id>
+    <id>$PackageId</id>
     <version>$version</version>
     <authors>Sistemas Aries</authors>
     <description>Aries Contador</description>
@@ -88,15 +155,15 @@ $nuspec = @"
 "@
 [System.IO.File]::WriteAllText($nuspecPath, $nuspec, (New-Object System.Text.UTF8Encoding $false))
 
-Write-Host "nuget pack CapaPresentacion $version"
+Write-Host "nuget pack $PackageId $version"
 & $NuGetExe pack $nuspecPath -BasePath $BinDir -OutputDirectory $work -NoPackageAnalysis -NonInteractive
 if ($LASTEXITCODE -ne 0) {
     throw "nuget pack fallo (exit $LASTEXITCODE)"
 }
 
-$nupkg = Get-ChildItem -LiteralPath $work -Filter 'CapaPresentacion.*.nupkg' | Select-Object -First 1
+$nupkg = Get-ChildItem -LiteralPath $work -Filter "$PackageId.*.nupkg" | Select-Object -First 1
 if (-not $nupkg) {
-    throw "nuget pack no produjo CapaPresentacion.*.nupkg"
+    throw "nuget pack no produjo $PackageId.*.nupkg"
 }
 
 Write-Host "Squirrel --releasify $($nupkg.Name) -> $OutputDir"
@@ -119,7 +186,7 @@ if (-not (Test-Path -LiteralPath $setup)) {
 }
 
 $verify = Join-Path $root 'scripts\Verify-SquirrelFeed.ps1'
-& $verify -FeedDir $OutputDir
+& $verify -FeedDir $OutputDir -ExpectedPackageId $PackageId
 if ($LASTEXITCODE -ne 0) {
     throw "Verify-SquirrelFeed fallo sobre $OutputDir"
 }
@@ -128,5 +195,5 @@ if ($env:GITHUB_OUTPUT) {
     Add-Content -Path $env:GITHUB_OUTPUT -Value "version=$version"
 }
 
-Write-Host "Pack-Squirrel OK version=$version feed=$OutputDir"
+Write-Host "Pack-Squirrel OK version=$version id=$PackageId feed=$OutputDir"
 exit 0

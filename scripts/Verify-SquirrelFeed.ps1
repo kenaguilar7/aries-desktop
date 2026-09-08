@@ -2,7 +2,8 @@
 # and as a local smoke check. Does not start Docker or talk to S3.
 param(
     [Parameter(Mandatory = $true)]
-    [string]$FeedDir
+    [string]$FeedDir,
+    [string]$ExpectedPackageId
 )
 
 $ErrorActionPreference = 'Stop'
@@ -37,6 +38,10 @@ foreach ($line in $lines) {
     $size = [long]$Matches[3]
     [void]$named.Add($fileName)
 
+    if ($ExpectedPackageId -and ($fileName -notlike "$ExpectedPackageId*" -or $fileName -notlike '*.nupkg')) {
+        $failures.Add("RELEASES menciona $fileName; se esperaba nupkg con id $ExpectedPackageId")
+    }
+
     $pkg = Join-Path $FeedDir $fileName
     if (-not (Test-Path -LiteralPath $pkg)) {
         $failures.Add("RELEASES menciona $fileName pero no esta en el feed")
@@ -60,5 +65,6 @@ if ($failures.Count -gt 0) {
     exit 1
 }
 
-Write-Host "Verify-SquirrelFeed OK ($($named.Count) paquete(s))"
+$suffix = if ($ExpectedPackageId) { ", id=$ExpectedPackageId" } else { '' }
+Write-Host "Verify-SquirrelFeed OK ($($named.Count) paquete(s)$suffix)"
 exit 0
