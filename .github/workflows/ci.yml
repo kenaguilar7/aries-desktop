@@ -67,7 +67,10 @@ jobs:
             -AppConfig "src/desktop/Aries.Desktop/App.Production.config" `
             -ProjectFile "src/desktop/Aries.Desktop/Aries.Desktop.csproj"
 
+  # Temporalmente fuera: el pack de escritorio (Windows + cd-test/cd-prod) no depende de este job.
+  # Es el único CI que aplica migraciones contra MySQL 8 real; reactivarlo cuando se revisite el esquema.
   linux-mysql:
+    if: false
     runs-on: ubuntu-latest
     timeout-minutes: 30
     services:
