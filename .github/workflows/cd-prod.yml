@@ -1,10 +1,10 @@
 name: cd-prod
 
 # Empaqueta el escritorio Release y (opcional) lo sube a s3://ariescontadorcr/updates/.
-# Nunca usa updates-test. Requiere environment GitHub "production" y confirmar "production".
+# Nunca usa updates-test. Requiere environment GitHub "Prod" y confirmar "production".
 #
 # En Actions: Run workflow > confirm = production > publish_to_s3 si vas a clientes.
-# Secrets (Settings > Environments > production):
+# Secrets (Settings > Environments > Prod):
 #   ARIES_MYSQL_CONNECTION  = connection string RDS prod (sin comillas)
 #   ARIES_UPDATE_URL        = https://ariescontadorcr.s3.us-east-2.amazonaws.com/updates/
 #   AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
@@ -41,7 +41,7 @@ permissions:
 jobs:
   pack-squirrel:
     runs-on: windows-latest
-    environment: production
+    environment: Prod
     timeout-minutes: 30
     steps:
       - name: Confirm production
@@ -140,7 +140,7 @@ jobs:
         shell: pwsh
         run: |
           if ([string]::IsNullOrWhiteSpace($env:ARIES_MYSQL_CONNECTION)) {
-            throw 'Falta el secret ARIES_MYSQL_CONNECTION. Environment production > Secrets.'
+            throw 'Falta el secret ARIES_MYSQL_CONNECTION. Environment Prod > Secrets.'
           }
           if ([string]::IsNullOrWhiteSpace($env:ARIES_UPDATE_URL)) {
             throw 'Falta el secret ARIES_UPDATE_URL. Valor = https://ariescontadorcr.s3.us-east-2.amazonaws.com/updates/ (con slash final).'
@@ -198,7 +198,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           if ([string]::IsNullOrWhiteSpace($env:AWS_ACCESS_KEY_ID) -or [string]::IsNullOrWhiteSpace($env:AWS_SECRET_ACCESS_KEY)) {
-            throw 'Faltan secrets AWS_ACCESS_KEY_ID y AWS_SECRET_ACCESS_KEY del environment production.'
+            throw 'Faltan secrets AWS_ACCESS_KEY_ID y AWS_SECRET_ACCESS_KEY del environment Prod.'
           }
           Write-Host "AWS secrets presentes."
 
