@@ -32,5 +32,5 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "Feed copiado a $dest"
-Write-Host "Las PCs Release deben tener UpdateServerString = http://<esta-laptop>:5088/updates/"
+Write-Host "Las PCs Release deben tener UpdateUrl = http://<esta-laptop>:5088/updates/"
 Write-Host "Lista: http://localhost:5088/updates"

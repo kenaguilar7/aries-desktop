@@ -2,17 +2,19 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Threading.Tasks;
 using System;
+using System.Windows.Forms;
 using AriesContador.Core.Models;
 using AriesContador.Core.Models.Companies;
 using AriesContador.Core.Models.Users;
 using AriesContador.Core.Services;
+using AriesContador.Data;
+using AriesContador.Data.Migrations;
 using Aries.Reporting.Entidades.Cuentas;
 using Aries.Reporting.Entidades.Usuarios;
 using Aries.Reporting.Entidades.Ventanas;
 using Aries.Reporting.Mappers;
 using Aries.Desktop.Conf;
 using Microsoft.Extensions.DependencyInjection;
-using Squirrel;
 
 namespace Aries.Desktop
 {
@@ -22,7 +24,6 @@ namespace Aries.Desktop
         {
             LoadHttpBaseUrl();
             LoadDatabaseConnectionString();
-            CheckForUpdates();
         }
 
         private static void LoadHttpBaseUrl()
@@ -34,56 +35,19 @@ namespace Aries.Desktop
                 return;
             }
 
-            var httpBase = ConfigurationManager.ConnectionStrings["HttpBaseUrl"];
-            if (httpBase != null && !string.IsNullOrWhiteSpace(httpBase.ConnectionString))
-                EnvironmentVariable.ApiUrl = httpBase.ConnectionString;
+            var httpBase = AppSettingReader.Read("HttpBaseUrl", "HttpBaseUrl");
+            if (!string.IsNullOrWhiteSpace(httpBase))
+                EnvironmentVariable.ApiUrl = httpBase;
         }
 
         private static void LoadDatabaseConnectionString()
         {
             var cs = ConnectionString.MySQLDefault;
-            var server = ReadConnectionPart(cs, "Server")
-                ?? ReadConnectionPart(cs, "Data Source")
-                ?? ReadConnectionPart(cs, "Host");
+            var server = MySqlConnectionInfo.Server(cs);
             if (string.IsNullOrWhiteSpace(server))
             {
                 throw new ConfigurationErrorsException(
                     "DBconnectionString no tiene Server=. Maestro de Cuentas y Asientos fallarán.");
-            }
-        }
-
-        private static string ReadConnectionPart(string connectionString, string key)
-        {
-            foreach (var part in connectionString.Split(';'))
-            {
-                var trimmed = part.Trim();
-                var eq = trimmed.IndexOf('=');
-                if (eq <= 0)
-                    continue;
-                var name = trimmed.Substring(0, eq).Trim();
-                if (name.Equals(key, StringComparison.OrdinalIgnoreCase))
-                    return trimmed.Substring(eq + 1).Trim();
-            }
-            return null;
-        }
-
-        private async Task CheckForUpdates()
-        {
-            try
-            {
-                var updateUrl = Environment.GetEnvironmentVariable("ARIES_UPDATE_URL")
-                    ?? ConfigurationManager.ConnectionStrings["UpdateServerString"]?.ConnectionString;
-                if (string.IsNullOrWhiteSpace(updateUrl))
-                    return;
-
-                using (var manager = new UpdateManager(updateUrl))
-                {
-                    await manager.UpdateApp();
-                }
-            }
-            catch
-            {
-                // Squirrel no debe impedir el login.
             }
         }
 
@@ -95,19 +59,26 @@ namespace Aries.Desktop
         public static ConnectionString ConnectionString = new ConnectionString();
 
         public static string EnvironmentName =>
-            ConfigurationManager.AppSettings["EnvironmentName"] ?? "Local";
+            AppSettingReader.Read("EnvironmentName") ?? "Local";
 
         public static bool IsLocalEnvironment =>
             string.Equals(EnvironmentName, "Local", StringComparison.OrdinalIgnoreCase);
 
+        public static bool IsBeta =>
+            AppSettingReader.ReadFlag("IsBeta", "IsBeta", defaultValue: false);
+
+        public static string UpdateUrl =>
+            Environment.GetEnvironmentVariable("ARIES_UPDATE_URL")
+            ?? AppSettingReader.Read("UpdateUrl", "UpdateServerString");
+
         public static string MySqlDatabase =>
-            ReadConnectionPart(ConnectionString.MySQLDefault, "Database") ?? "(sin Database)";
+            MySqlConnectionInfo.ReadPart(ConnectionString.MySQLDefault, "Database") ?? "(sin Database)";
 
         public static string MySqlServer =>
-            ReadConnectionPart(ConnectionString.MySQLDefault, "Server")
-            ?? ReadConnectionPart(ConnectionString.MySQLDefault, "Data Source")
-            ?? ReadConnectionPart(ConnectionString.MySQLDefault, "Host")
-            ?? "(sin Server)";
+            MySqlConnectionInfo.Server(ConnectionString.MySQLDefault) ?? "(sin Server)";
+
+        public static bool CanApplySchemaMigrations =>
+            SchemaMigrationGate.CanApply(User?.UserType);
 
         public static IServiceProvider Services { get; set; }
 
@@ -128,6 +99,16 @@ namespace Aries.Desktop
             }
         }
 
+        public static async Task ClearSessionAsync()
+        {
+            Company = null;
+            Cuentas = new List<Cuenta>();
+            Compañias = new List<Company>();
+            Permisos = new List<Modulo>();
+            EnvironmentVariable.ApiToken = new WebToken();
+            await SetUserAsync(null).ConfigureAwait(true);
+        }
+
         public static async Task SetUserAsync(User value)
         {
             Usuario = UserMapper.ToUsuario(value);
@@ -143,10 +124,16 @@ namespace Aries.Desktop
                     Usuario.Modulos = new List<Modulo>();
                 }
             }
-            catch
+            catch (Exception ex)
             {
                 if (Usuario != null)
                     Usuario.Modulos = new List<Modulo>();
+                StartupLog.Write("Permisos: " + ex);
+                MessageBox.Show(
+                    "No se pudieron cargar los permisos del usuario.\n\n" + ex.GetBaseException().Message,
+                    "Aries Contador",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
             }
 
             user = value;

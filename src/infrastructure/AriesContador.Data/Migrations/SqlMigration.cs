@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace AriesContador.Data.Migrations
 {
@@ -18,6 +20,21 @@ namespace AriesContador.Data.Migrations
         public abstract string Description { get; }
 
         public abstract string Sql { get; }
+
+        public string Checksum
+        {
+            get
+            {
+                using (var sha = SHA256.Create())
+                {
+                    var hash = sha.ComputeHash(Encoding.UTF8.GetBytes(Sql ?? string.Empty));
+                    var text = new StringBuilder(hash.Length * 2);
+                    foreach (var value in hash)
+                        text.Append(value.ToString("x2"));
+                    return text.ToString();
+                }
+            }
+        }
 
         public IReadOnlyList<string> SqlBatches
         {

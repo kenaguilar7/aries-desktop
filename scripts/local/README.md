@@ -5,14 +5,14 @@ Hay **tres** sitios: tu PC de desarrollo, la **laptop/servidor** con Docker (LAN
 | | Escritorio | MySQL + API + Squirrel |
 |---|---|---|
 | **Local (esta PC)** | **Debug** → `app.config` (Docker `:3307` / `aries`). Otra base: `local-db.json`. | `docker compose` en esta misma máquina |
-| **QA (laptop servidor)** | **Release** → copia `App.Production.config` a `App.Production.local.config` (gitignored): `Server=<laptop>`, puerto **3307**, `UpdateServerString=http://<laptop>:5088/updates/`, `EnvironmentName=Qa`. | El mismo `docker compose` en la laptop. Clientes por VPN/LAN. |
+| **QA (laptop servidor)** | **Release** → copia `App.Production.config` a `App.Production.local.config` (gitignored): `Server=<laptop>`, puerto **3307**, `UpdateUrl=http://<laptop>:5088/updates/`, `EnvironmentName=Qa`. | El mismo `docker compose` en la laptop. Clientes por VPN/LAN. |
 | **Production (S3)** | `App.Production.config` + pack con secrets. Feed: bucket `ariescontadorcr/updates` | No es este Docker |
 
 El título del menú muestra `[Local]`, `[Qa]` o `[Production]` según `EnvironmentName`.
 
 ## Un solo Docker: BD, API y actualizaciones
 
-Squirrel no necesita S3. Pregunta por HTTP a `UpdateServerString`. En QA esa URL es el **mismo** contenedor del API:
+Squirrel no necesita S3. Pregunta por HTTP a `UpdateUrl` (appSettings; el nombre viejo `UpdateServerString` en connectionStrings sigue leyéndose). En QA esa URL es el **mismo** contenedor del API:
 
 ```text
 PCs con Aries Release  ──MySQL :3307──►  laptop Docker  (aries_mysql_local)
@@ -47,7 +47,7 @@ Si ya tienes `aries_mysql_local` en 3307, el script **no** crea otro MySQL; solo
 
 El build (Actions o `msbuild`) solo deja `bin/Release`. El feed es **otro paso**: empaquetar con Squirrel y copiar el resultado a `publish/updates`.
 
-Desde un tag `vX.Y.Z` (mismo número que `AssemblyFileVersion`), Actions sube el feed como artefacto `squirrel-feed` y lo adjunta al GitHub Release. En la laptop QA:
+Desde un tag `vX.Y.Z` (mismo número que [`version.props`](../../version.props) y `AssemblyFileVersion`), el workflow **cd-prod** empaqueta el canal de clientes. **cd-test** sube el artefacto `squirrel-feed-test` (y opcionalmente S3 `updates-test`). En la laptop QA:
 
 1. Baja el zip del Release (o el artefacto `squirrel-feed`) y descomprímelo.
 2. Cópialo al bind mount:
@@ -63,7 +63,11 @@ Para empaquetar en esta máquina (tras un build Release y `nuget restore`):
 .\scripts\local\publish-updates.ps1 -SourceDir .\publish\squirrel
 ```
 
-Eso escribe `publish/updates/` (bind mount). Las PCs con `UpdateServerString=http://<laptop>:5088/updates/` se enteran al **siguiente arranque** del exe. Override: variable `ARIES_UPDATE_URL`.
+Eso escribe `publish/updates/` (bind mount). Las PCs con `UpdateUrl=http://<laptop>:5088/updates/` se enteran al **siguiente arranque** del exe (splash: busca updates, pide reinicio si hay paquete nuevo). Override: variable `ARIES_UPDATE_URL`.
+
+Log de arranque: `%LocalAppData%\AriesContador\startup.log` (ambiente, migraciones, Squirrel).
+
+**Debug y RDS:** F5 no aplica migraciones contra un host que no sea `localhost`/`127.0.0.1`. Para forzar (aries-test): `$env:ARIES_APPLY_MIGRATIONS=1`.
 
 `bin/Release` **no** es un feed: tiene que existir el archivo `RELEASES`.
 
@@ -100,7 +104,7 @@ Proyecto de inicio **Aries.Desktop** (`src/desktop/Aries.Desktop`, output `CapaP
 
 | `"use"` | Destino |
 |---|---|
-| `"docker"` | `127.0.0.1:3307`, base `aries` (`app.config`) |
+| `"docker"` | `127.0.0.1:3307`, base `aries` (bloque `docker` o `app.config`) |
 | `"aries-test"` | el RDS que pongas en ese bloque, base `aries-test` |
 
 Rellena `Server` y `Password` una vez. No uses variables de entorno en local. El título del menú muestra la base (`[Local] aries` o `[AriesTest] aries-test`).
@@ -109,7 +113,7 @@ Tras fase 7, el primer login de un usuario en plano deja la fila hasheada (`pbkd
 
 ### Escritorio en otras PCs (QA)
 
-Copia `App.Production.config` → `App.Production.local.config` (junto al csproj, gitignored). En esta laptop: `Server=127.0.0.1;Port=3307;...` y `UpdateServerString=http://127.0.0.1:5088/updates/`. En otras PCs: `Server=<laptop>` y `UpdateServerString=http://<laptop>:5088/updates/`. `EnvironmentName=Qa`. No uses el bucket S3 de producción.
+Copia `App.Production.config` → `App.Production.local.config` (junto al csproj, gitignored). En esta laptop: `Server=127.0.0.1;Port=3307;...` y `UpdateUrl=http://127.0.0.1:5088/updates/`. En otras PCs: `Server=<laptop>` y `UpdateUrl=http://<laptop>:5088/updates/`. `EnvironmentName=Qa`. No uses el bucket S3 de producción.
 
 ## Production (máquina / pipeline S3)
 
@@ -124,8 +128,8 @@ Copia `App.Production.config` → `App.Production.local.config` (junto al csproj
 | `.env.example` → `.env` | Docker (MySQL, puerto API, JWT) |
 | `docker-compose.yml` | MySQL 8 + `Aries.WebAPI` + volumen `publish/updates` |
 | `publish/updates/` | Feed Squirrel servido en `/updates/` |
-| `src/desktop/Aries.Desktop/app.config` | Debug / Docker (`:3307`, base `aries`) |
-| `src/desktop/Aries.Desktop/App.Production.config` | Release (sin secretos) |
+| `src/desktop/Aries.Desktop/app.config` | Debug / Docker (`:3307`, base `aries`). Solo `DBconnectionString` en connectionStrings; `UpdateUrl` / `HttpBaseUrl` / `IsBeta` en appSettings |
+| `src/desktop/Aries.Desktop/App.Production.config` | Release (sin secretos). `UpdateUrl` = S3 `updates/` |
 | `src/desktop/Aries.Desktop/local-db.json` | F5: `"use": "docker"` o `"aries-test"` (gitignored) |
 | `scripts/local/local-db.json.example` | Plantilla de `local-db.json` |
 | `src/desktop/Aries.Desktop/App.Production.local.config` | Secretos de un Release local (gitignored) |

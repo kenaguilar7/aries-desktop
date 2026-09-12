@@ -47,6 +47,24 @@ namespace Aries.Data.Tests
             Assert.Contains("006_PermissionForeignKeys", ids);
             Assert.Contains("009_AccountPathFunctions", ids);
             Assert.Contains("010_WidenCompanyIdOnDumpProcedures", ids);
+            Assert.Contains("013_CopyCompanyChart", ids);
+        }
+
+        [Fact]
+        public void Each_migration_has_stable_sha256_checksum()
+        {
+            foreach (var migration in SchemaMigrations.All)
+            {
+                Assert.Equal(64, migration.Checksum.Length);
+                Assert.Equal(migration.Checksum, migration.Checksum);
+                Assert.Matches("^[0-9a-f]{64}$", migration.Checksum);
+            }
+        }
+
+        [Fact]
+        public void Checksum_changes_when_sql_changes()
+        {
+            Assert.NotEqual(new BatchProbe().Checksum, new BatchProbeAlt().Checksum);
         }
 
         [Fact]
@@ -64,6 +82,14 @@ namespace Aries.Data.Tests
             public override string Id => "probe";
             public override string Description => "probe";
             public override string Sql => "DROP PROCEDURE IF EXISTS `X`;\n-- BATCH\nCREATE PROCEDURE `X`() BEGIN SELECT 1; END";
+        }
+
+        private sealed class BatchProbeAlt : SqlMigration
+        {
+            public override int Version => 99;
+            public override string Id => "probe";
+            public override string Description => "probe";
+            public override string Sql => "DROP PROCEDURE IF EXISTS `Y`;";
         }
     }
 }

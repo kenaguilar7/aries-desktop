@@ -214,7 +214,7 @@ namespace Aries.Desktop.FrameCompañias
 
             if (MessageBox.Show("Se guardara la compañia, ¿Desea continuar?", "Aries", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
-                
+                btnGuardar.Enabled = false;
                 try
                 {
                     IdType tipo = (IdType)lstTipoId.SelectedIndex + 1;
@@ -254,7 +254,10 @@ namespace Aries.Desktop.FrameCompañias
 
                     persona.CopyFrom = copiarde.Code;
                     persona.CreatedBy = GlobalConfig.User.Id;
-                    await UiBusy.Run(this, () => _administrationService.CreateCompanyAsync(persona));
+                    await UiBusy.Run(
+                        this,
+                        () => _administrationService.CreateCompanyAsync(persona),
+                        "Creando compañía y copiando el plan de cuentas…");
                     MessageBox.Show("Se registro la compañia correctamente", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
                     lst.Add(persona);
                     this.LimpiarFormulario();
@@ -262,6 +265,7 @@ namespace Aries.Desktop.FrameCompañias
                 }
                 catch (Exception ex)
                 {
+                    btnGuardar.Enabled = true;
                     MessageBox.Show(ex.Message, TextoGeneral.MensajeBannerError, MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 }
             }

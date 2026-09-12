@@ -19,6 +19,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test projects", "Test proje
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{6ABF1E0B-3919-4184-AA49-457F9CE1DA2A}"
 	ProjectSection(SolutionItems) = preProject
+		docs\ANALISIS-CICLO-VIDA.md = docs\ANALISIS-CICLO-VIDA.md
+		docs\ANALISIS-REPORTES-1.1.15.md = docs\ANALISIS-REPORTES-1.1.15.md
 		docs\ARQUITECTURA.md = docs\ARQUITECTURA.md
 		docs\COMPORTAMIENTO-UI.md = docs\COMPORTAMIENTO-UI.md
 		docs\LAYOUT.md = docs\LAYOUT.md
@@ -34,6 +36,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		global.json = global.json
 		nuget.config = nuget.config
 		README.md = README.md
+		version.props = version.props
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AriesContador.Core", "src\domain\AriesContador.Core\AriesContador.Core.csproj", "{BFD0E8AF-597B-42C5-B21A-147CF8706D79}"

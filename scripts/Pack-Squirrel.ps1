@@ -1,9 +1,8 @@
 # Empaqueta bin/Release del escritorio como feed Squirrel (nupkg full + RELEASES + Setup.exe).
-# Exe FIJO: CapaPresentacion.exe. El id por defecto es CapaPresentacion (CD actual).
-# Para el canal de clientes usa -PackageId AriesUpdater.
+# Exe FIJO: CapaPresentacion.exe. PackageId de clientes: AriesUpdater.
 #
 #   .\scripts\Pack-Squirrel.ps1
-#   .\scripts\Pack-Squirrel.ps1 -PackageId AriesUpdater -ExpectedUpdateUrlContains updates-test
+#   .\scripts\Pack-Squirrel.ps1 -ExpectedUpdateUrlContains updates-test
 #   .\scripts\Pack-Squirrel.ps1 -PreviousFeedDir .\publish\squirrel-previous
 param(
     [string]$BinDir,
@@ -15,7 +14,8 @@ param(
     [string]$PreviousFeedDir,
     [string]$ConnectionStringsConfig,
     [string]$ExpectedUpdateUrlContains,
-    [string]$PackageId = 'CapaPresentacion'
+    [string]$ForbiddenUpdateUrlContains,
+    [string]$PackageId = 'AriesUpdater'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -51,6 +51,16 @@ if ($info -notmatch 'AssemblyFileVersion\("([^"]+)"\)') {
     throw "No hay AssemblyFileVersion en $AssemblyInfo"
 }
 $version = $Matches[1]
+$versionProps = Join-Path $root 'version.props'
+if (Test-Path -LiteralPath $versionProps) {
+    $props = Get-Content -LiteralPath $versionProps -Raw
+    if ($props -match 'AriesVersion>([^<]+)<') {
+        $fromProps = $Matches[1].Trim()
+        if ($fromProps -ne $version) {
+            throw "version.props AriesVersion=$fromProps no coincide con AssemblyFileVersion $version"
+        }
+    }
+}
 if ($ExpectedVersion -and $ExpectedVersion -ne $version) {
     throw "AssemblyFileVersion $version no coincide con la version esperada $ExpectedVersion"
 }
@@ -96,46 +106,83 @@ if ($ConnectionStringsConfig) {
     if (-not (Test-Path -LiteralPath $exeConfig)) {
         throw "Falta $exeConfig; no se pueden fusionar connectionStrings."
     }
-    Write-Host "Fusionando connectionStrings desde $ConnectionStringsConfig (se conservan bindingRedirects del build)"
+    Write-Host "Fusionando connectionStrings/appSettings desde $ConnectionStringsConfig (se conservan bindingRedirects del build)"
     [xml]$built = Get-Content -LiteralPath $exeConfig -Raw
     [xml]$overlay = Get-Content -LiteralPath $ConnectionStringsConfig -Raw
     $overlayAdds = @($overlay.configuration.connectionStrings.add)
-    if ($overlayAdds.Count -eq 0) {
-        throw "$ConnectionStringsConfig no tiene connectionStrings/add"
+    $overlaySettings = @()
+    if ($overlay.configuration.appSettings -and $overlay.configuration.appSettings.add) {
+        $overlaySettings = @($overlay.configuration.appSettings.add)
     }
-    $builtCs = $built.configuration.connectionStrings
-    if (-not $builtCs) {
-        throw "$exeConfig no tiene connectionStrings"
+    if ($overlayAdds.Count -eq 0 -and $overlaySettings.Count -eq 0) {
+        throw "$ConnectionStringsConfig no tiene connectionStrings/add ni appSettings/add"
     }
-    foreach ($src in $overlayAdds) {
-        $name = [string]$src.name
-        $value = [string]$src.connectionString
-        $existing = @($builtCs.add) | Where-Object { $_.name -eq $name } | Select-Object -First 1
-        if ($existing) {
-            $existing.connectionString = $value
+    if ($overlayAdds.Count -gt 0) {
+        $builtCs = $built.configuration.connectionStrings
+        if (-not $builtCs) {
+            throw "$exeConfig no tiene connectionStrings"
         }
-        else {
-            $node = $built.ImportNode($src, $true)
-            [void]$builtCs.AppendChild($node)
+        foreach ($src in $overlayAdds) {
+            $name = [string]$src.name
+            $value = [string]$src.connectionString
+            $existing = @($builtCs.add) | Where-Object { $_.name -eq $name } | Select-Object -First 1
+            if ($existing) {
+                $existing.connectionString = $value
+            }
+            else {
+                $node = $built.ImportNode($src, $true)
+                [void]$builtCs.AppendChild($node)
+            }
+        }
+    }
+    if ($overlaySettings.Count -gt 0) {
+        $builtApp = $built.configuration.appSettings
+        if (-not $builtApp) {
+            $builtApp = $built.CreateElement('appSettings')
+            [void]$built.configuration.AppendChild($builtApp)
+        }
+        foreach ($src in $overlaySettings) {
+            $key = [string]$src.key
+            $value = [string]$src.value
+            $existing = @($builtApp.add) | Where-Object { $_.key -eq $key } | Select-Object -First 1
+            if ($existing) {
+                $existing.value = $value
+            }
+            else {
+                $node = $built.ImportNode($src, $true)
+                [void]$builtApp.AppendChild($node)
+            }
         }
     }
     $built.Save($exeConfig)
 }
 
-if ($ExpectedUpdateUrlContains) {
+if ($ExpectedUpdateUrlContains -or $ForbiddenUpdateUrlContains) {
     $exeConfig = Join-Path $BinDir 'CapaPresentacion.exe.config'
     if (-not (Test-Path -LiteralPath $exeConfig)) {
-        throw "Falta $exeConfig; no se puede validar UpdateServerString."
+        throw "Falta $exeConfig; no se puede validar UpdateUrl."
     }
     [xml]$packedCfg = Get-Content -LiteralPath $exeConfig -Raw
-    $updateNode = @($packedCfg.configuration.connectionStrings.add) |
-        Where-Object { [string]$_.name -eq 'UpdateServerString' } |
-        Select-Object -First 1
-    $updateUrl = if ($updateNode) { [string]$updateNode.connectionString } else { '' }
-    if ([string]::IsNullOrWhiteSpace($updateUrl) -or ($updateUrl -notlike "*$ExpectedUpdateUrlContains*")) {
-        throw "UpdateServerString='$updateUrl' no contiene '$ExpectedUpdateUrlContains'. Abortando pack para no enviar clientes al canal equivocado."
+    $updateUrl = ''
+    foreach ($add in @($packedCfg.configuration.appSettings.add)) {
+        if ([string]$add.key -eq 'UpdateUrl' -and -not [string]::IsNullOrWhiteSpace([string]$add.value)) {
+            $updateUrl = [string]$add.value
+            break
+        }
     }
-    Write-Host "UpdateServerString OK: $updateUrl"
+    if ([string]::IsNullOrWhiteSpace($updateUrl)) {
+        $updateNode = @($packedCfg.configuration.connectionStrings.add) |
+            Where-Object { [string]$_.name -eq 'UpdateServerString' } |
+            Select-Object -First 1
+        if ($updateNode) { $updateUrl = [string]$updateNode.connectionString }
+    }
+    if ($ExpectedUpdateUrlContains -and ([string]::IsNullOrWhiteSpace($updateUrl) -or ($updateUrl -notlike "*$ExpectedUpdateUrlContains*"))) {
+        throw "UpdateUrl='$updateUrl' no contiene '$ExpectedUpdateUrlContains'. Abortando pack para no enviar clientes al canal equivocado."
+    }
+    if ($ForbiddenUpdateUrlContains -and $updateUrl -like "*$ForbiddenUpdateUrlContains*") {
+        throw "UpdateUrl='$updateUrl' contiene '$ForbiddenUpdateUrlContains' (canal prohibido para este pack)."
+    }
+    Write-Host "UpdateUrl OK: $updateUrl"
 }
 
 $nuspecPath = Join-Path $work "$PackageId.nuspec"

@@ -13,10 +13,32 @@ param(
 $OutputDir = $OutputDir.Trim().TrimEnd('\', '/')
 $ErrorActionPreference = 'Stop'
 $failures = New-Object System.Collections.Generic.List[string]
+$repoRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
 
 function Add-Failure([string]$message) {
     $script:failures.Add($message)
     Write-Host "FAIL: $message" -ForegroundColor Red
+}
+
+$versionProps = Join-Path $repoRoot 'version.props'
+$assemblyInfo = Join-Path $repoRoot 'src\desktop\Aries.Desktop\Properties\AssemblyInfo.cs'
+if (Test-Path -LiteralPath $versionProps) {
+    $props = Get-Content -LiteralPath $versionProps -Raw
+    if ($props -match 'AriesVersion>([^<]+)<') {
+        $fromProps = $Matches[1].Trim()
+        if (Test-Path -LiteralPath $assemblyInfo) {
+            $info = Get-Content -LiteralPath $assemblyInfo -Raw
+            if ($info -match 'AssemblyFileVersion\("([^"]+)"\)' -and $Matches[1] -ne $fromProps) {
+                Add-Failure "version.props AriesVersion=$fromProps no coincide con AssemblyFileVersion $($Matches[1])"
+            }
+            else {
+                Write-Host "OK  version $fromProps"
+            }
+        }
+    }
+    else {
+        Add-Failure "version.props no tiene AriesVersion"
+    }
 }
 
 if (-not (Test-Path -LiteralPath $OutputDir)) {

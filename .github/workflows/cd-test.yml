@@ -101,9 +101,12 @@ jobs:
           $overlay = Join-Path $env:RUNNER_TEMP 'App.Test.pack.config'
           $overlayXml = '<?xml version="1.0" encoding="utf-8"?><configuration><connectionStrings>' +
             "<add name=`"DBconnectionString`" connectionString=`"$db`" />" +
-            "<add name=`"UpdateServerString`" connectionString=`"$updateUrl`" />" +
-            '<add name="HttpBaseUrl" connectionString="http://arieswebapi7-dev.eba-32ctm9kr.us-east-2.elasticbeanstalk.com/" />' +
-            '<add name="IsBeta" connectionString="true" /></connectionStrings></configuration>'
+            '</connectionStrings><appSettings>' +
+            "<add key=`"UpdateUrl`" value=`"$updateUrl`" />" +
+            '<add key="HttpBaseUrl" value="" />' +
+            '<add key="IsBeta" value="true" />' +
+            '<add key="EnvironmentName" value="Test" />' +
+            '</appSettings></configuration>'
           [System.IO.File]::WriteAllText($overlay, $overlayXml, (New-Object System.Text.UTF8Encoding $false))
 
           $packArgs = @{
@@ -112,7 +115,7 @@ jobs:
             ConnectionStringsConfig = $overlay
           }
           if ('${{ inputs.include_upgrade_chain }}' -eq 'true') {
-            ./scripts/ops/Download-SquirrelFeed.ps1 -OutDir ./publish/squirrel-previous
+            ./scripts/ops/Download-SquirrelFeed.ps1 -FeedUrl https://ariescontadorcr.s3.us-east-2.amazonaws.com/updates-test/ -OutDir ./publish/squirrel-previous
             $packArgs.PreviousFeedDir = './publish/squirrel-previous'
           }
           ./scripts/Pack-Squirrel.ps1 @packArgs
