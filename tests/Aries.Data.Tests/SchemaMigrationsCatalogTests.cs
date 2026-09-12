@@ -48,6 +48,26 @@ namespace Aries.Data.Tests
             Assert.Contains("009_AccountPathFunctions", ids);
             Assert.Contains("010_WidenCompanyIdOnDumpProcedures", ids);
             Assert.Contains("013_CopyCompanyChart", ids);
+            Assert.Contains("014_StandardizeReportContract", ids);
+        }
+
+        [Fact]
+        public void M014_aligns_account_tag_case_and_dual_deb_aliases()
+        {
+            var m014 = SchemaMigrations.All.Single(m => m.Id == "014_StandardizeReportContract");
+            Assert.Equal(14, m014.Version);
+            Assert.Contains("WHEN T0.`account_type`+ 0 = 4 THEN 'Ingreso'", m014.Sql);
+            Assert.Contains("WHEN T0.`account_type`+ 0 = 5 THEN 'CostoVenta'", m014.Sql);
+            Assert.DoesNotContain("WHEN T0.`account_type`+ 0 = 4 THEN 'CostoVenta'", m014.Sql);
+            Assert.Contains("AS 'DebOrCred'", m014.Sql);
+            Assert.Contains("AS 'DebOCred'", m014.Sql);
+            Assert.Contains("AS 'RateAmount'", m014.Sql);
+            Assert.Contains("AS 'Rate'", m014.Sql);
+            Assert.Contains("SP_GetAccountsByCompanyId", m014.Sql);
+            Assert.Contains("SP_GetAccountById", m014.Sql);
+            Assert.Contains("SP_AuxiliaryAccountsWithBalanceByDateRange", m014.Sql);
+            Assert.Contains("SP_EstadoResultadoIntegralReport", m014.Sql);
+            Assert.Contains("SP_GetAllJournalEntyLineByAccoudIdAndPostingPeriodId", m014.Sql);
         }
 
         [Fact]

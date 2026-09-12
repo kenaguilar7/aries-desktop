@@ -143,7 +143,6 @@
     <Compile Include="Reportes\ReporteMovimientoCuenta.cs" />
     <Compile Include="Textos\TextoGeneral.cs" />
     <Compile Include="Utils\Currency.cs" />
-    <Compile Include="Utils\DebOrCred.cs" />
     <Compile Include="Verificaciones\VerificaString.cs" />
   </ItemGroup>
   <ItemGroup>

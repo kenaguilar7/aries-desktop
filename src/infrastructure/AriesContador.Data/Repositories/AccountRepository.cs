@@ -125,8 +125,9 @@ namespace AriesContador.Data.Repositories
             var filter = auxiliar
                 ? "T3.account_id = @AccountId"
                 : "T3.father_account = @AccountId";
-            var tipo = auxiliar ? "Movimiento a cuenta" : "Movimiento a hija";
-            var sql = "SELECT "
+            var tipo = auxiliar ? "Movimiento a cuenta" : "Movimiento a cuenta hija";
+            var sql = "SET lc_time_names = 'es_MX'; "
+                      + "SELECT "
                       + "(SELECT T1.name FROM accounts_names T1 where T1.account_name_id = T3.account_name_id LIMIT 1) AS 'Nombre', "
                       + $"IF(T3.account_guide <> 'CUENTA AUXILIAR', 'Movimiento a hija', '{tipo}' ) AS 'Tipo Moviento',"
                       + "T2.detail AS 'Detalle',"

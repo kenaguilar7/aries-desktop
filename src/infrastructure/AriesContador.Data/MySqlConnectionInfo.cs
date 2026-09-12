@@ -48,10 +48,11 @@ namespace AriesContador.Data
         }
 
         /// <summary>
-        /// En Debug no se auto-migran hosts remotos (RDS de prueba, etc.) salvo
-        /// <c>ARIES_APPLY_MIGRATIONS=1</c>. Release siempre aplicaría.
-        /// El escritorio y el API ya no auto-migran: un administrador aplica
+        /// El escritorio no auto-migra al arrancar. Un administrador aplica
         /// el esquema desde Sistema → Actualizaciones.
+        /// En Debug, esta bandera sigue sirviendo a tests / API si alguien
+        /// llama al migrador a mano: hosts remotos solo con
+        /// <c>ARIES_APPLY_MIGRATIONS=1</c>.
         /// </summary>
         public static bool ShouldAutoMigrate(string connectionString, bool debugBuild, string applyMigrationsEnv)
         {

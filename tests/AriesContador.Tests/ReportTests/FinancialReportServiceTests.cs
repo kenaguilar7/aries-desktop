@@ -13,14 +13,14 @@ namespace AriesContador.Tests.ReportTests
     public class FinancialReportServiceTests
     {
         [Fact]
-        public async Task BalanceComprobacion_splits_balances_by_DebOCred()
+        public async Task BalanceComprobacion_splits_balances_by_DebOrCred()
         {
             var uow = new FakeUnitOfWork();
             uow.Accounts.AccountsWithBalance.Add(new Account
             {
                 Name = "Caja",
                 PathDirection = "Activo¡Caja",
-                DebOCred = DebOrCred.Debito,
+                DebOrCred = DebOrCred.Debito,
                 PriorBalance = 100,
                 DebitBalance = 40,
                 CreditBalance = 10
@@ -29,7 +29,7 @@ namespace AriesContador.Tests.ReportTests
             {
                 Name = "Ingresos",
                 PathDirection = "Ingreso¡Ventas",
-                DebOCred = DebOrCred.Credito,
+                DebOrCred = DebOrCred.Credito,
                 PriorBalance = 200,
                 DebitBalance = 5,
                 CreditBalance = 50
@@ -72,7 +72,7 @@ namespace AriesContador.Tests.ReportTests
                     AccountType = AccountType.Cuenta_Auxiliar,
                     AccountTag = AccountTag.Ingreso,
                     Editable = true,
-                    DebOCred = DebOrCred.Credito
+                    DebOrCred = DebOrCred.Credito
                 },
                 new Account
                 {
@@ -81,7 +81,7 @@ namespace AriesContador.Tests.ReportTests
                     AccountType = AccountType.Cuenta_Auxiliar,
                     AccountTag = AccountTag.Ingreso,
                     Editable = true,
-                    DebOCred = DebOrCred.Credito,
+                    DebOrCred = DebOrCred.Credito,
                     CreditBalance = 80
                 }
             });
@@ -143,7 +143,7 @@ namespace AriesContador.Tests.ReportTests
                 PathDirection = path,
                 AccountType = AccountType.Cuenta_Titulo,
                 AccountTag = tag,
-                DebOCred = DebOrCred.Credito,
+                DebOrCred = DebOrCred.Credito,
                 CreditBalance = currentAsCredit
             };
         }

@@ -15,7 +15,7 @@ namespace Aries.Reporting.Entidades.Cuentas
         }
         public decimal SaldoMensual(decimal debito, decimal credito)
         {
-            return (debito - credito);
+            return (credito - debito);
         }
     }
 }

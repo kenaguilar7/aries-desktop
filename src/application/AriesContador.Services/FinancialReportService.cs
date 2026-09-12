@@ -40,12 +40,12 @@ namespace AriesContador.Services
                 {
                     Account = account.Name,
                     AccountPath = account.PathDirection,
-                    SaldoAnteriorDeb = (account.DebOCred == DebOrCred.Debito) ? account.PriorBalance : 0,
-                    SaldoAnteriorCred = (account.DebOCred == DebOrCred.Credito) ? account.PriorBalance : 0,
-                    SaldoMensualDeb = (account.DebOCred == DebOrCred.Debito) ? account.MontlyBalance : 0,
-                    SaldoMensualCred = (account.DebOCred == DebOrCred.Credito) ? account.MontlyBalance : 0,
-                    SaldoActualCuentaDeb = (account.DebOCred == DebOrCred.Debito) ? account.CurrentBalance : 0,
-                    SaldoActualCuentaCred = (account.DebOCred == DebOrCred.Credito) ? account.CurrentBalance : 0,
+                    SaldoAnteriorDeb = (account.DebOrCred == DebOrCred.Debito) ? account.PriorBalance : 0,
+                    SaldoAnteriorCred = (account.DebOrCred == DebOrCred.Credito) ? account.PriorBalance : 0,
+                    SaldoMensualDeb = (account.DebOrCred == DebOrCred.Debito) ? account.MontlyBalance : 0,
+                    SaldoMensualCred = (account.DebOrCred == DebOrCred.Credito) ? account.MontlyBalance : 0,
+                    SaldoActualCuentaDeb = (account.DebOrCred == DebOrCred.Debito) ? account.CurrentBalance : 0,
+                    SaldoActualCuentaCred = (account.DebOrCred == DebOrCred.Credito) ? account.CurrentBalance : 0,
                 };
 
                 report.Add(rLine);
