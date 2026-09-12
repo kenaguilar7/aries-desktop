@@ -1,11 +1,29 @@
 {
   "use": "docker",
+  "docker": {
+    "Server": "127.0.0.1",
+    "Port": 3307,
+    "User": "kenneth",
+    "Password": "1234",
+    "Database": "aries",
+    "EnvironmentName": "Local"
+  },
   "aries-test": {
     "Server": "SET_RDS_HOST",
     "Port": 3306,
     "User": "kenneth",
     "Password": "SET_PASSWORD",
     "Database": "aries-test",
-    "EnvironmentName": "AriesTest"
+    "EnvironmentName": "AriesTest",
+    "UpdateUrl": ""
+  },
+  "aries-prod": {
+    "Server": "SET_RDS_HOST",
+    "Port": 3306,
+    "User": "kenneth",
+    "Password": "SET_PASSWORD",
+    "Database": "aries",
+    "EnvironmentName": "Production",
+    "UpdateUrl": ""
   }
 }

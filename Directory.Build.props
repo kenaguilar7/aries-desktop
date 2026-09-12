@@ -1,6 +1,9 @@
 <Project>
+  <Import Project="version.props" Condition="Exists('$(MSBuildThisFileDirectory)version.props')" />
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
     <Deterministic>true</Deterministic>
+    <Version Condition="'$(AriesVersion)' != ''">$(AriesVersion)</Version>
+    <InformationalVersion Condition="'$(AriesVersion)' != ''">$(AriesVersion)</InformationalVersion>
   </PropertyGroup>
 </Project>

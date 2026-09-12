@@ -1,0 +1,216 @@
+name: cd-prod
+
+# Empaqueta el escritorio Release y (opcional) lo sube a s3://ariescontadorcr/updates/.
+# Nunca usa updates-test. Requiere environment GitHub "production" y confirmar "production".
+#
+# En Actions: Run workflow > confirm = production > publish_to_s3 si vas a clientes.
+# Secrets (Settings > Environments > production):
+#   ARIES_MYSQL_CONNECTION  = connection string RDS prod (sin comillas)
+#   ARIES_UPDATE_URL        = https://ariescontadorcr.s3.us-east-2.amazonaws.com/updates/
+#   AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
+# Si hay version.props, un tag vX.Y.Z debe coincidir con AriesVersion.
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Escribe production para permitir el pack hacia el bucket de clientes'
+        required: true
+        type: string
+      git_tag:
+        description: 'Opcional: tag vX.Y.Z (debe coincidir con version.props). Vacío = rama seleccionada'
+        required: false
+        type: string
+        default: ''
+      publish_to_s3:
+        description: 'Subir el feed a s3://ariescontadorcr/updates/'
+        type: boolean
+        default: false
+      include_upgrade_chain:
+        description: 'Bajar el feed publico de produccion y releasify encima (delta)'
+        type: boolean
+        default: true
+
+concurrency:
+  group: cd-prod
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  pack-squirrel:
+    runs-on: windows-latest
+    environment: production
+    timeout-minutes: 30
+    steps:
+      - name: Confirm production
+        shell: pwsh
+        run: |
+          if ('${{ inputs.confirm }}' -ne 'production') {
+            throw 'Abortado: en confirm hay que escribir exactamente production.'
+          }
+          $tag = '${{ inputs.git_tag }}'.Trim()
+          if ($tag.Length -gt 0 -and $tag -notmatch '^v\d+\.\d+\.\d+$') {
+            throw "git_tag '$tag' debe ser vX.Y.Z (ejemplo v1.2.0) o quedar vacio."
+          }
+          Write-Host "confirm=production tag=$tag publish_to_s3=${{ inputs.publish_to_s3 }}"
+
+      - uses: actions/checkout@v4
+        if: ${{ inputs.git_tag != '' }}
+        with:
+          ref: ${{ inputs.git_tag }}
+
+      - uses: actions/checkout@v4
+        if: ${{ inputs.git_tag == '' }}
+
+      - name: Match version
+        shell: pwsh
+        run: |
+          $tag = '${{ inputs.git_tag }}'.Trim().TrimStart('v')
+          $info = Get-Content -LiteralPath src/desktop/Aries.Desktop/Properties/AssemblyInfo.cs -Raw
+          if ($info -notmatch 'AssemblyFileVersion\("([^"]+)"\)') {
+            throw 'AssemblyInfo no tiene AssemblyFileVersion.'
+          }
+          $version = $Matches[1].Trim()
+          if (Test-Path -LiteralPath version.props) {
+            $raw = Get-Content -LiteralPath version.props -Raw
+            if ($raw -notmatch 'AriesVersion>([^<]+)<') {
+              throw 'version.props no tiene AriesVersion.'
+            }
+            $fromProps = $Matches[1].Trim()
+            if ($fromProps -ne $version) {
+              throw "version.props $fromProps no coincide con AssemblyFileVersion $version."
+            }
+          }
+          if ($tag.Length -gt 0 -and $version -ne $tag) {
+            throw "Tag v$tag no coincide con AssemblyFileVersion $version."
+          }
+          Write-Host "version=$version tag=${{ inputs.git_tag }}"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version-file: global.json
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Setup NuGet
+        uses: nuget/setup-nuget@v2
+
+      - name: Cache NuGet
+        uses: actions/cache@v4
+        with:
+          path: |
+            packages
+            ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('nuget.config', '**/packages.config', '**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Restore
+        run: nuget restore Aries.sln
+
+      - name: Guard secrets
+        shell: pwsh
+        run: ./scripts/Verify-NoSecrets.ps1
+
+      - name: Build Release
+        run: msbuild Aries.sln /p:Configuration=Release /p:Platform="Any CPU" /m
+
+      - name: Test Core
+        run: dotnet test tests\AriesContador.Tests\AriesContador.Tests.csproj --configuration Release --nologo
+
+      - name: Test Desktop
+        run: dotnet test tests\Aries.Desktop.Tests\Aries.Desktop.Tests.csproj --configuration Release --nologo
+
+      - name: Verify publish folder
+        shell: pwsh
+        run: |
+          ./scripts/Verify-DesktopPublish.ps1 `
+            -OutputDir "src/desktop/Aries.Desktop/bin/Release" `
+            -AppConfig "src/desktop/Aries.Desktop/App.Production.config" `
+            -ProjectFile "src/desktop/Aries.Desktop/Aries.Desktop.csproj"
+
+      - name: Pack Squirrel (AriesUpdater / updates)
+        id: squirrel
+        env:
+          ARIES_MYSQL_CONNECTION: ${{ secrets.ARIES_MYSQL_CONNECTION }}
+          ARIES_UPDATE_URL: ${{ secrets.ARIES_UPDATE_URL }}
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:ARIES_MYSQL_CONNECTION)) {
+            throw 'Falta el secret ARIES_MYSQL_CONNECTION. Environment production > Secrets.'
+          }
+          if ([string]::IsNullOrWhiteSpace($env:ARIES_UPDATE_URL)) {
+            throw 'Falta el secret ARIES_UPDATE_URL. Valor = https://ariescontadorcr.s3.us-east-2.amazonaws.com/updates/ (con slash final).'
+          }
+          if ($env:ARIES_UPDATE_URL -like '*updates-test*') {
+            throw 'ARIES_UPDATE_URL de production no puede apuntar a updates-test.'
+          }
+          function Escape-Xml([string]$s) {
+            return ($s -replace '&', '&amp;' -replace '<', '&lt;' -replace '>', '&gt;' -replace '"', '&quot;')
+          }
+          $db = Escape-Xml $env:ARIES_MYSQL_CONNECTION
+          $updateUrl = Escape-Xml $env:ARIES_UPDATE_URL.Trim()
+          $overlay = Join-Path $env:RUNNER_TEMP 'App.Prod.pack.config'
+          # Overlay dual: appSettings (exe actual) + connectionStrings legado (Pack-Squirrel de main).
+          $overlayXml = '<?xml version="1.0" encoding="utf-8"?><configuration><connectionStrings>' +
+            "<add name=`"DBconnectionString`" connectionString=`"$db`" />" +
+            "<add name=`"UpdateServerString`" connectionString=`"$updateUrl`" />" +
+            '<add name="HttpBaseUrl" connectionString="" />' +
+            '<add name="IsBeta" connectionString="false" />' +
+            '</connectionStrings><appSettings>' +
+            "<add key=`"UpdateUrl`" value=`"$updateUrl`" />" +
+            '<add key="HttpBaseUrl" value="" />' +
+            '<add key="IsBeta" value="false" />' +
+            '<add key="EnvironmentName" value="Production" />' +
+            '</appSettings></configuration>'
+          [System.IO.File]::WriteAllText($overlay, $overlayXml, (New-Object System.Text.UTF8Encoding $false))
+
+          $packArgs = @{
+            PackageId = 'AriesUpdater'
+            ExpectedUpdateUrlContains = 'amazonaws.com/updates/'
+            ConnectionStringsConfig = $overlay
+          }
+          $packScript = Get-Content -LiteralPath ./scripts/Pack-Squirrel.ps1 -Raw
+          if ($packScript -match 'ForbiddenUpdateUrlContains') {
+            $packArgs.ForbiddenUpdateUrlContains = 'updates-test'
+          }
+          if ('${{ inputs.include_upgrade_chain }}' -eq 'true') {
+            ./scripts/ops/Download-SquirrelFeed.ps1 -OutDir ./publish/squirrel-previous
+            $packArgs.PreviousFeedDir = './publish/squirrel-previous'
+          }
+          ./scripts/Pack-Squirrel.ps1 @packArgs
+          Get-ChildItem ./publish/squirrel | Format-Table Name, Length -AutoSize
+
+      - name: Upload Squirrel feed
+        uses: actions/upload-artifact@v4
+        with:
+          name: squirrel-feed-prod
+          path: publish/squirrel
+
+      - name: Check AWS secrets
+        if: ${{ inputs.publish_to_s3 }}
+        shell: pwsh
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:AWS_ACCESS_KEY_ID) -or [string]::IsNullOrWhiteSpace($env:AWS_SECRET_ACCESS_KEY)) {
+            throw 'Faltan secrets AWS_ACCESS_KEY_ID y AWS_SECRET_ACCESS_KEY del environment production.'
+          }
+          Write-Host "AWS secrets presentes."
+
+      - name: Configure AWS
+        if: ${{ inputs.publish_to_s3 }}
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+
+      - name: Publish to S3 updates
+        if: ${{ inputs.publish_to_s3 }}
+        shell: pwsh
+        run: ./scripts/ops/Publish-SquirrelFeed.ps1 -Environment Production -ConfirmProduction

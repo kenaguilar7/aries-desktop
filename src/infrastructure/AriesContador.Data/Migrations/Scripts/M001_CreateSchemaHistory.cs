@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS `__schema_migrations` (
   `migration_id` VARCHAR(128) NOT NULL,
   `version` INT NOT NULL,
   `description` VARCHAR(255) NOT NULL,
+  `checksum` CHAR(64) NULL,
   `applied_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`migration_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

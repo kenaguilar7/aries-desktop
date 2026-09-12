@@ -12,6 +12,7 @@ using Aries.Desktop.FrameUsuarios;
 using Aries.Desktop.Restore;
 using AriesContador.Core.Services;
 using AriesContador.Core.Models;
+using Aries.Desktop.Utils;
 
 namespace Aries.Desktop
 {
@@ -22,6 +23,8 @@ namespace Aries.Desktop
         private readonly IFinancialReportService _financialReportService;
         private readonly IPermissionService _permissionService;
         private readonly IEmailService _emailService;
+
+        private readonly string _windowTitle;
 
         public Boolean comParametro { set { CargarCompañia(); } }
         public FrameMenu(
@@ -37,19 +40,21 @@ namespace Aries.Desktop
             this._permissionService = permissionService;
             this._emailService = emailService;
             InitializeComponent();
+            _windowTitle = this.Text;
 
-            LoginForm n = new LoginForm(_administrationService);
-            n.FormClosing += N_FormClosing;
-
-                n.ShowDialog();
-                void N_FormClosing(object sender, FormClosingEventArgs e)
-                {
-                    if (GlobalConfig.User == null)
-                    {
-                        Application.Exit();
-                    }
-                }
+            if (!TryLogin())
+            {
+                Application.Exit();
+                return;
+            }
             CargarDatos();
+        }
+
+        private bool TryLogin()
+        {
+            using (var login = new LoginForm(_administrationService))
+                login.ShowDialog();
+            return GlobalConfig.User != null;
         }
         private void CargarDatos()
         {
@@ -64,9 +69,10 @@ namespace Aries.Desktop
         {
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
             FileVersionInfo versionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
-            this.Text += $" v.{versionInfo.FileVersion} [{GlobalConfig.EnvironmentName}] {GlobalConfig.MySqlDatabase}";
-            ///fo
+            var beta = GlobalConfig.IsBeta ? " Beta" : string.Empty;
+            this.Text = $"{_windowTitle} v.{versionInfo.FileVersion} [{GlobalConfig.EnvironmentName}{beta}] {GlobalConfig.MySqlDatabase}";
         }
+
         private void CargarCompañia()
         {
             this.txtCompaniaNombre.Text = GlobalConfig.Company.ToString();
@@ -205,11 +211,7 @@ namespace Aries.Desktop
         }
         private void HideOptions()
         {
-            ///Acultamos los modulos
-
-            ///Modulo de conta
-            ///
-            //var mConta = ;
+            ResetMenuVisibility();
 
             if (GlobalConfig.Usuario.TipoUsuario == Aries.Reporting.Enumeradores.TipoUsuario.Usuario)
             {
@@ -264,6 +266,54 @@ namespace Aries.Desktop
             }
 
         }
+
+        private void ResetMenuVisibility()
+        {
+            contableToolStripMenuItem.Enabled = true;
+            contableToolStripMenuItem.Visible = true;
+            maestroDeCuentasToolStripMenuItem.Visible = true;
+            asientosContablesToolStripMenuItem.Visible = true;
+            administrarMesesToolStripMenuItem.Visible = true;
+            maestroDeCompañiasToolStripMenuItem.Enabled = true;
+            sistemaToolStripMenuItem.Enabled = true;
+            PermisosDeUsuarioToolStripMenuItem.Enabled = true;
+            usuariosToolStripMenuItem.Enabled = true;
+            MaestroDeUsuariotoolStripMenuItem.Enabled = true;
+            elementosEliminadosToolStripMenuItem.Enabled = true;
+        }
+
+        private bool CloseChildrenIfClean()
+        {
+            foreach (Form form in MdiChildren)
+            {
+                var needsCheck = form as INeedValidatedForClose;
+                if (needsCheck != null && !needsCheck.IsAvalibleToClose())
+                    return false;
+            }
+
+            for (int i = MdiChildren.Length - 1; i >= 0; i--)
+                MdiChildren[i].Close();
+            return true;
+        }
+
+        private async void CerrarSesionToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!CloseChildrenIfClean())
+                return;
+
+            await GlobalConfig.ClearSessionAsync();
+            txtUsuario.Text = string.Empty;
+            txtCompaniaNombre.Text = string.Empty;
+            this.Text = _windowTitle;
+
+            if (!TryLogin())
+            {
+                Application.Exit();
+                return;
+            }
+            CargarDatos();
+        }
+
         private void gestorDeVentanasToolStripMenuItem_Click(object sender, EventArgs e)
         {
             FormPermisoUsuario form = new FormPermisoUsuario(_administrationService, _permissionService)
@@ -386,6 +436,12 @@ namespace Aries.Desktop
             }
         }
 
+        private void actualizacionesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var form = new FrameActualizaciones())
+                form.ShowDialog(this);
+        }
+
         private void tokenToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var scriptInfo =
@@ -401,7 +457,13 @@ namespace Aries.Desktop
                 + (EnvironmentVariable.ApiToken?.Token ?? "(ninguno)")
                 + Environment.NewLine
                 + "API (si la arrancas): "
-                + EnvironmentVariable.ApiUrl; 
+                + EnvironmentVariable.ApiUrl
+                + Environment.NewLine
+                + "Update: "
+                + (string.IsNullOrWhiteSpace(GlobalConfig.UpdateUrl) ? "(ninguno)" : GlobalConfig.UpdateUrl)
+                + Environment.NewLine
+                + "Log: "
+                + StartupLog.FilePath; 
             MessageBox.Show(scriptInfo, "Token info",MessageBoxButtons.OK, MessageBoxIcon.Information); 
         }
     }

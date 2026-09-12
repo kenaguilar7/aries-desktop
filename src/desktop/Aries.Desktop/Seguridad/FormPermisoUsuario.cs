@@ -28,6 +28,7 @@ namespace Aries.Desktop.Seguridad
         private List<Company> CompañiasDelUsuario = new List<Company>();
         private List<Company> TodasLasCompañias = new List<Company>();
         private List<Modulo> modulos = new List<Modulo>();
+        private bool _loadingUsers;
 
         public FormPermisoUsuario(IAdministrationService administrationService, IPermissionService permissionService)
         {
@@ -44,10 +45,21 @@ namespace Aries.Desktop.Seguridad
 
         private async Task CargarDatosAsync()
         {
-            ///Cargamos los usuarios,
-            TodosLosUsuarios = (await _administrationService.GetAllUsersAsync()).Select(UserMapper.ToUsuario).ToList();
-            lstUsuarios.DataSource = TodosLosUsuarios;
-            lstUsuarios.SelectedIndex = -1;
+            TodosLosUsuarios = (await _administrationService.GetAllUsersAsync())
+                .Select(UserMapper.ToUsuario)
+                .Where(u => u != null)
+                .ToList();
+
+            _loadingUsers = true;
+            try
+            {
+                lstUsuarios.DataSource = TodosLosUsuarios;
+                lstUsuarios.SelectedIndex = -1;
+            }
+            finally
+            {
+                _loadingUsers = false;
+            }
         }
         /// <summary>
         /// Agrega las compañias seleccionadas en la lista (compañias sin asignar)
@@ -111,7 +123,7 @@ namespace Aries.Desktop.Seguridad
                 }
 
             });
-            await CargarModulosAsync();
+            await CargarModulosAsync(usuario);
         }
         /// <summary>
         /// Evento que ocurre cuando la lista que contiene los usuarios cambia de indice
@@ -120,36 +132,35 @@ namespace Aries.Desktop.Seguridad
         /// <param name="e"></param>
         private async void LstUsuarios_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (this.Visible)
-            {
-                var user = (Usuario)lstUsuarios.SelectedItem;
-                if (user != null)
-                {
-                    await CargarUsuarioAsync(user);
-                }
-                else
-                {
-                    MessageBox.Show("No se encontro ningun usurario", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-            }
+            if (_loadingUsers || !this.Visible)
+                return;
+
+            var user = lstUsuarios.SelectedItem as Usuario;
+            if (user == null)
+                return;
+
+            await CargarUsuarioAsync(user);
         }
         /// <summary>
         /// Carga los modulos disponible
         /// y selecciona los asignados al usuario
         /// y los que no tiene asignados
         /// </summary>
-        private async Task CargarModulosAsync()
+        private async Task CargarModulosAsync(Usuario user)
         {
             treeViewModulos.Nodes.Clear();
-            var user = (Usuario)lstUsuarios.SelectedItem;
-            ///El usuario admin puede tener acceso a todas las compañias??? si es asi entonces 
-            ///no ponerlos en la lista
-            panelAsignacionModulos.Enabled = (user.TipoUsuario == TipoUsuario.Administrador) ? false : true;
+            if (user == null)
+                return;
+
+            panelAsignacionModulos.Enabled = user.TipoUsuario != TipoUsuario.Administrador;
             var userId = int.TryParse(user.UsuarioId, out var parsed) ? parsed : user.Id;
             modulos = PermissionMapper.ToModulos(await _permissionService.GetModulesAsync(userId));
 
             foreach (var item in modulos)
             {
+                if (item == null)
+                    continue;
+
                 var x = new TreeNode(item.ToString())
                 {
                     Tag = item,
@@ -157,10 +168,8 @@ namespace Aries.Desktop.Seguridad
                 };
 
                 CargarVentanasAlNodo(item, ref x);
-
                 treeViewModulos.Nodes.Add(x);
             }
-
         }
         /// <summary>
         /// Carga las lista de ventanas al su respectivo modulo asignado al nodo
@@ -169,22 +178,32 @@ namespace Aries.Desktop.Seguridad
         /// <param name="treeNode"></param>
         private void CargarVentanasAlNodo(Modulo modulo, ref TreeNode treeNode)
         {
+            if (modulo?.LstVentanas == null)
+                return;
+
             foreach (var item in modulo.LstVentanas)
             {
-                var x = new TreeNode(item.NombreExterno)
+                if (item == null)
+                    continue;
+
+                var x = new TreeNode(item.NombreExterno ?? string.Empty)
                 {
                     Tag = item,
                     Checked = item.TienePermiso
                 };
-                x.Checked = item.TienePermiso;
-                x.Nodes.Add(new TreeNode(item.CRUDInsert.Nombre.ToString()) { Tag = item.CRUDInsert, Checked = item.CRUDInsert.TienePermiso });
-                x.Nodes.Add(new TreeNode(item.CRUDUpdate.Nombre.ToString()) { Tag = item.CRUDUpdate, Checked = item.CRUDUpdate.TienePermiso });
-                x.Nodes.Add(new TreeNode(item.CRUDLIst.Nombre.ToString()) { Tag = item.CRUDLIst, Checked = item.CRUDLIst.TienePermiso });
-                x.Nodes.Add(new TreeNode(item.CRUDDeleted.Nombre.ToString()) { Tag = item.CRUDDeleted, Checked = item.CRUDDeleted.TienePermiso });
-
+                AddCrudNode(x, item.CRUDInsert);
+                AddCrudNode(x, item.CRUDUpdate);
+                AddCrudNode(x, item.CRUDLIst);
+                AddCrudNode(x, item.CRUDDeleted);
                 treeNode.Nodes.Add(x);
-                ///
             }
+        }
+
+        private static void AddCrudNode(TreeNode parent, CRUDItem crud)
+        {
+            if (crud == null)
+                return;
+            parent.Nodes.Add(new TreeNode(crud.Nombre.ToString()) { Tag = crud, Checked = crud.TienePermiso });
         }
         /// <summary>
         /// Guarda los datos
@@ -224,7 +243,9 @@ namespace Aries.Desktop.Seguridad
         /// <param name="e"></param>
         private void TreeViewModulos_AfterCheck(object sender, TreeViewEventArgs e)
         {
-            ((IPermiso)e.Node.Tag).TienePermiso = e.Node.Checked;
+            var permiso = e.Node?.Tag as IPermiso;
+            if (permiso != null)
+                permiso.TienePermiso = e.Node.Checked;
         }
         /// <summary>
         /// Se sale de la venatana

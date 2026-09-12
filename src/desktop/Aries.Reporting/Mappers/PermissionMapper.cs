@@ -14,7 +14,7 @@ namespace Aries.Reporting.Mappers
             if (modules == null)
                 return new List<Modulo>();
 
-            return modules.Select(ToModulo).ToList();
+            return modules.Where(module => module != null).Select(ToModulo).Where(modulo => modulo != null).ToList();
         }
 
         public static Modulo ToModulo(ModulePermission module)

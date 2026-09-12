@@ -51,6 +51,7 @@ namespace Aries.Desktop
             this.PermisosDeUsuarioToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.gestionDeCorreosToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.elementosEliminadosToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.actualizacionesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.salirToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
@@ -61,6 +62,7 @@ namespace Aries.Desktop
             this.ProgressBar = new System.Windows.Forms.ToolStripProgressBar();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.tokenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.cerrarSesionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -220,7 +222,9 @@ namespace Aries.Desktop
             this.PermisosDeUsuarioToolStripMenuItem,
             this.gestionDeCorreosToolStripMenuItem,
             this.elementosEliminadosToolStripMenuItem,
+            this.actualizacionesToolStripMenuItem,
             this.tokenToolStripMenuItem,
+            this.cerrarSesionToolStripMenuItem,
             this.salirToolStripMenuItem});
             this.sistemaToolStripMenuItem.Name = "sistemaToolStripMenuItem";
             this.sistemaToolStripMenuItem.Size = new System.Drawing.Size(90, 29);
@@ -246,6 +250,13 @@ namespace Aries.Desktop
             this.elementosEliminadosToolStripMenuItem.Size = new System.Drawing.Size(287, 34);
             this.elementosEliminadosToolStripMenuItem.Text = "Elementos eliminados";
             this.elementosEliminadosToolStripMenuItem.Click += new System.EventHandler(this.elementosEliminadosToolStripMenuItem_Click);
+            // 
+            // actualizacionesToolStripMenuItem
+            // 
+            this.actualizacionesToolStripMenuItem.Name = "actualizacionesToolStripMenuItem";
+            this.actualizacionesToolStripMenuItem.Size = new System.Drawing.Size(287, 34);
+            this.actualizacionesToolStripMenuItem.Text = "Actualizaciones";
+            this.actualizacionesToolStripMenuItem.Click += new System.EventHandler(this.actualizacionesToolStripMenuItem_Click);
             // 
             // salirToolStripMenuItem
             // 
@@ -330,6 +341,13 @@ namespace Aries.Desktop
             this.tokenToolStripMenuItem.Text = "Token";
             this.tokenToolStripMenuItem.Click += new System.EventHandler(this.tokenToolStripMenuItem_Click);
             // 
+            // cerrarSesionToolStripMenuItem
+            // 
+            this.cerrarSesionToolStripMenuItem.Name = "cerrarSesionToolStripMenuItem";
+            this.cerrarSesionToolStripMenuItem.Size = new System.Drawing.Size(287, 34);
+            this.cerrarSesionToolStripMenuItem.Text = "Cerrar sesión";
+            this.cerrarSesionToolStripMenuItem.Click += new System.EventHandler(this.CerrarSesionToolStripMenuItem_Click);
+            // 
             // FrameMenu
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
@@ -387,6 +405,8 @@ namespace Aries.Desktop
         private System.Windows.Forms.ToolStripMenuItem nbalanceDeComprobaciónToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem gestionDeCorreosToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem elementosEliminadosToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem actualizacionesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem tokenToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem cerrarSesionToolStripMenuItem;
     }
 }

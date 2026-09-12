@@ -18,17 +18,22 @@ $sln = Join-Path $root 'Aries.sln'
 if (Test-Path -LiteralPath $sln) { Show-Ok "Solucion $sln" } else { Show-Fail "No esta Aries.sln" }
 
 $infoPath = Join-Path $root 'src\desktop\Aries.Desktop\Properties\AssemblyInfo.cs'
-if (Test-Path -LiteralPath $infoPath) {
+$versionProps = Join-Path $root 'version.props'
+if ((Test-Path -LiteralPath $infoPath) -and (Test-Path -LiteralPath $versionProps)) {
     $raw = Get-Content -LiteralPath $infoPath -Raw
-    if ($raw -match 'AssemblyFileVersion\("([^"]+)"\)') {
-        Show-Ok "AssemblyFileVersion $($Matches[1])"
+    $props = Get-Content -LiteralPath $versionProps -Raw
+    if ($raw -match 'AssemblyFileVersion\("([^"]+)"\)' -and $props -match 'AriesVersion>([^<]+)<') {
+        $fileVer = [regex]::Match($raw, 'AssemblyFileVersion\("([^"]+)"\)').Groups[1].Value
+        $propVer = [regex]::Match($props, 'AriesVersion>([^<]+)<').Groups[1].Value
+        if ($fileVer -eq $propVer) { Show-Ok "version $fileVer (version.props = AssemblyFileVersion)" }
+        else { Show-Fail "version.props $propVer != AssemblyFileVersion $fileVer" }
     }
     else {
-        Show-Fail "AssemblyInfo sin AssemblyFileVersion"
+        Show-Fail "Falta AriesVersion o AssemblyFileVersion"
     }
 }
 else {
-    Show-Fail "Falta AssemblyInfo.cs"
+    Show-Fail "Falta AssemblyInfo.cs o version.props"
 }
 
 $nuget = Get-Command nuget -ErrorAction SilentlyContinue

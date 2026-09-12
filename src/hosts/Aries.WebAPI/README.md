@@ -12,7 +12,7 @@ Ver [`scripts/local/README.md`](../../../scripts/local/README.md). El camino loc
 
 - Swagger: `http://localhost:5088/`
 - Salud: `http://localhost:5088/health`
-- Login de prueba: `POST /auth/login` con `{"UserId":"kenneth","Password":"96321"}`
+- Login de prueba: `POST /auth/login` con `{"UserId":"kenneth","Password":"96321"}` (PBKDF2; el primer login en plano rehash).
 
 El contenedor `aries_api_local` habla con MySQL en `host.docker.internal:3307` (`aries_mysql_local`). El escritorio Debug usa el mismo MySQL y `HttpBaseUrl=http://localhost:5088/`. Feed Squirrel del mismo host: `http://localhost:5088/updates/` (ver [`scripts/local/README.md`](../../../scripts/local/README.md)).
 
@@ -38,4 +38,4 @@ Login in-process del exe **no cambia**: sigue `IAdministrationService`. El API e
 - **Layout `src/`:** ver [`docs/LAYOUT.md`](../../../docs/LAYOUT.md).
 - **net8.0-windows:** no. El exe de producción sigue en .NET Framework 4.8.
 - **Blazor:** parqueado; si se retoma, debe pegarle a estas mismas rutas.
-- **Hash de passwords:** posterior. Login busca un usuario por nombre y compara texto plano.
+- **Hash de passwords:** `AdministrationService.LoginAsync` verifica PBKDF2 y rehash perezoso de texto plano.

@@ -1,5 +1,6 @@
 # Aplica src/desktop/Aries.Desktop/local-db.json sobre el exe.config de Debug.
-# Plantilla: scripts/local/local-db.json.example. "use": "docker" deja app.config intacto.
+# Plantilla: scripts/local/local-db.json.example.
+# "use": "docker" aplica el bloque docker si existe; si no, deja app.config intacto.
 param(
     [Parameter(Mandatory = $true)]
     [string]$JsonPath,
@@ -18,14 +19,18 @@ if (-not (Test-Path -LiteralPath $ExeConfigPath)) {
 
 $json = Get-Content -LiteralPath $JsonPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $use = [string]$json.use
-if ([string]::IsNullOrWhiteSpace($use) -or $use.Trim().Equals('docker', [StringComparison]::OrdinalIgnoreCase)) {
-    Write-Host "local-db.json: use=docker -> app.config (127.0.0.1:3307 / aries)"
-    exit 0
+if ([string]::IsNullOrWhiteSpace($use)) {
+    $use = 'docker'
 }
 
 $profile = $json.PSObject.Properties[$use]
+$isDocker = $use.Trim().Equals('docker', [StringComparison]::OrdinalIgnoreCase)
+if ($isDocker -and ($null -eq $profile -or $null -eq $profile.Value)) {
+    Write-Host "local-db.json: use=docker (sin bloque) -> app.config (127.0.0.1:3307 / aries)"
+    exit 0
+}
 if ($null -eq $profile -or $null -eq $profile.Value) {
-    throw "local-db.json: no hay un bloque '$use'. Crea uno (como aries-test) o pon `"use`": `"docker`"."
+    throw "local-db.json: no hay un bloque '$use'. Crea uno (como docker o aries-test)."
 }
 
 $p = $profile.Value
@@ -66,20 +71,35 @@ if (-not $found) {
     throw "El exe.config no tiene connectionString DBconnectionString."
 }
 
-$envFound = $false
-foreach ($add in @($cfg.configuration.appSettings.add)) {
-    if ($add.key -eq 'EnvironmentName') {
-        $add.SetAttribute('value', $envName)
-        $envFound = $true
+function Set-AppSetting([xml]$doc, [string]$key, [string]$value) {
+    $found = $false
+    foreach ($add in @($doc.configuration.appSettings.add)) {
+        if ($add.key -eq $key) {
+            $add.SetAttribute('value', $value)
+            $found = $true
+        }
+    }
+    if (-not $found) {
+        $node = $doc.CreateElement('add')
+        $node.SetAttribute('key', $key)
+        $node.SetAttribute('value', $value)
+        [void]$doc.configuration.appSettings.AppendChild($node)
     }
 }
-if (-not $envFound) {
-    $node = $cfg.CreateElement('add')
-    $node.SetAttribute('key', 'EnvironmentName')
-    $node.SetAttribute('value', $envName)
-    [void]$cfg.configuration.appSettings.AppendChild($node)
+
+Set-AppSetting $cfg 'EnvironmentName' $envName
+
+$updateUrlProp = $p.PSObject.Properties['UpdateUrl']
+if ($null -ne $updateUrlProp) {
+    Set-AppSetting $cfg 'UpdateUrl' ([string]$updateUrlProp.Value)
+}
+
+$httpBaseProp = $p.PSObject.Properties['HttpBaseUrl']
+if ($null -ne $httpBaseProp) {
+    Set-AppSetting $cfg 'HttpBaseUrl' ([string]$httpBaseProp.Value)
 }
 
 $cfg.Save($ExeConfigPath)
-Write-Host "local-db.json: use=$use -> Database=$database @ $server"
+$updateNote = if ($null -ne $updateUrlProp) { " UpdateUrl=$([string]$updateUrlProp.Value)" } else { '' }
+Write-Host "local-db.json: use=$use -> Database=$database @ $server$updateNote"
 exit 0

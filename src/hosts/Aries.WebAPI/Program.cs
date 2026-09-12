@@ -95,11 +95,29 @@ if (!app.Environment.IsEnvironment("Testing"))
         app.Environment.EnvironmentName, server, port, database);
 
     var connection = app.Services.GetRequiredService<IConnectionString>();
-    var migrated = await new DatabaseMigrator(connection.MySQLDefault).ApplyPendingAsync();
-    if (migrated.HadPending)
-        app.Logger.LogInformation("MySQL migraciones aplicadas: {Migrations}", string.Join(", ", migrated.AppliedIds));
-    else
-        app.Logger.LogInformation("MySQL esquema al día ({Count} migraciones)", migrated.AlreadyAppliedIds.Count);
+    try
+    {
+        var status = await new DatabaseMigrator(connection.MySQLDefault).GetStatusAsync();
+        if (status.IsUpToDate)
+        {
+            app.Logger.LogInformation(
+                "MySQL esquema al día ({Count} migraciones). No se aplica SQL al arranque.",
+                status.Applied.Count);
+        }
+        else
+        {
+            var pending = status.Pending.Count == 0
+                ? "(sin historial)"
+                : string.Join(", ", status.Pending.Select(m => m.Id));
+            app.Logger.LogWarning(
+                "MySQL esquema pendiente: {Pending}. Un administrador debe aplicarlas en Sistema > Actualizaciones.",
+                pending);
+        }
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogWarning(ex, "No se pudo leer el esquema MySQL al arranque (no se aplica SQL).");
+    }
 }
 
 app.UseExceptionHandler(errorApp =>
