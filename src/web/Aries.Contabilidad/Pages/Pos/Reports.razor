@@ -1,0 +1,130 @@
+@page "/pos/{CompanyId}/reports"
+@using AriesContador.Core.Models.PointOfSale
+@inject IPosService PosService
+
+<div class="container-fluid">
+    <h3 class="mb-3">Reportes de ventas</h3>
+    <PosNav CompanyId="@CompanyId" />
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item"><button class="nav-link @(tab == 0 ? "active" : "")" @onclick="() => tab = 0">Ventas de hoy</button></li>
+        <li class="nav-item"><button class="nav-link @(tab == 1 ? "active" : "")" @onclick="() => tab = 1">Stock bajo</button></li>
+        <li class="nav-item"><button class="nav-link @(tab == 2 ? "active" : "")" @onclick="() => tab = 2">Cierres</button></li>
+    </ul>
+
+    @if (loading)
+    {
+        <div class="spinner-border"></div>
+    }
+    else if (tab == 0 && today != null)
+    {
+        <div class="row g-3 mb-3">
+            <div class="col-md-3"><div class="card"><div class="card-body"><h6>Transacciones</h6><h4>@today.SaleCount</h4></div></div></div>
+            <div class="col-md-3"><div class="card"><div class="card-body"><h6>Total</h6><h4>@today.Total.ToString("N2")</h4></div></div></div>
+            <div class="col-md-2"><div class="card"><div class="card-body"><h6>Efectivo</h6><div>@today.CashTotal.ToString("N2")</div></div></div></div>
+            <div class="col-md-2"><div class="card"><div class="card-body"><h6>Tarjeta</h6><div>@today.CardTotal.ToString("N2")</div></div></div></div>
+            <div class="col-md-2"><div class="card"><div class="card-body"><h6>Transferencia</h6><div>@today.TransferTotal.ToString("N2")</div></div></div></div>
+        </div>
+        <div class="card"><div class="card-body table-responsive">
+            <table class="table table-striped table-sm">
+                <thead><tr><th>Hora</th><th>Caja</th><th>Pago</th><th class="text-end">Total</th></tr></thead>
+                <tbody>
+                    @foreach (var sale in today.RecentSales)
+                    {
+                        <tr>
+                            <td>@sale.SoldAt.ToString("g")</td>
+                            <td>@sale.RegisterName</td>
+                            <td>@sale.PaymentMethod</td>
+                            <td class="text-end">@sale.Total.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div></div>
+    }
+    else if (tab == 1)
+    {
+        <div class="card"><div class="card-body table-responsive">
+            <table class="table table-striped">
+                <thead><tr><th>Código</th><th>Producto</th><th class="text-end">Stock</th></tr></thead>
+                <tbody>
+                    @foreach (var product in lowStock)
+                    {
+                        <tr>
+                            <td>@product.Barcode</td>
+                            <td>@product.Name</td>
+                            <td class="text-end">@product.Stock.ToString("N3")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            @if (lowStock.Count == 0)
+            {
+                <p class="text-muted mb-0">No hay productos con stock bajo.</p>
+            }
+        </div></div>
+    }
+    else if (tab == 2)
+    {
+        <div class="card"><div class="card-body table-responsive">
+            <table class="table table-striped table-sm">
+                <thead>
+                    <tr>
+                        <th>Caja</th>
+                        <th>Apertura</th>
+                        <th>Cierre</th>
+                        <th class="text-end">Esperado</th>
+                        <th class="text-end">Declarado</th>
+                        <th class="text-end">Diferencia</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var session in closings)
+                    {
+                        <tr>
+                            <td>@session.RegisterName</td>
+                            <td>@session.OpenedAt.ToString("g")</td>
+                            <td>@session.ClosedAt?.ToString("g")</td>
+                            <td class="text-end">@session.ExpectedClosingAmount.ToString("N2")</td>
+                            <td class="text-end">@session.DeclaredClosingAmount?.ToString("N2")</td>
+                            <td class="text-end">@session.Difference?.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div></div>
+    }
+</div>
+
+@code {
+    [Parameter] public string CompanyId { get; set; } = string.Empty;
+    private int tab;
+    private bool loading = true;
+    private PosTodaySalesReport? today;
+    private List<Product> lowStock = new();
+    private List<SalesRegisterSession> closings = new();
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            today = await PosService.GetTodaySalesAsync(CompanyId);
+            lowStock = await PosService.GetLowStockAsync(CompanyId);
+            closings = await PosService.GetClosingsAsync(CompanyId);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+}

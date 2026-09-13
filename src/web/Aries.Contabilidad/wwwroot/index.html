@@ -30,6 +30,16 @@
     </div>
     <script src="_framework/blazor.webassembly.js"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+    <script>
+        window.ariesPrint = function (html) {
+            var w = window.open('', '_blank');
+            if (!w) return;
+            w.document.write(html);
+            w.document.close();
+            w.focus();
+            w.print();
+        };
+    </script>
 </body>
 
 </html>

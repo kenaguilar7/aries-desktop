@@ -1,0 +1,15 @@
+@inject NavigationManager NavigationManager
+
+<div class="mb-3 d-flex flex-wrap gap-2">
+    <NavLink class="btn btn-outline-primary btn-sm" href="@($"/pos/{CompanyId}/dashboard")">Dashboard</NavLink>
+    <NavLink class="btn btn-outline-primary btn-sm" href="@($"/pos/{CompanyId}/inventory")">Inventario</NavLink>
+    <NavLink class="btn btn-outline-primary btn-sm" href="@($"/pos/{CompanyId}/registers")">Cajas</NavLink>
+    <NavLink class="btn btn-outline-primary btn-sm" href="@($"/pos/{CompanyId}/caja")">Apertura / Cierre</NavLink>
+    <NavLink class="btn btn-outline-primary btn-sm" href="@($"/pos/{CompanyId}/sales")">Caja de ventas</NavLink>
+    <NavLink class="btn btn-outline-primary btn-sm" href="@($"/pos/{CompanyId}/reports")">Reportes</NavLink>
+</div>
+
+@code {
+    [Parameter]
+    public string CompanyId { get; set; } = string.Empty;
+}

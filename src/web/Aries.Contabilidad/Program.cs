@@ -28,6 +28,7 @@ builder.Services.AddScoped<IJournalEntryService, JournalEntryService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IPostingPeriodService, PostingPeriodService>();
 builder.Services.AddScoped<IJournalEntryLineService, JournalEntryLineService>();
+builder.Services.AddScoped<IPosService, PosService>();
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 
 var apiBaseUrl = apiSettings?.BaseUrl ?? "http://localhost:5088/";

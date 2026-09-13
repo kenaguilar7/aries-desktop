@@ -86,6 +86,34 @@ namespace AriesContador.Data.Internal.DataAccess
             }
         }
 
+        public async Task<int> InsertAndGetIdAsync(string insertSql, object parameters, CancellationToken cancellationToken = default)
+        {
+            using (var connection = new MySqlConnection(_connectionString.MySQLDefault))
+            {
+                await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+                await connection.ExecuteAsync(Text(insertSql, parameters, cancellationToken: cancellationToken))
+                    .ConfigureAwait(false);
+                return await connection.ExecuteScalarAsync<int>(
+                    Text("SELECT LAST_INSERT_ID()", cancellationToken: cancellationToken)).ConfigureAwait(false);
+            }
+        }
+
+        public async Task<List<T>> ExecuteQueryInTransactionAsync<T>(string sql, object parameters, CancellationToken cancellationToken = default)
+        {
+            var result = await _connection.QueryAsync<T>(Text(sql, parameters, _transaction, cancellationToken))
+                .ConfigureAwait(false);
+            return result.ToList();
+        }
+
+        public async Task<int> InsertAndGetIdInTransactionAsync(string insertSql, object parameters, CancellationToken cancellationToken = default)
+        {
+            await _connection.ExecuteAsync(Text(insertSql, parameters, _transaction, cancellationToken))
+                .ConfigureAwait(false);
+            var ids = await _connection.QueryAsync<int>(
+                Text("SELECT LAST_INSERT_ID()", transaction: _transaction, cancellationToken: cancellationToken)).ConfigureAwait(false);
+            return ids.Single();
+        }
+
         public async Task<DataTable> QueryTableAsync(string sql, object parameters, CancellationToken cancellationToken = default)
         {
             using (var connection = new MySqlConnection(_connectionString.MySQLDefault))

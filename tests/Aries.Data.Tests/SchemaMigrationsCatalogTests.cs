@@ -53,6 +53,20 @@ namespace Aries.Data.Tests
             Assert.Contains("016_ReportMonthRangeYyyymm", ids);
             Assert.Contains("017_AccountAndJournalInfoViews", ids);
             Assert.Contains("018_AccountPathFunctions", ids);
+            Assert.Contains("019_PosTables", ids);
+        }
+
+        [Fact]
+        public void M019_creates_pos_tables()
+        {
+            var m019 = SchemaMigrations.All.Single(m => m.Id == "019_PosTables");
+            Assert.Equal(19, m019.Version);
+            Assert.Contains("CREATE TABLE IF NOT EXISTS `products`", m019.Sql);
+            Assert.Contains("CREATE TABLE IF NOT EXISTS `sales_registers`", m019.Sql);
+            Assert.Contains("CREATE TABLE IF NOT EXISTS `sales_register_sessions`", m019.Sql);
+            Assert.Contains("uk_session_one_open", m019.Sql);
+            Assert.Contains("CREATE TABLE IF NOT EXISTS `sales`", m019.Sql);
+            Assert.Contains("CREATE TABLE IF NOT EXISTS `sale_lines`", m019.Sql);
         }
 
         [Fact]

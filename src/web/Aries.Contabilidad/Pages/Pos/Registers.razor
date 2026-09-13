@@ -1,0 +1,154 @@
+@page "/pos/{CompanyId}/registers"
+@using AriesContador.Core.Models.PointOfSale
+@inject IPosService PosService
+@inject IJSRuntime JSRuntime
+
+<div class="container-fluid">
+    <h3 class="mb-3">Cajas de venta</h3>
+    <PosNav CompanyId="@CompanyId" />
+    <p class="text-muted">Cada compañía puede tener varias cajas. Varias cajas pueden estar abiertas al mismo tiempo; cada una solo una sesión.</p>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    <div class="mb-3">
+        <button class="btn btn-primary" @onclick="StartCreate"><i class="fas fa-plus"></i> Nueva caja</button>
+    </div>
+
+    @if (editing)
+    {
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <label class="form-label">Código</label>
+                        <input class="form-control" @bind="form.Code" placeholder="Caja1" />
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label">Nombre</label>
+                        <input class="form-control" @bind="form.Name" placeholder="Mostrador principal" />
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button class="btn btn-primary me-2" @onclick="Save" disabled="@saving">Guardar</button>
+                        <button class="btn btn-secondary" @onclick="() => editing = false">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (registers == null)
+    {
+        <div class="d-flex justify-content-center"><div class="spinner-border"></div></div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-body table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var register in registers)
+                        {
+                            <tr>
+                                <td>@register.Code</td>
+                                <td>@register.Name</td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-primary me-1" @onclick="() => StartEdit(register)">Editar</button>
+                                    <button class="btn btn-sm btn-danger" @onclick="() => Delete(register)">Eliminar</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                @if (registers.Count == 0)
+                {
+                    <p class="text-muted mb-0">No hay cajas. Cree al menos una para vender.</p>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string CompanyId { get; set; } = string.Empty;
+    private List<SalesRegister>? registers;
+    private SalesRegister form = new();
+    private bool editing;
+    private bool saving;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync() => await Reload();
+
+    private async Task Reload()
+    {
+        errorMessage = null;
+        registers = await PosService.GetRegistersAsync(CompanyId);
+    }
+
+    private void StartCreate()
+    {
+        form = new SalesRegister { CompanyId = CompanyId, Active = true };
+        editing = true;
+    }
+
+    private void StartEdit(SalesRegister register)
+    {
+        form = new SalesRegister
+        {
+            Id = register.Id,
+            CompanyId = register.CompanyId,
+            Code = register.Code,
+            Name = register.Name,
+            Active = register.Active
+        };
+        editing = true;
+    }
+
+    private async Task Save()
+    {
+        saving = true;
+        errorMessage = null;
+        try
+        {
+            form.CompanyId = CompanyId;
+            if (form.Id == 0)
+                await PosService.CreateRegisterAsync(form);
+            else
+                await PosService.UpdateRegisterAsync(form);
+            editing = false;
+            await Reload();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private async Task Delete(SalesRegister register)
+    {
+        if (!await JSRuntime.InvokeAsync<bool>("confirm", $"¿Eliminar la caja {register.Name}?"))
+            return;
+        try
+        {
+            await PosService.DeleteRegisterAsync(register.Id);
+            await Reload();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+}
