@@ -1,7 +1,7 @@
 name: cd-web-prod
 
 # Publica Aries.Contabilidad (Blazor WASM) a ECS Express Mode (produccion).
-# Nunca usa aries-web-test ni el tag ECR test. Requiere environment GitHub "Prod"
+# Nunca usa aries-web-test. Imagen ECR: aries-webapi:web-prod.
 # y escribir production en confirm. Apunta al API aries-api-prod.
 #
 # En Actions: Run workflow > confirm = production.

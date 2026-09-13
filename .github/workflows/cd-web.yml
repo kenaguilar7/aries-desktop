@@ -50,7 +50,7 @@ jobs:
     timeout-minutes: 30
     env:
       AWS_REGION: us-east-2
-      ECR_REPOSITORY: aries-web
+      ECR_REPOSITORY: aries-webapi
     steps:
       - name: Confirm production
         if: ${{ inputs.github_environment == 'Prod' }}
@@ -191,16 +191,8 @@ jobs:
       - name: Ensure ECR repository
         run: |
           set -euo pipefail
-          if ! aws ecr describe-repositories --repository-names "$ECR_REPOSITORY" --region "$AWS_REGION" >/dev/null 2>&1; then
-            aws ecr create-repository \
-              --repository-name "$ECR_REPOSITORY" \
-              --region "$AWS_REGION" \
-              --image-scanning-configuration scanOnPush=true \
-              --encryption-configuration encryptionType=AES256
-            echo "Creado ECR $ECR_REPOSITORY"
-          else
-            echo "ECR $ECR_REPOSITORY ya existe"
-          fi
+          aws ecr describe-repositories --repository-names "$ECR_REPOSITORY" --region "$AWS_REGION"
+          echo "ECR $ECR_REPOSITORY listo (mismas credenciales que el API; tags web-*)"
 
       - name: Image tags
         id: tags
@@ -208,7 +200,7 @@ jobs:
           set -euo pipefail
           SHA="${GITHUB_SHA:0:7}"
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
-          echo "IMAGE_TAG=$SHA" >> "$GITHUB_ENV"
+          echo "IMAGE_TAG=web-$SHA" >> "$GITHUB_ENV"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -223,7 +215,7 @@ jobs:
             ARIES_API_BASE_URL=${{ steps.api-url.outputs.url }}
           tags: |
             ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
-            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ inputs.image_channel }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:web-${{ inputs.image_channel }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

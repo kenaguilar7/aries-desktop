@@ -1,7 +1,8 @@
 name: cd-web-test
 
 # Publica Aries.Contabilidad (Blazor WASM) a ECS Express Mode (test).
-# Nunca usa el servicio aries-web-prod ni el tag ECR prod.
+# Nunca usa el servicio aries-web-prod. Imagen ECR: aries-webapi:web-test
+# (el usuario de GitHub no puede crear el repo aries-web).
 # Apunta ApiSettings.BaseUrl al API aries-api-test (o vars.ARIES_API_BASE_URL).
 #
 # Environment GitHub "test":
