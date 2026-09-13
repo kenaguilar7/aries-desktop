@@ -1,0 +1,46 @@
+name: cd-api-prod
+
+# Publica Aries.WebAPI a ECS Express Mode (produccion).
+# Nunca usa aries-api-test ni el tag ECR test. Requiere environment GitHub "Prod"
+# y escribir production en confirm.
+#
+# En Actions: Run workflow > confirm = production.
+# Secrets (Settings > Environments > Prod):
+#   AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
+#   ARIES_MYSQL_CONNECTION = RDS prod (sin comillas, no aries-test)
+#   ARIES_JWT_KEY          = >= 32 chars, distinto de test y de change-me
+# Variables opcionales: ECS_CLUSTER, ECS_EXECUTION_ROLE, ECS_INFRA_ROLE, ECS_SUBNETS, ECS_SECURITY_GROUPS
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Escribe production para publicar el API de clientes'
+        required: true
+        type: string
+      git_tag:
+        description: 'Opcional: tag vX.Y.Z (debe coincidir con version.props). Vacío = rama seleccionada'
+        required: false
+        type: string
+        default: ''
+
+concurrency:
+  group: cd-api-prod
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/cd-api.yml
+    with:
+      github_environment: Prod
+      aspnetcore_environment: Production
+      service_name: aries-api-prod
+      image_channel: prod
+      max_task_count: 2
+      confirm: ${{ inputs.confirm }}
+      git_tag: ${{ inputs.git_tag }}
+    secrets: inherit

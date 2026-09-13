@@ -1,0 +1,31 @@
+name: cd-api-test
+
+# Publica Aries.WebAPI a ECS Express Mode (test).
+# Nunca usa el servicio aries-api-prod ni el tag ECR prod.
+#
+# Environment GitHub "test":
+#   Secrets: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, ARIES_MYSQL_CONNECTION (RDS aries-test), ARIES_JWT_KEY
+#   Variables opcionales: ECS_CLUSTER, ECS_EXECUTION_ROLE, ECS_INFRA_ROLE, ECS_SUBNETS, ECS_SECURITY_GROUPS
+# IAM: ECR + ECS Express + PassRole a ecsTaskExecutionRole y ecsInfrastructureRoleForExpressServices.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: cd-api-test
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/cd-api.yml
+    with:
+      github_environment: test
+      aspnetcore_environment: Staging
+      service_name: aries-api-test
+      image_channel: test
+      max_task_count: 2
+    secrets: inherit
