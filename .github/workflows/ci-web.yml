@@ -1,0 +1,85 @@
+name: ci-web
+
+# Compila Aries.Contabilidad (Blazor WASM) y construye la imagen nginx.
+# No publica a ECR ni toca ECS. El deploy es cd-web-test / cd-web-prod.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master, main, dev]
+    paths:
+      - 'src/web/Aries.Contabilidad/**'
+      - 'src/domain/AriesContador.Core/**'
+      - 'nuget.config'
+      - 'global.json'
+      - '.github/workflows/ci-web.yml'
+  pull_request:
+    branches: [master, main, dev]
+    paths:
+      - 'src/web/Aries.Contabilidad/**'
+      - 'src/domain/AriesContador.Core/**'
+      - 'nuget.config'
+      - 'global.json'
+      - '.github/workflows/ci-web.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version-file: global.json
+
+      - name: Cache NuGet
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-web-${{ hashFiles('nuget.config', '**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-web-
+
+      - name: Guard secrets
+        shell: pwsh
+        run: ./scripts/Verify-NoSecrets.ps1
+
+      - name: Restore
+        run: dotnet restore src/web/Aries.Contabilidad/Aries.Contabilidad.csproj --configfile nuget.config
+
+      - name: Build Blazor UI
+        run: dotnet build src/web/Aries.Contabilidad/Aries.Contabilidad.csproj --configuration Release --nologo --no-restore
+
+      - name: Build container image
+        run: |
+          docker build \
+            -f src/web/Aries.Contabilidad/Dockerfile \
+            --build-arg ARIES_API_BASE_URL=http://localhost:5088/ \
+            -t aries-web:ci .
+
+      - name: Inspect image and /health
+        run: |
+          set -euo pipefail
+          docker image inspect aries-web:ci --format 'os={{.Os}}/{{.Architecture}} exposed={{json .Config.ExposedPorts}} cmd={{json .Config.Cmd}}'
+          docker run --rm --entrypoint cat aries-web:ci /usr/share/nginx/html/appsettings.json
+          cid=$(docker run -d -p 18080:80 aries-web:ci)
+          trap 'docker rm -f "$cid" >/dev/null 2>&1 || true' EXIT
+          for i in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:18080/health; then
+              echo
+              curl -fsS -o /dev/null -w 'index=%{http_code}\n' http://127.0.0.1:18080/
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "nginx no respondio /health" >&2
+          docker logs "$cid" >&2 || true
+          exit 1

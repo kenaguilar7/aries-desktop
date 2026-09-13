@@ -1,0 +1,45 @@
+name: cd-web-prod
+
+# Publica Aries.Contabilidad (Blazor WASM) a ECS Express Mode (produccion).
+# Nunca usa aries-web-test ni el tag ECR test. Requiere environment GitHub "Prod"
+# y escribir production en confirm. Apunta al API aries-api-prod.
+#
+# En Actions: Run workflow > confirm = production.
+# Secrets (Settings > Environments > Prod):
+#   AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
+# Variables opcionales: ARIES_API_BASE_URL, ECS_CLUSTER, ECS_EXECUTION_ROLE,
+#                       ECS_INFRA_ROLE, ECS_SUBNETS, ECS_SECURITY_GROUPS
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Escribe production para publicar la UI de clientes'
+        required: true
+        type: string
+      git_tag:
+        description: 'Opcional: tag vX.Y.Z (debe coincidir con version.props). Vacío = rama seleccionada'
+        required: false
+        type: string
+        default: ''
+
+concurrency:
+  group: cd-web-prod
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/cd-web.yml
+    with:
+      github_environment: Prod
+      service_name: aries-web-prod
+      api_service_name: aries-api-prod
+      image_channel: prod
+      max_task_count: 2
+      confirm: ${{ inputs.confirm }}
+      git_tag: ${{ inputs.git_tag }}
+    secrets: inherit

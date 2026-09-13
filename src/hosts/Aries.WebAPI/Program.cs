@@ -31,12 +31,12 @@ builder.Services.AddSwaggerGen();
 var corsOrigins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>()
                  ?? Array.Empty<string>();
 if (corsOrigins.Length == 0)
-    corsOrigins = new[] { "http://localhost:8080" };
+    corsOrigins = new[] { "http://localhost:8080", "http://localhost:53253" };
 
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
-        policy.WithOrigins(corsOrigins)
+        policy.SetIsOriginAllowed(origin => IsAllowedCorsOrigin(origin, corsOrigins))
             .AllowAnyHeader()
             .AllowAnyMethod());
 });
@@ -207,4 +207,15 @@ app.Run();
 
 public partial class Program
 {
+    internal static bool IsAllowedCorsOrigin(string origin, string[] allowed)
+    {
+        if (string.IsNullOrWhiteSpace(origin))
+            return false;
+        if (allowed.Any(o => string.Equals(o, origin, StringComparison.OrdinalIgnoreCase)))
+            return true;
+        if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+            return false;
+        return uri.Scheme == Uri.UriSchemeHttps
+            && uri.Host.EndsWith(".ecs.us-east-2.on.aws", StringComparison.OrdinalIgnoreCase);
+    }
 }

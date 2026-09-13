@@ -1,0 +1,33 @@
+name: cd-web-test
+
+# Publica Aries.Contabilidad (Blazor WASM) a ECS Express Mode (test).
+# Nunca usa el servicio aries-web-prod ni el tag ECR prod.
+# Apunta ApiSettings.BaseUrl al API aries-api-test (o vars.ARIES_API_BASE_URL).
+#
+# Environment GitHub "test":
+#   Secrets: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+#   Variables opcionales: ARIES_API_BASE_URL, ECS_CLUSTER, ECS_EXECUTION_ROLE,
+#                         ECS_INFRA_ROLE, ECS_SUBNETS, ECS_SECURITY_GROUPS
+# IAM: ECR + ECS Express + PassRole a ecsTaskExecutionRole y ecsInfrastructureRoleForExpressServices.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: cd-web-test
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/cd-web.yml
+    with:
+      github_environment: test
+      service_name: aries-web-test
+      api_service_name: aries-api-test
+      image_channel: test
+      max_task_count: 2
+    secrets: inherit

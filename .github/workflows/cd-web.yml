@@ -1,0 +1,272 @@
+name: cd-web
+
+# Reusable: construye Aries.Contabilidad (Blazor WASM + nginx), sube a ECR (us-east-2)
+# y despliega ECS Express Mode. Llamado por cd-web-test.yml y cd-web-prod.yml.
+# No disparar este archivo a mano.
+
+on:
+  workflow_call:
+    inputs:
+      github_environment:
+        description: 'Environment GitHub (test | Prod)'
+        required: true
+        type: string
+      service_name:
+        description: 'Nombre del servicio Express Mode de la UI'
+        required: true
+        type: string
+      api_service_name:
+        description: 'Servicio Express Mode del API (para resolver BaseUrl)'
+        required: true
+        type: string
+      image_channel:
+        description: 'Tag movible en ECR (test | prod)'
+        required: true
+        type: string
+      max_task_count:
+        description: 'Max tasks Fargate'
+        required: false
+        type: number
+        default: 2
+      confirm:
+        description: 'Debe ser production si github_environment es Prod'
+        required: false
+        type: string
+        default: ''
+      git_tag:
+        description: 'Opcional: tag vX.Y.Z. Vacío = rama seleccionada'
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.github_environment }}
+    timeout-minutes: 30
+    env:
+      AWS_REGION: us-east-2
+      ECR_REPOSITORY: aries-web
+    steps:
+      - name: Confirm production
+        if: ${{ inputs.github_environment == 'Prod' }}
+        env:
+          CONFIRM: ${{ inputs.confirm }}
+          GIT_TAG: ${{ inputs.git_tag }}
+          SERVICE_NAME: ${{ inputs.service_name }}
+          API_SERVICE_NAME: ${{ inputs.api_service_name }}
+          IMAGE_CHANNEL: ${{ inputs.image_channel }}
+        run: |
+          set -euo pipefail
+          if [ "$CONFIRM" != "production" ]; then
+            echo "Abortado: en confirm hay que escribir exactamente production." >&2
+            exit 1
+          fi
+          if [ "$SERVICE_NAME" != "aries-web-prod" ]; then
+            echo "Abortado: servicio de produccion debe ser aries-web-prod (recibido: $SERVICE_NAME)." >&2
+            exit 1
+          fi
+          if [ "$API_SERVICE_NAME" != "aries-api-prod" ]; then
+            echo "Abortado: api_service_name de produccion debe ser aries-api-prod." >&2
+            exit 1
+          fi
+          if [ "$IMAGE_CHANNEL" != "prod" ]; then
+            echo "Abortado: image_channel de produccion debe ser prod." >&2
+            exit 1
+          fi
+          TAG="${GIT_TAG#"${GIT_TAG%%[![:space:]]*}"}"
+          TAG="${TAG%"${TAG##*[![:space:]]}"}"
+          if [ -n "$TAG" ] && [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "git_tag '$TAG' debe ser vX.Y.Z (ejemplo v1.2.0) o quedar vacio." >&2
+            exit 1
+          fi
+          echo "confirm=production service=$SERVICE_NAME api=$API_SERVICE_NAME channel=$IMAGE_CHANNEL tag=$TAG"
+
+      - uses: actions/checkout@v4
+        if: ${{ inputs.git_tag != '' }}
+        with:
+          ref: ${{ inputs.git_tag }}
+
+      - uses: actions/checkout@v4
+        if: ${{ inputs.git_tag == '' }}
+
+      - name: Match version
+        if: ${{ inputs.github_environment == 'Prod' && inputs.git_tag != '' }}
+        env:
+          GIT_TAG: ${{ inputs.git_tag }}
+        run: |
+          set -euo pipefail
+          TAG="${GIT_TAG#v}"
+          VERSION=$(python3 - <<'PY'
+          from pathlib import Path
+          import re
+          text = Path("version.props").read_text(encoding="utf-8")
+          match = re.search(r"AriesVersion>([^<]+)<", text)
+          if not match:
+              raise SystemExit("version.props no tiene AriesVersion.")
+          print(match.group(1).strip())
+          PY
+          )
+          if [ "$VERSION" != "$TAG" ]; then
+            echo "Tag v$TAG no coincide con version.props $VERSION." >&2
+            exit 1
+          fi
+          echo "version=$VERSION"
+
+      - name: Guard secrets
+        shell: pwsh
+        run: ./scripts/Verify-NoSecrets.ps1
+
+      - name: Check AWS secrets
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${AWS_ACCESS_KEY_ID}" ] || [ -z "${AWS_SECRET_ACCESS_KEY}" ]; then
+            echo "Faltan secrets AWS_ACCESS_KEY_ID y AWS_SECRET_ACCESS_KEY del environment ${{ inputs.github_environment }}." >&2
+            exit 1
+          fi
+          echo "Secrets AWS presentes."
+
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+
+      - name: Resolve AWS account and roles
+        id: aws
+        env:
+          EXEC_ROLE: ${{ vars.ECS_EXECUTION_ROLE }}
+          INFRA_ROLE: ${{ vars.ECS_INFRA_ROLE }}
+          CLUSTER: ${{ vars.ECS_CLUSTER }}
+        run: |
+          set -euo pipefail
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          EXEC_NAME="${EXEC_ROLE:-ecsTaskExecutionRole}"
+          INFRA_NAME="${INFRA_ROLE:-ecsInfrastructureRoleForExpressServices}"
+          CLUSTER_NAME="${CLUSTER:-default}"
+          echo "account_id=$ACCOUNT_ID" >> "$GITHUB_OUTPUT"
+          echo "cluster=$CLUSTER_NAME" >> "$GITHUB_OUTPUT"
+          echo "execution_role_arn=arn:aws:iam::${ACCOUNT_ID}:role/${EXEC_NAME}" >> "$GITHUB_OUTPUT"
+          echo "infra_role_arn=arn:aws:iam::${ACCOUNT_ID}:role/${INFRA_NAME}" >> "$GITHUB_OUTPUT"
+          echo "account=$ACCOUNT_ID cluster=$CLUSTER_NAME exec=$EXEC_NAME infra=$INFRA_NAME"
+
+      - name: Resolve API BaseUrl
+        id: api-url
+        env:
+          OVERRIDDEN: ${{ vars.ARIES_API_BASE_URL }}
+          API_SERVICE: ${{ inputs.api_service_name }}
+          CLUSTER: ${{ steps.aws.outputs.cluster }}
+          ACCOUNT_ID: ${{ steps.aws.outputs.account_id }}
+        run: |
+          set -euo pipefail
+          URL="${OVERRIDDEN:-}"
+          URL="${URL#"${URL%%[![:space:]]*}"}"
+          URL="${URL%"${URL##*[![:space:]]}"}"
+          if [ -z "$URL" ]; then
+            ARN="arn:aws:ecs:${AWS_REGION}:${ACCOUNT_ID}:service/${CLUSTER}/${API_SERVICE}"
+            echo "Resolviendo endpoint de $ARN"
+            URL=$(aws ecs describe-express-gateway-service --service-arn "$ARN" --region "$AWS_REGION" --output json \
+              | python3 -c 'import json,sys; d=json.load(sys.stdin); c=d["service"]["activeConfigurations"][0]; print(c["ingressPaths"][0]["endpoint"].strip())')
+          fi
+          case "$URL" in
+            http://*|https://*) ;;
+            *) URL="https://$URL" ;;
+          esac
+          URL="${URL%/}/"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "API BaseUrl=$URL"
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Ensure ECR repository
+        run: |
+          set -euo pipefail
+          if ! aws ecr describe-repositories --repository-names "$ECR_REPOSITORY" --region "$AWS_REGION" >/dev/null 2>&1; then
+            aws ecr create-repository \
+              --repository-name "$ECR_REPOSITORY" \
+              --region "$AWS_REGION" \
+              --image-scanning-configuration scanOnPush=true \
+              --encryption-configuration encryptionType=AES256
+            echo "Creado ECR $ECR_REPOSITORY"
+          else
+            echo "ECR $ECR_REPOSITORY ya existe"
+          fi
+
+      - name: Image tags
+        id: tags
+        run: |
+          set -euo pipefail
+          SHA="${GITHUB_SHA:0:7}"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "IMAGE_TAG=$SHA" >> "$GITHUB_ENV"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: src/web/Aries.Contabilidad/Dockerfile
+          push: true
+          build-args: |
+            ARIES_API_BASE_URL=${{ steps.api-url.outputs.url }}
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ inputs.image_channel }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to ECS Express Mode
+        id: deploy
+        uses: aws-actions/amazon-ecs-deploy-express-service@v1
+        with:
+          service-name: ${{ inputs.service_name }}
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+          execution-role-arn: ${{ steps.aws.outputs.execution_role_arn }}
+          infrastructure-role-arn: ${{ steps.aws.outputs.infra_role_arn }}
+          cluster: ${{ steps.aws.outputs.cluster }}
+          container-port: 80
+          health-check-path: /health
+          cpu: "256"
+          memory: "512"
+          min-task-count: 1
+          max-task-count: ${{ inputs.max_task_count }}
+          auto-scaling-metric: AVERAGE_CPU
+          auto-scaling-target-value: "70"
+          environment-variables: "[]"
+          subnets: ${{ vars.ECS_SUBNETS }}
+          security-groups: ${{ vars.ECS_SECURITY_GROUPS }}
+          tags: |
+            App=Aries.Contabilidad
+            Environment=${{ inputs.image_channel }}
+
+      - name: Smoke /health
+        env:
+          ENDPOINT: ${{ steps.deploy.outputs.endpoint }}
+        run: |
+          set -euo pipefail
+          EP="${ENDPOINT:-}"
+          if [ -z "$EP" ]; then
+            echo "El deploy no devolvio endpoint." >&2
+            exit 1
+          fi
+          EP="${EP%/}"
+          case "$EP" in
+            http://*|https://*) ;;
+            *) EP="https://$EP" ;;
+          esac
+          echo "GET $EP/health"
+          curl -fsS --retry 12 --retry-all-errors --retry-delay 5 "$EP/health"
+          echo
+          echo "OK $EP"
