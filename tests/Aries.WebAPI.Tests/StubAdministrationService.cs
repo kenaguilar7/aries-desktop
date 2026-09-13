@@ -11,6 +11,7 @@ namespace Aries.WebAPI.Tests
     public class StubAdministrationService : IAdministrationService
     {
         public Company LastCreated { get; private set; }
+        public Company LastUpdated { get; private set; }
         public string LastDeletedCode { get; private set; }
 
         public Task<WebToken> LoginAsync(Login param, CancellationToken cancellationToken = default)
@@ -84,7 +85,11 @@ namespace Aries.WebAPI.Tests
         }
 
         public Task InactivateUserAsync(User user, CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task UpdateCompanyAsync(Company company, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task UpdateCompanyAsync(Company company, CancellationToken cancellationToken = default)
+        {
+            LastUpdated = company;
+            return Task.CompletedTask;
+        }
         public Task UpdateUserAsync(User user, CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task<bool> UserNameTakenAsync(string userName, CancellationToken cancellationToken = default) => Task.FromResult(false);
     }

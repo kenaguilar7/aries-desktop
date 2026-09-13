@@ -133,8 +133,7 @@ namespace Aries.Reporting.Reportes
 
                 // var direccion = @"balance_comprobacion_" + compañia.MyNombre.Replace(' ', '_') + ".xlsx"; 
                 workbook.SaveAs(direccion);
-                ////Show report
-                Process.Start(new ProcessStartInfo(direccion) { UseShellExecute = true });
+                Aries.Reporting.Utils.ExcelShell.Open(direccion);
 
             }
 

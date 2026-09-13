@@ -1,0 +1,138 @@
+@page "/accounts/{CompanyId}/create"
+@using Aries.Contabilidad.Services
+@using Aries.Contabilidad.Components.Accounts
+@using AriesContador.Core.Models.Accounts
+
+@inject IAccountService AccountService
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudPaper Class="pa-4">
+        <MudText Typo="Typo.h5" Class="mb-4">Catálogo de Cuentas</MudText>
+        <MudGrid>
+            <MudItem xs="12" md="8">
+                <div id="unique_id_scroll_section" class="ma-0" style="height:300px;overflow: auto;">
+                    @if (accounts != null)
+                    {
+                        <AccountTreeView 
+                            Accounts="@accounts" 
+                            OnAccountSelected="HandleAccountSelected" />
+                    }
+                    else
+                    {
+                        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                    }
+                </div>
+            </MudItem>
+
+            <MudItem xs="12" md="4">
+                <AccountDetails Account="@selectedAccount" />
+            </MudItem>
+
+            <MudDivider Class="my-2" />
+
+            <MudItem xs="12" Class="shadow-none">
+                @if (selectedAccount != null)
+                {
+                    <AccountBalanceReport 
+                        Account="@selectedAccount" 
+                        OnDateRangeChanged="HandleDateRangeChanged" 
+                        CompanyId="@CompanyId" />
+                }
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [Parameter]
+    public string CompanyId { get; set; }
+
+    private List<Account> accounts;
+    private Account? selectedAccount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            accounts = await AccountService.GetAccountsAsync(CompanyId);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Error al cargar las cuentas", Severity.Error);
+            Console.WriteLine($"Error loading accounts: {ex}");
+        }
+    }
+
+    private async Task HandleAccountSelected(Account account)
+    {
+        if (account == null) return;
+        
+        try
+        {
+            selectedAccount = account;
+            // Load balance data in the background
+            _ = LoadAccountBalance(account.Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error al cargar la cuenta: {ex.Message}", Severity.Error);
+        }
+    }
+    
+    private async Task LoadAccountBalance(int accountId)
+    {
+        try
+        {
+            var updatedAccount = await AccountService.GetAccountBalanceAsync(
+                CompanyId,
+                accountId,
+                DateTime.Now.AddMonths(-1),
+                DateTime.Now
+            );
+            
+            selectedAccount = updatedAccount;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error al cargar el saldo: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task HandleDateRangeChanged((DateTime fromDate, DateTime toDate) range)
+    {
+        if (selectedAccount == null) return;
+
+        try
+        {
+            selectedAccount = await AccountService.GetAccountBalanceAsync(
+                CompanyId,
+                selectedAccount.Id,
+                range.fromDate,
+                range.toDate
+            );
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error al obtener el reporte de saldos: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task CreateAccount()
+    {
+        try
+        {
+            // await AccountService(CompanyId, newAccount);
+            // Snackbar.Add("Cuenta creada exitosamente", Severity.Success);
+            // newAccount = new Account(); // Reset form
+            // await LoadAccounts(); // Refresh accounts list
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Error al crear la cuenta", Severity.Error);
+            Console.WriteLine($"Error creating account: {ex}");
+        }
+    }
+}

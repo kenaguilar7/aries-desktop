@@ -49,6 +49,34 @@ namespace Aries.Data.Tests
             Assert.Contains("010_WidenCompanyIdOnDumpProcedures", ids);
             Assert.Contains("013_CopyCompanyChart", ids);
             Assert.Contains("014_StandardizeReportContract", ids);
+            Assert.Contains("015_AccountNameViaGetAccountName", ids);
+            Assert.Contains("016_ReportMonthRangeYyyymm", ids);
+            Assert.Contains("017_AccountAndJournalInfoViews", ids);
+            Assert.Contains("018_AccountPathFunctions", ids);
+        }
+
+        [Fact]
+        public void M018_functions_do_not_pin_definer()
+        {
+            var m018 = SchemaMigrations.All.Single(m => m.Id == "018_AccountPathFunctions");
+            Assert.Equal(18, m018.Version);
+            Assert.Contains("CREATE FUNCTION `F_GetAccountPathForReport`", m018.Sql);
+            Assert.Contains("CREATE FUNCTION `GetAccountName`", m018.Sql);
+            Assert.Contains("CREATE FUNCTION `GETFULLPATH`", m018.Sql);
+            Assert.DoesNotContain("DEFINER", m018.Sql);
+            Assert.DoesNotContain("`aries`.", m018.Sql);
+        }
+
+        [Fact]
+        public void M017_views_do_not_pin_schema_or_definer()
+        {
+            var m017 = SchemaMigrations.All.Single(m => m.Id == "017_AccountAndJournalInfoViews");
+            Assert.Equal(17, m017.Version);
+            Assert.Contains("CREATE VIEW `account_info`", m017.Sql);
+            Assert.Contains("CREATE VIEW `accounting_entries_info`", m017.Sql);
+            Assert.DoesNotContain("`aries`.", m017.Sql);
+            Assert.DoesNotContain("DEFINER", m017.Sql);
+            Assert.DoesNotContain("SQL SECURITY DEFINER", m017.Sql);
         }
 
         [Fact]

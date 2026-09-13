@@ -2,13 +2,13 @@
 
 ## `AriesWebApi/` (git anidado)
 
-El host HTTP canónico es [`src/hosts/Aries.WebAPI`](../src/hosts/Aries.WebAPI). La carpeta `AriesWebApi/` en el working tree (si existe) es un **clone aparte** de Azure DevOps:
+El host HTTP canónico es [`src/hosts/Aries.WebAPI`](../src/hosts/Aries.WebAPI). La UI web canónica es [`src/web/Aries.Contabilidad`](../src/web/Aries.Contabilidad).
+
+La cantera `AriesWebApi/` (API con Controllers, Blazor WASM y copias de Core/Data) se eliminó del working tree. Sigue ignorada en `.gitignore`. El historial vive en Azure DevOps:
 
 `https://dev.azure.com/ariescontadorcr/AriesWebService/_git/AriesWebService`
 
-No se fusiona con este repo. Contiene el API con Controllers, Blazor WASM y copias viejas de Core/Data. Sirve como cantera de código, no como solución de desarrollo.
-
-No commitear `AriesWebApi/` aquí (está en `.gitignore`). Si hace falta el historial, clonar ese remote **fuera** de este árbol.
+Si hace falta consultar ese código, clonar el remote **fuera** de este árbol. No fusionar historiales.
 
 ## Squirrel / `CapaPresentacion.exe`
 

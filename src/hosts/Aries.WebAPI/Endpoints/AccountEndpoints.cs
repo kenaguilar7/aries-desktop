@@ -19,10 +19,23 @@ namespace Aries.WebAPI.Endpoints
                 return account == null ? Results.NotFound() : Results.Ok(account);
             });
 
-            group.MapGet("/balance/{accountId:int}", async (HttpContext http, int accountId, IFinancialService svc) =>
+            group.MapGet("/balance/{accountId:int}", async (
+                HttpContext http,
+                int accountId,
+                IFinancialService svc,
+                string companyId = null,
+                DateTime? startMonth = null,
+                DateTime? endMonth = null) =>
             {
                 var account = await svc.FindAccountAsync(accountId, http.RequestAborted);
-                return account == null ? Results.NotFound() : Results.Ok(account);
+                if (account == null)
+                    return Results.NotFound();
+                if (!string.IsNullOrEmpty(companyId))
+                    account.CompanyId = companyId;
+                var from = startMonth ?? DateTime.Today;
+                var to = endMonth ?? from;
+                await svc.FillAccountsWithBalancesAsync(new List<Account> { account }, from, to, http.RequestAborted);
+                return Results.Ok(account);
             });
 
             group.MapPost("/Create", async (HttpContext http, Account account, IFinancialService svc) =>

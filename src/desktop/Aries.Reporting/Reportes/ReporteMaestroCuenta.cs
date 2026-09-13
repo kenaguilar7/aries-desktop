@@ -59,8 +59,7 @@ namespace Aries.Reporting.Reportes
 
 
                 workbook.SaveAs(direccion);
-                ////Show report
-                Process.Start(new ProcessStartInfo(direccion) { UseShellExecute = true });
+                Aries.Reporting.Utils.ExcelShell.Open(direccion);
 
             }
 
@@ -134,8 +133,7 @@ namespace Aries.Reporting.Reportes
 
 
                 workbook.SaveAs(direccion);
-                ////Show report
-                Process.Start(new ProcessStartInfo(direccion) { UseShellExecute = true });
+                Aries.Reporting.Utils.ExcelShell.Open(direccion);
 
             }
 
@@ -239,8 +237,7 @@ namespace Aries.Reporting.Reportes
                 LlenarSaldoCuentasColonesDolares(ref worksheet, row, column, list);
 
                 workbook.SaveAs(direccion);
-                ////Show report
-                Process.Start(new ProcessStartInfo(direccion) { UseShellExecute = true });
+                Aries.Reporting.Utils.ExcelShell.Open(direccion);
 
             }
 

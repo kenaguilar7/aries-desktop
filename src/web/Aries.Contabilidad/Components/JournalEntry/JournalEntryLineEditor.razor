@@ -1,0 +1,290 @@
+
+<MudTd ColSpan="2">
+    <MudExpansionPanel @ref="_expansionPanel" @bind-IsExpanded="@_isExpanded">
+        <TitleContent>
+            <div class="d-flex align-center">
+                @if (string.IsNullOrEmpty(Line.AccountName))
+                {
+                    <MudText Typo="Typo.body1" Color="Color.Default">Select an account...</MudText>
+                }
+                else
+                {
+                    <div class="d-flex flex-column">
+                        <MudText Typo="Typo.body1" Color="Color.Primary">@Line.AccountName</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Click to change account</MudText>
+                    </div>
+                }
+            </div>
+        </TitleContent>
+        <ChildContent>
+            <div class="scrollable-treeview">
+                <AccountTreeView @ref="_accountTreeView" 
+                               Accounts="@Accounts" 
+                               OnAccountSelected="HandleAccountSelected" />
+            </div>
+        </ChildContent>
+    </MudExpansionPanel>
+
+    <MudTextField @bind-Value="Line.Memo"
+    Label="Memo"
+    Variant="Variant.Outlined"
+    Dense="true"
+    Class="flex-grow-1 mt-2" />
+</MudTd>
+
+<MudTd ColSpan="2">
+    <MudSelect T="Currency"
+    @bind-Value="Line.Currency"
+    Label="Currency"
+    Variant="Variant.Outlined"
+    Dense="true"
+    Style="width: 150px">
+        <MudSelectItem Value="Currency.colones">Colones</MudSelectItem>
+        <MudSelectItem Value="Currency.dolares">Dólares</MudSelectItem>
+    </MudSelect>
+    <MudNumericField @bind-Value="Line.RateAmount"
+    Label="Exchange Rate"
+    Variant="Variant.Outlined"
+    Dense="true"
+    Format="N4"
+    Min="0"
+    Style="width: 150px" />
+</MudTd>
+
+<MudTd ColSpan="2">
+    <MudNumericField Value="DebitAmount"
+    ValueChanged="@((decimal val) => OnDebitAmountChanged(val))"
+    Label="@($"{(Line.Currency == Currency.dolares ? "USD" : "CRC")} Debit")"
+    Variant="Variant.Outlined"
+    Dense="true"
+    Format="N2"
+    Min="0"
+    Class="flex-grow-1"/>
+
+    <MudNumericField Value="CreditAmount"
+    ValueChanged="@((decimal val) => OnCreditAmountChanged(val))"
+    Label="@($"{(Line.Currency == Currency.dolares ? "USD" : "CRC")} Credit")"
+    Variant="Variant.Outlined"
+    Dense="true"
+    Format="N2"
+    Min="0"
+    Class="flex-grow-1" />
+</MudTd>
+
+<MudTd ColSpan="3" Style="text-align: right">
+    <MudButton Color="Color.Success"
+    StartIcon="@Icons.Material.Filled.Save"
+    Disabled="@_isSaved"
+    OnClick="HandleSave"
+    Size="Size.Small"
+    Variant="Variant.Filled">
+        Save
+    </MudButton>
+    <MudButton Color="Color.Error"
+    StartIcon="@Icons.Material.Filled.Cancel"
+    OnClick="HandleCancel"
+    Size="Size.Small"
+    Class="ml-2"
+    Variant="Variant.Filled">
+        Cancel
+    </MudButton>
+</MudTd>
+
+@code {
+    private bool _isSaved = false;
+    private bool _isExpanded;
+    private MudExpansionPanel _expansionPanel;
+    private AccountTreeView _accountTreeView;
+
+    /// <summary>
+    /// The journal entry line being edited
+    /// </summary>
+    [Parameter]
+    public JournalEntryLine Line { get; set; } = default!;
+
+    [Parameter]
+    public string CompanyId { get; set; }
+    /// <summary>
+    /// Event callback when the line is changed
+    /// </summary>
+    [Parameter]
+    public EventCallback OnChange { get; set; }
+
+    /// <summary>
+    /// Event callback when the line is deleted
+    /// </summary>
+    [Parameter]
+    public EventCallback OnCancelAction { get; set; }
+
+    [Inject]
+    private IAccountService AccountService { get; set; } = default!;
+
+    private List<Account> Accounts { get; set; } = new();
+    private decimal DebitAmount { get; set; }
+    private decimal CreditAmount { get; set; }
+
+    protected override void OnInitialized()
+    {
+        _isExpanded = false;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Accounts = await AccountService.GetAccountsAsync(CompanyId);
+            
+            // Initialize amounts based on existing line data
+            if (Line != null)
+            {
+                DebitAmount = Line.DebOrCred == DebOrCred.Debito ? Line.Amount : 0;
+                CreditAmount = Line.DebOrCred == DebOrCred.Credito ? Line.Amount : 0;
+                
+                // If it's a foreign currency transaction, set the foreign amounts
+                if (Line.Currency == Currency.dolares)
+                {
+                    Line.ForeignAmount = Line.Amount;
+                    Line.Amount = Line.ForeignAmount * Line.RateAmount;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in OnInitializedAsync: {ex.Message}");
+            // Handle error appropriately
+        }
+    }
+
+    private async Task NotifyChange()
+    {
+        await OnChange.InvokeAsync();
+    }
+
+    private async void HandleAccountSelected(Account account)
+    {
+        try 
+        {
+            if(account == null) return;
+
+            Line.AccountId = account.Id;
+            Line.AccountName = account.Name;
+            
+            if (_expansionPanel != null)
+            {
+                await _expansionPanel.CollapseAsync();
+            }
+            
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in HandleAccountSelected: {ex.Message}");
+        }
+    }
+
+    private void OnDebitAmountChanged(decimal value)
+    {
+        DebitAmount = value;
+        if (value > 0)
+        {
+            CreditAmount = 0;
+            Line.DebOrCred = DebOrCred.Debito;
+            Line.Amount = value;
+        }
+    }
+
+    private void OnCreditAmountChanged(decimal value)
+    {
+        CreditAmount = value;
+        if (value > 0)
+        {
+            DebitAmount = 0;
+            Line.DebOrCred = DebOrCred.Credito;
+            Line.Amount = value;
+        }
+    }
+
+    private async Task HandleSave()
+    {
+        if (Line.AccountId == 0)
+        {
+            return;
+        }
+
+        // Make sure we have either a debit or credit amount
+        if (DebitAmount == 0 && CreditAmount == 0)
+        {
+            return;
+        }
+
+        // Set the amount based on which field was filled
+        decimal enteredAmount = Line.DebOrCred == DebOrCred.Debito ? DebitAmount : CreditAmount;
+        
+        // Handle foreign currency calculations
+        if (Line.Currency == Currency.dolares)
+        {
+            Line.ForeignAmount = enteredAmount;
+            Line.Amount = Line.ForeignAmount * Line.RateAmount;
+        }
+        else
+        {
+            Line.Amount = enteredAmount;
+            Line.ForeignAmount = 0; // Reset foreign amount for local currency
+        }
+        
+        _isSaved = true;
+        await NotifyChange();
+    }
+
+    private async Task HandleCancel()
+    {
+        await OnCancelAction.InvokeAsync();
+    }
+}
+
+<style>
+    /* Fondo oscuro semi-transparente para mejor enfoque */
+    .account-selector-popover .mud-overlay {
+        background-color: rgba(0, 0, 0, 0.5) !important;
+    }
+
+    /* Contenedor del popover centrado */
+    .popover-container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 400px;
+        max-width: 90vw;
+        max-height: 80vh;
+        background: var(--mud-palette-surface);
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Contenido del popover con padding */
+    .popover-content {
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+    }
+
+    /* Scroll interno del TreeView */
+    .scrollable-treeview {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid var(--mud-palette-lines-default);
+        border-radius: 4px;
+        padding: 8px;
+    }
+
+    /* Botones de acción alineados a la derecha */
+    .popover-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 12px;
+    }
+</style>

@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
 using Squirrel;
@@ -47,6 +48,17 @@ namespace Aries.Desktop
                 };
             }
 
+            if (!FeedReachable(updateUrl))
+            {
+                return new AppUpdateCheck
+                {
+                    InstalledVersion = installed,
+                    FeedUrl = updateUrl,
+                    HasFeed = true,
+                    Error = "El feed no responde (" + updateUrl + ")."
+                };
+            }
+
             try
             {
                 using (var manager = new UpdateManager(updateUrl))
@@ -91,6 +103,9 @@ namespace Aries.Desktop
             if (string.IsNullOrWhiteSpace(updateUrl))
                 throw new InvalidOperationException("No hay canal de actualización configurado (UpdateUrl).");
 
+            if (!FeedReachable(updateUrl))
+                throw new InvalidOperationException("El feed no responde (" + updateUrl + ").");
+
             using (var manager = new UpdateManager(updateUrl))
             {
                 var release = await manager.UpdateApp().ConfigureAwait(false);
@@ -108,6 +123,35 @@ namespace Aries.Desktop
         public static void Restart()
         {
             UpdateManager.RestartApp();
+        }
+
+        /// <summary>
+        /// Squirrel usa HttpClient (~100 s). Si el API/S3 no está, el splash se queda
+        /// en "Buscando actualizaciones…". Un GET corto a RELEASES falla ya.
+        /// 404 cuenta como alcanzable (feed vacío).
+        /// </summary>
+        private static bool FeedReachable(string updateUrl)
+        {
+            try
+            {
+                var releases = updateUrl.TrimEnd('/') + "/RELEASES";
+                var request = (HttpWebRequest)WebRequest.Create(releases);
+                request.Method = "GET";
+                request.Timeout = 4000;
+                request.ReadWriteTimeout = 4000;
+                request.AllowAutoRedirect = false;
+                using (var response = request.GetResponse())
+                    return true;
+            }
+            catch (WebException ex)
+            {
+                var http = ex.Response as HttpWebResponse;
+                return http != null;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }

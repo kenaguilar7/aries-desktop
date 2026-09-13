@@ -1,0 +1,49 @@
+@page "/companies/edit/{Code}"
+@using Aries.Contabilidad.Services
+@using AriesContador.Core.Models.Companies
+@inject IClientCompanyService CompanyService
+@inject NavigationManager NavigationManager
+
+<h3>Edit Company</h3>
+
+@if (company == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <CompanyForm 
+        Company="@company"
+        ButtonText="Update"
+        OnValidSubmit="@HandleValidSubmit"
+        OnCancel="@HandleCancel" />
+}
+
+@code {
+    [Parameter]
+    public string Code { get; set; }
+
+    private Company company;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Code))
+            return;
+        company = await CompanyService.GetCompanyByCodeAsync(Code);
+        if (company == null)
+            NavigationManager.NavigateTo("/companies");
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (company == null)
+            return;
+        await CompanyService.UpdateCompanyAsync(company);
+        NavigationManager.NavigateTo("/companies");
+    }
+
+    private void HandleCancel()
+    {
+        NavigationManager.NavigateTo("/companies");
+    }
+}

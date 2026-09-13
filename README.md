@@ -22,6 +22,7 @@ Este repo se abre con **Visual Studio Community 2026** (18.x), no con VS 2022. L
    - **Solo escritorio (Local)** — F5 arranca `CapaPresentacion.exe`
    - **Solo API (Local)**
    - **Escritorio + API (Local)**
+   - **UI + API (Local)** — Blazor en `src/web/Aries.Contabilidad` + Minimal API `:5088`
 5. MySQL local en `:3307`: [`scripts/local/start-local.ps1`](scripts/local/README.md).
 
 ### Cambiar de base en F5 (sin variables de entorno)

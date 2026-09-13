@@ -33,6 +33,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		Directory.Build.props = Directory.Build.props
 		docker-compose.yml = docker-compose.yml
+		docker-compose.test.yml = docker-compose.test.yml
 		global.json = global.json
 		nuget.config = nuget.config
 		README.md = README.md
@@ -58,6 +59,12 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aries.WebAPI.Tests", "tests\Aries.WebAPI.Tests\Aries.WebAPI.Tests.csproj", "{6BC48508-2DE6-4BF9-9934-A710C196FB5E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aries.Data.Tests", "tests\Aries.Data.Tests\Aries.Data.Tests.csproj", "{7E4C9A21-5D8B-4F13-9C06-2A8E1B4D7F90}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aries.Flujos.Tests", "tests\Aries.Flujos.Tests\Aries.Flujos.Tests.csproj", "{A1DB3A6C-A679-4DA6-85BE-65E43B3076FA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "web", "web", "{C6E21BFB-2D7E-43AF-87D1-700999989A22}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aries.Contabilidad", "src\web\Aries.Contabilidad\Aries.Contabilidad.csproj", "{1585010F-8EF8-4561-8758-35DE05336BDD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -105,6 +112,14 @@ Global
 		{7E4C9A21-5D8B-4F13-9C06-2A8E1B4D7F90}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7E4C9A21-5D8B-4F13-9C06-2A8E1B4D7F90}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7E4C9A21-5D8B-4F13-9C06-2A8E1B4D7F90}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1DB3A6C-A679-4DA6-85BE-65E43B3076FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1DB3A6C-A679-4DA6-85BE-65E43B3076FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1DB3A6C-A679-4DA6-85BE-65E43B3076FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1DB3A6C-A679-4DA6-85BE-65E43B3076FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1585010F-8EF8-4561-8758-35DE05336BDD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1585010F-8EF8-4561-8758-35DE05336BDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1585010F-8EF8-4561-8758-35DE05336BDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1585010F-8EF8-4561-8758-35DE05336BDD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -125,6 +140,9 @@ Global
 		{8F3A1B2C-4D5E-6789-ABCD-EF0123456789} = {B008224A-AC90-4943-8410-F0B807234C5D}
 		{6BC48508-2DE6-4BF9-9934-A710C196FB5E} = {B008224A-AC90-4943-8410-F0B807234C5D}
 		{7E4C9A21-5D8B-4F13-9C06-2A8E1B4D7F90} = {B008224A-AC90-4943-8410-F0B807234C5D}
+		{A1DB3A6C-A679-4DA6-85BE-65E43B3076FA} = {B008224A-AC90-4943-8410-F0B807234C5D}
+		{C6E21BFB-2D7E-43AF-87D1-700999989A22} = {3E151E60-40F3-44F0-84A3-81EE47FCCEE4}
+		{1585010F-8EF8-4561-8758-35DE05336BDD} = {C6E21BFB-2D7E-43AF-87D1-700999989A22}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {27A71D8E-459A-43E3-9C4D-54BB65CA7250}

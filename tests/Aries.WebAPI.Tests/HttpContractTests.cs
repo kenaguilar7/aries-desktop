@@ -102,6 +102,25 @@ namespace Aries.WebAPI.Tests
         }
 
         [Fact]
+        public async Task Company_get_by_code_and_update_match_desktop()
+        {
+            var client = await ClientWithToken();
+
+            var found = await client.GetAsync("/company/C001");
+            found.EnsureSuccessStatusCode();
+            var company = JsonConvert.DeserializeObject<Company>(await found.Content.ReadAsStringAsync());
+            Assert.Equal("C001", company.Code);
+
+            company.CompanyName = "Renamed";
+            var payload = JsonConvert.SerializeObject(company);
+            using var content = new StringContent(payload, Encoding.UTF8, "application/json");
+            var update = await client.PostAsync("/company/Update", content);
+            update.EnsureSuccessStatusCode();
+            Assert.Equal("Renamed", _factory.Admin.LastUpdated.CompanyName);
+            Assert.Equal(7, _factory.Admin.LastUpdated.UpdatedBy);
+        }
+
+        [Fact]
         public async Task JournalEntry_create_returns_int_id()
         {
             var client = await ClientWithToken();

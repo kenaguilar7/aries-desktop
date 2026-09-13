@@ -1,0 +1,154 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Aries.Contabilidad.Services
+@using AriesContador.Core.Models.Companies
+@inject ILocalStorageService LocalStorage
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">Aries Contabilidad</a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+    <nav class="nav flex-column">
+        <AuthorizeView>
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/companies" Match="NavLinkMatch.All">
+                        <i class="fas fa-building"></i> Compañías
+                    </NavLink>
+     @*                <div class="d-flex align-items-center">
+                        <small class="text-light me-2">Current company: @CurrentCompanyId</small>
+                        <button class="btn btn-sm btn-outline-danger" @onclick="ClearCompanyData">Clear</button>
+                    </div> *@
+                </div>
+                @if (!string.IsNullOrEmpty(@CurrentCompanyId))
+                {
+                    <div class="nav-item px-3 submenu">
+                        <NavLink class="nav-link" @onclick="NavigateToAccounts">
+                            <i class="fas fa-book"></i> Maestro de cuentas
+                        </NavLink>
+                    </div>
+                    <div class="nav-item px-3 submenu">
+                        <NavLink class="nav-link" @onclick="NavigateToJournalEntry">
+                            <i class="fas fa-journal-whills"></i> Asientos contables
+                        </NavLink>
+                    </div>
+                }
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/reports">
+                        <i class="fas fa-chart-bar"></i> Reportes
+                    </NavLink>
+                    <!-- TODO: Add report submenu items here -->
+                </div>
+            </Authorized>
+        </AuthorizeView>
+    </nav>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+    private string? CurrentCompanyId { get; set; }
+    private Company CurrentCompany { get; set; }
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CheckCompanyData();
+        NavigationManager.LocationChanged += HandleLocationChanged;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await CheckCompanyData();
+    }
+
+    private async void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        await CheckCompanyData();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task CheckCompanyData()
+    {
+        try
+        {
+            var companyData = await LocalStorage.GetStoredCompany();
+            Console.WriteLine($"Company Data: {companyData?.Code ?? "null"}");
+            
+            if (companyData != null)
+            {
+                CurrentCompanyId = companyData.Code;
+                CurrentCompany = companyData;
+                Console.WriteLine($"Set CurrentCompanyId to: {CurrentCompanyId}");
+            }
+            else
+            {
+                // Try to get company ID from URL if we're on a company-specific page
+                var uri = new Uri(NavigationManager.Uri);
+                var segments = uri.Segments;
+                if (segments.Length > 2 && segments[1] == "dashboard/")
+                {
+                    var companyIdFromUrl = segments[2].TrimEnd('/');
+                    CurrentCompanyId = companyIdFromUrl;
+                    Console.WriteLine($"Set CurrentCompanyId from URL to: {CurrentCompanyId}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in CheckCompanyData: {ex.Message}");
+            await JSRuntime.InvokeVoidAsync("console.error", "Error checking company data:", ex);
+        }
+    }
+
+    // private async Task ClearCompanyData()
+    // {
+    //     try
+    //     {
+    //         await LocalStorage.RemoveItem("company_data");
+    //         CurrentCompanyId = null;
+    //         CurrentCompany = null;
+    //         StateHasChanged();
+    //         await JSRuntime.InvokeVoidAsync("alert", "Company data cleared");
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         Console.WriteLine($"Error clearing company data: {ex.Message}");
+    //         await JSRuntime.InvokeVoidAsync("alert", "Error clearing company data");
+    //     }
+    // }
+
+    private void NavigateToJournalEntry()
+    {
+        if (!string.IsNullOrEmpty(CurrentCompanyId))
+        {
+            NavigationManager.NavigateTo($"/journal-entries/{CurrentCompanyId}/create");
+        }
+    }
+
+    private void NavigateToAccounts()
+    {
+        if (!string.IsNullOrEmpty(CurrentCompanyId))
+        {
+            NavigationManager.NavigateTo($"/accounts/{CurrentCompanyId}/create");
+        }
+    }
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= HandleLocationChanged;
+    }
+}

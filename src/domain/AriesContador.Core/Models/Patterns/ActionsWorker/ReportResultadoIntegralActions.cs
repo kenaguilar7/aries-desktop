@@ -46,7 +46,8 @@ namespace AriesContador.Core.Models.Patterns.ActionsWorker
                 worker.SetCommand(new AddHeadExcelReport(worksheet, reportResultadoPameter));
                 await worker.Run();
                 workbook.SaveAs(path);
-                Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+                if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ARIES_SKIP_OPEN_EXCEL")))
+                    Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
             }
         }
     }

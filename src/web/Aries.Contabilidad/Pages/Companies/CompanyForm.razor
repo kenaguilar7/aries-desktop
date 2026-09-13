@@ -1,0 +1,160 @@
+@using AriesContador.Core.Models.Companies
+@using AriesContador.Core.Models.Utils
+
+<EditForm Model="@Company" OnValidSubmit="@OnValidSubmit">
+    <div class="card">
+        <div class="card-body">
+            <div class="alert alert-info">
+                Los campos marcados con <span class="text-danger">*</span> son obligatorios
+            </div>
+
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="alert alert-danger">
+                    @ErrorMessage
+                </div>
+            }
+
+            <div class="row mb-3">
+                <div class="col-md-8">
+                    <label>Tipo de Identificación <span class="text-danger">*</span></label>
+                    <InputSelect @bind-Value="Company.IdType" class="form-select">
+                        @foreach (var type in Enum.GetValues(typeof(IdType)))
+                        {
+                            <option value="@type">@type.ToString().Replace("_", " ")</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="col-md-4">
+                    <label>Código <span class="text-danger">*</span></label>
+                    <InputText @bind-Value="Company.Code" class="form-control" readonly />
+                    <small class="text-success">Código Próxima Compañía: @NextCompanyCode</small>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label>Identificación <span class="text-danger">*</span></label>
+                    <InputText @bind-Value="Company.NumberId" class="form-control" placeholder="X-XXX-XXXX" />
+                </div>
+            </div>
+
+            @if (Company.IdType != IdType.CEDULA_JURIDICA)
+            {
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label>Nombre Completo <span class="text-danger">*</span></label>
+                        <InputText @bind-Value="Company.CompanyName" class="form-control" placeholder="Nombre y Apellidos" />
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label>Razón Social <span class="text-danger">*</span></label>
+                        <InputText @bind-Value="Company.CompanyName" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label>Representante Legal <span class="text-danger">*</span></label>
+                        <InputText @bind-Value="Company.Op1" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label>ID Representante Legal <span class="text-danger">*</span></label>
+                        <InputText @bind-Value="Company.Op2" class="form-control" placeholder="X-XXX-XXXX" />
+                    </div>
+                </div>
+            }
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label>Moneda (Registro Mov.) <span class="text-danger">*</span></label>
+                    <InputSelect @bind-Value="Company.MoneyType" class="form-select">
+                        @foreach (var moneyType in Enum.GetValues(typeof(CurrencyTypeCompany)))
+                        {
+                            <option value="@moneyType">@moneyType.ToString().Replace("_", " ")</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label>Dirección <span class="text-danger">*</span></label>
+                    <InputText @bind-Value="Company.Address" class="form-control" />
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label>Correo Electrónico</label>
+                    <InputText @bind-Value="Company.Mail" class="form-control" type="email" />
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label>Dirección Web</label>
+                    <InputText @bind-Value="Company.WebSite" class="form-control" />
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label>Teléfono Fijo</label>
+                    <InputText @bind-Value="Company.PhoneNumber1" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <label>Teléfono Celular</label>
+                    <InputText @bind-Value="Company.PhoneNumber2" class="form-control" />
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label>Observaciones</label>
+                    <InputTextArea @bind-Value="Company.Notes" class="form-control" rows="3" />
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <div class="form-check">
+                        <InputCheckbox @bind-Value="Company.Active" class="form-check-input" id="isActive" />
+                        <label class="form-check-label" for="isActive">Compañía Activa</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12 text-end">
+                    <button type="button" class="btn btn-secondary me-2" @onclick="OnCancel">
+                        <i class="fas fa-times"></i> Cerrar
+                    </button>
+                    <button type="button" class="btn btn-danger me-2" @onclick="OnClear">
+                        <i class="fas fa-eraser"></i> Limpiar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> @ButtonText
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter] public Company Company { get; set; } = new();
+    [Parameter] public string ButtonText { get; set; } = "Guardar";
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public EventCallback OnClear { get; set; }
+    [Parameter] public string NextCompanyCode { get; set; }
+    [Parameter] public string ErrorMessage { get; set; }
+}

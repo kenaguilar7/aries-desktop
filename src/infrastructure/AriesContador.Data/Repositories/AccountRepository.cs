@@ -29,9 +29,21 @@ namespace AriesContador.Data.Repositories
 
         public async Task AddChildAsync(Account entity, CancellationToken cancellationToken = default)
         {
+            await GetOrCreateAccountNameAsync(entity.Name, cancellationToken).ConfigureAwait(false);
             var dataAccess = new MySqlDataAccess(_connectionString);
             entity.Id = await dataAccess.SaveDataAsync<object, int>("SP_InsertChildAccount", ToChildInsertParams(entity), cancellationToken)
                 .ConfigureAwait(false);
+        }
+
+        public async Task<int> GetOrCreateAccountNameAsync(string name, CancellationToken cancellationToken = default)
+        {
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            var rows = await dataAccess.ExecuteQueryAsync<IdRow, object>(
+                    "SELECT GetAccountName(@AccountName) AS Id",
+                    new { AccountName = name },
+                    cancellationToken)
+                .ConfigureAwait(false);
+            return rows.First().Id;
         }
 
         public async Task<IEnumerable<Account>> FindByCompanyIdAsync(string companyId, CancellationToken cancellationToken = default)
@@ -62,6 +74,7 @@ namespace AriesContador.Data.Repositories
 
         public async Task UpdateNameInfoAsync(Account entity, CancellationToken cancellationToken = default)
         {
+            await GetOrCreateAccountNameAsync(entity.Name, cancellationToken).ConfigureAwait(false);
             var dataAccess = new MySqlDataAccess(_connectionString);
             await dataAccess.SaveDataAsync("SP_UpdateAccountNameInfo", new
             {
@@ -173,6 +186,11 @@ namespace AriesContador.Data.Repositories
         {
             public int Taken { get; set; }
             public int HasMovements { get; set; }
+        }
+
+        private class IdRow
+        {
+            public int Id { get; set; }
         }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Configuration;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using AriesContador.Core;
 using AriesContador.Core.Models.Email;
@@ -105,9 +106,14 @@ namespace Aries.Desktop
         /// <summary>
         /// Al arrancar solo se busca el exe (Squirrel). El esquema MySQL
         /// lo aplica un administrador en Sistema → Actualizaciones.
+        /// F5 (Debug) no consulta el feed: no hay Update.exe y localhost:5088
+        /// suele estar apagado, y un await en el hilo STA deja el splash colgado.
         /// </summary>
         private static void ApplyStartupAppUpdate()
         {
+#if DEBUG
+            StartupLog.Write("Squirrel omitido (Debug). Esquema: Sistema > Actualizaciones.");
+#else
             if (string.IsNullOrWhiteSpace(GlobalConfig.UpdateUrl))
             {
                 StartupLog.Write("Squirrel omitido (sin UpdateUrl). Esquema: Sistema > Actualizaciones.");
@@ -116,7 +122,13 @@ namespace Aries.Desktop
 
             try
             {
-                var result = AppUpdater.ApplyAsync().GetAwaiter().GetResult();
+                var applyTask = Task.Run(() => AppUpdater.ApplyAsync()).Unwrap();
+                if (!applyTask.Wait(TimeSpan.FromSeconds(20)))
+                {
+                    StartupLog.Write("Squirrel: timeout. feed=" + GlobalConfig.UpdateUrl);
+                    return;
+                }
+                var result = applyTask.GetAwaiter().GetResult();
                 if (result == null || !result.Applied)
                 {
                     StartupLog.Write("Squirrel: sin actualización. feed=" + GlobalConfig.UpdateUrl);
@@ -135,6 +147,7 @@ namespace Aries.Desktop
             {
                 StartupLog.Write("Squirrel: " + ex.GetBaseException().Message);
             }
+#endif
         }
 
         private static SmtpOptions ReadSmtpOptions()

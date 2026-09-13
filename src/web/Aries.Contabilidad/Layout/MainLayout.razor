@@ -1,0 +1,71 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Aries.Contabilidad.Services
+@using AriesContador.Core.Models.Companies
+@inherits LayoutComponentBase
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService LocalStorage
+
+<MudThemeProvider/>
+<MudDialogProvider/>
+<MudSnackbarProvider/>
+<MudPopoverProvider/>
+
+<div class="page">
+    <AuthorizeView>
+        <Authorized>
+            <div class="sidebar">
+                <NavMenu />
+            </div>
+        </Authorized>
+    </AuthorizeView>
+
+    <main>
+        <div class="top-row px-4 justify-content-end">
+            <AuthorizeView>
+                <Authorized>
+                    <div class="d-flex align-items-center">
+                        <span class="me-3">@context.User.Identity?.Name</span>
+                        @if (currentCompany != null)
+                        {
+                            <span class="me-3 text-muted">| @currentCompany.CompanyName (@currentCompany.Code)</span>
+                        }
+                        <button class="btn btn-link" @onclick="HandleLogout">
+                            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                        </button>
+                    </div>
+                </Authorized>
+            </AuthorizeView>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+@code {
+    private Company currentCompany;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CheckCurrentCompany();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await CheckCurrentCompany();
+    }
+
+    private async Task CheckCurrentCompany()
+    {
+        currentCompany = await LocalStorage.GetStoredCompany();
+        StateHasChanged();
+    }
+
+    private async Task HandleLogout()
+    {
+        await ((CustomAuthStateProvider)AuthStateProvider).MarkUserAsLoggedOut();
+        NavigationManager.NavigateTo("/");
+    }
+}

@@ -164,6 +164,9 @@ namespace AriesContador.Tests.Fakes
             return Task.CompletedTask;
         }
 
+        public Task<int> GetOrCreateAccountNameAsync(string name, CancellationToken cancellationToken = default) =>
+            Task.FromResult(1);
+
         public Task UpdateAsync(Account entity, CancellationToken cancellationToken = default) =>
             UpdateNameInfoAsync(entity, cancellationToken);
 

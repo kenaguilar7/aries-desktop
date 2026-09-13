@@ -1,0 +1,78 @@
+@page "/companies/create"
+@using Aries.Contabilidad.Services
+@using AriesContador.Core.Models.Companies
+@inject IClientCompanyService CompanyService
+@inject NavigationManager NavigationManager
+
+<div class="container-fluid">
+    <h3 class="mb-4">Maestro de Compañías</h3>
+
+    @if (isLoading)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <CompanyForm 
+            Company="@company"
+            ButtonText="Guardar"
+            OnValidSubmit="@HandleValidSubmit"
+            OnCancel="@HandleCancel"
+            OnClear="@HandleClear"
+            NextCompanyCode="@nextCompanyCode" />
+    }
+</div>
+
+@code {
+    private Company company = new();
+    private string nextCompanyCode;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            nextCompanyCode = await CompanyService.GetNextCompanyCode();
+            company.Code = nextCompanyCode;
+            company.Active = true;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            isLoading = true;
+            company.Active = true;
+            await CompanyService.CreateCompanyAsync(company);
+            NavigationManager.NavigateTo("/companies");
+        }
+        catch (Exception)
+        {
+            isLoading = false;
+        }
+    }
+
+    private void HandleCancel()
+    {
+        NavigationManager.NavigateTo("/companies");
+    }
+
+    private async Task HandleClear()
+    {
+        nextCompanyCode = await CompanyService.GetNextCompanyCode();
+        company = new Company
+        {
+            Code = nextCompanyCode,
+            Active = true
+        };
+    }
+}

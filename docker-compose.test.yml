@@ -1,0 +1,39 @@
+# MySQL solo para Aries.Flujos.Tests. No toca aries_mysql_local (:3307).
+#
+#   docker compose -f docker-compose.test.yml up -d
+#   dotnet test tests/Aries.Flujos.Tests/Aries.Flujos.Tests.csproj
+#
+# Puerto 3308, base aries_flujos. El fixture de xUnit también levanta esto
+# si Docker está disponible y el puerto no responde.
+
+name: aries-flujos
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: aries_mysql_flujos
+    ports:
+      - "3308:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: aries_flujos_root
+      MYSQL_DATABASE: aries_flujos
+      MYSQL_USER: kenneth
+      MYSQL_PASSWORD: 1234
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --log-bin-trust-function-creators=1
+    volumes:
+      - aries-flujos-mysql-data:/var/lib/mysql
+      - ./tests/Aries.Flujos.Tests/Schema/00_baseline_tables.sql:/docker-entrypoint-initdb.d/00_baseline_tables.sql:ro
+      - ./scripts/mysql/grant_routine_replace.sql:/docker-entrypoint-initdb.d/01_grant_routine_replace.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -paries_flujos_root --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+
+volumes:
+  aries-flujos-mysql-data:

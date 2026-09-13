@@ -137,7 +137,11 @@ app.UseExceptionHandler(errorApp =>
 if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Local"))
 {
     app.UseSwagger();
-    app.UseSwaggerUI(c => c.RoutePrefix = string.Empty);
+    app.UseSwaggerUI(c =>
+    {
+        c.RoutePrefix = string.Empty;
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Aries.WebAPI");
+    });
 }
 
 var updatesRoot = app.Configuration["Updates:Root"];

@@ -1,0 +1,100 @@
+@using AriesContador.Core.Models.PostingPeriods
+@using System.Globalization
+
+<div class="d-flex align-center">
+    <MudPopover Open="@_isOpen" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+        <MudPaper Elevation="0" Class="pa-4" Style="min-width: 300px;">
+            <div class="d-flex justify-space-between align-center mb-4">
+                <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" 
+                             OnClick="PreviousYear" 
+                             Disabled="!CanNavigateYear(-1)" />
+                <MudText Typo="Typo.h6">@_currentYear</MudText>
+                <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" 
+                             OnClick="NextYear"
+                             Disabled="!CanNavigateYear(1)" />
+            </div>
+            <MudGrid Spacing="1">
+                @foreach (var month in Enumerable.Range(1, 12))
+                {
+                    var isAvailable = AvailablePeriods?.Any(p => p.Date.Year == _currentYear && p.Date.Month == month) ?? false;
+                    var isSelected = SelectedDate?.Year == _currentYear && SelectedDate?.Month == month;
+                    
+                    <MudItem xs="4">
+                        <MudButton FullWidth="true"
+                                 Variant="@(isSelected ? Variant.Filled : Variant.Text)"
+                                 Color="@(isSelected ? Color.Primary : Color.Default)"
+                                 DisableElevation="true"
+                                 Disabled="!isAvailable"
+                                 OnClick="@(() => SelectMonth(month))">
+                            @(new DateTime(2000, month, 1).ToString("MMM", new CultureInfo("es-ES")))
+                        </MudButton>
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudPaper>
+    </MudPopover>
+
+    <MudButton Variant="Variant.Outlined" 
+               FullWidth="true"
+               OnClick="@(() => _isOpen = !_isOpen)"
+               EndIcon="@Icons.Material.Filled.CalendarMonth"
+               Color="@(SelectedDate.HasValue ? Color.Primary : Color.Default)">
+        @if (SelectedDate.HasValue)
+        {
+            @($"{SelectedDate.Value.ToString("MMMM yyyy", new CultureInfo("es-ES"))}")
+        }
+        else
+        {
+            <text>Seleccionar período</text>
+        }
+    </MudButton>
+</div>
+
+@code {
+    [Parameter]
+    public List<PostingPeriod> AvailablePeriods { get; set; }
+
+    [Parameter]
+    public DateTime? SelectedDate { get; set; }
+
+    [Parameter]
+    public EventCallback<DateTime> OnDateSelected { get; set; }
+
+    private bool _isOpen;
+    private int _currentYear;
+
+    protected override void OnInitialized()
+    {
+        _currentYear = SelectedDate?.Year ?? DateTime.Today.Year;
+    }
+
+    private void SelectMonth(int month)
+    {
+        var newDate = new DateTime(_currentYear, month, 1);
+        SelectedDate = newDate;
+        _isOpen = false;
+        OnDateSelected.InvokeAsync(newDate);
+    }
+
+    private bool CanNavigateYear(int offset)
+    {
+        var targetYear = _currentYear + offset;
+        return AvailablePeriods?.Any(p => p.Date.Year == targetYear) ?? false;
+    }
+
+    private void PreviousYear()
+    {
+        if (CanNavigateYear(-1))
+        {
+            _currentYear--;
+        }
+    }
+
+    private void NextYear()
+    {
+        if (CanNavigateYear(1))
+        {
+            _currentYear++;
+        }
+    }
+}

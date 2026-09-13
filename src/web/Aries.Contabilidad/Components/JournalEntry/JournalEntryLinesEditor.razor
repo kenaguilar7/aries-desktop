@@ -1,0 +1,170 @@
+
+<MudPaper Class="pa-4">
+        <MudTable Items="@GetDisplayLines()" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" Class="mt-0" FixedHeader="true" 
+        Height="@("400px")">
+            <ToolBarContent>
+                <MudButton Color="Color.Primary"
+                           OnClick="AddNewLine"
+                           StartIcon="@Icons.Material.Filled.Add">
+                    Add Line
+                </MudButton>
+            </ToolBarContent>
+            <HeaderContent>
+            <MudTh MudTableSortLabel>Account</MudTh>
+            <MudTh MudTableSortLabel>Description</MudTh>
+            <MudTh MudTableSortLabel>Currency</MudTh>
+            <MudTh MudTableSortLabel>Rate</MudTh>
+            <MudTh MudTableSortLabel  Style="text-align: right">Foreign Debit</MudTh>
+            <MudTh MudTableSortLabel Style="text-align: right">Foreign Credit</MudTh>
+            <MudTh MudTableSortLabel Style="text-align: right">Debit</MudTh>
+            <MudTh MudTableSortLabel Style="text-align: right">Credit</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                @if (_editingLine == context)
+                {
+                    <JournalEntryLineEditor Line="@context"
+                                            OnChange="@(() => FinishEditing(context))"
+                                            OnCancelAction="@(() => HandleCancelAction(context))"
+                                            CompanyId="@CompanyId" />
+                }
+                else
+                {
+                    <MudTd DataLabel="Account">@context.AccountName</MudTd>
+                    <MudTd DataLabel="Description">@context.Memo</MudTd>
+                    <MudTd DataLabel="Currency">@(context.Currency == Currency.dolares ? "USD" : "CRC")</MudTd>
+                    <MudTd DataLabel="Rate">@context.RateAmount.ToString("N4")</MudTd>
+                    @* TODO Validate with the company if the company allow fereign transactions*@
+                    <MudTd DataLabel="Foreign Debit" Style="text-align: right">
+                        @(context.DebOrCred == DebOrCred.Debito ? context.ForeignAmount.ToString("N2") : "")
+                    </MudTd>
+                    <MudTd DataLabel="Foreign Credit" Style="text-align: right">
+                        @(context.DebOrCred == DebOrCred.Credito ? context.ForeignAmount.ToString("N2") : "")
+                    </MudTd>
+                    <MudTd DataLabel="Debit" Style="text-align: right">
+                        @(context.DebOrCred == DebOrCred.Debito ? context.Amount.ToString("N2") : "")
+                    </MudTd>
+                    <MudTd DataLabel="Credit" Style="text-align: right">
+                        @(context.DebOrCred == DebOrCred.Credito ? context.Amount.ToString("N2") : "")
+                    </MudTd>
+                }
+
+                @if (_editingLine != context){
+                <MudTd Class="d-flex flex-row gap-2">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                   Color="Color.Info"
+                                   Size="Size.Small"
+                                   OnClick="@(() => StartEditing(context))" />
+
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                   Color="Color.Error"
+                                   Size="Size.Small"
+                                   OnClick="@(() => HandleLineDeleted(context))" />
+                </MudTd>
+                }
+            </RowTemplate>
+        </MudTable>
+</MudPaper>
+
+@code {
+    private JournalEntryLine? _editingLine;
+    private bool _isAddingNew;
+    private JournalEntryLine? _tempNewLine;
+
+    /// <summary>
+    /// List of journal entry lines
+    /// </summary>
+    [Parameter]
+    public List<JournalEntryLine> Lines { get; set; } = new();
+
+    [Parameter]
+    public string CompanyId { get; set; }
+
+    /// <summary>
+    /// Event callback when a line is changed
+    /// </summary>
+    [Parameter]
+    public EventCallback<JournalEntryLine> OnLineChanged { get; set; }
+
+    /// <summary>
+    /// Event callback when a line is deleted
+    /// </summary>
+    [Parameter]
+    public EventCallback<JournalEntryLine> OnLineDeleted { get; set; }
+
+    private List<JournalEntryLine> GetDisplayLines()
+    {
+        var displayLines = new List<JournalEntryLine>(Lines);
+        if (_tempNewLine != null)
+        {
+            displayLines.Add(_tempNewLine);
+        }
+        return displayLines;
+    }
+
+    private void AddNewLine()
+    {
+        if(_isAddingNew) return; 
+
+        _tempNewLine = new JournalEntryLine
+        {
+            Date = DateTime.Now,
+            RateAmount = 1,
+            DebOrCred = DebOrCred.Debito, // Default to debit
+            Currency = Currency.dolares, // Default to local currency
+        };
+        _editingLine = _tempNewLine;
+        _isAddingNew = true;
+        StateHasChanged();
+    }
+
+    private void StartEditing(JournalEntryLine line)
+    {
+        _editingLine = line;
+        _isAddingNew = false;
+        StateHasChanged();
+    }
+
+    private async Task FinishEditing(JournalEntryLine line)
+    {
+        if (_isAddingNew)
+        {
+            await OnLineChanged.InvokeAsync(line);
+            _tempNewLine = null;
+        }
+        else 
+        {
+            // Handle existing line update
+            await HandleLineChanged(line);
+        }
+        _editingLine = null;
+        _isAddingNew = false;
+        StateHasChanged();
+    }
+
+    private async Task HandleLineChanged(JournalEntryLine line)
+    {
+        await OnLineChanged.InvokeAsync(line);
+    }
+    
+    private async Task HandleCancelAction(JournalEntryLine line)
+    {
+        _editingLine = null;
+        _isAddingNew = false;
+        if (_isAddingNew)
+        {
+            _tempNewLine = null;
+        }
+        StateHasChanged();
+    }
+
+    private async Task HandleLineDeleted(JournalEntryLine line)
+    {
+        if (_editingLine == line)
+        {
+            _editingLine = null;
+            _isAddingNew = false;
+        }
+        await OnLineDeleted.InvokeAsync(line);
+    }
+}
