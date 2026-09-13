@@ -1,6 +1,5 @@
 using System;
 using System.Drawing;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -13,70 +12,80 @@ namespace Aries.Desktop
 {
     public sealed class FrameActualizaciones : Form
     {
-        private readonly Label _lblAppVersion;
-        private readonly Label _lblAppFeed;
-        private readonly Label _lblAppStatus;
-        private readonly Label _lblDbConnection;
-        private readonly Label _lblDbVersion;
-        private readonly Label _lblDbStatus;
-        private readonly ListBox _lstPending;
+        private readonly TextBox _txtAppVersion;
+        private readonly TextBox _txtAppFeed;
+        private readonly TextBox _txtAppStatus;
+        private readonly TextBox _txtDbConnection;
+        private readonly TextBox _txtDbVersion;
+        private readonly TextBox _txtDbStatus;
+        private readonly TextBox _txtPending;
         private readonly Button _btnUpdateApp;
         private readonly Button _btnUpdateDb;
+        private readonly Button _btnCopy;
         private readonly Button _btnClose;
         private bool _loaded;
 
         public FrameActualizaciones()
         {
             Text = "Actualizaciones";
-            FormBorderStyle = FormBorderStyle.FixedDialog;
+            FormBorderStyle = FormBorderStyle.Sizable;
             StartPosition = FormStartPosition.CenterParent;
-            MaximizeBox = false;
             MinimizeBox = false;
+            MaximizeBox = false;
             ShowInTaskbar = false;
             ShowIcon = false;
-            ClientSize = new Size(560, 520);
+            MinimumSize = new Size(720, 620);
+            ClientSize = new Size(700, 580);
             Font = new Font("Segoe UI", 9F);
 
             var grpApp = new GroupBox
             {
                 Text = "Sistema",
                 Location = new Point(12, 12),
-                Size = new Size(536, 150)
+                Size = new Size(676, 168),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
             };
-            _lblAppVersion = MakeValueLabel(grpApp, "Versión instalada:", 28);
-            _lblAppFeed = MakeValueLabel(grpApp, "Canal de actualización:", 60);
-            _lblAppStatus = MakeValueLabel(grpApp, "Estado:", 92, 40);
+            _txtAppVersion = MakeValueBox(grpApp, "Versión instalada:", 24, 22);
+            _txtAppFeed = MakeValueBox(grpApp, "Canal de actualización:", 52, 40);
+            _txtAppStatus = MakeValueBox(grpApp, "Estado:", 98, 52);
 
             var grpDb = new GroupBox
             {
                 Text = "Base de datos",
-                Location = new Point(12, 174),
-                Size = new Size(536, 280)
+                Location = new Point(12, 188),
+                Size = new Size(676, 330),
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
             };
-            _lblDbConnection = MakeValueLabel(grpDb, "Conexión:", 28);
-            _lblDbVersion = MakeValueLabel(grpDb, "Esquema:", 60);
-            _lblDbStatus = MakeValueLabel(grpDb, "Estado:", 92, 36);
+            _txtDbConnection = MakeValueBox(grpDb, "Conexión:", 24, 36);
+            _txtDbVersion = MakeValueBox(grpDb, "Esquema:", 66, 36);
+            _txtDbStatus = MakeValueBox(grpDb, "Estado:", 108, 36);
 
             var lblPending = new Label
             {
                 AutoSize = true,
-                Location = new Point(16, 136),
+                Location = new Point(16, 152),
                 Text = "Migraciones pendientes:"
             };
-            _lstPending = new ListBox
+            _txtPending = new TextBox
             {
-                Location = new Point(16, 158),
-                Size = new Size(504, 104),
-                IntegralHeight = false
+                Location = new Point(16, 174),
+                Size = new Size(644, 138),
+                Multiline = true,
+                ReadOnly = true,
+                ScrollBars = ScrollBars.Both,
+                WordWrap = false,
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+                BackColor = SystemColors.Window
             };
             grpDb.Controls.Add(lblPending);
-            grpDb.Controls.Add(_lstPending);
+            grpDb.Controls.Add(_txtPending);
 
             _btnUpdateApp = new Button
             {
                 Text = "Actualizar sistema",
-                Location = new Point(12, 470),
+                Location = new Point(12, 532),
                 Size = new Size(160, 32),
+                Anchor = AnchorStyles.Bottom | AnchorStyles.Left,
                 UseVisualStyleBackColor = true
             };
             _btnUpdateApp.Click += BtnUpdateApp_Click;
@@ -84,17 +93,29 @@ namespace Aries.Desktop
             _btnUpdateDb = new Button
             {
                 Text = "Actualizar base de datos",
-                Location = new Point(178, 470),
+                Location = new Point(178, 532),
                 Size = new Size(180, 32),
+                Anchor = AnchorStyles.Bottom | AnchorStyles.Left,
                 UseVisualStyleBackColor = true
             };
             _btnUpdateDb.Click += BtnUpdateDb_Click;
 
+            _btnCopy = new Button
+            {
+                Text = "Copiar datos",
+                Location = new Point(364, 532),
+                Size = new Size(120, 32),
+                Anchor = AnchorStyles.Bottom | AnchorStyles.Left,
+                UseVisualStyleBackColor = true
+            };
+            _btnCopy.Click += BtnCopy_Click;
+
             _btnClose = new Button
             {
                 Text = "Cerrar",
-                Location = new Point(448, 470),
+                Location = new Point(588, 532),
                 Size = new Size(100, 32),
+                Anchor = AnchorStyles.Bottom | AnchorStyles.Right,
                 UseVisualStyleBackColor = true,
                 DialogResult = DialogResult.Cancel
             };
@@ -103,6 +124,7 @@ namespace Aries.Desktop
             Controls.Add(grpDb);
             Controls.Add(_btnUpdateApp);
             Controls.Add(_btnUpdateDb);
+            Controls.Add(_btnCopy);
             Controls.Add(_btnClose);
             CancelButton = _btnClose;
             AcceptButton = _btnClose;
@@ -110,19 +132,30 @@ namespace Aries.Desktop
             Shown += FrameActualizaciones_Shown;
         }
 
-        private static Label MakeValueLabel(GroupBox group, string caption, int top, int height = 18)
+        private static TextBox MakeValueBox(GroupBox group, string caption, int top, int height)
         {
             var captionLabel = new Label
             {
                 AutoSize = true,
-                Location = new Point(16, top),
+                Location = new Point(16, top + 3),
                 Text = caption
             };
-            var value = new Label
+            var value = new TextBox
             {
-                AutoEllipsis = height <= 18,
                 Location = new Point(180, top),
-                Size = new Size(340, height)
+                Size = new Size(480, height),
+                ReadOnly = true,
+                BorderStyle = BorderStyle.FixedSingle,
+                BackColor = SystemColors.Window,
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
+                Multiline = height > 24,
+                WordWrap = height > 24,
+                ScrollBars = height > 40 ? ScrollBars.Vertical : ScrollBars.None
+            };
+            value.Click += delegate
+            {
+                if (value.SelectionLength == 0)
+                    value.SelectAll();
             };
             group.Controls.Add(captionLabel);
             group.Controls.Add(value);
@@ -169,40 +202,40 @@ namespace Aries.Desktop
         {
             if (app == null)
             {
-                _lblAppVersion.Text = AppUpdater.FileVersion;
-                _lblAppFeed.Text = "(sin datos)";
-                _lblAppStatus.Text = "No se pudo consultar el canal de actualización.";
+                _txtAppVersion.Text = AppUpdater.FileVersion;
+                _txtAppFeed.Text = "(sin datos)";
+                _txtAppStatus.Text = "No se pudo consultar el canal de actualización.";
                 return;
             }
 
             var beta = GlobalConfig.IsBeta ? " Beta" : string.Empty;
-            _lblAppVersion.Text = app.InstalledVersion + "  [" + GlobalConfig.EnvironmentName + beta + "]";
-            _lblAppFeed.Text = app.HasFeed
+            _txtAppVersion.Text = app.InstalledVersion + "  [" + GlobalConfig.EnvironmentName + beta + "]";
+            _txtAppFeed.Text = app.HasFeed
                 ? (string.IsNullOrWhiteSpace(app.FeedUrl) ? "(ninguno)" : app.FeedUrl)
                 : "(ninguno — este equipo no busca actualizaciones)";
 
             if (!string.IsNullOrWhiteSpace(app.Error))
             {
-                _lblAppStatus.Text = "No se pudo consultar el feed: " + app.Error;
+                _txtAppStatus.Text = "No se pudo consultar el feed: " + app.Error;
                 _btnUpdateApp.Enabled = app.HasFeed;
                 return;
             }
 
             if (!app.HasFeed)
             {
-                _lblAppStatus.Text = "No hay UpdateUrl configurado.";
+                _txtAppStatus.Text = "No hay UpdateUrl configurado.";
                 _btnUpdateApp.Enabled = false;
                 return;
             }
 
             if (app.HasUpdate)
             {
-                _lblAppStatus.Text = "Hay una versión nueva: " + (app.AvailableVersion ?? "(desconocida)");
+                _txtAppStatus.Text = "Hay una versión nueva: " + (app.AvailableVersion ?? "(desconocida)");
                 _btnUpdateApp.Enabled = true;
             }
             else
             {
-                _lblAppStatus.Text = "El sistema está al día"
+                _txtAppStatus.Text = "El sistema está al día"
                     + (string.IsNullOrWhiteSpace(app.AvailableVersion)
                         ? "."
                         : " (feed: " + app.AvailableVersion + ").");
@@ -212,66 +245,106 @@ namespace Aries.Desktop
 
         private void BindDb(MigrationStatus db, string error)
         {
-            _lblDbConnection.Text = GlobalConfig.MySqlServer + " / " + GlobalConfig.MySqlDatabase;
+            _txtDbConnection.Text = GlobalConfig.MySqlServer + " / " + GlobalConfig.MySqlDatabase;
 
             if (!string.IsNullOrWhiteSpace(error))
             {
-                _lblDbVersion.Text = "(sin datos)";
-                _lblDbStatus.Text = "No se pudo leer el esquema: " + error;
-                _lstPending.Items.Clear();
+                _txtDbVersion.Text = "(sin datos)";
+                _txtDbStatus.Text = "No se pudo leer el esquema: " + error;
+                _txtPending.Text = string.Empty;
                 _btnUpdateDb.Enabled = false;
                 return;
             }
 
             if (db == null)
             {
-                _lblDbVersion.Text = "(sin datos)";
-                _lblDbStatus.Text = "No se pudo leer el esquema.";
-                _lstPending.Items.Clear();
+                _txtDbVersion.Text = "(sin datos)";
+                _txtDbStatus.Text = "No se pudo leer el esquema.";
+                _txtPending.Text = string.Empty;
                 _btnUpdateDb.Enabled = false;
                 return;
             }
 
-            _lblDbVersion.Text = db.HistoryTableExists
+            _txtDbVersion.Text = db.HistoryTableExists
                 ? "v." + db.AppliedVersion + " aplicada  /  v." + db.CatalogVersion + " en esta versión del sistema"
                     + "  (" + db.Applied.Count + " de " + (db.Applied.Count + db.Pending.Count) + " migraciones)"
                 : "Sin historial  /  catálogo v." + db.CatalogVersion;
 
-            _lstPending.Items.Clear();
-            foreach (var pending in db.Pending)
-                _lstPending.Items.Add(pending.Id + " — " + pending.Description);
+            if (db.Pending.Count == 0)
+            {
+                _txtPending.Text = "(ninguna)";
+            }
+            else
+            {
+                var pending = new StringBuilder();
+                foreach (var item in db.Pending)
+                    pending.AppendLine(item.Id + " — " + item.Description);
+                _txtPending.Text = pending.ToString();
+            }
 
             if (db.ChecksumMismatches.Count > 0)
             {
-                _lblDbStatus.Text = "El SQL de una migración aplicada cambió: "
+                _txtDbStatus.Text = "El SQL de una migración aplicada cambió: "
                     + string.Join(", ", db.ChecksumMismatches.ToArray());
             }
             else if (!db.HistoryTableExists)
             {
-                _lblDbStatus.Text = db.Pending.Count == 0
+                _txtDbStatus.Text = db.Pending.Count == 0
                     ? "No hay historial de esquema."
                     : "Sin historial. Hay " + db.Pending.Count + " migraciones por aplicar.";
             }
             else if (db.IsUpToDate)
             {
-                _lblDbStatus.Text = "El esquema está al día.";
+                _txtDbStatus.Text = "El esquema está al día.";
             }
             else
             {
-                _lblDbStatus.Text = db.Pending.Count == 1
+                _txtDbStatus.Text = db.Pending.Count == 1
                     ? "Hay 1 migración pendiente."
                     : "Hay " + db.Pending.Count + " migraciones pendientes.";
             }
 
             if (!GlobalConfig.CanApplySchemaMigrations)
             {
-                _lblDbStatus.Text += " Solo un administrador puede aplicar migraciones.";
+                _txtDbStatus.Text += " Solo un administrador puede aplicar migraciones.";
                 _btnUpdateDb.Enabled = false;
             }
             else
             {
                 _btnUpdateDb.Enabled = true;
             }
+        }
+
+        private void BtnCopy_Click(object sender, EventArgs e)
+        {
+            var text = new StringBuilder();
+            text.AppendLine("Versión instalada: " + _txtAppVersion.Text);
+            text.AppendLine("Canal de actualización: " + _txtAppFeed.Text);
+            text.AppendLine("Estado sistema: " + _txtAppStatus.Text);
+            text.AppendLine("Conexión: " + _txtDbConnection.Text);
+            text.AppendLine("Esquema: " + _txtDbVersion.Text);
+            text.AppendLine("Estado base: " + _txtDbStatus.Text);
+            text.AppendLine("Migraciones pendientes:");
+            text.Append(_txtPending.Text);
+            try
+            {
+                Clipboard.SetText(text.ToString());
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "No se pudo copiar.\n\n" + ex.GetBaseException().Message,
+                    TextoGeneral.NombreApp,
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            MessageBox.Show(
+                "Datos copiados al portapapeles.",
+                TextoGeneral.NombreApp,
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
         }
 
         private async void BtnUpdateApp_Click(object sender, EventArgs e)
