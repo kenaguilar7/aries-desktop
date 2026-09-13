@@ -1,0 +1,77 @@
+name: ci-api
+
+# Compila y prueba Aries.WebAPI (contrato HTTP + imagen Docker).
+# No publica a ECR ni toca ECS. El deploy es cd-api-test / cd-api-prod.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master, main, dev]
+    paths:
+      - 'src/hosts/Aries.WebAPI/**'
+      - 'src/domain/**'
+      - 'src/infrastructure/**'
+      - 'src/application/**'
+      - 'tests/Aries.WebAPI.Tests/**'
+      - 'docker-compose.yml'
+      - '.dockerignore'
+      - 'nuget.config'
+      - 'global.json'
+      - '.github/workflows/ci-api.yml'
+  pull_request:
+    branches: [master, main, dev]
+    paths:
+      - 'src/hosts/Aries.WebAPI/**'
+      - 'src/domain/**'
+      - 'src/infrastructure/**'
+      - 'src/application/**'
+      - 'tests/Aries.WebAPI.Tests/**'
+      - 'docker-compose.yml'
+      - '.dockerignore'
+      - 'nuget.config'
+      - 'global.json'
+      - '.github/workflows/ci-api.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version-file: global.json
+
+      - name: Cache NuGet
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-api-${{ hashFiles('nuget.config', '**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-api-
+
+      - name: Guard secrets
+        shell: pwsh
+        run: ./scripts/Verify-NoSecrets.ps1
+
+      - name: Restore
+        run: dotnet restore tests/Aries.WebAPI.Tests/Aries.WebAPI.Tests.csproj --configfile nuget.config
+
+      - name: Test API contract
+        run: dotnet test tests/Aries.WebAPI.Tests/Aries.WebAPI.Tests.csproj --configuration Release --nologo
+
+      - name: Build container image
+        run: docker build -f src/hosts/Aries.WebAPI/Dockerfile -t aries-webapi:ci .
+
+      - name: Inspect image
+        run: |
+          docker image inspect aries-webapi:ci --format 'os={{.Os}}/{{.Architecture}} exposed={{json .Config.ExposedPorts}} entrypoint={{json .Config.Entrypoint}}'
+          docker run --rm --entrypoint printenv aries-webapi:ci ASPNETCORE_URLS
