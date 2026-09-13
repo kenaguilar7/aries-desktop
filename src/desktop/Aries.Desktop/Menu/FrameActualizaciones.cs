@@ -285,7 +285,7 @@ namespace Aries.Desktop
             if (db.ChecksumMismatches.Count > 0)
             {
                 _txtDbStatus.Text = "El SQL de una migración aplicada cambió: "
-                    + string.Join(", ", db.ChecksumMismatches.ToArray());
+                    + string.Join(", ", db.ChecksumMismatches);
             }
             else if (!db.HistoryTableExists)
             {
