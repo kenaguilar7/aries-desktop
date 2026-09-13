@@ -1,0 +1,201 @@
+@using AriesContador.Core.Models.Accounts
+@using AriesContador.Core.Models.PostingPeriods
+@using Aries.Contabilidad.Components.Selectors
+
+@inject IPostingPeriodService PostingPeriodService
+
+@* <MudPaper Class="pa-4"> *@
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" Border="true">
+        <MudTabPanel Text="Saldo Actual">
+            <div class="d-flex gap-4 mb-4">
+                <div class="flex-grow-1">
+                    <PostingPeriodPicker 
+                        AvailablePeriods="@availablePeriods"
+                        SelectedDate="@fromDate"
+                        OnDateSelected="HandleFromDateSelected"/>
+                </div>
+                <div class="flex-grow-1">
+                    <PostingPeriodPicker 
+                        AvailablePeriods="@availablePeriods"
+                        SelectedDate="@toDate"
+                        OnDateSelected="HandleToDateSelected" />
+                </div>
+            </div>
+            @if (Account != null)
+            {
+                <MudSimpleTable Dense="true" Hover="true">
+                    <thead>
+                        <tr>
+                            <th>Saldo Anterior</th>
+                            <th>Débitos</th>
+                            <th>Créditos</th>
+                            <th>Saldo Actual</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>@Account.PriorBalance.ToString("N2")</td>
+                            <td>@Account.DebitBalance.ToString("N2")</td>
+                            <td>@Account.CreditBalance.ToString("N2")</td>
+                            <td>
+                                <MudText Color="@(Account.CurrentBalance >= 0 ? Color.Success : Color.Error)">
+                                    @Account.CurrentBalance.ToString("N2")
+                                </MudText>
+                            </td>
+                        </tr>
+                    </tbody>
+                </MudSimpleTable>
+            }
+            else
+            {
+                <MudText>Seleccione una cuenta para ver sus saldos</MudText>
+            }
+        </MudTabPanel>
+        <MudTabPanel Text="Saldos Mensual">
+            <div class="d-flex gap-4 mb-4">
+            <div class="flex-grow-1">
+                <PostingPeriodPicker AvailablePeriods="@availablePeriods"
+                                     SelectedDate="@fromDate"
+                                     OnDateSelected="HandleFromDateSelected" />
+            </div>
+            <div class="flex-grow-1">
+                <PostingPeriodPicker AvailablePeriods="@availablePeriods"
+                                     SelectedDate="@toDate"
+                                     OnDateSelected="HandleToDateSelected" />
+            </div>
+            </div>
+            @if (Account != null)
+            {
+                <MudSimpleTable Dense="true" Hover="true">
+                    <thead>
+                        <tr>
+                            <th>Débitos</th>
+                            <th>Créditos</th>
+                            <th>Saldo Actual</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>@Account.DebitBalance.ToString("N2")</td>
+                            <td>@Account.CreditBalance.ToString("N2")</td>
+                            <td>
+                            <MudText Color="@(Account.MontlyBalance >= 0 ? Color.Success : Color.Error)">
+                                    @Account.MontlyBalance.ToString("N2")
+                                </MudText>
+                            </td>
+                        </tr>
+                    </tbody>
+                </MudSimpleTable>
+            }
+            else
+            {
+                <MudText>Seleccione una cuenta para ver sus saldos</MudText>
+            }
+        </MudTabPanel>
+        <MudTabPanel Text="Moviemientos">
+        <div class="d-flex gap-4 mb-4">
+      @*       <div class="flex-grow-1">
+                <PostingPeriodPicker AvailablePeriods="@availablePeriods"
+                                     SelectedDate="@fromDate"
+                                     OnDateSelected="HandleFromDateSelected" />
+            </div>
+            <div class="flex-grow-1">
+                <PostingPeriodPicker AvailablePeriods="@availablePeriods"
+                                     SelectedDate="@toDate"
+                                     OnDateSelected="HandleToDateSelected" />
+            </div> *@
+
+            <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQ8PKOWw0w4vGQSA9yPc1iyqvi7X-Yv-3C6DuqSdJGlTmft4q_PhBUHuH1PxM8GO1TTU1hqIJe_9R-F/pubhtml?widget=true&amp;headers=false"></iframe>
+        </div>
+        @if (Account != null)
+        {
+            <MudSimpleTable Dense="true" Hover="true">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Descripción</th>
+                        <th>Débitos</th>
+                        <th>Créditos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var transaction in journalEntryLineReportDtos)
+                    {
+                        <tr>
+                            <td>@transaction.Date.ToShortDateString()</td>
+                            @* <td>@transaction.Description</td> *@
+                            <td>@transaction.Amount.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+            </MudSimpleTable>
+        }
+        else
+        {
+            <MudText>Seleccione una cuenta para ver sus movimientos</MudText>
+        }
+        </MudTabPanel>
+    </MudTabs>
+@* </MudPaper> *@
+
+@code {
+
+
+
+    [Parameter]
+    public Account? Account { get; set; }
+
+    [Parameter]
+    public string CompanyId { get; set; }
+
+    [Parameter]
+    public EventCallback<(DateTime From, DateTime To)> OnDateRangeChanged { get; set; }
+
+    private DateTime fromDate = DateTime.Today.AddMonths(-1);
+    private DateTime toDate = DateTime.Today;
+    private List<PostingPeriod> availablePeriods;
+    private List<JournalEntryLine> journalEntryLineReportDtos = new List<JournalEntryLine>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Get all available posting periods
+            availablePeriods = await PostingPeriodService.GetPostingPeriodsAsync(CompanyId);
+
+            // Set initial dates to first and last available periods
+            if (availablePeriods?.Any() == true)
+            {
+                var orderedPeriods = availablePeriods.OrderBy(p => p.Date).ToList();
+                fromDate = orderedPeriods.First().Date;
+                toDate = orderedPeriods.Last().Date;
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle error appropriately
+            Console.WriteLine($"Error loading posting periods: {ex.Message}");
+            availablePeriods = new List<PostingPeriod>();
+        }
+    }
+
+    private async Task HandleFromDateSelected(DateTime date)
+    {
+        fromDate = date;
+        if (toDate < fromDate)
+        {
+            toDate = fromDate;
+        }
+        await OnDateRangeChanged.InvokeAsync((fromDate, toDate));
+    }
+
+    private async Task HandleToDateSelected(DateTime date)
+    {
+        toDate = date;
+        if (fromDate > toDate)
+        {
+            fromDate = toDate;
+        }
+        await OnDateRangeChanged.InvokeAsync((fromDate, toDate));
+    }
+}

@@ -1,0 +1,104 @@
+@* This page is not being used yet *@
+@page "/journal-entries/{CompanyId}"
+@using Aries.Contabilidad.Services
+@using MudBlazor
+@using System.Linq
+
+@inject IJournalEntryService JournalEntryService
+@inject IPostingPeriodService PostingPeriodService
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">Journal Entries</MudText>
+    
+    <MudGrid>
+        <MudItem xs="12" sm="8">
+            <MudText Class="mb-2">Showing @((_entries?.Count ?? 0) > 0 ? $"1 - {_entries.Count} of {_totalCount}" : "0") entries</MudText>
+        </MudItem>
+        <MudItem xs="12" sm="4">
+            <MudTextField @bind-Value="_searchString" Placeholder="Search Journal Entries" Adornment="Adornment.Start"
+                         AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        </MudItem>
+    </MudGrid>
+
+    <MudPaper Class="pa-4 mt-4">
+        <MudGrid>
+            <MudItem xs="12" sm="6" md="3">
+                <MudTextField @bind-Value="@_startDate" Label="Start Date" Type="InputType.Date" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudTextField @bind-Value="@_endDate" Label="End Date" Type="InputType.Date" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudTextField @bind-Value="@_startNumber" Label="Start Number" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudTextField @bind-Value="@_endNumber" Label="End Number" />
+            </MudItem>
+            <MudItem xs="12" Class="d-flex justify-end">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ApplyFilters">Filter</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mt-4">
+        <MudTabs>
+            <MudTabPanel Text="All">
+                <JournalEntriesList Entries="@_entries" OnEntryClick="@NavigateToEntry" />
+            </MudTabPanel>
+            <MudTabPanel Text="Borrador">
+                <JournalEntriesList Entries="@(_entries?.Where(e => e.Id == 0).ToList())" OnEntryClick="@NavigateToEntry" />
+            </MudTabPanel>
+            <MudTabPanel Text="En proceso">
+                <JournalEntriesList Entries="@(_entries?.Where(e => e.JournalEntryStatus == JournalEntryStatus.Progress).ToList())" OnEntryClick="@NavigateToEntry" />
+            </MudTabPanel>
+            <MudTabPanel Text="Aprobado">
+                <JournalEntriesList Entries="@(_entries?.Where(e => e.JournalEntryStatus == JournalEntryStatus.Approved).ToList())" OnEntryClick="@NavigateToEntry" />
+            </MudTabPanel>
+        </MudTabs>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [Parameter]
+    public string CompanyId { get; set; }
+
+    private List<JournalEntry> _entries;
+    private int _totalCount;
+    private string _searchString;
+    private DateTime? _startDate;
+    private DateTime? _endDate;
+    private string _startNumber;
+    private string _endNumber;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEntries();
+    }
+
+    private async Task LoadEntries()
+    {
+        try
+        {
+            var postingPeriod = await PostingPeriodService.GetPostingPeriodsAsync(CompanyId);
+            var result = await JournalEntryService.GetJournalEntriesAsync(postingPeriod.FirstOrDefault().Id);
+            _entries = result.ToList();
+            _totalCount = result.Count;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Failed to load journal entries", Severity.Error);
+        }
+    }
+
+    private async Task ApplyFilters()
+    {
+        await LoadEntries();
+    }
+
+    private void NavigateToEntry(string entryId)
+    {
+        NavigationManager.NavigateTo($"/journal-entries/{CompanyId}/entry/{entryId}");
+    }
+}

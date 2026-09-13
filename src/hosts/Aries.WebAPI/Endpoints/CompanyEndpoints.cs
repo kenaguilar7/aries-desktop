@@ -34,6 +34,22 @@ namespace Aries.WebAPI.Endpoints
                     return Results.Ok(company);
                 }));
 
+            group.MapPost("/Update", async (HttpContext http, Company company, IAdministrationService svc) =>
+                await EndpointRun.TryAsync(async () =>
+                {
+                    var userId = http.TryGetUserId();
+                    if (userId.HasValue)
+                        company.UpdatedBy = userId.Value;
+                    await svc.UpdateCompanyAsync(company, http.RequestAborted);
+                    return Results.Ok();
+                }));
+
+            group.MapGet("/{code}", async (HttpContext http, string code, IAdministrationService svc) =>
+            {
+                var company = await svc.FindByCodeAsync(code, http.RequestAborted);
+                return company == null ? Results.NotFound() : Results.Ok(company);
+            });
+
             group.MapDelete("/delete/{code}", async (HttpContext http, string code, IAdministrationService svc) =>
                 await EndpointRun.TryAsync(async () =>
                 {

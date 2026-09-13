@@ -85,6 +85,10 @@ namespace AriesContador.Data.Migrations
                             {
                                 hint = " El usuario de conexión no puede reemplazar rutinas restauradas por root. En Docker local: scripts/mysql/grant_routine_replace.sql (start-local.ps1 lo aplica).";
                             }
+                            else if (ex.Message != null && ex.Message.IndexOf("SUPER privilege", StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                hint = " MySQL 8 con binary logging no deja crear funciones al usuario de app. En Docker local: SET GLOBAL log_bin_trust_function_creators=1 (start-local.ps1 / grant_routine_replace.sql lo aplican como root).";
+                            }
 
                             throw new InvalidOperationException(
                                 "Falló la migración " + migration.Id + " (" + migration.Description + "): " + ex.Message + hint, ex);

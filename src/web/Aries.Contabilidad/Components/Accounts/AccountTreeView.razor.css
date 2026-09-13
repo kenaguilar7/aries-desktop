@@ -1,0 +1,26 @@
+::deep .mud-treeview {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+::deep .mud-treeview-item-content {
+    width: 100%;
+    padding: 4px 8px;
+}
+
+::deep .mud-treeview-item-arrow {
+    min-width: 24px;
+    padding: 0;
+}
+
+::deep .mud-treeview-item {
+    transition: background-color 0.2s ease;
+}
+
+::deep .mud-treeview-item:hover {
+    background-color: var(--mud-palette-action-default-hover);
+}
+
+::deep .mud-treeview-item-selected {
+    background-color: var(--mud-palette-action-default);
+}

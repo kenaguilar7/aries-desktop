@@ -1,0 +1,89 @@
+@page "/companies"
+@using Aries.Contabilidad.Services
+@using AriesContador.Core.Models.Companies
+@inject IClientCompanyService CompanyService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@inject ILocalStorageService LocalStorage
+
+<div class="container-fluid">
+    <h3 class="mb-4">Compañías</h3>
+
+    <div class="mb-3">
+        <a href="/companies/create" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nueva Compañía
+        </a>
+    </div>
+    @if (companies == null)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Nombre</th>
+                                <th>Identificación</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var company in companies)
+                            {
+                                <tr style="cursor: pointer" @onclick="() => NavigateToDashboard(company.Code)">
+                                    <td>@company.Code</td>
+                                    <td>@company.CompanyName</td>
+                                    <td>@company.NumberId</td>
+                                    <td>
+                                        <a href="/companies/edit/@company.Code" class="btn btn-sm btn-primary me-2" @onclick:stopPropagation>
+                                            <i class="fas fa-edit"></i> Editar
+                                        </a>
+                                        <button class="btn btn-sm btn-danger" @onclick:stopPropagation @onclick="() => DeleteCompany(company.Code)">
+                                            <i class="fas fa-trash"></i> Eliminar
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private IEnumerable<Company>? companies;
+
+    protected override async Task OnInitializedAsync()
+    {
+        companies = await CompanyService.GetAllCompaniesAsync();
+    }
+
+    private async Task DeleteCompany(string code)
+    {
+        if (await JSRuntime.InvokeAsync<bool>("confirm", "¿Está seguro que desea eliminar esta compañía?"))
+        {
+            await CompanyService.DeleteCompanyAsync(code);
+            companies = await CompanyService.GetAllCompaniesAsync();
+        }
+    }
+
+    private async Task NavigateToDashboard(string companyId)
+    {
+        var selectedCompany = companies?.FirstOrDefault(comp => comp.Code == companyId);
+        if (selectedCompany == null)
+            return;
+        await LocalStorage.StoreCompanyInLocalStorage(selectedCompany);
+        NavigationManager.NavigateTo($"/dashboard/{companyId}");
+    }
+}

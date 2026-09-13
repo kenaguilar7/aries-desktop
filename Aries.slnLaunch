@@ -13,6 +13,19 @@
     ]
   },
   {
+    "Name": "UI + API (Local)",
+    "Projects": [
+      {
+        "Path": "src\\web\\Aries.Contabilidad\\Aries.Contabilidad.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "src\\hosts\\Aries.WebAPI\\Aries.WebAPI.csproj",
+        "Action": "Start"
+      }
+    ]
+  },
+  {
     "Name": "Solo escritorio (Local)",
     "Projects": [
       {

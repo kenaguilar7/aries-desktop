@@ -15,6 +15,7 @@ namespace AriesContador.Core.Repositories
         IEnumerable<Account> GetDefaultAccounts();
         Task<IEnumerable<Account>> AccountsWithBalanceByDateRangeAsync(BasicReportParam reportParam, CancellationToken cancellationToken = default);
         Task AddChildAsync(Account entity, CancellationToken cancellationToken = default);
+        Task<int> GetOrCreateAccountNameAsync(string name, CancellationToken cancellationToken = default);
         Task<bool> NameTakenAsync(int accountId, string companyId, string name, CancellationToken cancellationToken = default);
         Task<bool> HasOpenPeriodMovementsAsync(int accountId, CancellationToken cancellationToken = default);
         Task<IEnumerable<Account>> GetBalancesFromAccountInfoAsync(string companyId, DateTime from, DateTime to, CancellationToken cancellationToken = default);

@@ -10,7 +10,7 @@ namespace AriesContador.Core.Models.Accounts
 
         public int? FatherAccount { get; set; }
 
-        public DebOrCred DebOCred { get; set; }
+        public DebOrCred DebOrCred { get; set; }
 
         public decimal PriorBalance { get; set; }
 
@@ -36,7 +36,7 @@ namespace AriesContador.Core.Models.Accounts
         {
             get
             {
-                if (DebOCred == DebOrCred.Debito)
+                if (DebOrCred == Utils.DebOrCred.Debito)
                 { return new Debit(); }
                 else { return new Credit(); }
             }

@@ -72,6 +72,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IAdministrationService, AdministrationService>();
 builder.Services.AddScoped<IFinancialService, FinancialService>();
 builder.Services.AddScoped<IFinancialReportService, FinancialReportService>();
+builder.Services.AddScoped<IPointOfSaleService, PointOfSaleService>();
 builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
 
 var app = builder.Build();
@@ -137,7 +138,11 @@ app.UseExceptionHandler(errorApp =>
 if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Local"))
 {
     app.UseSwagger();
-    app.UseSwaggerUI(c => c.RoutePrefix = string.Empty);
+    app.UseSwaggerUI(c =>
+    {
+        c.RoutePrefix = string.Empty;
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Aries.WebAPI");
+    });
 }
 
 var updatesRoot = app.Configuration["Updates:Root"];
@@ -190,6 +195,7 @@ app.MapAccountEndpoints();
 app.MapPostingPeriodEndpoints();
 app.MapJournalEntryEndpoints();
 app.MapJournalEntryLineEndpoints();
+app.MapPosEndpoints();
 
 app.Lifetime.ApplicationStarted.Register(() =>
 {

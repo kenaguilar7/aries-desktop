@@ -17,5 +17,8 @@ namespace AriesContador.Core
         IFinancialReportRepository FinancialReportRepository { get; }
         IPermissionRepository PermissionRepository { get; }
         IEmailRepository EmailRepository { get; }
+        IProductRepository ProductRepository { get; }
+        ISalesRegisterRepository SalesRegisterRepository { get; }
+        ISaleRepository SaleRepository { get; }
     }
 }

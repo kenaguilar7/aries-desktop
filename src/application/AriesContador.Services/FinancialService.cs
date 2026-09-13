@@ -76,10 +76,17 @@ namespace AriesContador.Services
                 AccountRules.InheritBalancesIfParentIsAuxiliar(account, parent);
             }
 
+            await _unitOfWork.AccountRepository.GetOrCreateAccountNameAsync(account.Name, cancellationToken)
+                .ConfigureAwait(false);
             await _unitOfWork.AccountRepository.AddChildAsync(account, cancellationToken).ConfigureAwait(false);
 
             if (parentWasAuxiliar)
                 parent.AccountType = AccountType.Cuenta_De_Mayor;
+        }
+
+        public Task<int> EnsureAccountNameAsync(string name, CancellationToken cancellationToken = default)
+        {
+            return _unitOfWork.AccountRepository.GetOrCreateAccountNameAsync(name, cancellationToken);
         }
 
         public async Task UpdateAccountAsync(Account account, CancellationToken cancellationToken = default)
@@ -93,6 +100,8 @@ namespace AriesContador.Services
             if (await _unitOfWork.AccountRepository.NameTakenAsync(account.Id, account.CompanyId, account.Name, cancellationToken).ConfigureAwait(false))
                 throw new InvalidOperationException(AccountRules.NameTakenMessage);
 
+            await _unitOfWork.AccountRepository.GetOrCreateAccountNameAsync(account.Name, cancellationToken)
+                .ConfigureAwait(false);
             await _unitOfWork.AccountRepository.UpdateNameInfoAsync(account, cancellationToken).ConfigureAwait(false);
         }
 

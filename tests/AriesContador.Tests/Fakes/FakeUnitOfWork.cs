@@ -10,6 +10,7 @@ using AriesContador.Core.Models.Companies;
 using AriesContador.Core.Models.Email;
 using AriesContador.Core.Models.JournalEntries;
 using AriesContador.Core.Models.Permissions;
+using AriesContador.Core.Models.PointOfSale;
 using AriesContador.Core.Models.PostingPeriods;
 using AriesContador.Core.Models.Reports;
 using AriesContador.Core.Models.Users;
@@ -26,6 +27,9 @@ namespace AriesContador.Tests.Fakes
         public FakeJournalEntryRepository JournalEntries { get; } = new FakeJournalEntryRepository();
         public FakeJournalEntryLineRepository JournalEntryLines { get; } = new FakeJournalEntryLineRepository();
         public FakeFinancialReportRepository FinancialReports { get; } = new FakeFinancialReportRepository();
+        public FakeProductRepository Products { get; } = new FakeProductRepository();
+        public FakeSalesRegisterRepository Registers { get; } = new FakeSalesRegisterRepository();
+        public FakeSaleRepository Sales { get; } = new FakeSaleRepository();
 
         public ICompanyRepository CompanyRepository => Companies;
         public IUserRepository UserRepository => Users;
@@ -36,6 +40,17 @@ namespace AriesContador.Tests.Fakes
         public IFinancialReportRepository FinancialReportRepository => FinancialReports;
         public IPermissionRepository PermissionRepository { get; } = new FakePermissionRepository();
         public IEmailRepository EmailRepository { get; } = new FakeEmailRepository();
+        public IProductRepository ProductRepository => Products;
+        public ISalesRegisterRepository SalesRegisterRepository => Registers;
+        public ISaleRepository SaleRepository
+        {
+            get
+            {
+                Sales.Products = Products;
+                Sales.Registers = Registers;
+                return Sales;
+            }
+        }
     }
 
     public class FakePermissionRepository : IPermissionRepository
@@ -163,6 +178,9 @@ namespace AriesContador.Tests.Fakes
             }
             return Task.CompletedTask;
         }
+
+        public Task<int> GetOrCreateAccountNameAsync(string name, CancellationToken cancellationToken = default) =>
+            Task.FromResult(1);
 
         public Task UpdateAsync(Account entity, CancellationToken cancellationToken = default) =>
             UpdateNameInfoAsync(entity, cancellationToken);
@@ -364,5 +382,187 @@ namespace AriesContador.Tests.Fakes
 
         public Task<IEnumerable<ClosingPostingPeriodReport>> ClosingPostingPeriodReportAsync(string companyId, CancellationToken cancellationToken = default) =>
             Task.FromResult(Enumerable.Empty<ClosingPostingPeriodReport>());
+    }
+
+    public class FakeProductRepository : IProductRepository
+    {
+        public List<Product> Items { get; } = new List<Product>();
+
+        public Task AddAsync(Product entity, CancellationToken cancellationToken = default)
+        {
+            if (entity.Id == 0)
+                entity.Id = Items.Count == 0 ? 1 : Items.Max(x => x.Id) + 1;
+            Items.Add(entity);
+            return Task.CompletedTask;
+        }
+
+        public Task UpdateAsync(Product entity, CancellationToken cancellationToken = default)
+        {
+            var i = Items.FindIndex(x => x.Id == entity.Id);
+            if (i >= 0) Items[i] = entity;
+            return Task.CompletedTask;
+        }
+
+        public Task RemoveAsync(Product entity, CancellationToken cancellationToken = default)
+        {
+            var found = Items.FirstOrDefault(x => x.Id == entity.Id);
+            if (found != null) found.Active = false;
+            return Task.CompletedTask;
+        }
+
+        public Task<Product> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Items.FirstOrDefault(x => x.Id == id));
+
+        public Task<IEnumerable<Product>> FindByCompanyIdAsync(string companyId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IEnumerable<Product>>(Items.Where(x => x.CompanyId == companyId && x.Active).ToList());
+
+        public Task<Product> FindByBarcodeAsync(string companyId, string barcode, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Items.FirstOrDefault(x => x.CompanyId == companyId && x.Barcode == barcode && x.Active));
+
+        public Task<IEnumerable<Product>> FindLowStockAsync(string companyId, decimal minimum, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IEnumerable<Product>>(Items.Where(x => x.CompanyId == companyId && x.Active && x.Stock <= minimum).ToList());
+
+        public Task<int> CountActiveByCompanyAsync(string companyId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Items.Count(x => x.CompanyId == companyId && x.Active));
+    }
+
+    public class FakeSalesRegisterRepository : ISalesRegisterRepository
+    {
+        public List<SalesRegister> Items { get; } = new List<SalesRegister>();
+        public List<SalesRegisterSession> Sessions { get; } = new List<SalesRegisterSession>();
+
+        public Task AddAsync(SalesRegister entity, CancellationToken cancellationToken = default)
+        {
+            if (entity.Id == 0)
+                entity.Id = Items.Count == 0 ? 1 : Items.Max(x => x.Id) + 1;
+            Items.Add(entity);
+            return Task.CompletedTask;
+        }
+
+        public Task UpdateAsync(SalesRegister entity, CancellationToken cancellationToken = default)
+        {
+            var i = Items.FindIndex(x => x.Id == entity.Id);
+            if (i >= 0) Items[i] = entity;
+            return Task.CompletedTask;
+        }
+
+        public Task RemoveAsync(SalesRegister entity, CancellationToken cancellationToken = default)
+        {
+            var found = Items.FirstOrDefault(x => x.Id == entity.Id);
+            if (found != null) found.Active = false;
+            return Task.CompletedTask;
+        }
+
+        public Task<SalesRegister> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Items.FirstOrDefault(x => x.Id == id));
+
+        public Task<IEnumerable<SalesRegister>> FindByCompanyIdAsync(string companyId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IEnumerable<SalesRegister>>(Items.Where(x => x.CompanyId == companyId && x.Active).ToList());
+
+        public Task<SalesRegisterSession> GetOpenSessionAsync(int registerId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Sessions.FirstOrDefault(x => x.SalesRegisterId == registerId && !x.ClosedAt.HasValue));
+
+        public Task<SalesRegisterSession> GetSessionByIdAsync(int sessionId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Sessions.FirstOrDefault(x => x.Id == sessionId));
+
+        public Task AddSessionAsync(SalesRegisterSession session, CancellationToken cancellationToken = default)
+        {
+            if (session.Id == 0)
+                session.Id = Sessions.Count == 0 ? 1 : Sessions.Max(x => x.Id) + 1;
+            Sessions.Add(session);
+            return Task.CompletedTask;
+        }
+
+        public Task CloseSessionAsync(SalesRegisterSession session, CancellationToken cancellationToken = default)
+        {
+            var current = Sessions.FirstOrDefault(x => x.Id == session.Id);
+            if (current == null)
+                throw new InvalidOperationException("La caja no tiene una sesión abierta");
+            current.ClosedAt = session.ClosedAt;
+            current.ExpectedClosingAmount = session.ExpectedClosingAmount;
+            current.DeclaredClosingAmount = session.DeclaredClosingAmount;
+            current.Difference = session.Difference;
+            current.ClosingNotes = session.ClosingNotes;
+            current.UpdatedBy = session.UpdatedBy;
+            return Task.CompletedTask;
+        }
+
+        public Task<IEnumerable<SalesRegisterSession>> GetSessionHistoryAsync(string companyId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IEnumerable<SalesRegisterSession>>(Sessions.Where(x => x.CompanyId == companyId).OrderByDescending(x => x.OpenedAt).ToList());
+
+        public Task UpdateSessionTotalsAsync(SalesRegisterSession session, CancellationToken cancellationToken = default)
+        {
+            var current = Sessions.FirstOrDefault(x => x.Id == session.Id);
+            if (current == null)
+                return Task.CompletedTask;
+            current.CashSales = session.CashSales;
+            current.CardSales = session.CardSales;
+            current.TransferSales = session.TransferSales;
+            current.ExpectedClosingAmount = session.ExpectedClosingAmount;
+            return Task.CompletedTask;
+        }
+    }
+
+    public class FakeSaleRepository : ISaleRepository
+    {
+        public List<Sale> Items { get; } = new List<Sale>();
+        public FakeProductRepository Products { get; set; }
+        public FakeSalesRegisterRepository Registers { get; set; }
+
+        public Task AddAsync(Sale entity, CancellationToken cancellationToken = default) =>
+            CreateWithEffectsAsync(entity, cancellationToken);
+
+        public Task UpdateAsync(Sale entity, CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+
+        public Task RemoveAsync(Sale entity, CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+
+        public Task<Sale> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Items.FirstOrDefault(x => x.Id == id));
+
+        public Task<IEnumerable<Sale>> FindByCompanyIdAsync(string companyId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IEnumerable<Sale>>(Items.Where(x => x.CompanyId == companyId).ToList());
+
+        public Task<IEnumerable<Sale>> FindBySessionIdAsync(int sessionId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IEnumerable<Sale>>(Items.Where(x => x.SessionId == sessionId).ToList());
+
+        public Task<IEnumerable<Sale>> FindByCompanyAndDateRangeAsync(string companyId, DateTime fromInclusive, DateTime toExclusive, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IEnumerable<Sale>>(Items.Where(x => x.CompanyId == companyId && x.SoldAt >= fromInclusive && x.SoldAt < toExclusive).ToList());
+
+        public Task CreateWithEffectsAsync(Sale sale, CancellationToken cancellationToken = default)
+        {
+            var session = Registers?.Sessions.FirstOrDefault(x => x.Id == sale.SessionId && !x.ClosedAt.HasValue);
+            if (session == null)
+                throw new InvalidOperationException("La caja no tiene una sesión abierta");
+
+            foreach (var line in sale.Lines)
+            {
+                var product = Products?.Items.FirstOrDefault(x => x.Id == line.ProductId);
+                if (product == null || product.Stock < line.StockToDecrement)
+                    throw new InvalidOperationException("Stock insuficiente para " + line.ProductName);
+                product.Stock -= line.StockToDecrement;
+            }
+
+            if (sale.Id == 0)
+                sale.Id = Items.Count == 0 ? 1 : Items.Max(x => x.Id) + 1;
+            var nextLine = 1;
+            foreach (var line in sale.Lines)
+            {
+                line.SaleId = sale.Id;
+                if (line.Id == 0)
+                    line.Id = nextLine++;
+            }
+            Items.Add(sale);
+
+            if (sale.PaymentMethod == PaymentMethod.Efectivo)
+                session.CashSales += sale.Total;
+            else if (sale.PaymentMethod == PaymentMethod.Tarjeta)
+                session.CardSales += sale.Total;
+            else
+                session.TransferSales += sale.Total;
+            session.ExpectedClosingAmount = session.OpeningAmount + session.CashSales;
+            return Task.CompletedTask;
+        }
     }
 }

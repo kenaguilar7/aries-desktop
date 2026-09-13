@@ -56,8 +56,14 @@ jobs:
       - name: Test Desktop
         run: dotnet test tests\Aries.Desktop.Tests\Aries.Desktop.Tests.csproj --configuration Release --nologo
 
+      - name: Test Flujos
+        run: dotnet test tests\Aries.Flujos.Tests\Aries.Flujos.Tests.csproj --configuration Release --nologo
+
       - name: Test API contract
         run: dotnet test tests\Aries.WebAPI.Tests\Aries.WebAPI.Tests.csproj --configuration Release --nologo
+
+      - name: Build Blazor UI
+        run: dotnet build src\web\Aries.Contabilidad\Aries.Contabilidad.csproj --configuration Release --nologo
 
       - name: Verify publish folder
         shell: pwsh

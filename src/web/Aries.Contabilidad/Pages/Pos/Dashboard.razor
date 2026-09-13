@@ -1,0 +1,101 @@
+@page "/pos/{CompanyId}/dashboard"
+@using AriesContador.Core.Models.PointOfSale
+@inject IPosService PosService
+@inject NavigationManager NavigationManager
+
+<div class="container-fluid">
+    <h3 class="mb-3">Punto de venta</h3>
+    <PosNav CompanyId="@CompanyId" />
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+    @if (isLoading || report == null)
+    {
+        <div class="d-flex justify-content-center"><div class="spinner-border"></div></div>
+    }
+    else
+    {
+        <div class="row g-3">
+            <div class="col-md-3">
+                <div class="card"><div class="card-body">
+                    <h6 class="text-muted">Ventas de hoy</h6>
+                    <h3>@report.SaleCount</h3>
+                </div></div>
+            </div>
+            <div class="col-md-3">
+                <div class="card"><div class="card-body">
+                    <h6 class="text-muted">Ingresos</h6>
+                    <h3>@report.Total.ToString("N2")</h3>
+                </div></div>
+            </div>
+            <div class="col-md-3">
+                <div class="card"><div class="card-body">
+                    <h6 class="text-muted">Productos</h6>
+                    <h3>@report.ProductCount</h3>
+                </div></div>
+            </div>
+            <div class="col-md-3">
+                <div class="card cursor-pointer" @onclick="GoLowStock"><div class="card-body">
+                    <h6 class="text-muted">Stock bajo</h6>
+                    <h3>@report.LowStockCount</h3>
+                </div></div>
+            </div>
+        </div>
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5>Últimas ventas</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr>
+                                <th>Hora</th>
+                                <th>Caja</th>
+                                <th>Pago</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var sale in report.RecentSales)
+                            {
+                                <tr>
+                                    <td>@sale.SoldAt.ToString("HH:mm")</td>
+                                    <td>@sale.RegisterName</td>
+                                    <td>@sale.PaymentMethod</td>
+                                    <td class="text-end">@sale.Total.ToString("N2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string CompanyId { get; set; } = string.Empty;
+    private PosTodaySalesReport? report;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            report = await PosService.GetTodaySalesAsync(CompanyId);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            report = new PosTodaySalesReport();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void GoLowStock() => NavigationManager.NavigateTo($"/pos/{CompanyId}/reports");
+}

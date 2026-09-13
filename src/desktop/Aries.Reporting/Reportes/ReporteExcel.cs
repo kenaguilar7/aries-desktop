@@ -25,9 +25,8 @@ namespace Aries.Reporting.Reportes
             //workbook.Table("Table1").Theme = XLTableTheme.None; 
 
 
-            workbook.SaveAs(padf); //saves the workbook
-                                   ////Show report
-            Process.Start(new ProcessStartInfo(padf) { UseShellExecute = true });
+            workbook.SaveAs(padf);
+            Aries.Reporting.Utils.ExcelShell.Open(padf);
 
         }
 

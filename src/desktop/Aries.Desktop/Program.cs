@@ -1,11 +1,11 @@
 using System;
 using System.Configuration;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using AriesContador.Core;
 using AriesContador.Core.Models.Email;
 using AriesContador.Core.Services;
 using AriesContador.Data;
-using AriesContador.Data.Migrations;
 using AriesContador.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -38,8 +38,8 @@ namespace Aries.Desktop
                     + " database=" + GlobalConfig.MySqlDatabase
                     + " update=" + (string.IsNullOrWhiteSpace(GlobalConfig.UpdateUrl) ? "(ninguno)" : GlobalConfig.UpdateUrl));
 
-                splash.SetStatus("Actualizando esquema de base de datos…");
-                ApplyStartupMigrations();
+                splash.SetStatus("Buscando actualizaciones…");
+                ApplyStartupAppUpdate();
 
                 splash.SetStatus("Iniciando…");
                 var services = new ServiceCollection();
@@ -104,27 +104,50 @@ namespace Aries.Desktop
         }
 
         /// <summary>
-        /// Prueba: aplica migraciones pendientes al arrancar.
-        /// <see cref="DatabaseMigrator.ApplyPendingAsync"/> es idempotente:
-        /// las ya registradas en __schema_migrations no se vuelven a ejecutar.
+        /// Al arrancar solo se busca el exe (Squirrel). El esquema MySQL
+        /// lo aplica un administrador en Sistema → Actualizaciones.
+        /// F5 (Debug) no consulta el feed: no hay Update.exe y localhost:5088
+        /// suele estar apagado, y un await en el hilo STA deja el splash colgado.
         /// </summary>
-        private static void ApplyStartupMigrations()
+        private static void ApplyStartupAppUpdate()
         {
-            var migrator = new DatabaseMigrator(GlobalConfig.ConnectionString.MySQLDefault);
-            var result = migrator.ApplyPendingAsync().GetAwaiter().GetResult();
-            if (!result.HadPending)
+#if DEBUG
+            StartupLog.Write("Squirrel omitido (Debug). Esquema: Sistema > Actualizaciones.");
+#else
+            if (string.IsNullOrWhiteSpace(GlobalConfig.UpdateUrl))
             {
-                StartupLog.Write("Esquema al día (" + result.AlreadyAppliedIds.Count + " migraciones).");
+                StartupLog.Write("Squirrel omitido (sin UpdateUrl). Esquema: Sistema > Actualizaciones.");
                 return;
             }
 
-            var ids = string.Join(", ", result.AppliedIds);
-            StartupLog.Write("Migraciones aplicadas: " + ids);
-            MessageBox.Show(
-                "Se aplicaron " + result.AppliedIds.Count + " migraciones:\n\n" + ids,
-                "Aries Contador",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
+            try
+            {
+                var applyTask = Task.Run(() => AppUpdater.ApplyAsync());
+                if (!applyTask.Wait(TimeSpan.FromSeconds(20)))
+                {
+                    StartupLog.Write("Squirrel: timeout. feed=" + GlobalConfig.UpdateUrl);
+                    return;
+                }
+                var result = applyTask.GetAwaiter().GetResult();
+                if (result == null || !result.Applied)
+                {
+                    StartupLog.Write("Squirrel: sin actualización. feed=" + GlobalConfig.UpdateUrl);
+                    return;
+                }
+
+                StartupLog.Write("Squirrel aplicó " + result.Version + " desde " + GlobalConfig.UpdateUrl);
+                MessageBox.Show(
+                    "Se instaló la versión " + result.Version + ". Aries se reiniciará.",
+                    "Aries Contador",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+                AppUpdater.Restart();
+            }
+            catch (Exception ex)
+            {
+                StartupLog.Write("Squirrel: " + ex.GetBaseException().Message);
+            }
+#endif
         }
 
         private static SmtpOptions ReadSmtpOptions()

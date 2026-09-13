@@ -1,0 +1,61 @@
+
+<MudGrid>
+    <MudItem xs="12" sm="6">
+        <MudSelect T="int"
+                   Value="PostingPeriodId"
+                   ValueChanged="@(async (int val) => await PostingPeriodIdChanged.InvokeAsync(val))"
+                   Label="Posting Period"
+                   Variant="Variant.Outlined"
+                   Immediate="true">
+            @if (PostingPeriods != null)
+            {
+                @foreach (var period in PostingPeriods)
+                {
+                    <MudSelectItem Value="@period.Id">@period.ToString()</MudSelectItem>
+                }
+            }
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="12" sm="6">
+        <MudSelect T="JournalEntry"
+                   Value="JournalEntry"
+                   ValueChanged="@(async (JournalEntry val) => await JournalEntryIdChanged.InvokeAsync(val))"
+                   Label="Journal Entry Number"
+                   Variant="Variant.Outlined"
+                   Immediate="true">
+            @if (JournalEntries != null)
+            {
+                @foreach (var entry in JournalEntries)
+                {
+                    <MudSelectItem Value="@entry">@entry.Number</MudSelectItem>
+                }
+            }
+        </MudSelect>
+    </MudItem>
+
+</MudGrid>
+
+@code {
+
+    // [Parameter]
+    // public int JournalEntryId { get; set; }
+
+    [Parameter]
+    public JournalEntry JournalEntry { get; set; } = new();
+
+    [Parameter]
+    public int PostingPeriodId { get; set; }
+
+    [Parameter]
+    public EventCallback<JournalEntry> JournalEntryIdChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<int> PostingPeriodIdChanged { get; set; }
+
+    [Parameter]
+    public List<PostingPeriod> PostingPeriods { get; set; } = new();
+
+    [Parameter]
+    public List<JournalEntry> JournalEntries { get; set; } = new();
+
+}

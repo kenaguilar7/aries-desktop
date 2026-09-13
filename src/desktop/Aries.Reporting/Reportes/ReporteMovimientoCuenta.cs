@@ -101,7 +101,7 @@ namespace Aries.Reporting.Reportes
                 range.Style.NumberFormat.Format = "#,##0.00";
 
                 workbook.SaveAs(direccion);
-                Process.Start(new ProcessStartInfo(direccion) { UseShellExecute = true });
+                Aries.Reporting.Utils.ExcelShell.Open(direccion);
 
             }
 

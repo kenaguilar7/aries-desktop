@@ -1,0 +1,78 @@
+@page "/dashboard/{CompanyId}"
+@using Aries.Contabilidad.Services
+@using Aries.Contabilidad.Components.Accounts
+
+@inject IClientCompanyService CompanyService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@inject ILocalStorageService LocalStorage
+
+<div class="container-fluid">
+    @if (isLoading)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="card h-100 cursor-pointer" @onclick="NavigateToJournalEntry">
+                    <div class="card-body text-center">
+                        <i class="fas fa-book fa-3x mb-3"></i>
+                        <h3 class="card-title">Asientos Contables</h3>
+                        <p class="card-text">Gestione sus asientos contables de manera eficiente</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 cursor-pointer" @onclick="NavigateToAccounts">
+                    <div class="card-body text-center">
+                        <i class="fas fa-sitemap fa-3x mb-3"></i>
+                        <h3 class="card-title">Catálogo de Cuentas</h3>
+                        <p class="card-text">Gestione su plan de cuentas contables</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 cursor-pointer" @onclick="NavigateToPos">
+                    <div class="card-body text-center">
+                        <i class="fas fa-cash-register fa-3x mb-3"></i>
+                        <h3 class="card-title">Punto de venta</h3>
+                        <p class="card-text">Inventario, n cajas por compañía y ventas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string CompanyId { get; set; }
+
+    private bool isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+    }
+
+    private void NavigateToJournalEntry()
+    {
+        NavigationManager.NavigateTo($"/journal-entries/{CompanyId}/create");
+    }
+
+    private void NavigateToAccounts()
+    {
+        NavigationManager.NavigateTo($"/accounts/{CompanyId}/create");
+    }
+
+    private void NavigateToPos()
+    {
+        NavigationManager.NavigateTo($"/pos/{CompanyId}/dashboard");
+    }
+} 

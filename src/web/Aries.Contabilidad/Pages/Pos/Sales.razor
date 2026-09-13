@@ -1,0 +1,299 @@
+@page "/pos/{CompanyId}/sales"
+@using AriesContador.Core.Models.PointOfSale
+@inject IPosService PosService
+@inject ILocalStorageService LocalStorage
+@inject IJSRuntime JSRuntime
+
+<div class="container-fluid">
+    <h3 class="mb-3">Caja de ventas</h3>
+    <PosNav CompanyId="@CompanyId" />
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+    @if (!string.IsNullOrEmpty(infoMessage))
+    {
+        <div class="alert alert-success">@infoMessage</div>
+    }
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            <label class="form-label">Caja</label>
+            <select class="form-select" value="@selectedRegisterId" @onchange="OnRegisterChanged">
+                <option value="0">Seleccione una caja</option>
+                @foreach (var register in registers)
+                {
+                    <option value="@register.Id">@register.Code — @register.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-8 d-flex align-items-end">
+            @if (status == null)
+            {
+                <span class="text-muted">Seleccione una caja</span>
+            }
+            else if (!status.Abierta)
+            {
+                <span class="badge bg-warning text-dark">Caja cerrada. Ábrala en Apertura / Cierre.</span>
+            }
+            else
+            {
+                <span class="badge bg-success">Caja abierta — efectivo @((status.Session?.OpeningAmount + status.Session?.CashSales)?.ToString("N2"))</span>
+            }
+        </div>
+    </div>
+
+    @if (status?.Abierta == true)
+    {
+        <div class="row g-3">
+            <div class="col-lg-7">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <label class="form-label">Código de barras</label>
+                        <input class="form-control mb-2" @bind="barcode" @onkeydown="OnBarcodeKey" placeholder="Escanee o escriba y pulse Enter" />
+                        <input class="form-control" @bind="productSearch" @bind:event="oninput" placeholder="Buscar producto" />
+                        <div class="table-responsive mt-2" style="max-height: 240px; overflow:auto;">
+                            <table class="table table-sm table-hover">
+                                <tbody>
+                                    @foreach (var product in FilteredProducts.Take(20))
+                                    {
+                                        <tr style="cursor:pointer" @onclick="() => AddProduct(product)">
+                                            <td>@product.Barcode</td>
+                                            <td>@product.Name</td>
+                                            <td class="text-end">@(product.SoldByWeight ? product.PricePerKilo?.ToString("N2") + "/kg" : product.Price.ToString("N2"))</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Carrito</h5>
+                        @if (weightProduct != null)
+                        {
+                            <div class="alert alert-info">
+                                <div>@weightProduct.Name — gramos</div>
+                                <div class="input-group mt-2">
+                                    <input class="form-control" type="number" step="1" @bind="weightGrams" />
+                                    <button class="btn btn-primary" @onclick="ConfirmWeight">Agregar</button>
+                                    <button class="btn btn-secondary" @onclick="() => weightProduct = null">Cancelar</button>
+                                </div>
+                            </div>
+                        }
+                        <table class="table table-sm">
+                            <tbody>
+                                @foreach (var line in cart)
+                                {
+                                    <tr>
+                                        <td>@line.ProductName</td>
+                                        <td>@(line.SoldByWeight ? line.WeightGrams + " g" : "x" + line.Quantity.ToString("N0"))</td>
+                                        <td class="text-end">@line.LineTotal.ToString("N2")</td>
+                                        <td><button class="btn btn-sm btn-outline-danger" @onclick="() => cart.Remove(line)">×</button></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <h4 class="text-end">Total @CartTotal.ToString("N2")</h4>
+                        <div class="mb-2">
+                            <label class="form-label">Pago</label>
+                            <select class="form-select" @bind="paymentMethod">
+                                <option value="@PaymentMethod.Efectivo">Efectivo</option>
+                                <option value="@PaymentMethod.Tarjeta">Tarjeta</option>
+                                <option value="@PaymentMethod.Transferencia">Transferencia</option>
+                            </select>
+                        </div>
+                        @if (paymentMethod != PaymentMethod.Efectivo)
+                        {
+                            <div class="mb-2">
+                                <label class="form-label">Referencia</label>
+                                <input class="form-control" @bind="paymentReference" />
+                            </div>
+                        }
+                        <button class="btn btn-success w-100" disabled="@(busy || cart.Count == 0)" @onclick="Checkout">Procesar venta</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (lastSale != null)
+    {
+        <div class="card mt-3" id="voucher">
+            <div class="card-body">
+                <h5>Comprobante #@lastSale.Id</h5>
+                <p>@lastSale.SoldAt.ToString("g") — @lastSale.RegisterName</p>
+                <table class="table table-sm">
+                    @foreach (var line in lastSale.Lines)
+                    {
+                        <tr>
+                            <td>@line.ProductName</td>
+                            <td>@(line.SoldByWeight ? line.WeightGrams + " g" : "x" + line.Quantity.ToString("N0"))</td>
+                            <td class="text-end">@line.LineTotal.ToString("N2")</td>
+                        </tr>
+                    }
+                </table>
+                <p><strong>Total @lastSale.Total.ToString("N2")</strong> — @lastSale.PaymentMethod</p>
+                <button class="btn btn-outline-primary" @onclick="PrintVoucher">Imprimir</button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string CompanyId { get; set; } = string.Empty;
+    private List<SalesRegister> registers = new();
+    private List<Product> products = new();
+    private int selectedRegisterId;
+    private CashRegisterStatus? status;
+    private string barcode = string.Empty;
+    private string productSearch = string.Empty;
+    private List<SaleLine> cart = new();
+    private Product? weightProduct;
+    private decimal weightGrams;
+    private PaymentMethod paymentMethod = PaymentMethod.Efectivo;
+    private string paymentReference = string.Empty;
+    private Sale? lastSale;
+    private bool busy;
+    private string? errorMessage;
+    private string? infoMessage;
+
+    private IEnumerable<Product> FilteredProducts =>
+        products.Where(p =>
+            string.IsNullOrWhiteSpace(productSearch)
+            || (p.Name?.Contains(productSearch, StringComparison.OrdinalIgnoreCase) ?? false)
+            || (p.Barcode?.Contains(productSearch, StringComparison.OrdinalIgnoreCase) ?? false));
+
+    private decimal CartTotal => cart.Sum(l => l.LineTotal);
+
+    protected override async Task OnInitializedAsync()
+    {
+        registers = await PosService.GetRegistersAsync(CompanyId);
+        products = await PosService.GetProductsAsync(CompanyId);
+        var stored = await LocalStorage.GetItem($"pos_register_{CompanyId}");
+        if (int.TryParse(stored, out var id) && registers.Any(r => r.Id == id))
+            selectedRegisterId = id;
+        else if (registers.Count == 1)
+            selectedRegisterId = registers[0].Id;
+        if (selectedRegisterId > 0)
+            status = await PosService.GetStatusAsync(selectedRegisterId);
+    }
+
+    private async Task OnRegisterChanged(ChangeEventArgs e)
+    {
+        if (!int.TryParse(e.Value?.ToString(), out var id))
+            id = 0;
+        selectedRegisterId = id;
+        await LocalStorage.SetItem($"pos_register_{CompanyId}", id.ToString());
+        status = id > 0 ? await PosService.GetStatusAsync(id) : null;
+        cart.Clear();
+    }
+
+    private async Task OnBarcodeKey(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter" || string.IsNullOrWhiteSpace(barcode))
+            return;
+        var found = await PosService.FindByBarcodeAsync(CompanyId, barcode.Trim());
+        barcode = string.Empty;
+        if (found == null)
+            errorMessage = "Producto no encontrado";
+        else
+            AddProduct(found);
+    }
+
+    private void AddProduct(Product product)
+    {
+        errorMessage = null;
+        if (product.SoldByWeight)
+        {
+            weightProduct = product;
+            weightGrams = 0;
+            return;
+        }
+        var existing = cart.FirstOrDefault(l => l.ProductId == product.Id && !l.SoldByWeight);
+        if (existing != null)
+        {
+            existing.Quantity += 1;
+            existing.LineTotal = Math.Round(existing.UnitPrice * existing.Quantity, 2);
+        }
+        else
+        {
+            cart.Add(new SaleLine
+            {
+                ProductId = product.Id,
+                ProductName = product.Name,
+                Quantity = 1,
+                UnitPrice = product.Price,
+                LineTotal = product.Price
+            });
+        }
+    }
+
+    private void ConfirmWeight()
+    {
+        if (weightProduct == null || weightGrams <= 0)
+            return;
+        var total = Math.Round((weightProduct.PricePerKilo ?? 0) * weightGrams / 1000m, 2);
+        cart.Add(new SaleLine
+        {
+            ProductId = weightProduct.Id,
+            ProductName = weightProduct.Name,
+            SoldByWeight = true,
+            PricePerKilo = weightProduct.PricePerKilo,
+            WeightGrams = weightGrams,
+            LineTotal = total
+        });
+        weightProduct = null;
+    }
+
+    private async Task Checkout()
+    {
+        busy = true;
+        errorMessage = null;
+        infoMessage = null;
+        try
+        {
+            var sale = await PosService.CreateSaleAsync(new Sale
+            {
+                CompanyId = CompanyId,
+                SalesRegisterId = selectedRegisterId,
+                PaymentMethod = paymentMethod,
+                PaymentReference = paymentReference,
+                Lines = cart.ToList()
+            });
+            lastSale = sale;
+            cart.Clear();
+            paymentReference = string.Empty;
+            paymentMethod = PaymentMethod.Efectivo;
+            infoMessage = "Venta registrada";
+            products = await PosService.GetProductsAsync(CompanyId);
+            status = await PosService.GetStatusAsync(selectedRegisterId);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task PrintVoucher()
+    {
+        if (lastSale == null)
+            return;
+        await JSRuntime.InvokeVoidAsync("ariesPrint", BuildVoucherHtml(lastSale));
+    }
+
+    private static string BuildVoucherHtml(Sale sale)
+    {
+        var lines = string.Join("", sale.Lines.Select(l =>
+            $"<tr><td>{l.ProductName}</td><td>{(l.SoldByWeight ? l.WeightGrams + " g" : "x" + l.Quantity)}</td><td style='text-align:right'>{l.LineTotal:N2}</td></tr>"));
+        return $"<html><body><h3>Comprobante #{sale.Id}</h3><p>{sale.SoldAt:g} — {sale.RegisterName}</p><table width='100%'>{lines}</table><p><strong>Total {sale.Total:N2}</strong> {sale.PaymentMethod}</p></body></html>";
+    }
+}

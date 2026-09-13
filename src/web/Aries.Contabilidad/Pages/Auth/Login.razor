@@ -1,0 +1,110 @@
+@page "/"
+@using Aries.Contabilidad.Models
+@using Aries.Contabilidad.Services
+@using AriesContador.Core.Models.Users
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Login - Aries Contabilidad</PageTitle>
+
+<div class="container">
+    <div class="row justify-content-center align-items-center min-vh-100">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow">
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <h2 class="card-title">Aries Contabilidad</h2>
+                        <p class="text-muted">Iniciar Sesión</p>
+                    </div>
+
+                    <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+                        <DataAnnotationsValidator />
+
+                        <div class="form-group mb-3">
+                            <label for="userId">Usuario</label>
+                            <InputText id="userId" class="form-control" @bind-Value="loginModel.UserId" />
+                            <ValidationMessage For="@(() => loginModel.UserId)" />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="password">Contraseña</label>
+                            <InputText type="password" id="password" class="form-control" @bind-Value="loginModel.Password" />
+                            <ValidationMessage For="@(() => loginModel.Password)" />
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                @errorMessage
+                            </div>
+                        }
+
+                        <button type="submit" class="btn btn-primary w-100" disabled="@isLoading">
+                            @if (isLoading)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>Cargando...</span>
+                            }
+                            else
+                            {
+                                <span>Iniciar Sesión</span>
+                            }
+                        </button>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private LoginModel loginModel = new();
+    private string? errorMessage;
+    private bool isLoading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated ?? false)
+        {
+            NavigationManager.NavigateTo("/companies", true);
+        }
+    }
+
+    private async Task HandleLogin()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+
+            var credentials = new global::AriesContador.Core.Models.Users.Login
+            {
+                UserId = loginModel.UserId,
+                Password = loginModel.Password
+            };
+            var result = await AuthService.LoginAsync(credentials);
+            if (result != null)
+            {
+                await ((CustomAuthStateProvider)AuthStateProvider).MarkUserAsAuthenticated(result);
+                NavigationManager.NavigateTo("/companies", true);
+            }
+            else
+            {
+                errorMessage = "Usuario o contraseña incorrectos";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Error al iniciar sesión. Por favor, intente nuevamente.";
+            await JSRuntime.InvokeVoidAsync("console.error", ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

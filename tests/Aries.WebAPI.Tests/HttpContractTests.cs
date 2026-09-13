@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AriesContador.Core.Models.Companies;
 using AriesContador.Core.Models.JournalEntries;
+using AriesContador.Core.Models.PointOfSale;
 using AriesContador.Core.Models.Users;
 using Newtonsoft.Json;
 using Xunit;
@@ -102,6 +103,25 @@ namespace Aries.WebAPI.Tests
         }
 
         [Fact]
+        public async Task Company_get_by_code_and_update_match_desktop()
+        {
+            var client = await ClientWithToken();
+
+            var found = await client.GetAsync("/company/C001");
+            found.EnsureSuccessStatusCode();
+            var company = JsonConvert.DeserializeObject<Company>(await found.Content.ReadAsStringAsync());
+            Assert.Equal("C001", company.Code);
+
+            company.CompanyName = "Renamed";
+            var payload = JsonConvert.SerializeObject(company);
+            using var content = new StringContent(payload, Encoding.UTF8, "application/json");
+            var update = await client.PostAsync("/company/Update", content);
+            update.EnsureSuccessStatusCode();
+            Assert.Equal("Renamed", _factory.Admin.LastUpdated.CompanyName);
+            Assert.Equal(7, _factory.Admin.LastUpdated.UpdatedBy);
+        }
+
+        [Fact]
         public async Task JournalEntry_create_returns_int_id()
         {
             var client = await ClientWithToken();
@@ -112,6 +132,39 @@ namespace Aries.WebAPI.Tests
             var id = JsonConvert.DeserializeObject<int>(await response.Content.ReadAsStringAsync());
             Assert.Equal(42, id);
             Assert.Equal(7, _factory.Financial.LastCreatedEntry.CreatedBy);
+        }
+
+        [Fact]
+        public async Task SalesRegister_requires_bearer()
+        {
+            var client = _factory.CreateClient();
+            var response = await client.GetAsync("/salesRegister/byCompany/C001");
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task SalesRegister_create_and_caja_estado()
+        {
+            var client = await ClientWithToken();
+            var payload = JsonConvert.SerializeObject(new SalesRegister
+            {
+                CompanyId = "C001",
+                Code = "Caja1",
+                Name = "Mostrador"
+            });
+            using var content = new StringContent(payload, Encoding.UTF8, "application/json");
+            var created = await client.PostAsync("/salesRegister/Create", content);
+            created.EnsureSuccessStatusCode();
+            var register = JsonConvert.DeserializeObject<SalesRegister>(
+                await created.Content.ReadAsStringAsync());
+            Assert.Equal(1, register.Id);
+            Assert.Equal(7, register.CreatedBy);
+
+            var estado = await client.GetAsync($"/caja/estado/{register.Id}");
+            estado.EnsureSuccessStatusCode();
+            var status = JsonConvert.DeserializeObject<CashRegisterStatus>(
+                await estado.Content.ReadAsStringAsync());
+            Assert.False(status.Abierta);
         }
 
         private async Task<HttpClient> ClientWithToken()

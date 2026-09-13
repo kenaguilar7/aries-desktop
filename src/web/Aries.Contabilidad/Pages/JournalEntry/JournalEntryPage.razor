@@ -1,0 +1,218 @@
+@* This page is not being used yet *@
+
+@page "/journal-entries"
+
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudPaper Elevation="3" Class="pa-4">
+        <MudGrid>
+            <MudItem xs="12">
+                <MudText Typo="Typo.h5" Class="mb-4">Journal Entries</MudText>
+            </MudItem>
+            
+            <MudItem xs="12" md="4">
+                <MudSelect T="int" Label="Posting Period" @bind-Value="selectedPostingPeriodId" 
+                          @bind-Value:after="LoadJournalEntries">
+                    @if (postingPeriods != null)
+                    {
+                        @foreach (var period in postingPeriods)
+                        {
+                            <MudSelectItem Value="@period.Id">@period.ToString()</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </MudItem>
+
+            <MudItem xs="12" md="8" Class="d-flex justify-end">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" 
+                          OnClick="OpenCreateDialog" Class="ml-2">
+                    New Journal Entry
+                </MudButton>
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudDataGrid T="JournalEntry" Items="@journalEntries" Dense="true" Hover="true"
+                            FixedHeader="true" Height="400px">
+                    <Columns>
+                        <PropertyColumn Property="x => x.Number" Title="Number" />
+                        <PropertyColumn Property="x => x.CreatedAt" Title="Date" Format="d" />
+                        <PropertyColumn Property="x => x.JournalEntryStatus" Title="Status" />
+                        <PropertyColumn Property="x => x.DebitosColones" Title="Total Debits" Format="N2" />
+                        <PropertyColumn Property="x => x.CreditosColones" Title="Total Credits" Format="N2" />
+                        <TemplateColumn Title="Actions">
+                            <CellTemplate>
+                                <MudStack Row="true">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                                                 OnClick="@(() => OpenEditDialog(context.Item))" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" 
+                                                 Color="Color.Error"
+                                                 OnClick="@(() => DeleteJournalEntry(context.Item))" />
+                                </MudStack>
+                            </CellTemplate>
+                        </TemplateColumn>
+                    </Columns>
+                    <ChildRowContent>
+                        <MudCard Elevation="0">
+                            <MudCardContent>
+                                <MudDataGrid T="JournalEntryLine" Items="@context.Item.JournalEntryLines" Dense="true">
+                                    <Columns>
+                                        <PropertyColumn Property="x => x.AccountName" Title="Account" />
+                                        <PropertyColumn Property="x => x.Reference" Title="Reference" />
+                                        <PropertyColumn Property="x => x.Memo" Title="Memo" />
+                                        <PropertyColumn Property="x => x.Date" Title="Date" Format="d" />
+                                        <PropertyColumn Property="x => x.Currency" Title="Currency" />
+                                        <PropertyColumn Property="x => x.RateAmount" Title="Rate" Format="N2" />
+                                        <PropertyColumn Property="x => x.Amount" Title="Amount" Format="N2" />
+                                        <PropertyColumn Property="x => x.DebOrCred" Title="Type" />
+                                    </Columns>
+                                </MudDataGrid>
+                            </MudCardContent>
+                        </MudCard>
+                    </ChildRowContent>
+                </MudDataGrid>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private List<JournalEntry> journalEntries;
+    private List<PostingPeriod> postingPeriods;
+    private List<Account> accounts;
+    private int selectedPostingPeriodId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAccounts();
+        await LoadPostingPeriods();
+        if (postingPeriods?.Any() == true)
+        {
+            selectedPostingPeriodId = postingPeriods.First().Id;
+            await LoadJournalEntries();
+        }
+    }
+
+    private async Task LoadAccounts()
+    {
+        try
+        {
+            accounts = await Http.GetFromJsonAsync<List<Account>>("Account/GetAccounts");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Error loading accounts", Severity.Error);
+        }
+    }
+
+    private async Task LoadPostingPeriods()
+    {
+        try
+        {
+            postingPeriods = await Http.GetFromJsonAsync<List<PostingPeriod>>("PostingPeriod/GetPostingPeriods");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Error loading posting periods", Severity.Error);
+        }
+    }
+
+    private async Task LoadJournalEntries()
+    {
+        try
+        {
+            journalEntries = await Http.GetFromJsonAsync<List<JournalEntry>>($"JournalEntry/GetJournalEntries/{selectedPostingPeriodId}");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Error loading journal entries", Severity.Error);
+        }
+    }
+
+    private async Task OpenCreateDialog()
+    {
+        try
+        {
+            var consecutive = await Http.GetFromJsonAsync<int>($"JournalEntry/GetConsecutiveNumber/{selectedPostingPeriodId}");
+            var parameters = new DialogParameters
+            {
+                ["Entry"] = new JournalEntry
+                {
+                    Number = consecutive,
+                    PostingPeriodId = selectedPostingPeriodId,
+                    JournalEntryStatus = JournalEntryStatus.Progress,
+                    CreatedAt = DateTime.Now,
+                    UpdateAt = DateTime.Now
+                },
+                ["Accounts"] = accounts
+            };
+
+            // var dialog = await DialogService.ShowAsync<JournalEntryDialog>("New Journal Entry", parameters);
+            // var result = await dialog.Result;
+
+            // if (!result.Canceled)
+            // {
+            //     var entry = (JournalEntry)result.Data;
+            //     var response = await Http.PostAsJsonAsync("JournalEntry/CreateJournalEntry", entry);
+            //     if (response.IsSuccessStatusCode)
+            //     {
+            //         await LoadJournalEntries();
+            //         Snackbar.Add("Journal entry created successfully", Severity.Success);
+            //     }
+            // }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Error creating journal entry", Severity.Error);
+        }
+    }
+
+    private async Task OpenEditDialog(JournalEntry entry)
+    {
+        try
+        {
+            var parameters = new DialogParameters
+            {
+                ["Entry"] = entry,
+                ["Accounts"] = accounts
+            };
+
+            // var dialog = await DialogService.ShowAsync<JournalEntryDialog>("Edit Journal Entry", parameters);
+            // var result = await dialog.Result;
+
+            // if (!result.Canceled)
+            // {
+            //     var updatedEntry = (JournalEntry)result.Data;
+            //     var response = await Http.PostAsJsonAsync("JournalEntry/UpdateJournalEntry", updatedEntry);
+            //     if (response.IsSuccessStatusCode)
+            //     {
+            //         await LoadJournalEntries();
+            //         Snackbar.Add("Journal entry updated successfully", Severity.Success);
+            //     }
+            // }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Error updating journal entry", Severity.Error);
+        }
+    }
+
+    private async Task DeleteJournalEntry(JournalEntry entry)
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync("JournalEntry/DeleteJournalEntry", entry);
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadJournalEntries();
+                Snackbar.Add("Journal entry deleted successfully", Severity.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Error deleting journal entry", Severity.Error);
+        }
+    }
+} 

@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <StaticWebAssetBasePath>/</StaticWebAssetBasePath>
+    <RunAOTCompilation>false</RunAOTCompilation>
+    <PublishTrimmed>false</PublishTrimmed>
+    <SelfContained>false</SelfContained>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.3" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
+    <PackageReference Include="MudBlazor" Version="8.7.0" />
+    <PackageReference Include="System.Net.Http.Json" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\domain\AriesContador.Core\AriesContador.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="wwwroot\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <Target Name="CopyAppSettingsToWWWRoot" BeforeTargets="Build">
+    <Copy SourceFiles="appsettings.json" DestinationFolder="wwwroot" />
+    <Copy SourceFiles="appsettings.Development.json" DestinationFolder="wwwroot" />
+    <Copy SourceFiles="appsettings.Production.json" DestinationFolder="wwwroot" />
+  </Target>
+
+</Project>

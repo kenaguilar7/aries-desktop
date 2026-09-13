@@ -60,7 +60,7 @@ namespace AriesContador.Tests.AccountTests
                 Name = name,
                 AccountType = type,
                 FatherAccount = father,
-                DebOCred = DebOrCred.Debito
+                DebOrCred = DebOrCred.Debito
             };
         }
 
@@ -70,7 +70,7 @@ namespace AriesContador.Tests.AccountTests
             {
                 AccountType = AccountType.Cuenta_Titulo,
                 AccountTag = tag,
-                DebOCred = DebOrCred.Credito,
+                DebOrCred = DebOrCred.Credito,
                 CreditBalance = credit
             };
         }

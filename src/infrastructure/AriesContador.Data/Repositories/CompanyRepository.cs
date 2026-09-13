@@ -95,6 +95,15 @@ namespace AriesContador.Data.Repositories
         public async Task RemoveAsync(Company entity, CancellationToken cancellationToken = default)
         {
             var query = @"
+DELETE T0 FROM sale_lines T0
+INNER JOIN sales T1 ON T0.sale_id = T1.sale_id
+WHERE T1.company_id = @Code;
+
+DELETE FROM sales WHERE company_id = @Code;
+DELETE FROM sales_register_sessions WHERE company_id = @Code;
+DELETE FROM sales_registers WHERE company_id = @Code;
+DELETE FROM products WHERE company_id = @Code;
+
 delete T2 from accounting_months T0 JOIN  
 accounting_entries T1 ON T1.accounting_months_id = T0.accounting_months_id
 JOIN transactions_accounting T2 ON T1.accounting_entry_id = T2.accounting_entry_id

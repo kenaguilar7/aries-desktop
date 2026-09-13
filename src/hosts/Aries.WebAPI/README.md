@@ -25,7 +25,9 @@ Para depurar el API **en el host** (no Docker): `docker compose stop api` y F5 e
 | POST | `/auth/login` (anónimo) |
 | GET | `/company/getAll` |
 | GET | `/company/BuildCode` |
+| GET | `/company/{code}` |
 | POST | `/company/Create` |
+| POST | `/company/Update` |
 | DELETE | `/company/delete/{code}` |
 
 El resto (cuentas, periodos, asientos) replica las rutas de `HttpFinancialService`. JSON en PascalCase (Newtonsoft del WinForms). `UserId` sale del claim JWT, no de un `1` hardcodeado.
@@ -37,5 +39,5 @@ Login in-process del exe **no cambia**: sigue `IAdministrationService`. El API e
 - **Git anidado `AriesWebApi/`:** se deja parqueado. Ver [`archive/README.md`](../../../archive/README.md). El host canónico es este proyecto (`src/hosts/Aries.WebAPI`).
 - **Layout `src/`:** ver [`docs/LAYOUT.md`](../../../docs/LAYOUT.md).
 - **net8.0-windows:** no. El exe de producción sigue en .NET Framework 4.8.
-- **Blazor:** parqueado; si se retoma, debe pegarle a estas mismas rutas.
+- **Blazor:** [`src/web/Aries.Contabilidad`](../../web/Aries.Contabilidad). Cliente WASM del mismo contrato HTTP que el escritorio.
 - **Hash de passwords:** `AdministrationService.LoginAsync` verifica PBKDF2 y rehash perezoso de texto plano.

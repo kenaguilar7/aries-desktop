@@ -1,0 +1,42 @@
+@using AriesContador.Core.Models.Accounts
+@using AriesContador.Core.Models.Utils
+
+<MudPaper Class="pa-4" Elevation="0">
+    <MudList Dense="true" T="string">
+        <MudListItem T="string">
+            <MudText Typo="Typo.subtitle2">Nombre:</MudText>
+            @if(Account != null)
+            {
+                <MudText Class="ml-2">@Account.Name</MudText>
+            }
+            else
+            {
+                <MudText Class="ml-2">No se ha seleccionado ninguna cuenta</MudText>
+            }
+        </MudListItem>
+
+        <MudListItem T="string">
+            <MudText Typo="Typo.subtitle2">Tipo de Cuenta:</MudText>
+                @if(Account != null)
+                {
+                    <MudText Class="ml-2">
+                    @(Account.DebOrCred == DebOrCred.Debito ? "Débito" : "Crédito")
+                    </MudText>
+                }
+        </MudListItem>
+        
+        <MudListItem T="string">
+            <MudText Typo="Typo.subtitle2">Indicador:</MudText>
+            @if(Account != null){
+                <MudText Class="ml-2">
+                    @(Account.FatherAccount.HasValue ? "Cuenta de Menor" : "Cuenta de Mayor")
+                </MudText>
+            }
+        </MudListItem>
+    </MudList>
+</MudPaper>
+
+@code {
+    [Parameter]
+    public Account? Account { get; set; }
+}

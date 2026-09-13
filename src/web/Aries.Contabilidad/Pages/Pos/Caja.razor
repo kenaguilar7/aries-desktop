@@ -1,0 +1,186 @@
+@page "/pos/{CompanyId}/caja"
+@using AriesContador.Core.Models.PointOfSale
+@inject IPosService PosService
+@inject ILocalStorageService LocalStorage
+
+<div class="container-fluid">
+    <h3 class="mb-3">Apertura y cierre de caja</h3>
+    <PosNav CompanyId="@CompanyId" />
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+    @if (!string.IsNullOrEmpty(infoMessage))
+    {
+        <div class="alert alert-success">@infoMessage</div>
+    }
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <label class="form-label">Caja</label>
+            <select class="form-select" value="@selectedRegisterId" @onchange="OnRegisterChanged">
+                <option value="0">Seleccione una caja</option>
+                @foreach (var register in registers)
+                {
+                    <option value="@register.Id">@register.Code — @register.Name</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    @if (selectedRegisterId > 0)
+    {
+        @if (status == null)
+        {
+            <div class="spinner-border"></div>
+        }
+        else if (!status.Abierta)
+        {
+            <div class="card">
+                <div class="card-body">
+                    <h5>Abrir caja</h5>
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <label class="form-label">Monto inicial</label>
+                            <input class="form-control" type="number" step="0.01" @bind="openingAmount" />
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">Observaciones</label>
+                            <input class="form-control" @bind="openingNotes" />
+                        </div>
+                    </div>
+                    <button class="btn btn-success mt-3" @onclick="Open" disabled="@busy">Abrir caja</button>
+                </div>
+            </div>
+        }
+        else if (status.Session != null)
+        {
+            var session = status.Session;
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5>Caja abierta</h5>
+                    <p>Apertura: @session.OpenedAt.ToString("g") — Inicial @session.OpeningAmount.ToString("N2")</p>
+                    <div class="row text-center">
+                        <div class="col"><strong>Efectivo</strong><div>@session.CashSales.ToString("N2")</div></div>
+                        <div class="col"><strong>Tarjeta</strong><div>@session.CardSales.ToString("N2")</div></div>
+                        <div class="col"><strong>Transferencia</strong><div>@session.TransferSales.ToString("N2")</div></div>
+                        <div class="col"><strong>Total ventas</strong><div>@session.TotalSales.ToString("N2")</div></div>
+                    </div>
+                    <hr />
+                    <p>Efectivo esperado: @((session.OpeningAmount + session.CashSales).ToString("N2"))</p>
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <label class="form-label">Monto declarado</label>
+                            <input class="form-control" type="number" step="0.01" @bind="declaredAmount" />
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">Observaciones de cierre</label>
+                            <input class="form-control" @bind="closingNotes" />
+                        </div>
+                    </div>
+                    <button class="btn btn-danger mt-3" @onclick="Close" disabled="@busy">Cerrar caja</button>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public string CompanyId { get; set; } = string.Empty;
+    private List<SalesRegister> registers = new();
+    private int selectedRegisterId;
+    private CashRegisterStatus? status;
+    private decimal openingAmount;
+    private string openingNotes = string.Empty;
+    private decimal declaredAmount;
+    private string closingNotes = string.Empty;
+    private bool busy;
+    private string? errorMessage;
+    private string? infoMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        registers = await PosService.GetRegistersAsync(CompanyId);
+        var stored = await LocalStorage.GetItem($"pos_register_{CompanyId}");
+        if (int.TryParse(stored, out var id) && registers.Any(r => r.Id == id))
+            selectedRegisterId = id;
+        else if (registers.Count == 1)
+            selectedRegisterId = registers[0].Id;
+        if (selectedRegisterId > 0)
+            await LoadStatus();
+    }
+
+    private async Task OnRegisterChanged(ChangeEventArgs e)
+    {
+        if (!int.TryParse(e.Value?.ToString(), out var id))
+            id = 0;
+        selectedRegisterId = id;
+        await LocalStorage.SetItem($"pos_register_{CompanyId}", id.ToString());
+        await LoadStatus();
+    }
+
+    private async Task LoadStatus()
+    {
+        errorMessage = null;
+        infoMessage = null;
+        status = selectedRegisterId > 0
+            ? await PosService.GetStatusAsync(selectedRegisterId)
+            : null;
+        if (status?.Session != null)
+            declaredAmount = status.Session.OpeningAmount + status.Session.CashSales;
+    }
+
+    private async Task Open()
+    {
+        busy = true;
+        errorMessage = null;
+        try
+        {
+            await PosService.OpenAsync(new OpenCashRegisterRequest
+            {
+                RegisterId = selectedRegisterId,
+                OpeningAmount = openingAmount,
+                Notes = openingNotes
+            });
+            infoMessage = "Caja abierta";
+            await LoadStatus();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task Close()
+    {
+        busy = true;
+        errorMessage = null;
+        try
+        {
+            var closed = await PosService.CloseAsync(new CloseCashRegisterRequest
+            {
+                RegisterId = selectedRegisterId,
+                DeclaredAmount = declaredAmount,
+                Notes = closingNotes
+            });
+            infoMessage = $"Caja cerrada. Diferencia: {closed.Difference:N2}";
+            openingAmount = 0;
+            openingNotes = string.Empty;
+            closingNotes = string.Empty;
+            await LoadStatus();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+}

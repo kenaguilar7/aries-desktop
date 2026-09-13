@@ -1,0 +1,41 @@
+@using MudBlazor
+
+<MudPaper Class="pa-4 mt-4">
+    <MudGrid>
+        <MudItem xs="12" sm="4">
+            <MudText Typo="Typo.subtitle1">Total Debit</MudText>
+            <MudText Typo="Typo.h6">@TotalDebit.ToString("N2")</MudText>
+        </MudItem>
+        <MudItem xs="12" sm="4">
+            <MudText Typo="Typo.subtitle1">Total Credit</MudText>
+            <MudText Typo="Typo.h6">@TotalCredit.ToString("N2")</MudText>
+        </MudItem>
+        <MudItem xs="12" sm="4">
+            <MudText Typo="Typo.subtitle1">Balance Status</MudText>
+            <MudChip T="string" Color="@(IsBalanced ? Color.Success : Color.Error)" 
+                    Size="Size.Small">
+                @(IsBalanced ? "Balanced" : "Unbalanced")
+            </MudChip>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@code {
+    /// <summary>
+    /// Total debit amount
+    /// </summary>
+    [Parameter]
+    public decimal TotalDebit { get; set; }
+
+    /// <summary>
+    /// Total credit amount
+    /// </summary>
+    [Parameter]
+    public decimal TotalCredit { get; set; }
+
+    /// <summary>
+    /// Indicates whether the entry is balanced
+    /// </summary>
+    [Parameter]
+    public bool IsBalanced { get; set; }
+}
