@@ -122,7 +122,7 @@ namespace Aries.Desktop
 
             try
             {
-                var applyTask = Task.Run(() => AppUpdater.ApplyAsync()).Unwrap();
+                var applyTask = Task.Run(() => AppUpdater.ApplyAsync());
                 if (!applyTask.Wait(TimeSpan.FromSeconds(20)))
                 {
                     StartupLog.Write("Squirrel: timeout. feed=" + GlobalConfig.UpdateUrl);
