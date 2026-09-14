@@ -74,6 +74,21 @@
                 </div>
 
                 <div class="side-nav-group">
+                    <button type="button" class="side-nav-group-toggle @(IsGroupActive("compras") ? "active" : null)" @onclick='() => Toggle("compras")'>
+                        <span>Compras</span>
+                        <i class="fas @(_expanded.Contains("compras") ? "fa-chevron-down" : "fa-chevron-right")"></i>
+                    </button>
+                    @if (_expanded.Contains("compras"))
+                    {
+                        <div class="side-nav-children">
+                            <NavLink class="side-nav-link" href="@($"/purchases/{CurrentCompanyId}/suppliers")" @onclick="NotifyNavigate">
+                                <span>Proveedores</span>
+                            </NavLink>
+                        </div>
+                    }
+                </div>
+
+                <div class="side-nav-group">
                     <button type="button" class="side-nav-group-toggle @(IsGroupActive("integration") ? "active" : null)" @onclick='() => Toggle("integration")'>
                         <span>Integración</span>
                         <i class="fas @(_expanded.Contains("integration") ? "fa-chevron-down" : "fa-chevron-right")"></i>
@@ -205,7 +220,7 @@
         if (segments.Length < 2)
             return null;
 
-        var prefixes = new[] { "dashboard", "accounts", "journal-entries", "pos", "accounting", "integration", "automations" };
+        var prefixes = new[] { "dashboard", "accounts", "journal-entries", "pos", "accounting", "integration", "automations", "purchases" };
         if (prefixes.Contains(segments[0], StringComparer.OrdinalIgnoreCase))
             return segments[1];
 
@@ -219,6 +234,7 @@
         {
             "contab" => Starts(path, "journal-entries") || Starts(path, "accounts") || Starts(path, "accounting"),
             "pos" => Starts(path, "pos/"),
+            "compras" => Starts(path, "purchases/"),
             "integration" => Starts(path, "integration/"),
             "automations" => Starts(path, "automations/"),
             "admin" => Starts(path, "companies") || Starts(path, "admin/"),
@@ -231,7 +247,7 @@
 
     private void EnsureActiveGroupExpanded()
     {
-        foreach (var group in new[] { "contab", "pos", "integration", "automations", "admin" })
+        foreach (var group in new[] { "contab", "pos", "compras", "integration", "automations", "admin" })
         {
             if (IsGroupActive(group))
                 _expanded.Add(group);
