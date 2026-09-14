@@ -7,56 +7,54 @@
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
 @inject AuthenticationStateProvider AuthStateProvider
+@inject ILocalStorageService LocalStorage
 
 <PageTitle>Login - Aries Contabilidad</PageTitle>
 
-<div class="container">
-    <div class="row justify-content-center align-items-center min-vh-100">
-        <div class="col-md-6 col-lg-4">
-            <div class="card shadow">
-                <div class="card-body">
-                    <div class="text-center mb-4">
-                        <h2 class="card-title">Aries Contabilidad</h2>
-                        <p class="text-muted">Iniciar Sesión</p>
-                    </div>
-
-                    <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
-                        <DataAnnotationsValidator />
-
-                        <div class="form-group mb-3">
-                            <label for="userId">Usuario</label>
-                            <InputText id="userId" class="form-control" @bind-Value="loginModel.UserId" />
-                            <ValidationMessage For="@(() => loginModel.UserId)" />
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label for="password">Contraseña</label>
-                            <InputText type="password" id="password" class="form-control" @bind-Value="loginModel.Password" />
-                            <ValidationMessage For="@(() => loginModel.Password)" />
-                        </div>
-
-                        @if (!string.IsNullOrEmpty(errorMessage))
-                        {
-                            <div class="alert alert-danger" role="alert">
-                                @errorMessage
-                            </div>
-                        }
-
-                        <button type="submit" class="btn btn-primary w-100" disabled="@isLoading">
-                            @if (isLoading)
-                            {
-                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                <span>Cargando...</span>
-                            }
-                            else
-                            {
-                                <span>Iniciar Sesión</span>
-                            }
-                        </button>
-                    </EditForm>
-                </div>
-            </div>
+<div class="login-page">
+    <div class="login-card">
+        <div class="login-brand">
+            <svg class="app-logo" viewBox="0 0 16 16" width="48" height="48" aria-hidden="true">
+                <path fill="currentColor" d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0ZM4.75 5.5h6.5a.75.75 0 0 1 0 1.5h-6.5a.75.75 0 0 1 0-1.5Zm0 3.5h6.5a.75.75 0 0 1 0 1.5h-6.5a.75.75 0 0 1 0-1.5Z" />
+            </svg>
+            <h1>Aries Contabilidad</h1>
+            <p>Iniciar sesión</p>
         </div>
+
+        <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+            <DataAnnotationsValidator />
+
+            <div class="form-group mb-3">
+                <label for="userId">Usuario</label>
+                <InputText id="userId" class="form-control" @bind-Value="loginModel.UserId" autocomplete="username" />
+                <ValidationMessage For="@(() => loginModel.UserId)" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="password">Contraseña</label>
+                <InputText type="password" id="password" class="form-control" @bind-Value="loginModel.Password" autocomplete="current-password" />
+                <ValidationMessage For="@(() => loginModel.Password)" />
+            </div>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger" role="alert">
+                    @errorMessage
+                </div>
+            }
+
+            <button type="submit" class="btn btn-primary w-100" disabled="@isLoading">
+                @if (isLoading)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <span>Cargando...</span>
+                }
+                else
+                {
+                    <span>Iniciar sesión</span>
+                }
+            </button>
+        </EditForm>
     </div>
 </div>
 
@@ -70,7 +68,7 @@
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         if (authState.User.Identity?.IsAuthenticated ?? false)
         {
-            NavigationManager.NavigateTo("/companies", true);
+            await NavigateAfterAuth();
         }
     }
 
@@ -90,7 +88,7 @@
             if (result != null)
             {
                 await ((CustomAuthStateProvider)AuthStateProvider).MarkUserAsAuthenticated(result);
-                NavigationManager.NavigateTo("/companies", true);
+                await NavigateAfterAuth();
             }
             else
             {
@@ -106,5 +104,14 @@
         {
             isLoading = false;
         }
+    }
+
+    private async Task NavigateAfterAuth()
+    {
+        var company = await LocalStorage.GetStoredCompany();
+        if (company != null && !string.IsNullOrEmpty(company.Code))
+            NavigationManager.NavigateTo($"/dashboard/{company.Code}", true);
+        else
+            NavigationManager.NavigateTo("/companies", true);
     }
 }

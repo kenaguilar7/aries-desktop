@@ -1,0 +1,256 @@
+@page "/accounts/{CompanyId}"
+@using AriesContador.Core.Models.Accounts
+@inject IAccountService AccountService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Plan de cuentas - Aries Contabilidad</PageTitle>
+
+<div class="container-fluid px-0">
+    <div class="page-header">
+        <h1 class="page-title mb-0">Plan de cuentas</h1>
+        <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-primary" disabled="@(_busy || !CanCreate)" @onclick="GoCreate">
+                Nueva
+            </button>
+            <button type="button" class="btn btn-secondary" disabled="@(_busy || _selected == null)" @onclick="EditAsync">
+                Editar
+            </button>
+            <button type="button" class="btn btn-secondary" disabled="@(_busy || _selected == null)" @onclick="GoMovements">
+                Movimientos
+            </button>
+            <button type="button" class="btn btn-danger" disabled="@(_busy || !CanDeleteSelected)" @onclick="DeleteAsync">
+                Eliminar
+            </button>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="d-flex justify-content-center py-5">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        </div>
+    }
+    else
+    {
+        <div class="row g-3 accounts-layout">
+            <div class="col-lg-7">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            <button type="button" class="btn btn-sm btn-secondary" @onclick="ExpandTree">Expandir</button>
+                            <button type="button" class="btn btn-sm btn-secondary" @onclick="CollapseTree">Colapsar</button>
+                        </div>
+                        <div class="accounts-tree-scroll">
+                            <AccountTreeView @ref="_tree"
+                                             Accounts="@_accounts"
+                                             SelectedAccount="@_selected"
+                                             OnAccountSelected="HandleAccountSelected" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h2 class="h6 mb-3">Información de cuenta</h2>
+                        <AccountDetails Account="@_selected"
+                                        Editing="@_editing"
+                                        Saving="@_busy"
+                                        OnSave="SaveEditAsync" />
+                    </div>
+                </div>
+            </div>
+            <div class="col-12">
+                @if (_selected != null)
+                {
+                    <AccountBalanceReport @key="_selected.Id" Account="@_selected" CompanyId="@CompanyId" />
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string CompanyId { get; set; } = string.Empty;
+
+    [SupplyParameterFromQuery(Name = "cuenta")]
+    public int? Cuenta { get; set; }
+
+    private List<Account> _accounts = new();
+    private Account? _selected;
+    private AccountTreeView? _tree;
+    private bool _loading = true;
+    private bool _busy;
+    private bool _editing;
+    private string _loadedCompanyId = string.Empty;
+
+    private bool CanCreate =>
+        _selected != null && _selected.AccountType != AccountType.Cuenta_Titulo;
+
+    private bool CanDeleteSelected =>
+        _selected != null && AccountRules.CanDelete(_selected, out _);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.Equals(_loadedCompanyId, CompanyId, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        _loadedCompanyId = CompanyId;
+        await LoadAccountsAsync();
+    }
+
+    private async Task LoadAccountsAsync(int? keepSelectedId = null)
+    {
+        _loading = _accounts.Count == 0;
+        _editing = false;
+        try
+        {
+            _accounts = await AccountService.GetAccountsAsync(CompanyId) ?? new List<Account>();
+            var id = keepSelectedId ?? Cuenta ?? _selected?.Id;
+            _selected = id.HasValue
+                ? _accounts.FirstOrDefault(a => a.Id == id.Value) ?? _accounts.FirstOrDefault()
+                : _accounts.FirstOrDefault();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error al cargar las cuentas: {ex.Message}", Severity.Error);
+            _accounts = new List<Account>();
+            _selected = null;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void HandleAccountSelected(Account account)
+    {
+        _selected = account;
+        _editing = false;
+    }
+
+    private void ExpandTree() => _tree?.ExpandAll();
+
+    private void CollapseTree() => _tree?.CollapseAll();
+
+    private void GoCreate()
+    {
+        if (_selected == null || _selected.AccountType == AccountType.Cuenta_Titulo)
+            return;
+
+        NavigationManager.NavigateTo($"/accounts/{CompanyId}/nueva/{_selected.Id}");
+    }
+
+    private void EditAsync()
+    {
+        if (_selected == null)
+        {
+            Snackbar.Add("Seleccione una cuenta", Severity.Warning);
+            return;
+        }
+
+        if (!_selected.Editable)
+        {
+            Snackbar.Add("Esta cuenta no puede ser editada", Severity.Warning);
+            return;
+        }
+
+        _editing = true;
+    }
+
+    private async Task SaveEditAsync((string Name, string Memo) values)
+    {
+        if (_selected == null)
+            return;
+
+        if (!AccountRules.ValidateName(values.Name, out var message))
+        {
+            Snackbar.Add(message, Severity.Warning);
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            var updated = Clone(_selected);
+            updated.Name = values.Name;
+            updated.Memo = values.Memo;
+            await AccountService.UpdateAccountAsync(updated);
+            Snackbar.Add(AccountRules.UpdateSuccessMessage, Severity.Success);
+            _editing = false;
+            await LoadAccountsAsync(updated.Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (_selected == null)
+        {
+            Snackbar.Add("Seleccione una cuenta", Severity.Warning);
+            return;
+        }
+
+        if (!AccountRules.CanDelete(_selected, out var reason))
+        {
+            Snackbar.Add(reason, Severity.Warning);
+            return;
+        }
+
+        var confirmed = await DialogService.ShowMessageBox(
+            "Aries Contabilidad",
+            "Esta acción no se puede deshacer ¿desea continuar de todos modos?",
+            yesText: "Sí",
+            cancelText: "No");
+        if (confirmed != true)
+            return;
+
+        _busy = true;
+        try
+        {
+            var parentId = _selected.FatherAccount;
+            await AccountService.DeleteAccountAsync(_selected);
+            Snackbar.Add(AccountRules.DeleteSuccessMessage, Severity.Success);
+            await LoadAccountsAsync(parentId);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private void GoMovements()
+    {
+        if (_selected == null)
+            return;
+
+        NavigationManager.NavigateTo($"/accounting/{CompanyId}/reports/movimientos/{_selected.Id}");
+    }
+
+    private static Account Clone(Account source) => new()
+    {
+        Id = source.Id,
+        Name = source.Name,
+        Memo = source.Memo,
+        Editable = source.Editable,
+        AccountTag = source.AccountTag,
+        AccountType = source.AccountType,
+        CompanyId = source.CompanyId,
+        FatherAccount = source.FatherAccount,
+        DebOrCred = source.DebOrCred
+    };
+}

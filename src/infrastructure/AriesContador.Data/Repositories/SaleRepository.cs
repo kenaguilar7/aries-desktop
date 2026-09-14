@@ -118,6 +118,9 @@ namespace AriesContador.Data.Repositories
                             PaymentMethodDb = PaymentMethodNames.ToDb(sale.PaymentMethod),
                             sale.PaymentReference,
                             sale.Total,
+                            sale.NetAmount,
+                            sale.TaxAmount,
+                            sale.CostAmount,
                             sale.SoldAt,
                             sale.CreatedBy,
                             sale.UpdatedBy

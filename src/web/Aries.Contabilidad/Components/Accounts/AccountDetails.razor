@@ -1,42 +1,104 @@
 @using AriesContador.Core.Models.Accounts
-@using AriesContador.Core.Models.Utils
 
-<MudPaper Class="pa-4" Elevation="0">
-    <MudList Dense="true" T="string">
-        <MudListItem T="string">
-            <MudText Typo="Typo.subtitle2">Nombre:</MudText>
-            @if(Account != null)
-            {
-                <MudText Class="ml-2">@Account.Name</MudText>
-            }
-            else
-            {
-                <MudText Class="ml-2">No se ha seleccionado ninguna cuenta</MudText>
-            }
-        </MudListItem>
-
-        <MudListItem T="string">
-            <MudText Typo="Typo.subtitle2">Tipo de Cuenta:</MudText>
-                @if(Account != null)
-                {
-                    <MudText Class="ml-2">
-                    @(Account.DebOrCred == DebOrCred.Debito ? "Débito" : "Crédito")
-                    </MudText>
-                }
-        </MudListItem>
-        
-        <MudListItem T="string">
-            <MudText Typo="Typo.subtitle2">Indicador:</MudText>
-            @if(Account != null){
-                <MudText Class="ml-2">
-                    @(Account.FatherAccount.HasValue ? "Cuenta de Menor" : "Cuenta de Mayor")
-                </MudText>
-            }
-        </MudListItem>
-    </MudList>
-</MudPaper>
+<div class="account-details">
+    @if (Account == null)
+    {
+        <p class="text-muted mb-0">Seleccione una cuenta para ver su información.</p>
+    }
+    else if (Editing)
+    {
+        <div class="mb-3">
+            <label class="form-label" for="account-name">Nombre</label>
+            <input id="account-name"
+                   class="form-control"
+                   maxlength="45"
+                   @bind="_name"
+                   @bind:event="oninput"
+                   @bind:after="NormalizeName" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="account-memo">Detalle</label>
+            <input id="account-memo"
+                   class="form-control"
+                   maxlength="45"
+                   @bind="_memo"
+                   @bind:event="oninput"
+                   @bind:after="NormalizeMemo" />
+        </div>
+        <dl class="account-meta mb-3">
+            <div>
+                <dt>Tipo de cuenta</dt>
+                <dd>@AccountUi.TagLabel(Account.AccountTag)</dd>
+            </div>
+            <div>
+                <dt>Indicador</dt>
+                <dd>@AccountUi.TypeLabel(Account.AccountType)</dd>
+            </div>
+        </dl>
+        <button type="button" class="btn btn-primary" disabled="@Saving" @onclick="SaveAsync">Guardar</button>
+    }
+    else
+    {
+        <dl class="account-meta mb-0">
+            <div>
+                <dt>Nombre</dt>
+                <dd>
+                    @Account.Name
+                    @if (!Account.Editable)
+                    {
+                        <span class="account-system-flag">Cuenta del sistema</span>
+                    }
+                </dd>
+            </div>
+            <div>
+                <dt>Tipo de cuenta</dt>
+                <dd>@AccountUi.TagLabel(Account.AccountTag)</dd>
+            </div>
+            <div>
+                <dt>Indicador</dt>
+                <dd>@AccountUi.TypeLabel(Account.AccountType)</dd>
+            </div>
+            <div>
+                <dt>Detalle</dt>
+                <dd>@(string.IsNullOrWhiteSpace(Account.Memo) ? "—" : Account.Memo)</dd>
+            </div>
+        </dl>
+    }
+</div>
 
 @code {
     [Parameter]
     public Account? Account { get; set; }
+
+    [Parameter]
+    public bool Editing { get; set; }
+
+    [Parameter]
+    public bool Saving { get; set; }
+
+    [Parameter]
+    public EventCallback<(string Name, string Memo)> OnSave { get; set; }
+
+    private string _name = string.Empty;
+    private string _memo = string.Empty;
+    private int _boundId;
+
+    protected override void OnParametersSet()
+    {
+        if (Account == null)
+            return;
+
+        if (_boundId != Account.Id || !Editing)
+        {
+            _boundId = Account.Id;
+            _name = Account.Name ?? string.Empty;
+            _memo = Account.Memo ?? string.Empty;
+        }
+    }
+
+    private void NormalizeName() => _name = (_name ?? string.Empty).ToUpperInvariant();
+
+    private void NormalizeMemo() => _memo = (_memo ?? string.Empty).ToUpperInvariant();
+
+    private Task SaveAsync() => OnSave.InvokeAsync((_name.Trim(), _memo.Trim()));
 }

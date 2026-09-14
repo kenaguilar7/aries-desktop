@@ -20,6 +20,14 @@ namespace AriesContador.Core.Models.PointOfSale
 
         public decimal LineTotal { get; set; }
 
+        public decimal NetAmount { get; set; }
+
+        public decimal TaxAmount { get; set; }
+
+        public decimal CostAmount { get; set; }
+
+        public bool TaxExempt { get; set; }
+
         public decimal StockToDecrement => SoldByWeight ? WeightGrams : Quantity;
     }
 }

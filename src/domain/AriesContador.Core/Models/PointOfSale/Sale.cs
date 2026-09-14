@@ -17,6 +17,12 @@ namespace AriesContador.Core.Models.PointOfSale
 
         public decimal Total { get; set; }
 
+        public decimal NetAmount { get; set; }
+
+        public decimal TaxAmount { get; set; }
+
+        public decimal CostAmount { get; set; }
+
         public DateTime SoldAt { get; set; }
 
         public string RegisterCode { get; set; }

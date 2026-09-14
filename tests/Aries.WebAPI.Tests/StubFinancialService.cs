@@ -50,6 +50,13 @@ namespace Aries.WebAPI.Tests
             LastCreatedEntry = journalEntry;
             return Task.CompletedTask;
         }
+        public Task CreateApprovedJournalEntryAsync(JournalEntry journalEntry, string companyId, CancellationToken cancellationToken = default)
+        {
+            journalEntry.ApplyStatusFromBalance();
+            if (!journalEntry.Cuadrado)
+                throw new InvalidOperationException("El asiento no está cuadrado");
+            return CreateJournalEntryAsync(journalEntry, cancellationToken);
+        }
         public Task UpdateJournalEntryAsync(JournalEntry journalEntry, CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task<IEnumerable<JournalEntryDeletedReport>> GetAllJournalEntryDeletedAsync(BasicReportParam reportParam, CancellationToken cancellationToken = default) =>
             Task.FromResult<IEnumerable<JournalEntryDeletedReport>>(Array.Empty<JournalEntryDeletedReport>());

@@ -11,8 +11,8 @@ namespace AriesContador.Tests.AccountTests
         {
             var accounts = DefaultChartOfAccounts.Create();
 
-            Assert.Equal(57, accounts.Count);
-            Assert.Equal(Enumerable.Range(1, 57), accounts.Select(a => a.Id));
+            Assert.Equal(DefaultChartOfAccounts.AccountCount, accounts.Count);
+            Assert.Equal(Enumerable.Range(1, DefaultChartOfAccounts.AccountCount), accounts.Select(a => a.Id));
 
             Assert.All(accounts.Take(6), a =>
             {
@@ -43,6 +43,22 @@ namespace AriesContador.Tests.AccountTests
             Assert.Equal(5, accounts[55].FatherAccount);
             Assert.Equal("EGRESO", accounts[56].Name);
             Assert.Equal(6, accounts[56].FatherAccount);
+
+            Assert.Equal("VENTAS", accounts[57].Name);
+            Assert.Equal(55, accounts[57].FatherAccount);
+            Assert.Equal(AccountType.Cuenta_Auxiliar, accounts[57].AccountType);
+            Assert.Equal(AccountTag.Ingreso, accounts[57].AccountTag);
+
+            Assert.Equal("IVA POR PAGAR", accounts[58].Name);
+            Assert.Equal(9, accounts[58].FatherAccount);
+            Assert.Equal(AccountTag.Pasivo, accounts[58].AccountTag);
+
+            Assert.Equal("COSTO DE MERCADERÍA", accounts[59].Name);
+            Assert.Equal(56, accounts[59].FatherAccount);
+            Assert.Equal(AccountTag.CostoVenta, accounts[59].AccountTag);
+
+            Assert.Equal("FALTANTE DE CAJA", accounts[60].Name);
+            Assert.Equal("SOBRANTE DE CAJA", accounts[61].Name);
         }
     }
 }

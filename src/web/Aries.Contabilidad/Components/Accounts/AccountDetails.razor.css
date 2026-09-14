@@ -1,0 +1,26 @@
+.account-meta {
+    display: grid;
+    gap: 12px;
+}
+
+.account-meta dt {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--fg-muted);
+    margin-bottom: 2px;
+}
+
+.account-meta dd {
+    margin: 0;
+    color: var(--fg-default);
+}
+
+.account-system-flag {
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 11px;
+    color: var(--fg-muted);
+    border: 1px solid var(--border-default);
+    border-radius: 999px;
+    padding: 1px 7px;
+}

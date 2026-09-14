@@ -6,12 +6,11 @@
 @inject IJSRuntime JSRuntime
 @inject ILocalStorageService LocalStorage
 
-<div class="container-fluid">
-    <h3 class="mb-4">Compañías</h3>
-
-    <div class="mb-3">
+<div class="container-fluid px-0">
+    <div class="page-header">
+        <h1 class="page-title mb-0">Compañías</h1>
         <a href="/companies/create" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Nueva Compañía
+            <i class="fas fa-plus"></i> Nueva compañía
         </a>
     </div>
     @if (companies == null)

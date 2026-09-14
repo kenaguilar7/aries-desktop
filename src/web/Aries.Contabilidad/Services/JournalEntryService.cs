@@ -24,6 +24,15 @@ namespace Aries.Contabilidad.Services
             return response ?? new List<JournalEntry>();
         }
 
+        public async Task<JournalEntry?> GetJournalEntryByIdAsync(int id)
+        {
+            var response = await _httpClient.GetAsync($"journalEntry/GetJournalEntryById/{id}");
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                return null;
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<JournalEntry>(_jsonOptions);
+        }
+
         public async Task<int> GetConsecutiveNumberAsync(int postingPeriodId)
         {
             return await _httpClient.GetFromJsonAsync<int>(
@@ -63,6 +72,44 @@ namespace Aries.Contabilidad.Services
             var response = await _httpClient.PostAsJsonAsync(
                 "journalEntry/DeleteJournalEntry", journalEntry, _jsonOptions);
             response.EnsureSuccessStatusCode();
+        }
+
+        public async Task UpdatePeriodAsync(JournalEntry journalEntry)
+        {
+            var user = await _localStorageService.GetCurrentUserSesion();
+            journalEntry.UpdatedBy = user.Id;
+
+            var response = await _httpClient.PostAsJsonAsync(
+                "journalEntry/UpdatedJournalEntryPeriod", journalEntry, _jsonOptions);
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task RestoreJournalEntryAsync(JournalEntry journalEntry)
+        {
+            var user = await _localStorageService.GetCurrentUserSesion();
+            journalEntry.UpdatedBy = user.Id;
+
+            var response = await _httpClient.PostAsJsonAsync(
+                "journalEntry/RestoreJournalEntry", journalEntry, _jsonOptions);
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task<List<JournalEntryDeletedReport>> GetDeletedJournalEntriesAsync(BasicReportParam reportParam)
+        {
+            var response = await _httpClient.PostAsJsonAsync(
+                "journalEntry/GetDeletedJournalEntries", reportParam, _jsonOptions);
+            response.EnsureSuccessStatusCode();
+            var result = await response.Content.ReadFromJsonAsync<List<JournalEntryDeletedReport>>(_jsonOptions);
+            return result ?? new List<JournalEntryDeletedReport>();
+        }
+
+        public async Task<List<JournalEntryReport>> GetJournalEntryReportAsync(BasicReportParam reportParam)
+        {
+            var response = await _httpClient.PostAsJsonAsync(
+                "journalEntry/GetJournalEntryReport", reportParam, _jsonOptions);
+            response.EnsureSuccessStatusCode();
+            var result = await response.Content.ReadFromJsonAsync<List<JournalEntryReport>>(_jsonOptions);
+            return result ?? new List<JournalEntryReport>();
         }
     }
 }

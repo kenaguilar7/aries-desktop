@@ -39,6 +39,7 @@ namespace AriesContador.Core.Services
         Task<IEnumerable<JournalEntry>> GetJournalEntriesAsync(int postingPeriodId, CancellationToken cancellationToken = default);
         Task<JournalEntry> GetJournalEntryByIdAsync(int id, CancellationToken cancellationToken = default);
         Task CreateJournalEntryAsync(JournalEntry journalEntry, CancellationToken cancellationToken = default);
+        Task CreateApprovedJournalEntryAsync(JournalEntry journalEntry, string companyId, CancellationToken cancellationToken = default);
         Task UpdateJournalEntryAsync(JournalEntry journalEntry, CancellationToken cancellationToken = default);
         Task<IEnumerable<JournalEntryDeletedReport>> GetAllJournalEntryDeletedAsync(BasicReportParam reportParam, CancellationToken cancellationToken = default);
         Task RestoreJournalEntryAsync(JournalEntry journalEntry, CancellationToken cancellationToken = default);

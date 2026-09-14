@@ -1,42 +1,84 @@
 @using AriesContador.Core.Models.Accounts
 
-<MudStack>
-    <MudTextField T="string" 
-                Label="Search accounts" 
-                Adornment="Adornment.Start" 
-                AdornmentIcon="@Icons.Material.Filled.Search" 
-                @bind-Value="_searchText"
-                Immediate="true" 
-                Clearable="true" />
+<div class="account-tree">
+    @if (ShowSearch)
+    {
+        <MudTextField T="string"
+                      Label="@SearchLabel"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      @bind-Value="_searchText"
+                      Immediate="true"
+                      Clearable="true"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      Class="mb-2" />
+    }
 
-    <MudTreeView T="Account" 
-                Items="@TreeViewItems" 
-                @ref="_treeView"
-                Hover="true" 
-                Dense="true" 
-                ExpandOnClick="true"
-                SelectedValueChanged="HandleSelectedValueChanged">
-        <ItemTemplate>
-            <MudTreeViewItem Items="@(GetChildTreeItems(context.Value))" 
-                            Value="@context.Value" 
-                            Text="@($"{context.Value.Name} ({context.Value.Id})")"
-                            Expanded="@(ShouldExpand(context.Value))"
-                            Visible="@(ShouldBeVisible(context.Value))">
+    <MudTreeView T="Account"
+                 @key="_treeVersion"
+                 Items="@TreeViewItems"
+                 Hover="true"
+                 Dense="true"
+                 ExpandOnClick="true"
+                 Comparer="_comparer"
+                 SelectedValue="@SelectedAccount"
+                 SelectedValueChanged="HandleSelectedValueChanged">
+        <ItemTemplate Context="node">
+            <MudTreeViewItem Items="@GetChildTreeItems(node.Value)"
+                             Value="@node.Value"
+                             Expanded="@ShouldExpand(node.Value)"
+                             Visible="@ShouldBeVisible(node.Value)">
+                <BodyContent>
+                    <div class="account-tree-item">
+                        <span class="account-tree-name">@node.Value.Name</span>
+                        <span class="account-type-badge">@AccountUi.TypeBadge(node.Value.AccountType)</span>
+                        @if (!node.Value.Editable)
+                        {
+                            <i class="fas fa-lock account-lock" title="Cuenta del sistema"></i>
+                        }
+                    </div>
+                </BodyContent>
             </MudTreeViewItem>
         </ItemTemplate>
     </MudTreeView>
-</MudStack>
+</div>
 
 @code {
     [Parameter]
     public List<Account> Accounts { get; set; } = new();
 
     [Parameter]
+    public Account? SelectedAccount { get; set; }
+
+    [Parameter]
     public EventCallback<Account> OnAccountSelected { get; set; }
 
-    private Account selectedAccount;
-    private MudTreeView<Account> _treeView;
+    [Parameter]
+    public string SearchLabel { get; set; } = "Buscar cuentas";
+
+    [Parameter]
+    public bool ShowSearch { get; set; } = true;
+
     private string _searchText = string.Empty;
+    private bool _expandAll;
+    private int _treeVersion;
+    private static readonly IEqualityComparer<Account> _comparer = new AccountIdComparer();
+
+    public void ExpandAll()
+    {
+        _expandAll = true;
+        _treeVersion++;
+        StateHasChanged();
+    }
+
+    public void CollapseAll()
+    {
+        _expandAll = false;
+        _searchText = string.Empty;
+        _treeVersion++;
+        StateHasChanged();
+    }
 
     private IReadOnlyCollection<TreeItemData<Account>> TreeViewItems =>
         RootAccounts
@@ -47,7 +89,8 @@
                 Expanded = ShouldExpand(a)
             }).ToList();
 
-    private IEnumerable<Account> RootAccounts => Accounts.Where(a => !a.FatherAccount.HasValue);
+    private IEnumerable<Account> RootAccounts =>
+        Accounts.Where(AccountRules.IsRoot);
 
     private IReadOnlyCollection<TreeItemData<Account>> GetChildTreeItems(Account parent)
     {
@@ -64,10 +107,9 @@
 
     private bool ShouldExpand(Account account)
     {
-        if (string.IsNullOrWhiteSpace(_searchText))
-            return false;
-
-        return HasMatchInSubtree(account);
+        if (!string.IsNullOrWhiteSpace(_searchText))
+            return HasMatchInSubtree(account);
+        return _expandAll;
     }
 
     private bool ShouldBeVisible(Account account)
@@ -81,13 +123,12 @@
     private bool HasMatchInSubtree(Account parent)
     {
         var children = Accounts.Where(a => a.FatherAccount == parent.Id);
-        
         foreach (var child in children)
         {
             if (IsMatch(child) || HasMatchInSubtree(child))
                 return true;
         }
-        
+
         return false;
     }
 
@@ -97,21 +138,26 @@
             return false;
 
         var searchTerms = _searchText.Trim()
-                                   .ToLowerInvariant()
-                                   .Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        
-        var accountName = account.Name.ToLowerInvariant();
+            .ToLowerInvariant()
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        var accountName = account.Name?.ToLowerInvariant() ?? string.Empty;
         var accountId = account.Id.ToString();
 
-        return searchTerms.All(term => 
+        return searchTerms.All(term =>
             accountName.Contains(term) || accountId.Contains(term));
     }
 
     private async Task HandleSelectedValueChanged(Account account)
     {
         if (account != null)
-        {
             await OnAccountSelected.InvokeAsync(account);
-        }
+    }
+
+    private sealed class AccountIdComparer : IEqualityComparer<Account>
+    {
+        public bool Equals(Account? x, Account? y) => x?.Id == y?.Id;
+
+        public int GetHashCode(Account obj) => obj?.Id.GetHashCode() ?? 0;
     }
 }

@@ -1,0 +1,48 @@
+@inject ThemeService ThemeService
+@implements IDisposable
+
+<button type="button"
+        class="theme-toggle"
+        title="@(_isDark ? "Cambiar a tema claro" : "Cambiar a tema oscuro")"
+        aria-label="@(_isDark ? "Cambiar a tema claro" : "Cambiar a tema oscuro")"
+        @onclick="ToggleTheme">
+    @if (_isDark)
+    {
+        <i class="fas fa-sun"></i>
+    }
+    else
+    {
+        <i class="fas fa-moon"></i>
+    }
+</button>
+
+@code {
+    private bool _isDark;
+
+    protected override void OnInitialized()
+    {
+        ThemeService.Changed += OnThemeChanged;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ThemeService.InitializeAsync();
+        _isDark = ThemeService.IsDarkMode;
+    }
+
+    private void OnThemeChanged()
+    {
+        _isDark = ThemeService.IsDarkMode;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ToggleTheme()
+    {
+        await ThemeService.ToggleAsync();
+    }
+
+    public void Dispose()
+    {
+        ThemeService.Changed -= OnThemeChanged;
+    }
+}

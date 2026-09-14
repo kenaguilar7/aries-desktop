@@ -1,0 +1,26 @@
+.account-create-form {
+    max-width: 36rem;
+}
+
+.account-create-meta {
+    display: grid;
+    gap: 12px;
+}
+
+.account-create-meta dt {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--fg-muted);
+    margin-bottom: 2px;
+}
+
+.account-create-meta dd {
+    margin: 0;
+    color: var(--fg-default);
+}
+
+.account-create-warning {
+    white-space: pre-line;
+    color: var(--fg-muted);
+    margin-bottom: 1rem;
+}

@@ -227,13 +227,17 @@ namespace AriesContador.Services
                 throw new InvalidOperationException("La referencia de pago es requerida");
 
             var prepared = new List<SaleLine>();
+            var map = await _unitOfWork.PosAccountMapRepository.GetByCompanyIdAsync(sale.CompanyId, cancellationToken)
+                .ConfigureAwait(false);
+            var taxRate = map?.TaxRate ?? PosTax.DefaultRate;
+            var pricesIncludeTax = map == null || map.PricesIncludeTax;
             foreach (var raw in sale.Lines)
             {
                 if (raw.ProductId <= 0)
                     throw new InvalidOperationException("Línea de venta sin producto");
                 var product = await RequireProductAsync(raw.ProductId, sale.CompanyId, cancellationToken)
                     .ConfigureAwait(false);
-                var line = PrepareLine(product, raw);
+                var line = PrepareLine(product, raw, taxRate, pricesIncludeTax);
                 if (product.Stock < line.StockToDecrement)
                     throw new InvalidOperationException("Stock insuficiente para " + product.Name);
                 prepared.Add(line);
@@ -242,6 +246,9 @@ namespace AriesContador.Services
             sale.SessionId = session.Id;
             sale.Lines = prepared;
             sale.Total = prepared.Sum(l => l.LineTotal);
+            sale.NetAmount = prepared.Sum(l => l.NetAmount);
+            sale.TaxAmount = prepared.Sum(l => l.TaxAmount);
+            sale.CostAmount = prepared.Sum(l => l.CostAmount);
             sale.SoldAt = sale.SoldAt == default ? DateTime.Now : sale.SoldAt;
             sale.UpdatedBy = sale.CreatedBy;
             sale.Active = true;
@@ -292,7 +299,7 @@ namespace AriesContador.Services
             return history.Where(s => s.ClosedAt.HasValue).ToList();
         }
 
-        private static SaleLine PrepareLine(Product product, SaleLine raw)
+        private static SaleLine PrepareLine(Product product, SaleLine raw, decimal taxRate, bool pricesIncludeTax)
         {
             var line = new SaleLine
             {
@@ -300,7 +307,8 @@ namespace AriesContador.Services
                 ProductName = product.Name,
                 SoldByWeight = product.SoldByWeight,
                 UnitPrice = product.Price,
-                PricePerKilo = product.PricePerKilo
+                PricePerKilo = product.PricePerKilo,
+                TaxExempt = product.TaxExempt
             };
 
             if (product.SoldByWeight)
@@ -323,7 +331,32 @@ namespace AriesContador.Services
 
             if (line.LineTotal <= 0)
                 throw new InvalidOperationException("El importe de la línea debe ser mayor a cero");
+
+            ApplyTaxAndCost(product, line, taxRate, pricesIncludeTax);
             return line;
+        }
+
+        private static void ApplyTaxAndCost(Product product, SaleLine line, decimal taxRate, bool pricesIncludeTax)
+        {
+            if (pricesIncludeTax)
+            {
+                var split = PosTax.SplitGross(line.LineTotal, taxRate, product.TaxExempt);
+                line.NetAmount = split.Net;
+                line.TaxAmount = split.Tax;
+            }
+            else if (product.TaxExempt || taxRate <= 0)
+            {
+                line.NetAmount = line.LineTotal;
+                line.TaxAmount = 0m;
+            }
+            else
+            {
+                line.NetAmount = line.LineTotal;
+                line.TaxAmount = Math.Round(line.LineTotal * taxRate, 2, MidpointRounding.AwayFromZero);
+                line.LineTotal = line.NetAmount + line.TaxAmount;
+            }
+
+            line.CostAmount = PosTax.LineCost(product, line);
         }
 
         private async Task<Product> RequireProductAsync(int id, string companyId, CancellationToken cancellationToken)
@@ -359,6 +392,8 @@ namespace AriesContador.Services
                 throw new InvalidOperationException("El precio por kilo debe ser mayor a cero");
             if (product.Stock < 0)
                 throw new InvalidOperationException("El stock no puede ser negativo");
+            if (product.Cost < 0)
+                throw new InvalidOperationException("El costo no puede ser negativo");
         }
 
         private static void ValidateRegister(SalesRegister register)

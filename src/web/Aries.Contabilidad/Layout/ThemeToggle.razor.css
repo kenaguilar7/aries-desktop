@@ -1,0 +1,20 @@
+.theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid var(--border-default, #d0d7de);
+    border-radius: 6px;
+    background: var(--btn-bg, #f6f8fa);
+    color: var(--header-fg, #1f2328);
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.theme-toggle:hover {
+    background: var(--btn-hover-bg, #f3f4f6);
+    color: var(--header-fg, #1f2328);
+}

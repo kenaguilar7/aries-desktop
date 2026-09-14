@@ -1,0 +1,146 @@
+@inject IClientCompanyService CompanyService
+@inject ILocalStorageService LocalStorage
+@inject NavigationManager NavigationManager
+@inject JournalWorkspaceGuard WorkspaceGuard
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+@if (_company != null)
+{
+    <div class="company-switcher">
+        <span class="company-switcher-sep">/</span>
+        <button type="button"
+                class="company-switcher-btn"
+                title="Cambiar compañía"
+                aria-expanded="@_open"
+                aria-haspopup="listbox"
+                @onclick="Toggle">
+            <span class="company-switcher-name">@_company.CompanyName</span>
+            <span class="company-switcher-code">@_company.Code</span>
+            <i class="fas fa-caret-down" aria-hidden="true"></i>
+        </button>
+        @if (_open)
+        {
+            <div class="company-switcher-backdrop" @onclick="Close"></div>
+            <div class="company-switcher-menu" role="listbox">
+                @if (_loading)
+                {
+                    <p class="company-switcher-empty">Cargando…</p>
+                }
+                else if (_companies.Count == 0)
+                {
+                    <p class="company-switcher-empty">No hay compañías</p>
+                }
+                else
+                {
+                    @foreach (var company in _companies)
+                    {
+                        var selected = string.Equals(company.Code, _company.Code, StringComparison.OrdinalIgnoreCase);
+                        <button type="button"
+                                class="company-switcher-item @(selected ? "active" : null)"
+                                role="option"
+                                aria-selected="@selected"
+                                @onclick="() => Select(company)">
+                            <span>@company.CompanyName</span>
+                            <span class="company-switcher-code">@company.Code</span>
+                        </button>
+                    }
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private Company? _company;
+    private List<Company> _companies = new();
+    private bool _open;
+    private bool _loading;
+
+    private static readonly string[] CompanyPrefixes =
+    {
+        "dashboard", "accounts", "journal-entries", "pos",
+        "accounting", "integration", "automations"
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        NavigationManager.LocationChanged += OnLocationChanged;
+        await LoadCurrent();
+    }
+
+    private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        _open = false;
+        await LoadCurrent();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadCurrent()
+    {
+        _company = await LocalStorage.GetStoredCompany();
+    }
+
+    private async Task Toggle()
+    {
+        _open = !_open;
+        if (_open)
+            await LoadList();
+    }
+
+    private void Close() => _open = false;
+
+    private async Task LoadList()
+    {
+        _loading = true;
+        try
+        {
+            var result = await CompanyService.GetAllCompaniesAsync();
+            _companies = result?.ToList() ?? new List<Company>();
+        }
+        catch
+        {
+            _companies = new List<Company>();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task Select(Company company)
+    {
+        if (company == null || string.IsNullOrEmpty(company.Code))
+            return;
+
+        if (!WorkspaceGuard.CanLeave)
+        {
+            Snackbar.Add(WorkspaceGuard.Message, Severity.Warning);
+            _open = false;
+            return;
+        }
+
+        await LocalStorage.StoreCompanyInLocalStorage(company);
+        _company = company;
+        _open = false;
+        NavigationManager.NavigateTo(PathForCompany(company.Code));
+    }
+
+    private string PathForCompany(string newCompanyId)
+    {
+        var path = NavigationManager.ToBaseRelativePath(NavigationManager.Uri).Trim('/');
+        var parts = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length >= 2 && CompanyPrefixes.Contains(parts[0], StringComparer.OrdinalIgnoreCase))
+        {
+            parts[1] = newCompanyId;
+            return "/" + string.Join("/", parts);
+        }
+
+        return $"/dashboard/{newCompanyId}";
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+}

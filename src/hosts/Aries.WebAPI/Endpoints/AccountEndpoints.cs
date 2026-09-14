@@ -30,20 +30,53 @@ namespace Aries.WebAPI.Endpoints
                 var account = await svc.FindAccountAsync(accountId, http.RequestAborted);
                 if (account == null)
                     return Results.NotFound();
-                if (!string.IsNullOrEmpty(companyId))
-                    account.CompanyId = companyId;
+
+                var cid = string.IsNullOrEmpty(companyId) ? account.CompanyId : companyId;
                 var from = startMonth ?? DateTime.Today;
                 var to = endMonth ?? from;
-                await svc.FillAccountsWithBalancesAsync(new List<Account> { account }, from, to, http.RequestAborted);
-                return Results.Ok(account);
+                var accounts = (await svc.GetAccountsAsync(cid, http.RequestAborted)).ToList();
+                await svc.FillAccountsWithBalancesAsync(accounts, from, to, http.RequestAborted);
+                var match = accounts.FirstOrDefault(a => a.Id == accountId);
+                return match == null ? Results.NotFound() : Results.Ok(match);
             });
+
+            group.MapGet("/{accountId:int}/movements", async (
+                HttpContext http,
+                int accountId,
+                IFinancialService financial,
+                IFinancialReportService reports) =>
+            {
+                var account = await financial.FindAccountAsync(accountId, http.RequestAborted);
+                if (account == null)
+                    return Results.NotFound();
+
+                var auxiliar = account.AccountType == AccountType.Cuenta_Auxiliar;
+                var table = await reports.GetAccountMovementReportAsync(accountId, auxiliar, http.RequestAborted);
+                return Results.Ok(AccountMovementMapper.FromTable(table));
+            });
+
+            group.MapPost("/EvaluateParent", async (HttpContext http, Account parent, IFinancialService svc) =>
+                await EndpointRun.TryAsync(async () =>
+                {
+                    var (canProceed, message) = await svc.EvaluateParentForNewChildAsync(parent, http.RequestAborted);
+                    return Results.Ok(new EvaluateParentResult
+                    {
+                        CanProceed = canProceed,
+                        Message = message ?? string.Empty
+                    });
+                }));
 
             group.MapPost("/Create", async (HttpContext http, Account account, IFinancialService svc) =>
                 await EndpointRun.TryAsync(async () =>
                 {
                     var userId = http.TryGetUserId();
-                    if (userId.HasValue && account.CreatedBy == 0)
-                        account.CreatedBy = userId.Value;
+                    if (userId.HasValue)
+                    {
+                        if (account.CreatedBy == 0)
+                            account.CreatedBy = userId.Value;
+                        if (account.UpdatedBy == 0)
+                            account.UpdatedBy = userId.Value;
+                    }
                     await svc.CreateAccountAsync(account, http.RequestAborted);
                     return Results.Ok();
                 }));

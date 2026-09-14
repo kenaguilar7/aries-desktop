@@ -1,0 +1,4 @@
+.movements-tree {
+    max-height: 280px;
+    overflow: auto;
+}

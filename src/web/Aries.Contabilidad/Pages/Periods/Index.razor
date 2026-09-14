@@ -1,0 +1,380 @@
+@page "/accounting/{CompanyId}/periods"
+@using AriesContador.Core.Models.JournalEntries
+@inject IPostingPeriodService PeriodService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<PageTitle>Periodos - Aries Contabilidad</PageTitle>
+
+<div class="container-fluid px-0">
+    <div class="page-header">
+        <h1 class="page-title mb-0">Periodos</h1>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="d-flex justify-content-center py-5">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        </div>
+    }
+    else
+    {
+        <MudTabs Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-4">
+            <MudTabPanel Text="Abrir">
+                <MudGrid>
+                    <MudItem xs="12" md="6" lg="4">
+                        <MudSelect T="string"
+                                   Label="Seleccione el mes"
+                                   @bind-Value="_selectedOpenKey"
+                                   Disabled="@(_busy || _available.Count == 0)"
+                                   Variant="Variant.Outlined"
+                                   AnchorOrigin="Origin.BottomCenter">
+                            @foreach (var period in _available)
+                            {
+                                <MudSelectItem T="string" Value="@OpenKey(period)">@period.ToString()</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" md="6" lg="4" Class="d-flex align-center">
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Disabled="@(_busy || _available.Count == 0)"
+                                   OnClick="OpenPeriodAsync">
+                            Abrir mes
+                        </MudButton>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudDataGrid T="PostingPeriodInfoReport"
+                                     Items="@_periodInfo"
+                                     Dense="true"
+                                     Hover="true"
+                                     Striped="true"
+                                     Elevation="0"
+                                     Class="periods-grid">
+                            <Columns>
+                                <PropertyColumn Property="x => x.AccountPeriodName" Title="Periodo Contable" />
+                                <PropertyColumn Property="x => x.Status" Title="Estado" />
+                                <PropertyColumn Property="x => x.CreatedDate" Title="Fecha Creación" />
+                                <PropertyColumn Property="x => x.ClosedDate" Title="Cerrado" />
+                                <PropertyColumn Property="x => x.UserName" Title="Usuario" />
+                            </Columns>
+                            <NoRecordsContent>
+                                <MudText Class="pa-4">No hay periodos registrados.</MudText>
+                            </NoRecordsContent>
+                        </MudDataGrid>
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
+            <MudTabPanel Text="Cerrar">
+                @if (_fromPeriod == null)
+                {
+                    <MudAlert Severity="Severity.Info">No hay periodos abiertos para cerrar.</MudAlert>
+                }
+                else
+                {
+                    <MudGrid>
+                        <MudItem xs="12" md="4">
+                            <MudTextField Value="@_fromPeriod.ToString()"
+                                          Label="Desde"
+                                          ReadOnly="true"
+                                          Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudSelect T="int"
+                                       Label="Hasta"
+                                       @bind-Value="_selectedToPeriodId"
+                                       ToStringFunc="@FormatPeriodId"
+                                       Disabled="@_busy"
+                                       Variant="Variant.Outlined"
+                                       AnchorOrigin="Origin.BottomCenter">
+                                @foreach (var period in _toPeriods)
+                                {
+                                    <MudSelectItem T="int" Value="@period.Id">@period.ToString()</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="8">
+                            <MudTextField @bind-Value="_userNotes"
+                                          Label="Notas"
+                                          Variant="Variant.Outlined"
+                                          Lines="3"
+                                          MaxLength="100"
+                                          Counter="100"
+                                          Disabled="@_busy" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Error"
+                                       Disabled="@(_busy || _selectedToPeriodId == 0)"
+                                       OnClick="ClosePeriodAsync">
+                                Cerrar Período
+                            </MudButton>
+                        </MudItem>
+                    </MudGrid>
+                }
+                <MudDataGrid T="ClosingPostingPeriodReport"
+                             Items="@_closingHistory"
+                             Dense="true"
+                             Hover="true"
+                             Striped="true"
+                             Elevation="0"
+                             Class="periods-grid mt-4">
+                    <Columns>
+                        <PropertyColumn Property="x => x.FromPeriod" Title="Período Desde" />
+                        <PropertyColumn Property="x => x.ToPeriod" Title="Período Hasta" />
+                        <PropertyColumn Property="x => x.Amount" Title="Monto" Format="N2" />
+                        <PropertyColumn Property="x => x.UserNotes" Title="Notas de usuario" />
+                        <PropertyColumn Property="x => x.CreatedAt" Title="Fecha" Format="g" />
+                        <PropertyColumn Property="x => x.CreatedBy" Title="Usuario" />
+                    </Columns>
+                    <NoRecordsContent>
+                        <MudText Class="pa-4">No hay cierres registrados.</MudText>
+                    </NoRecordsContent>
+                </MudDataGrid>
+            </MudTabPanel>
+        </MudTabs>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string CompanyId { get; set; } = string.Empty;
+
+    private string? _loadedCompanyId;
+    private bool _loading = true;
+    private bool _busy;
+    private List<PostingPeriod> _postingPeriods = new();
+    private List<PostingPeriod> _available = new();
+    private List<PostingPeriodInfoReport> _periodInfo = new();
+    private List<ClosingPostingPeriodReport> _closingHistory = new();
+    private List<PostingPeriod> _toPeriods = new();
+    private PostingPeriod? _fromPeriod;
+    private string? _selectedOpenKey;
+    private int _selectedToPeriodId;
+    private string _userNotes = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.IsNullOrWhiteSpace(CompanyId) || CompanyId == _loadedCompanyId)
+            return;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        try
+        {
+            await LoadGridsAsync();
+            _loadedCompanyId = CompanyId;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+
+        await LoadAvailableAsync();
+    }
+
+    private async Task ReloadFormAsync()
+    {
+        await LoadGridsAsync();
+        await LoadAvailableAsync();
+    }
+
+    private async Task LoadGridsAsync()
+    {
+        var periodsTask = PeriodService.GetPostingPeriodsAsync(CompanyId);
+        var infoTask = PeriodService.GetPostingPeriodInfoAsync(CompanyId);
+        var closingTask = PeriodService.GetClosingPostingPeriodReportAsync(CompanyId);
+        await Task.WhenAll(periodsTask, infoTask, closingTask);
+
+        _postingPeriods = periodsTask.Result;
+        _periodInfo = infoTask.Result;
+        _closingHistory = closingTask.Result;
+        ApplyCloseSelectors();
+    }
+
+    private async Task LoadAvailableAsync()
+    {
+        try
+        {
+            var available = await PeriodService.GetAvailablePostingPeriodsForBeCreatedAsync(CompanyId);
+            _available = available.Count > 0 ? available : FallbackAvailable(_postingPeriods);
+        }
+        catch
+        {
+            _available = FallbackAvailable(_postingPeriods);
+        }
+
+        if (_available.Count == 0)
+        {
+            _selectedOpenKey = null;
+            return;
+        }
+
+        if (_available.All(p => OpenKey(p) != _selectedOpenKey))
+            _selectedOpenKey = OpenKey(_available[0]);
+    }
+
+    private void ApplyCloseSelectors()
+    {
+        _fromPeriod = _postingPeriods
+            .Where(x => !x.Closed)
+            .OrderBy(x => x.Date)
+            .FirstOrDefault();
+
+        if (_fromPeriod == null)
+        {
+            _toPeriods = new List<PostingPeriod>();
+            _selectedToPeriodId = 0;
+            return;
+        }
+
+        _toPeriods = _postingPeriods
+            .Where(x => !x.Closed && x.Date >= _fromPeriod.Date)
+            .OrderBy(x => x.Date)
+            .ToList();
+
+        if (_toPeriods.All(p => p.Id != _selectedToPeriodId))
+            _selectedToPeriodId = _toPeriods.First().Id;
+    }
+
+    private static string OpenKey(PostingPeriod period) => period.ToString();
+
+    private string FormatPeriodId(int id) =>
+        _toPeriods.FirstOrDefault(p => p.Id == id)?.ToString() ?? string.Empty;
+
+    private static List<PostingPeriod> FallbackAvailable(IReadOnlyCollection<PostingPeriod> periods)
+    {
+        if (periods.Count == 0)
+        {
+            var today = DateTime.Today;
+            return new List<PostingPeriod>
+            {
+                new() { Date = new DateTime(today.Year, today.Month, 1) }
+            };
+        }
+
+        var newest = periods.OrderByDescending(p => p.Date).First();
+        var next = new DateTime(newest.Date.Year, newest.Date.Month, 1).AddMonths(1);
+        return new List<PostingPeriod> { new() { Date = next } };
+    }
+
+    private async Task OpenPeriodAsync()
+    {
+        var selected = _available.FirstOrDefault(p => OpenKey(p) == _selectedOpenKey);
+        if (selected == null)
+            return;
+
+        _busy = true;
+        try
+        {
+            await CreateNewPostingPeriodAsync(selected);
+            Snackbar.Add($"Se abrió {selected}.", Severity.Success);
+            await ReloadFormAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task CreateNewPostingPeriodAsync(PostingPeriod selected)
+    {
+        var postingPeriod = new PostingPeriod
+        {
+            Date = new DateTime(selected.Date.Year, selected.Date.Month, 1, 0, 0, 0, 0),
+            Closed = false,
+            CompanyId = CompanyId
+        };
+        await PeriodService.CreatePostingPeriodAsync(postingPeriod);
+    }
+
+    private async Task ClosePeriodAsync()
+    {
+        if (_fromPeriod == null)
+            return;
+
+        var toPeriod = _toPeriods.FirstOrDefault(p => p.Id == _selectedToPeriodId);
+        if (toPeriod == null)
+            return;
+
+        _busy = true;
+        try
+        {
+            var amount = await PeriodService.GetClosureBalanceAsync(new BasicReportParam
+            {
+                CompanyId = CompanyId,
+                FirstDate = $"{_fromPeriod.Date.Year}{_fromPeriod.Date.Month:D2}",
+                EndDate = $"{toPeriod.Date.Year}{toPeriod.Date.Month:D2}"
+            });
+
+            var confirmed = await DialogService.ShowMessageBox(
+                "Aries Contabilidad",
+                $"Se creará un cierre contable por {amount.Amount:n}",
+                yesText: "Sí",
+                cancelText: "No");
+            if (confirmed != true)
+                return;
+
+            var range = _postingPeriods
+                .Where(p => p.Date >= _fromPeriod.Date && p.Date <= toPeriod.Date)
+                .Select(p => new PostingPeriod
+                {
+                    Id = p.Id,
+                    CompanyId = p.CompanyId,
+                    Date = p.Date,
+                    Closed = true
+                })
+                .ToList();
+
+            var closing = new PostingPeriodEndClosing
+            {
+                CompanyId = CompanyId,
+                FromPeriodId = _fromPeriod.Id,
+                ToPeriodId = toPeriod.Id,
+                FromPeriod = _fromPeriod.ToString(),
+                ToPeriod = toPeriod.ToString(),
+                Amount = amount.Amount,
+                UserNotes = _userNotes,
+                PostingPeriods = range
+            };
+
+            await PeriodService.ClosePostingPeriodAsync(closing);
+
+            var candidate = _available.FirstOrDefault(p => OpenKey(p) == _selectedOpenKey);
+            if (candidate != null)
+            {
+                try
+                {
+                    await CreateNewPostingPeriodAsync(candidate);
+                }
+                catch (Exception ex)
+                {
+                    Snackbar.Add($"El periodo se cerró, pero no se pudo abrir el siguiente: {ex.Message}", Severity.Warning);
+                }
+            }
+
+            _userNotes = string.Empty;
+            Snackbar.Add("Periodo cerrado.", Severity.Success);
+            await ReloadFormAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

@@ -1,26 +1,44 @@
-::deep .mud-treeview {
-    max-height: 600px;
-    overflow-y: auto;
+.account-tree ::deep .mud-treeview {
+    max-height: none;
 }
 
-::deep .mud-treeview-item-content {
+.account-tree ::deep .mud-treeview-item-content {
     width: 100%;
     padding: 4px 8px;
 }
 
-::deep .mud-treeview-item-arrow {
+.account-tree ::deep .mud-treeview-item-arrow {
     min-width: 24px;
     padding: 0;
 }
 
-::deep .mud-treeview-item {
-    transition: background-color 0.2s ease;
+.account-tree-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    width: 100%;
 }
 
-::deep .mud-treeview-item:hover {
-    background-color: var(--mud-palette-action-default-hover);
+.account-tree-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-::deep .mud-treeview-item-selected {
-    background-color: var(--mud-palette-action-default);
+.account-type-badge {
+    flex-shrink: 0;
+    font-size: 11px;
+    line-height: 1.2;
+    color: var(--fg-muted);
+    border: 1px solid var(--border-default);
+    border-radius: 999px;
+    padding: 1px 7px;
+    background: var(--bg-canvas-subtle);
+}
+
+.account-lock {
+    flex-shrink: 0;
+    font-size: 11px;
+    color: var(--fg-subtle);
 }

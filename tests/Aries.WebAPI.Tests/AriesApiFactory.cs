@@ -13,7 +13,9 @@ namespace Aries.WebAPI.Tests
     {
         public StubAdministrationService Admin { get; } = new StubAdministrationService();
         public StubFinancialService Financial { get; } = new StubFinancialService();
+        public StubFinancialReportService Reports { get; } = new StubFinancialReportService();
         public StubPointOfSaleService Pos { get; } = new StubPointOfSaleService();
+        public StubPosAccountingService PosAccounting { get; } = new StubPosAccountingService();
         public string UpdatesRoot { get; } =
             Path.Combine(Path.GetTempPath(), "aries-squirrel-" + Guid.NewGuid().ToString("N"));
 
@@ -26,15 +28,21 @@ namespace Aries.WebAPI.Tests
             {
                 Remove<IAdministrationService>(services);
                 Remove<IFinancialService>(services);
+                Remove<IFinancialReportService>(services);
                 Remove<IPointOfSaleService>(services);
+                Remove<IPosAccountingService>(services);
                 Remove<IUnitOfWork>(services);
 
                 services.AddSingleton(Admin);
                 services.AddSingleton<IAdministrationService>(sp => Admin);
                 services.AddSingleton(Financial);
                 services.AddSingleton<IFinancialService>(sp => Financial);
+                services.AddSingleton(Reports);
+                services.AddSingleton<IFinancialReportService>(sp => Reports);
                 services.AddSingleton(Pos);
                 services.AddSingleton<IPointOfSaleService>(sp => Pos);
+                services.AddSingleton(PosAccounting);
+                services.AddSingleton<IPosAccountingService>(sp => PosAccounting);
             });
         }
 

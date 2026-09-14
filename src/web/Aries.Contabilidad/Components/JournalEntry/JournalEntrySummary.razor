@@ -1,41 +1,48 @@
-@using MudBlazor
-
-<MudPaper Class="pa-4 mt-4">
-    <MudGrid>
-        <MudItem xs="12" sm="4">
-            <MudText Typo="Typo.subtitle1">Total Debit</MudText>
-            <MudText Typo="Typo.h6">@TotalDebit.ToString("N2")</MudText>
-        </MudItem>
-        <MudItem xs="12" sm="4">
-            <MudText Typo="Typo.subtitle1">Total Credit</MudText>
-            <MudText Typo="Typo.h6">@TotalCredit.ToString("N2")</MudText>
-        </MudItem>
-        <MudItem xs="12" sm="4">
-            <MudText Typo="Typo.subtitle1">Balance Status</MudText>
-            <MudChip T="string" Color="@(IsBalanced ? Color.Success : Color.Error)" 
-                    Size="Size.Small">
-                @(IsBalanced ? "Balanced" : "Unbalanced")
-            </MudChip>
-        </MudItem>
-    </MudGrid>
-</MudPaper>
+<div class="asientos-footer">
+    <div class="asientos-totals @(IsBalanced ? "asientos-totals-ok" : null)">
+        <div>
+            <span class="text-muted">Total débitos</span>
+            <strong>@AsientosUi.Colones(TotalDebit)</strong>
+        </div>
+        <div>
+            <span class="text-muted">Total créditos</span>
+            <strong>@AsientosUi.Colones(TotalCredit)</strong>
+        </div>
+        @if (!IsBalanced)
+        {
+            <div>
+                <span class="text-muted">Diferencia</span>
+                <strong>@AsientosUi.Colones(TotalDebit - TotalCredit)</strong>
+            </div>
+        }
+    </div>
+    <div class="asientos-footer-actions">
+        <button type="button" class="btn btn-secondary" disabled="@(!CanTransfer)" @onclick="HandleTransfer">Transferir</button>
+        <button type="button" class="btn btn-secondary" disabled="@(!CanEditLine)" @onclick="HandleEditLine">Editar línea</button>
+        <button type="button" class="btn btn-secondary" disabled="@(!CanDeleteLines)" @onclick="HandleDeleteLines">Eliminar línea</button>
+        <button type="button" class="btn btn-danger" disabled="@(!CanDeleteEntry)" @onclick="HandleDeleteEntry">Eliminar asiento</button>
+        <button type="button" class="btn btn-secondary" disabled="@(!CanClear)" @onclick="HandleClear">Limpiar</button>
+    </div>
+</div>
 
 @code {
-    /// <summary>
-    /// Total debit amount
-    /// </summary>
-    [Parameter]
-    public decimal TotalDebit { get; set; }
+    [Parameter] public decimal TotalDebit { get; set; }
+    [Parameter] public decimal TotalCredit { get; set; }
+    [Parameter] public bool IsBalanced { get; set; }
+    [Parameter] public bool CanTransfer { get; set; }
+    [Parameter] public bool CanEditLine { get; set; }
+    [Parameter] public bool CanDeleteLines { get; set; }
+    [Parameter] public bool CanDeleteEntry { get; set; }
+    [Parameter] public bool CanClear { get; set; }
+    [Parameter] public EventCallback OnTransfer { get; set; }
+    [Parameter] public EventCallback OnEditLine { get; set; }
+    [Parameter] public EventCallback OnDeleteLines { get; set; }
+    [Parameter] public EventCallback OnDeleteEntry { get; set; }
+    [Parameter] public EventCallback OnClear { get; set; }
 
-    /// <summary>
-    /// Total credit amount
-    /// </summary>
-    [Parameter]
-    public decimal TotalCredit { get; set; }
-
-    /// <summary>
-    /// Indicates whether the entry is balanced
-    /// </summary>
-    [Parameter]
-    public bool IsBalanced { get; set; }
+    private Task HandleTransfer() => OnTransfer.InvokeAsync();
+    private Task HandleEditLine() => OnEditLine.InvokeAsync();
+    private Task HandleDeleteLines() => OnDeleteLines.InvokeAsync();
+    private Task HandleDeleteEntry() => OnDeleteEntry.InvokeAsync();
+    private Task HandleClear() => OnClear.InvokeAsync();
 }

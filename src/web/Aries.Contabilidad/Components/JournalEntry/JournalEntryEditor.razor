@@ -1,240 +1,512 @@
-@using Microsoft.AspNetCore.Components.Forms
+@implements IDisposable
+@inject IPostingPeriodService PostingPeriodService
+@inject IJournalEntryService JournalEntryService
+@inject IJournalEntryLineService JournalEntryLineService
+@inject ILocalStorageService LocalStorageService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+@inject JournalWorkspaceGuard WorkspaceGuard
 
+<div class="asientos-workspace" @ref="_workspace">
+    <div class="page-header">
+        <h1 class="page-title mb-0">Asientos</h1>
+        <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-primary" disabled="@(_busy || PeriodClosed || _postingPeriods.Count == 0)" @onclick="CreateNewJournalEntry">
+                Nuevo asiento
+            </button>
+            <button type="button" class="btn btn-secondary" disabled="@_busy" @onclick="RefreshGrid">Refrescar</button>
+        </div>
+    </div>
 
-<EditForm Model="@JournalEntry">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+    @if (_loading)
+    {
+        <div class="d-flex justify-content-center py-5">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    }
+    else if (_postingPeriods.Count == 0)
+    {
+        <div class="alert alert-info">Esta compañía no tiene periodos contables. Ábralos en Periodos antes de registrar asientos.</div>
+    }
+    else
+    {
+        <JournalEntryHeader PostingPeriodId="JournalEntry.PostingPeriodId"
+                            SelectedEntryId="JournalEntry.Id"
+                            PostingPeriods="_postingPeriods"
+                            JournalEntries="_journalEntries"
+                            IsBalanced="IsBalanced"
+                            PeriodClosed="PeriodClosed"
+                            PostingPeriodIdChanged="HandlePostingPeriodChanged"
+                            JournalEntryIdChanged="HandleJournalEntryIdChanged" />
 
-    <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
-        <MudGrid>
-            <MudItem xs="12" sm="10">
-                <MudText Typo="Typo.h4" Class="mb-4">@Title</MudText>
-            </MudItem>
-            <MudItem xs="12" sm="2" Class="d-flex justify-end">
-                <MudButton Color="Color.Primary" 
-                          OnClick="CreateNewJournalEntry" 
-                          StartIcon="@Icons.Material.Filled.Add"
-                          Variant="Variant.Filled">
-                    New Entry
-                </MudButton>
-            </MudItem>
-        </MudGrid>
+        <div class="mt-3">
+            <JournalEntryLineComposer @ref="_composer"
+                                      CompanyId="@CompanyId"
+                                      ReadOnly="PeriodClosed"
+                                      CurrencyLocked="AsientosUi.CurrencyLocked(_moneyType)"
+                                      DefaultCurrency="AsientosUi.DefaultCurrency(_moneyType)"
+                                      OnSubmit="HandleLineSubmit"
+                                      OnCancel="HandleComposerCancel" />
+        </div>
 
-        <JournalEntryHeader 
-        JournalEntry="JournalEntry"
-        PostingPeriodId="JournalEntry?.PostingPeriodId ?? 0"
-        JournalEntryIdChanged="HandleJournalEntryIdChanged"
-        PostingPeriodIdChanged="HandlePostingPeriodChanged"
-        PostingPeriods="@_postingPeriods"
-        JournalEntries="@_journalEntries" />
+        <div class="mt-3">
+            <JournalEntryLinesEditor Lines="@(JournalEntry.JournalEntryLines ?? new List<JournalEntryLine>())"
+                                     SelectedIds="_selectedIds"
+                                     SelectedIdsChanged="OnSelectionChanged"
+                                     ShowFx="AsientosUi.ShowForeignColumns(_moneyType)"
+                                     ReadOnly="PeriodClosed" />
+        </div>
 
-        <JournalEntryLinesEditor 
-        Lines="@(JournalEntry?.JournalEntryLines ?? new List<JournalEntryLine>())"
-        OnLineChanged="HandleLineChanged"
-        OnLineDeleted="HandleLineDeleted" 
-        CompanyId="@CompanyId"/>
-
-        <JournalEntrySummary 
-        TotalDebit="@_totalDebit"
-        TotalCredit="@_totalCredit"
-        IsBalanced="@IsBalanced" />
-
-    </MudContainer>
-</EditForm>
+        <JournalEntrySummary TotalDebit="_totalDebit"
+                             TotalCredit="_totalCredit"
+                             IsBalanced="IsBalanced"
+                             CanTransfer="CanTransfer"
+                             CanEditLine="CanEditLine"
+                             CanDeleteLines="CanDeleteLines"
+                             CanDeleteEntry="CanDeleteEntry"
+                             CanClear="CanClear"
+                             OnTransfer="TransferPeriod"
+                             OnEditLine="EditSelectedLine"
+                             OnDeleteLines="DeleteSelectedLines"
+                             OnDeleteEntry="DeleteJournalEntry"
+                             OnClear="ClearWorkspace" />
+    }
+</div>
 
 @code {
-    [Parameter]
-    public string CompanyId { get; set; } 
+    [Parameter] public string CompanyId { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Title of the editor form
-    /// </summary>
-    [Parameter]
-    public string Title { get; set; } = "Create Journal Entry";
-
-    /// <summary>
-    /// Callback invoked when the journal entry is saved
-    /// </summary>
-    [Parameter]
-    public EventCallback<JournalEntry> OnSave { get; set; }
-
-    /// <summary>
-    /// Callback invoked when editing is cancelled
-    /// </summary>
-    [Parameter]
-    public EventCallback OnCancel { get; set; }
-
-    /// <summary>
-    /// The journal entry model being edited
-    /// </summary>
-    [Parameter]
-    public JournalEntry JournalEntry { get; set; } = new JournalEntry
+    public JournalEntry JournalEntry { get; set; } = new()
     {
         JournalEntryLines = new List<JournalEntryLine>(),
-        JournalEntryStatus = JournalEntryStatus.Progress,
-        CreatedAt = DateTime.Now,
-        UpdateAt = DateTime.Now
+        JournalEntryStatus = JournalEntryStatus.Progress
     };
 
+    private JournalEntryLineComposer? _composer;
     private List<PostingPeriod> _postingPeriods = new();
     private List<JournalEntry> _journalEntries = new();
+    private HashSet<int> _selectedIds = new();
+    private CurrencyTypeCompany _moneyType = CurrencyTypeCompany.Dolares_y_Colones;
     private decimal _totalDebit;
     private decimal _totalCredit;
+    private bool _loading = true;
+    private bool _busy;
+    private ElementReference _workspace;
+    private DotNetObjectReference<JournalEntryEditor>? _dotNetRef;
+    private bool _shortcutsBound;
+    private string _loadedCompanyId = string.Empty;
 
-    [Inject]
-    private IPostingPeriodService PostingPeriodService { get; set; } = default!;
+    public bool IsBalanced => JournalEntry.Cuadrado;
+    private bool PeriodClosed => CurrentPeriod?.Closed == true;
+    private PostingPeriod? CurrentPeriod => _postingPeriods.FirstOrDefault(p => p.Id == JournalEntry.PostingPeriodId);
+    private bool CanTransfer => !_busy && !PeriodClosed && JournalEntry.Id != 0 && IsBalanced && (JournalEntry.JournalEntryLines?.Count ?? 0) > 0;
+    private bool CanEditLine => !_busy && !PeriodClosed && _selectedIds.Count == 1;
+    private bool CanDeleteLines => !_busy && !PeriodClosed && _selectedIds.Count > 0;
+    private bool CanDeleteEntry => !_busy && !PeriodClosed && JournalEntry.Id != 0;
+    private bool CanClear => !_busy && !PeriodClosed && JournalEntry.CanNavigateAway();
 
-    [Inject]
-    private IJournalEntryService JournalEntryService { get; set; } = default!;
-
-    [Inject]
-    private IJournalEntryLineService JournalEntryLineService { get; set; } = default!;
-
-    [Inject]
-    private ILocalStorageService LocalStorageService { get; set; } = default!;
-
-    /// <summary>
-    /// Indicates whether debits and credits are balanced
-    /// </summary>
-    public bool IsBalanced => Math.Abs(_totalDebit - _totalCredit) < 0.01m;
-
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
+        if (string.Equals(_loadedCompanyId, CompanyId, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        _loadedCompanyId = CompanyId;
+        await LoadWorkspaceAsync();
+    }
+
+    private async Task LoadWorkspaceAsync()
+    {
+        _loading = true;
         try
         {
-            _postingPeriods = await PostingPeriodService.GetPostingPeriodsAsync(CompanyId);
-            var lastPostingPeriod = _postingPeriods.OrderByDescending(p => p.Date).FirstOrDefault();
-            if (lastPostingPeriod != null)
+            var company = await LocalStorageService.GetStoredCompany();
+            if (company != null)
+                _moneyType = company.MoneyType;
+
+            _postingPeriods = (await PostingPeriodService.GetPostingPeriodsAsync(CompanyId))
+                .OrderByDescending(p => p.Date)
+                .ToList();
+
+            _journalEntries = new List<JournalEntry>();
+            _selectedIds = new HashSet<int>();
+            _composer?.Clear();
+
+            var last = _postingPeriods.FirstOrDefault();
+            if (last != null)
+                await LoadPeriodAsync(last.Id, selectDraft: true);
+            else
             {
-                await HandlePostingPeriodChanged(lastPostingPeriod.Id);
+                JournalEntry = new JournalEntry
+                {
+                    JournalEntryLines = new List<JournalEntryLine>(),
+                    JournalEntryStatus = JournalEntryStatus.Progress
+                };
+                CalculateTotals();
             }
-            CalculateTotals();
         }
         catch (Exception ex)
         {
-            // Handle error appropriately
+            Snackbar.Add(ex.Message, Severity.Error);
         }
+        finally
+        {
+            _loading = false;
+            SyncGuard();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_shortcutsBound || _loading)
+            return;
+
+        _dotNetRef = DotNetObjectReference.Create(this);
+        await JS.InvokeVoidAsync("ariesAsientos.bindShortcuts", _workspace, _dotNetRef);
+        _shortcutsBound = true;
+    }
+
+    [JSInvokable]
+    public async Task OnShortcut(string name)
+    {
+        if (_composer == null || PeriodClosed)
+            return;
+
+        switch (name)
+        {
+            case "account":
+                await _composer.OpenAccountPickerFromShortcut();
+                break;
+            case "debit":
+                _composer.SetDebit();
+                break;
+            case "credit":
+                _composer.SetCredit();
+                break;
+            case "submit":
+                await _composer.SubmitFromShortcut();
+                break;
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnEnterAsTab()
+    {
+        if (_composer == null)
+            return;
+        await JS.InvokeVoidAsync("ariesAsientos.focusNext", _composer.Element);
+    }
+
+    private async Task HandlePostingPeriodChanged(int periodId)
+    {
+        if (!EnsureCanLeave())
+            return;
+        await LoadPeriodAsync(periodId, selectDraft: true);
+    }
+
+    private async Task HandleJournalEntryIdChanged(int entryId)
+    {
+        var next = _journalEntries.FirstOrDefault(e => e.Id == entryId);
+        if (next == null)
+            return;
+        if (!ReferenceEquals(JournalEntry, next) && !EnsureCanLeave())
+            return;
+        await SelectEntryAsync(next);
     }
 
     private async Task CreateNewJournalEntry()
     {
-        var lastPostingPeriod = _postingPeriods.OrderByDescending(p => p.Date).FirstOrDefault();
-        if (lastPostingPeriod != null)
+        if (!EnsureCanLeave())
+            return;
+
+        _busy = true;
+        try
         {
-            await HandlePostingPeriodChanged(lastPostingPeriod.Id);
+            if (JournalEntry.Id == 0)
+            {
+                var user = await LocalStorageService.GetCurrentUserSesion();
+                JournalEntry.CreatedBy = user.Id;
+                JournalEntry.UpdatedBy = user.Id;
+                JournalEntry.Id = await JournalEntryService.CreateJournalEntryAsync(JournalEntry);
+            }
+
+            await LoadPeriodAsync(JournalEntry.PostingPeriodId, selectDraft: true);
+            _composer?.Clear();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _busy = false;
         }
     }
 
-    private async Task<List<JournalEntry>> GetConsecutiveNumberAsync(int postingPeriodId)
+    private async Task LoadPeriodAsync(int postingPeriodId, bool selectDraft, int? selectId = null)
     {
-        var allJournalEntries = await JournalEntryService.GetJournalEntriesAsync(postingPeriodId);
-        var newJournalEntryId = await JournalEntryService.GetConsecutiveNumberAsync(postingPeriodId);
-
-        var newEntry = new JournalEntry
+        var all = await JournalEntryService.GetJournalEntriesAsync(postingPeriodId);
+        var nextNumber = await JournalEntryService.GetConsecutiveNumberAsync(postingPeriodId);
+        var draft = new JournalEntry
         {
             Id = 0,
             CreatedAt = DateTime.Now,
             UpdateAt = DateTime.Now,
             JournalEntryStatus = JournalEntryStatus.Progress,
             PostingPeriodId = postingPeriodId,
-            Number = newJournalEntryId,
+            Number = nextNumber,
             JournalEntryLines = new List<JournalEntryLine>()
         };
+        all.Add(draft);
+        _journalEntries = all.OrderByDescending(e => e.Number).ThenBy(e => e.Id).ToList();
 
-        JournalEntry = newEntry;
-        allJournalEntries.Add(newEntry);
-        return allJournalEntries;
+        JournalEntry selected;
+        if (selectId.HasValue)
+            selected = _journalEntries.FirstOrDefault(e => e.Id == selectId.Value) ?? draft;
+        else if (selectDraft)
+            selected = draft;
+        else
+            selected = _journalEntries.FirstOrDefault(e => e.Id == JournalEntry.Id) ?? draft;
+
+        await SelectEntryAsync(selected);
+    }
+
+    private async Task SelectEntryAsync(JournalEntry entry)
+    {
+        JournalEntry = entry;
+        _selectedIds = new HashSet<int>();
+        if (entry.Id == 0)
+        {
+            entry.JournalEntryLines ??= new List<JournalEntryLine>();
+        }
+        else
+        {
+            entry.JournalEntryLines = await JournalEntryLineService.GetJournalEntryLinesAsync(entry.Id)
+                                       ?? new List<JournalEntryLine>();
+        }
+
+        CalculateTotals();
+        SyncGuard();
+        StateHasChanged();
+    }
+
+    private async Task HandleLineSubmit(JournalEntryLine line)
+    {
+        _busy = true;
+        try
+        {
+            var user = await LocalStorageService.GetCurrentUserSesion();
+            if (JournalEntry.Id == 0)
+            {
+                JournalEntry.CreatedBy = user.Id;
+                JournalEntry.UpdatedBy = user.Id;
+                JournalEntry.Id = await JournalEntryService.CreateJournalEntryAsync(JournalEntry);
+                var inList = _journalEntries.FirstOrDefault(e => e.Id == 0);
+                if (inList != null)
+                    inList.Id = JournalEntry.Id;
+            }
+
+            line.JournalEntryId = JournalEntry.Id;
+            line.CreatedBy = user.Id;
+            line.UpdatedBy = user.Id;
+
+            if (line.Id == 0)
+            {
+                line.Id = await JournalEntryLineService.CreateJournalEntryLineAsync(line);
+                JournalEntry.JournalEntryLines.Add(line);
+            }
+            else
+            {
+                await JournalEntryLineService.UpdateJournalEntryLineAsync(line);
+                var index = JournalEntry.JournalEntryLines.FindIndex(l => l.Id == line.Id);
+                if (index >= 0)
+                    JournalEntry.JournalEntryLines[index] = line;
+            }
+
+            await JournalEntryService.UpdateJournalEntryAsync(JournalEntry);
+            _selectedIds.Clear();
+            _composer?.Clear(keepAccount: true);
+            CalculateTotals();
+            SyncGuard();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private void HandleComposerCancel()
+    {
+        _selectedIds.Clear();
+    }
+
+    private void OnSelectionChanged(HashSet<int> ids)
+    {
+        _selectedIds = ids;
+    }
+
+    private void EditSelectedLine()
+    {
+        if (_selectedIds.Count != 1)
+            return;
+        var id = _selectedIds.First();
+        var line = JournalEntry.JournalEntryLines.FirstOrDefault(l => l.Id == id);
+        if (line == null)
+            return;
+        _composer?.LoadLine(line);
+    }
+
+    private async Task DeleteSelectedLines()
+    {
+        var toDelete = JournalEntry.JournalEntryLines.Where(l => _selectedIds.Contains(l.Id)).ToList();
+        if (toDelete.Count == 0)
+            return;
+
+        var confirmed = await DialogService.ShowMessageBox(
+            "Aries Contabilidad",
+            $"Se van a eliminar {toDelete.Count} elementos ¿Desea continuar?",
+            yesText: "Sí",
+            cancelText: "No");
+        if (confirmed != true)
+            return;
+
+        _busy = true;
+        try
+        {
+            foreach (var line in toDelete)
+            {
+                await JournalEntryLineService.DeleteJournalEntryLineAsync(line);
+                JournalEntry.JournalEntryLines.Remove(line);
+            }
+
+            await JournalEntryService.UpdateJournalEntryAsync(JournalEntry);
+            _selectedIds.Clear();
+            _composer?.Clear();
+            CalculateTotals();
+            SyncGuard();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task DeleteJournalEntry()
+    {
+        if (JournalEntry.Id == 0)
+        {
+            Snackbar.Add("No se puede eliminar este asiento porque aun no ha sido registrado", Severity.Warning);
+            return;
+        }
+
+        var confirmed = await DialogService.ShowMessageBox(
+            "Aries Contabilidad",
+            "Se eliminara este asiento desea continuar",
+            yesText: "Sí",
+            cancelText: "No");
+        if (confirmed != true)
+            return;
+
+        _busy = true;
+        try
+        {
+            await JournalEntryService.DeleteJournalEntryAsync(JournalEntry);
+            Snackbar.Add("Asiento eliminado correctamente", Severity.Success);
+            await LoadPeriodAsync(JournalEntry.PostingPeriodId, selectDraft: true);
+            _composer?.Clear();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task ClearWorkspace()
+    {
+        if (!EnsureCanLeave())
+            return;
+        var draft = _journalEntries.FirstOrDefault(e => e.Id == 0);
+        if (draft != null)
+            await SelectEntryAsync(draft);
+        _composer?.Clear();
+    }
+
+    private async Task TransferPeriod()
+    {
+        if (!CanTransfer)
+            return;
+
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var parameters = new DialogParameters<TransferPeriodDialog>
+        {
+            { x => x.JournalEntry, JournalEntry },
+            { x => x.CurrentPeriod, CurrentPeriod },
+            { x => x.PostingPeriods, _postingPeriods }
+        };
+        var dialog = await DialogService.ShowAsync<TransferPeriodDialog>("Cambiar periodo contable de asiento", parameters, options);
+        var result = await dialog.Result;
+        if (result is not { Canceled: false, Data: PostingPeriod target })
+            return;
+
+        _busy = true;
+        try
+        {
+            JournalEntry.PostingPeriodId = target.Id;
+            await JournalEntryService.UpdatePeriodAsync(JournalEntry);
+            Snackbar.Add($"Asiento transferido a {target}.", Severity.Success);
+            await LoadPeriodAsync(target.Id, selectDraft: false, selectId: JournalEntry.Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task RefreshGrid()
+    {
+        if (JournalEntry.PostingPeriodId == 0)
+            return;
+        await LoadPeriodAsync(JournalEntry.PostingPeriodId, selectDraft: false, selectId: JournalEntry.Id);
     }
 
     private void CalculateTotals()
     {
-        if (JournalEntry?.JournalEntryLines == null) return;
-
-        _totalDebit = JournalEntry.JournalEntryLines
-            .Where(l => l.DebOrCred == DebOrCred.Debito)
-            .Sum(l => l.Amount);
-
-        _totalCredit = JournalEntry.JournalEntryLines
-            .Where(l => l.DebOrCred == DebOrCred.Credito)
-            .Sum(l => l.Amount);
+        JournalEntry.JournalEntryLines ??= new List<JournalEntryLine>();
+        _totalDebit = JournalEntry.DebitosColones;
+        _totalCredit = JournalEntry.CreditosColones;
     }
 
-    private async Task HandlePostingPeriodChanged(int periodId)
+    private bool EnsureCanLeave()
     {
-        _journalEntries = await GetConsecutiveNumberAsync(periodId);
-        StateHasChanged(); 
+        if (JournalEntry.CanNavigateAway())
+            return true;
+        Snackbar.Add(JournalWorkspaceGuard.UnbalancedMessage, Severity.Warning);
+        return false;
     }
 
-    private async Task HandleJournalEntryIdChanged(JournalEntry journalEntry)
+    private void SyncGuard() => WorkspaceGuard.SetCanLeave(JournalEntry.CanNavigateAway());
+
+    public void Dispose()
     {
-        if (JournalEntry != null && !ReferenceEquals(JournalEntry, journalEntry) && !JournalEntry.CanNavigateAway())
-            return;
-
-        JournalEntry = journalEntry;
-
-        if (journalEntry.Id == 0)
-        {
-            var user = await LocalStorageService.GetCurrentUserSesion();
-            JournalEntry.CreatedBy = user.Id;
-            JournalEntry.UpdatedBy = user.Id;
-        }
-        else
-        {
-            var existingLines = await JournalEntryLineService.GetJournalEntryLinesAsync(journalEntry.Id);
-            journalEntry.JournalEntryLines = existingLines ?? new List<JournalEntryLine>();
-        }
-        CalculateTotals();
-        StateHasChanged();
+        WorkspaceGuard.Clear();
+        _dotNetRef?.Dispose();
     }
-
-    private async void HandleLineChanged(JournalEntryLine line)
-    {
-        var user = await LocalStorageService.GetCurrentUserSesion();
-
-        // If this is a new journal entry, create it first
-        if (JournalEntry.Id == 0)
-        {
-            JournalEntry.CreatedBy = user.Id;
-            JournalEntry.UpdatedBy = user.Id;
-            JournalEntry.Id = await JournalEntryService.CreateJournalEntryAsync(JournalEntry);
-        }
-
-        // Set the line's properties
-        line.JournalEntryId = JournalEntry.Id;
-        line.CreatedBy = user.Id; 
-        line.UpdatedBy = user.Id;
-
-        // Handle new vs existing line
-        if (line.Id == 0)
-        {
-            await JournalEntryLineService.CreateJournalEntryLineAsync(line);
-            JournalEntry.JournalEntryLines.Add(line);
-        }
-        else
-        {
-            await JournalEntryLineService.UpdateJournalEntryLineAsync(line);
-        }
-
-        // Update the journal entry
-        await JournalEntryService.UpdateJournalEntryAsync(JournalEntry);
-
-        CalculateTotals();
-        StateHasChanged();
-    }
-
-    private async void HandleLineDeleted(JournalEntryLine line)
-    {
-        await JournalEntryLineService.DeleteJournalEntryLineAsync(line);
-        JournalEntry.JournalEntryLines.Remove(line);
-        CalculateTotals();
-        StateHasChanged();
-    }
-
-    // private async Task HandleValidSubmit()
-    // {
-    //     if (IsBalanced)
-    //     {
-    //         await OnSave.InvokeAsync(JournalEntry);
-    //     }
-    // }
 }

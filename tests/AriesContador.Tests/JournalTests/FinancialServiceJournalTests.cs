@@ -162,7 +162,7 @@ namespace AriesContador.Tests.JournalTests
                 Date = new DateTime(2024, 3, 1)
             };
 
-            var ex = await Assert.ThrowsAsync<Exception>(() => svc.CreatePostingPeriodAsync(duplicate));
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => svc.CreatePostingPeriodAsync(duplicate));
             Assert.Equal("Periodo contable con fechas repetidas", ex.Message);
             Assert.Single(uow.PostingPeriods.Items);
         }

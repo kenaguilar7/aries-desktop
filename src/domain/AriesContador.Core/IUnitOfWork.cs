@@ -20,5 +20,7 @@ namespace AriesContador.Core
         IProductRepository ProductRepository { get; }
         ISalesRegisterRepository SalesRegisterRepository { get; }
         ISaleRepository SaleRepository { get; }
+        IPosAccountMapRepository PosAccountMapRepository { get; }
+        IPosSessionPostingRepository PosSessionPostingRepository { get; }
     }
 }

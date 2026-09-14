@@ -4,8 +4,10 @@
 @inject IClientCompanyService CompanyService
 @inject NavigationManager NavigationManager
 
-<div class="container-fluid">
-    <h3 class="mb-4">Maestro de Compañías</h3>
+<div class="container-fluid px-0">
+    <div class="page-header">
+        <h1 class="page-title mb-0">Nueva compañía</h1>
+    </div>
 
     @if (isLoading)
     {

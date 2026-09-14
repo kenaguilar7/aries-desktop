@@ -1,3 +1,4 @@
+using AriesContador.Core.Models.JournalEntries;
 using AriesContador.Core.Models.PostingPeriods;
 using AriesContador.Core.Services;
 using Aries.WebAPI.Infrastructure;
@@ -16,12 +17,25 @@ namespace Aries.WebAPI.Endpoints
             group.MapGet("/GetAvailablePostingPeriodsForBeCreated/{companyId}", async (HttpContext http, string companyId, IFinancialService svc) =>
                 Results.Ok(await svc.GetAvailablePostingPeriodsForBeCreatedAsync(companyId, http.RequestAborted)));
 
+            group.MapGet("/GetPostingPeriodInfo/{companyId}", async (HttpContext http, string companyId, IFinancialReportService svc) =>
+                Results.Ok(await svc.PostingPeriodInfoAsync(companyId, http.RequestAborted)));
+
+            group.MapGet("/GetClosingPostingPeriodReport/{companyId}", async (HttpContext http, string companyId, IFinancialReportService svc) =>
+                Results.Ok(await svc.ClosingPostingPeriodReportAsync(companyId, http.RequestAborted)));
+
+            group.MapPost("/GetClosureBalance", async (HttpContext http, BasicReportParam reportParam, IFinancialReportService svc) =>
+                Results.Ok(await svc.PreviousClosurePostingPeriodBalanceAsync(reportParam, http.RequestAborted)));
+
             group.MapPost("/Create", async (HttpContext http, PostingPeriod period, IFinancialService svc) =>
                 await EndpointRun.TryAsync(async () =>
                 {
                     var userId = http.TryGetUserId();
-                    if (userId.HasValue && period.CreatedBy == 0)
-                        period.CreatedBy = userId.Value;
+                    if (userId.HasValue)
+                    {
+                        if (period.CreatedBy == 0)
+                            period.CreatedBy = userId.Value;
+                        period.UpdatedBy = userId.Value;
+                    }
                     await svc.CreatePostingPeriodAsync(period, http.RequestAborted);
                     return Results.Ok();
                 }));
@@ -44,8 +58,12 @@ namespace Aries.WebAPI.Endpoints
                 await EndpointRun.TryAsync(async () =>
                 {
                     var userId = http.TryGetUserId();
-                    if (userId.HasValue && closing.CreatedBy == 0)
-                        closing.CreatedBy = userId.Value;
+                    if (userId.HasValue)
+                    {
+                        if (closing.CreatedBy == 0)
+                            closing.CreatedBy = userId.Value;
+                        closing.UpdatedBy = userId.Value;
+                    }
                     await svc.ClosePostingPeriodAsync(closing, http.RequestAborted);
                     return Results.Ok();
                 }));

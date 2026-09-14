@@ -1,0 +1,24 @@
+.coming-soon {
+    max-width: 560px;
+}
+
+.coming-soon-badge {
+    display: inline-block;
+    margin: 0 0 8px;
+    padding: 2px 8px;
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    background: var(--bg-canvas-subtle);
+    color: var(--fg-muted);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.coming-soon-body {
+    margin: 0;
+    color: var(--fg-muted);
+    font-size: 15px;
+    line-height: 1.5;
+}

@@ -1,0 +1,195 @@
+@page "/integration/{CompanyId}/pos-accounting"
+@inject IPosAccountingClient AccountingClient
+
+<PageTitle>POS → Contabilidad - Aries Contabilidad</PageTitle>
+
+<div class="container-fluid">
+    <h1 class="page-title">POS → Contabilidad</h1>
+    <p class="text-muted">Genere un asiento por cada sesión de caja cerrada (ventas, IVA, costo y diferencia de arqueo).</p>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+    @if (!string.IsNullOrEmpty(infoMessage))
+    {
+        <div class="alert alert-success">@infoMessage</div>
+    }
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5>Sesiones pendientes</h5>
+            @if (sessions == null)
+            {
+                <div class="d-flex justify-content-center"><div class="spinner-border"></div></div>
+            }
+            else if (sessions.Count == 0)
+            {
+                <p class="text-muted mb-0">No hay sesiones cerradas sin asentar.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Caja</th>
+                                <th>Cierre</th>
+                                <th class="text-end">Efectivo</th>
+                                <th class="text-end">Tarjeta</th>
+                                <th class="text-end">Transferencia</th>
+                                <th class="text-end">Diferencia</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var session in sessions)
+                            {
+                                <tr>
+                                    <td>@session.RegisterCode — @session.RegisterName</td>
+                                    <td>@session.ClosedAt?.ToString("g")</td>
+                                    <td class="text-end">@session.CashSales.ToString("N2")</td>
+                                    <td class="text-end">@session.CardSales.ToString("N2")</td>
+                                    <td class="text-end">@session.TransferSales.ToString("N2")</td>
+                                    <td class="text-end">@(session.Difference?.ToString("N2") ?? "—")</td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-primary" @onclick="() => Preview(session.Id)" disabled="@busy">Vista previa</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (preview != null)
+    {
+        <div class="card">
+            <div class="card-body">
+                <h5>Vista previa del asiento</h5>
+                <p class="text-muted mb-2">
+                    Periodo: @(preview.PeriodName ?? "—")
+                    @if (preview.AlreadyPosted && preview.JournalEntryId.HasValue)
+                    {
+                        <span> — asiento #@preview.JournalEntryId</span>
+                    }
+                </p>
+                <div class="row mb-3">
+                    <div class="col-md-2"><strong>Neto</strong><div>@preview.NetSales.ToString("N2")</div></div>
+                    <div class="col-md-2"><strong>IVA</strong><div>@preview.TaxAmount.ToString("N2")</div></div>
+                    <div class="col-md-2"><strong>Costo</strong><div>@preview.CostAmount.ToString("N2")</div></div>
+                    <div class="col-md-2"><strong>Diferencia</strong><div>@preview.Difference.ToString("N2")</div></div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Cuenta</th>
+                                <th>Detalle</th>
+                                <th class="text-end">Débito</th>
+                                <th class="text-end">Crédito</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var line in preview.Lines)
+                            {
+                                <tr>
+                                    <td>
+                                        <div>@(string.IsNullOrWhiteSpace(line.AccountName) ? line.AccountId.ToString() : line.AccountName)</div>
+                                        @if (!string.IsNullOrWhiteSpace(line.AccountPath))
+                                        {
+                                            <div class="text-muted small text-truncate" title="@line.AccountPath">@line.AccountPath</div>
+                                        }
+                                    </td>
+                                    <td>@line.Memo</td>
+                                    <td class="text-end">@(line.DebOrCred == DebOrCred.Debito ? line.Amount.ToString("N2") : "")</td>
+                                    <td class="text-end">@(line.DebOrCred == DebOrCred.Credito ? line.Amount.ToString("N2") : "")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                @if (!preview.AlreadyPosted)
+                {
+                    <button class="btn btn-success" @onclick="ConfirmPost" disabled="@busy">Generar asiento</button>
+                }
+                else if (preview.JournalEntryId.HasValue)
+                {
+                    <a class="btn btn-outline-primary" href="@($"/journal-entries/{CompanyId}")">Ver asientos</a>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string CompanyId { get; set; } = string.Empty;
+    private List<SalesRegisterSession>? sessions;
+    private PosPostingPreview? preview;
+    private int previewSessionId;
+    private bool busy;
+    private string? errorMessage;
+    private string? infoMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_loadedCompany == CompanyId && sessions != null)
+            return;
+        _loadedCompany = CompanyId;
+        await Reload();
+    }
+
+    private string? _loadedCompany;
+
+    private async Task Reload()
+    {
+        errorMessage = null;
+        sessions = await AccountingClient.GetUnpostedSessionsAsync(CompanyId);
+    }
+
+    private async Task Preview(int sessionId)
+    {
+        busy = true;
+        errorMessage = null;
+        infoMessage = null;
+        try
+        {
+            previewSessionId = sessionId;
+            preview = await AccountingClient.PreviewSessionAsync(sessionId);
+        }
+        catch (Exception ex)
+        {
+            preview = null;
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task ConfirmPost()
+    {
+        busy = true;
+        errorMessage = null;
+        infoMessage = null;
+        try
+        {
+            preview = await AccountingClient.PostSessionAsync(previewSessionId);
+            infoMessage = preview.JournalEntryId.HasValue
+                ? $"Asiento #{preview.JournalEntryId} generado"
+                : "Asiento generado";
+            await Reload();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+}

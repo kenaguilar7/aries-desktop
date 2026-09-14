@@ -1,0 +1,23 @@
+.report-card-wip {
+    cursor: default;
+    opacity: 0.78;
+}
+
+.report-card-wip:hover {
+    border-color: var(--border-default);
+    box-shadow: none;
+}
+
+.wip-badge {
+    display: inline-block;
+    margin: 0 0 8px;
+    padding: 2px 8px;
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    background: var(--bg-canvas-subtle);
+    color: var(--fg-muted);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}

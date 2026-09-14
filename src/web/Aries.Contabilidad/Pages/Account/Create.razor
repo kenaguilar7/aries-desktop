@@ -1,138 +1,198 @@
-@page "/accounts/{CompanyId}/create"
-@using Aries.Contabilidad.Services
-@using Aries.Contabilidad.Components.Accounts
+@page "/accounts/{CompanyId}/nueva/{ParentId:int}"
 @using AriesContador.Core.Models.Accounts
-
 @inject IAccountService AccountService
-@inject ISnackbar Snackbar
 @inject NavigationManager NavigationManager
 
-<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
-    <MudPaper Class="pa-4">
-        <MudText Typo="Typo.h5" Class="mb-4">Catálogo de Cuentas</MudText>
-        <MudGrid>
-            <MudItem xs="12" md="8">
-                <div id="unique_id_scroll_section" class="ma-0" style="height:300px;overflow: auto;">
-                    @if (accounts != null)
-                    {
-                        <AccountTreeView 
-                            Accounts="@accounts" 
-                            OnAccountSelected="HandleAccountSelected" />
-                    }
-                    else
-                    {
-                        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
-                    }
-                </div>
-            </MudItem>
+<PageTitle>Nueva cuenta - Aries Contabilidad</PageTitle>
 
-            <MudItem xs="12" md="4">
-                <AccountDetails Account="@selectedAccount" />
-            </MudItem>
+<div class="container-fluid px-0">
+    <div class="page-header">
+        <h1 class="page-title mb-0">Nueva cuenta</h1>
+        <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-secondary" disabled="@_busy" @onclick="GoBack">Volver</button>
+            <button type="button" class="btn btn-primary" disabled="@(_busy || !CanSave)" @onclick="SaveAsync">Guardar</button>
+        </div>
+    </div>
 
-            <MudDivider Class="my-2" />
-
-            <MudItem xs="12" Class="shadow-none">
-                @if (selectedAccount != null)
+    @if (_loading)
+    {
+        <div class="d-flex justify-content-center py-5">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        </div>
+    }
+    else
+    {
+        <div class="card account-create-form">
+            <div class="card-body">
+                @if (_parent == null)
                 {
-                    <AccountBalanceReport 
-                        Account="@selectedAccount" 
-                        OnDateRangeChanged="HandleDateRangeChanged" 
-                        CompanyId="@CompanyId" />
+                    <p class="text-muted mb-0">No se encontró la cuenta padre.</p>
                 }
-            </MudItem>
-        </MudGrid>
-    </MudPaper>
-</MudContainer>
+                else if (_parent.AccountType == AccountType.Cuenta_Titulo)
+                {
+                    <p class="text-muted mb-0">No se puede crear cuentas bajo un título. Vuelva al plan de cuentas y elija una mayor o auxiliar.</p>
+                }
+                else
+                {
+                    <dl class="account-create-meta mb-4">
+                        <div>
+                            <dt>Cuenta padre</dt>
+                            <dd>@_parent.Name</dd>
+                        </div>
+                        <div>
+                            <dt>Tipo de cuenta</dt>
+                            <dd>@AccountUi.TagLabel(_parent.AccountTag)</dd>
+                        </div>
+                        <div>
+                            <dt>Indicador</dt>
+                            <dd>La nueva cuenta se crea como auxiliar.</dd>
+                        </div>
+                    </dl>
+
+                    @if (!string.IsNullOrEmpty(_warning))
+                    {
+                        <p class="account-create-warning">@_warning</p>
+                    }
+
+                    <div class="mb-3">
+                        <label class="form-label" for="new-account-name">Nombre</label>
+                        <input id="new-account-name"
+                               class="form-control"
+                               maxlength="45"
+                               disabled="@_busy"
+                               @bind="_name"
+                               @bind:event="oninput"
+                               @bind:after="NormalizeName" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="new-account-memo">Detalle</label>
+                        <input id="new-account-memo"
+                               class="form-control"
+                               maxlength="45"
+                               disabled="@_busy"
+                               @bind="_memo"
+                               @bind:event="oninput"
+                               @bind:after="NormalizeMemo" />
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(_error))
+                    {
+                        <p class="text-danger mb-0">@_error</p>
+                    }
+                }
+            </div>
+        </div>
+    }
+</div>
 
 @code {
     [Parameter]
-    public string CompanyId { get; set; }
+    public string CompanyId { get; set; } = string.Empty;
 
-    private List<Account> accounts;
-    private Account? selectedAccount;
+    [Parameter]
+    public int ParentId { get; set; }
 
-    protected override async Task OnInitializedAsync()
+    private Account? _parent;
+    private string _name = string.Empty;
+    private string _memo = string.Empty;
+    private string? _error;
+    private string? _warning;
+    private bool _loading = true;
+    private bool _busy;
+    private string _loadedKey = string.Empty;
+
+    private bool CanSave =>
+        _parent != null && _parent.AccountType != AccountType.Cuenta_Titulo;
+
+    protected override async Task OnParametersSetAsync()
     {
+        var key = $"{CompanyId}:{ParentId}";
+        if (string.Equals(_loadedKey, key, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        _loadedKey = key;
+        await LoadParentAsync();
+    }
+
+    private async Task LoadParentAsync()
+    {
+        _loading = true;
+        _error = null;
+        _warning = null;
         try
         {
-            accounts = await AccountService.GetAccountsAsync(CompanyId);
+            _parent = await AccountService.FindAccountAsync(ParentId);
+            if (_parent != null && _parent.AccountType != AccountType.Cuenta_Titulo)
+            {
+                var evaluation = await AccountService.EvaluateParentAsync(_parent);
+                if (evaluation != null && !evaluation.CanProceed)
+                    _warning = FormatWarning(evaluation.Message);
+            }
         }
         catch (Exception ex)
         {
-            Snackbar.Add("Error al cargar las cuentas", Severity.Error);
-            Console.WriteLine($"Error loading accounts: {ex}");
+            _parent = null;
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
         }
     }
 
-    private async Task HandleAccountSelected(Account account)
+    private static string FormatWarning(string? message)
     {
-        if (account == null) return;
-        
-        try
-        {
-            selectedAccount = account;
-            // Load balance data in the background
-            _ = LoadAccountBalance(account.Id);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Error al cargar la cuenta: {ex.Message}", Severity.Error);
-        }
+        var text = (message ?? string.Empty)
+            .Replace("¿Desea continuar y crear una cuenta nueva?", string.Empty)
+            .Trim();
+        if (string.IsNullOrEmpty(text))
+            return text;
+
+        return text + "\nSi guarda, esos saldos pasan a la cuenta nueva.";
     }
-    
-    private async Task LoadAccountBalance(int accountId)
+
+    private void NormalizeName() => _name = (_name ?? string.Empty).ToUpperInvariant();
+
+    private void NormalizeMemo() => _memo = (_memo ?? string.Empty).ToUpperInvariant();
+
+    private async Task SaveAsync()
     {
+        _error = null;
+        if (_parent == null || !CanSave)
+            return;
+
+        if (!AccountRules.ValidateName(_name, out var message))
+        {
+            _error = message;
+            return;
+        }
+
+        _busy = true;
         try
         {
-            var updatedAccount = await AccountService.GetAccountBalanceAsync(
-                CompanyId,
-                accountId,
-                DateTime.Now.AddMonths(-1),
-                DateTime.Now
-            );
-            
-            selectedAccount = updatedAccount;
-            StateHasChanged();
+            await AccountService.CreateAccountAsync(new Account
+            {
+                Name = _name.Trim(),
+                Memo = _memo.Trim(),
+                FatherAccount = _parent.Id,
+                CompanyId = string.IsNullOrEmpty(CompanyId) ? _parent.CompanyId : CompanyId,
+                AccountType = AccountType.Cuenta_Auxiliar,
+                AccountTag = _parent.AccountTag,
+                Editable = true
+            });
+
+            NavigationManager.NavigateTo($"/accounts/{CompanyId}?cuenta={_parent.Id}");
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error al cargar el saldo: {ex.Message}", Severity.Error);
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
         }
     }
 
-    private async Task HandleDateRangeChanged((DateTime fromDate, DateTime toDate) range)
-    {
-        if (selectedAccount == null) return;
-
-        try
-        {
-            selectedAccount = await AccountService.GetAccountBalanceAsync(
-                CompanyId,
-                selectedAccount.Id,
-                range.fromDate,
-                range.toDate
-            );
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Error al obtener el reporte de saldos: {ex.Message}", Severity.Error);
-        }
-    }
-
-    private async Task CreateAccount()
-    {
-        try
-        {
-            // await AccountService(CompanyId, newAccount);
-            // Snackbar.Add("Cuenta creada exitosamente", Severity.Success);
-            // newAccount = new Account(); // Reset form
-            // await LoadAccounts(); // Refresh accounts list
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add("Error al crear la cuenta", Severity.Error);
-            Console.WriteLine($"Error creating account: {ex}");
-        }
-    }
+    private void GoBack() =>
+        NavigationManager.NavigateTo($"/accounts/{CompanyId}?cuenta={ParentId}");
 }

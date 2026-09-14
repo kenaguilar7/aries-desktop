@@ -3,8 +3,7 @@
 @inject IPosService PosService
 
 <div class="container-fluid">
-    <h3 class="mb-3">Reportes de ventas</h3>
-    <PosNav CompanyId="@CompanyId" />
+    <h1 class="page-title">Reportes de ventas</h1>
 
     @if (!string.IsNullOrEmpty(errorMessage))
     {

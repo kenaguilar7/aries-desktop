@@ -54,6 +54,20 @@ namespace Aries.Data.Tests
             Assert.Contains("017_AccountAndJournalInfoViews", ids);
             Assert.Contains("018_AccountPathFunctions", ids);
             Assert.Contains("019_PosTables", ids);
+            Assert.Contains("020_PosAccounting", ids);
+        }
+
+        [Fact]
+        public void M020_adds_pos_accounting_tables()
+        {
+            var m020 = SchemaMigrations.All.Single(m => m.Id == "020_PosAccounting");
+            Assert.Equal(20, m020.Version);
+            Assert.Contains("ALTER TABLE `products`", m020.Sql);
+            Assert.Contains("`cost`", m020.Sql);
+            Assert.Contains("`tax_exempt`", m020.Sql);
+            Assert.Contains("CREATE TABLE IF NOT EXISTS `pos_account_maps`", m020.Sql);
+            Assert.Contains("CREATE TABLE IF NOT EXISTS `pos_session_postings`", m020.Sql);
+            Assert.Contains("uk_pos_session_postings_session", m020.Sql);
         }
 
         [Fact]

@@ -20,6 +20,25 @@ namespace AriesContador.Core.Models.Accounts
         public const string CreateSuccessMessage = "Cuenta guardada exitosamente";
         public const string UpdateSuccessMessage = "Cuenta actualizada correctamente";
 
+        public static bool IsDebitNature(AccountTag tag)
+            => tag == AccountTag.Activo || tag == AccountTag.Egreso || tag == AccountTag.CostoVenta;
+
+        public static void ApplyNature(Account account)
+        {
+            if (account == null) return;
+            account.DebOrCred = IsDebitNature(account.AccountTag) ? DebOrCred.Debito : DebOrCred.Credito;
+        }
+
+        public static void ApplyNature(IEnumerable<Account> accounts)
+        {
+            if (accounts == null) return;
+            foreach (var account in accounts)
+                ApplyNature(account);
+        }
+
+        public static bool IsRoot(Account account)
+            => account != null && (!account.FatherAccount.HasValue || account.FatherAccount.Value == 0);
+
         public static IList<Account> OrderByTree(IEnumerable<Account> accounts)
             => accounts.OrderByTree().ToList();
 

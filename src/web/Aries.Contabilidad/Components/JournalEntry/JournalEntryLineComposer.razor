@@ -1,0 +1,256 @@
+<div class="card asientos-composer" @ref="_composerElement">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-lg-5">
+                <label class="form-label">Cuenta</label>
+                <div class="input-group">
+                    <input class="form-control" readonly value="@AccountDisplay" placeholder="Seleccione una cuenta auxiliar" title="@_accountPath" />
+                    <button type="button"
+                            class="btn btn-secondary"
+                            title="Seleccionar cuenta (Ctrl+S)"
+                            disabled="@ReadOnly"
+                            @onclick="OpenAccountPicker">
+                        …
+                    </button>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(_accountPath))
+                {
+                    <div class="form-text text-truncate" title="@_accountPath">Ruta: @_accountPath</div>
+                }
+            </div>
+            <div class="col-lg-3">
+                <label class="form-label">Naturaleza</label>
+                <div class="btn-group w-100" role="group">
+                    <button type="button"
+                            class="btn @(_debOrCred == DebOrCred.Debito ? "btn-primary" : "btn-outline-primary")"
+                            title="Débito (Ctrl+D)"
+                            disabled="@ReadOnly"
+                            @onclick="SetDebit">Débito</button>
+                    <button type="button"
+                            class="btn @(_debOrCred == DebOrCred.Credito ? "btn-primary" : "btn-outline-primary")"
+                            title="Crédito (Ctrl+Shift+C)"
+                            disabled="@ReadOnly"
+                            @onclick="SetCredit">Crédito</button>
+                </div>
+            </div>
+            <div class="col-lg-2">
+                <label class="form-label" for="asientos-fecha">Fecha doc</label>
+                <input id="asientos-fecha" type="date" class="form-control" disabled="@ReadOnly" @bind="_date" />
+            </div>
+            <div class="col-lg-2">
+                <label class="form-label" for="asientos-monto">Monto</label>
+                <input id="asientos-monto" type="number" min="0" step="0.01" class="form-control text-end" disabled="@ReadOnly" @bind="_amount" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="asientos-ref">Referencia</label>
+                <input id="asientos-ref" class="form-control" maxlength="100" disabled="@ReadOnly" @bind="_reference" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="asientos-detalle">Detalle</label>
+                <input id="asientos-detalle" class="form-control" maxlength="100" disabled="@ReadOnly" @bind="_memo" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="asientos-moneda">Moneda</label>
+                <select id="asientos-moneda" class="form-select" disabled="@(ReadOnly || CurrencyLocked)" @bind="_currency" @bind:after="OnCurrencyChanged">
+                    <option value="@Currency.colones">Colones</option>
+                    <option value="@Currency.dolares">Dólares</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="asientos-tc">Tipo cambio</label>
+                <input id="asientos-tc" type="number" min="0" step="0.0001" class="form-control text-end" disabled="@(ReadOnly || _currency == Currency.colones)" @bind="_rate" />
+            </div>
+            <div class="col-12 d-flex justify-content-end gap-2">
+                @if (_editingId != 0)
+                {
+                    <button type="button" class="btn btn-secondary" disabled="@ReadOnly" @onclick="CancelEdit">Cancelar</button>
+                    <button type="button" class="btn btn-primary" disabled="@ReadOnly" title="Actualizar (Ctrl+Enter)" @onclick="Submit">Actualizar</button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-primary" disabled="@ReadOnly" title="Agregar (Ctrl+Enter)" @onclick="Submit">Agregar</button>
+                }
+            </div>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(_validation))
+        {
+            <div class="alert alert-danger mt-3 mb-0">@_validation</div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public string CompanyId { get; set; } = string.Empty;
+    [Parameter] public bool ReadOnly { get; set; }
+    [Parameter] public bool CurrencyLocked { get; set; }
+    [Parameter] public Currency DefaultCurrency { get; set; } = Currency.colones;
+    [Parameter] public EventCallback<JournalEntryLine> OnSubmit { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    [Inject] private IDialogService DialogService { get; set; } = default!;
+
+    private ElementReference _composerElement;
+    private int _editingId;
+    private int _accountId;
+    private string _accountName = string.Empty;
+    private string _accountPath = string.Empty;
+    private string _reference = string.Empty;
+    private string _memo = string.Empty;
+    private DateTime? _date;
+    private DebOrCred _debOrCred = DebOrCred.Debito;
+    private Currency _currency = Currency.colones;
+    private decimal _rate = 1.00m;
+    private decimal _amount;
+    private string? _validation;
+
+    public ElementReference Element => _composerElement;
+    public bool IsEditing => _editingId != 0;
+    private string AccountDisplay => string.IsNullOrWhiteSpace(_accountName) ? string.Empty : _accountName;
+
+    protected override void OnParametersSet()
+    {
+        if (_accountId == 0 && _editingId == 0)
+            _currency = DefaultCurrency;
+        if (_currency == Currency.colones)
+            _rate = 1.00m;
+    }
+
+    public void LoadLine(JournalEntryLine line)
+    {
+        _editingId = line.Id;
+        _accountId = line.AccountId;
+        _accountName = line.AccountName ?? string.Empty;
+        _accountPath = line.AccountPath ?? string.Empty;
+        _reference = line.Reference ?? string.Empty;
+        _memo = line.Memo ?? string.Empty;
+        _date = line.Date == default ? null : line.Date.Date;
+        _debOrCred = line.DebOrCred;
+        _currency = line.Currency;
+        _rate = line.RateAmount <= 0 ? 1.00m : line.RateAmount;
+        _amount = line.Currency == Currency.dolares ? line.ForeignAmount : line.Amount;
+        _validation = null;
+        StateHasChanged();
+    }
+
+    public void Clear(bool keepAccount = false)
+    {
+        _editingId = 0;
+        if (!keepAccount)
+        {
+            _accountId = 0;
+            _accountName = string.Empty;
+            _accountPath = string.Empty;
+        }
+        _reference = string.Empty;
+        _memo = string.Empty;
+        _date = null;
+        _debOrCred = DebOrCred.Debito;
+        _currency = DefaultCurrency;
+        _rate = 1.00m;
+        _amount = 0;
+        _validation = null;
+        StateHasChanged();
+    }
+
+    public void SetDebit()
+    {
+        _debOrCred = DebOrCred.Debito;
+        StateHasChanged();
+    }
+
+    public void SetCredit()
+    {
+        _debOrCred = DebOrCred.Credito;
+        StateHasChanged();
+    }
+
+    public Task SubmitFromShortcut() => Submit();
+
+    public Task OpenAccountPickerFromShortcut() => OpenAccountPicker();
+
+    private void OnCurrencyChanged()
+    {
+        if (_currency == Currency.colones)
+            _rate = 1.00m;
+    }
+
+    private async Task OpenAccountPicker()
+    {
+        if (ReadOnly)
+            return;
+
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var parameters = new DialogParameters<AccountPickerDialog>
+        {
+            { x => x.CompanyId, CompanyId }
+        };
+        var dialog = await DialogService.ShowAsync<AccountPickerDialog>("Seleccionar cuenta", parameters, options);
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: Account account })
+        {
+            _accountId = account.Id;
+            _accountName = account.Name;
+            _accountPath = string.IsNullOrWhiteSpace(account.PathDirection) ? account.Name : account.PathDirection;
+            _validation = null;
+            StateHasChanged();
+        }
+    }
+
+    private async Task CancelEdit()
+    {
+        Clear();
+        await OnCancel.InvokeAsync();
+    }
+
+    private async Task Submit()
+    {
+        if (ReadOnly)
+            return;
+
+        if (_accountId == 0)
+        {
+            _validation = "Seleccione una cuenta valida";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_reference))
+        {
+            _validation = "Referencia no puede ir en blanco!";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_memo))
+        {
+            _validation = "Detalle no puede ir en blanco!";
+            return;
+        }
+
+        if (_date is null || _date.Value.Year < 1000 || _date.Value.Year > 9999)
+        {
+            _validation = "Formato de fecha incorrecto";
+            return;
+        }
+
+        if (_currency == Currency.dolares && _rate <= 0)
+        {
+            _validation = "El tipo de cambio no puede ser cero o menor a cero";
+            return;
+        }
+
+        var line = new JournalEntryLine
+        {
+            Id = _editingId,
+            AccountId = _accountId,
+            AccountName = _accountName,
+            AccountPath = _accountPath,
+            Reference = _reference.Trim(),
+            Memo = _memo.Trim(),
+            Date = _date.Value,
+            DebOrCred = _debOrCred
+        };
+        JournalEntryLineAmount.Apply(line, _currency, _amount, _rate);
+
+        _validation = null;
+        await OnSubmit.InvokeAsync(line);
+    }
+}

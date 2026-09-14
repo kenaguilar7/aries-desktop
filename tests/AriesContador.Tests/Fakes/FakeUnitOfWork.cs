@@ -30,6 +30,8 @@ namespace AriesContador.Tests.Fakes
         public FakeProductRepository Products { get; } = new FakeProductRepository();
         public FakeSalesRegisterRepository Registers { get; } = new FakeSalesRegisterRepository();
         public FakeSaleRepository Sales { get; } = new FakeSaleRepository();
+        public FakePosAccountMapRepository AccountMaps { get; } = new FakePosAccountMapRepository();
+        public FakePosSessionPostingRepository SessionPostings { get; } = new FakePosSessionPostingRepository();
 
         public ICompanyRepository CompanyRepository => Companies;
         public IUserRepository UserRepository => Users;
@@ -51,6 +53,8 @@ namespace AriesContador.Tests.Fakes
                 return Sales;
             }
         }
+        public IPosAccountMapRepository PosAccountMapRepository => AccountMaps;
+        public IPosSessionPostingRepository PosSessionPostingRepository => SessionPostings;
     }
 
     public class FakePermissionRepository : IPermissionRepository
@@ -562,6 +566,52 @@ namespace AriesContador.Tests.Fakes
             else
                 session.TransferSales += sale.Total;
             session.ExpectedClosingAmount = session.OpeningAmount + session.CashSales;
+            return Task.CompletedTask;
+        }
+    }
+
+    public class FakePosAccountMapRepository : IPosAccountMapRepository
+    {
+        public List<PosAccountMap> Items { get; } = new List<PosAccountMap>();
+
+        public Task<PosAccountMap> GetByCompanyIdAsync(string companyId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Items.FirstOrDefault(x => x.CompanyId == companyId));
+
+        public Task UpsertAsync(PosAccountMap map, CancellationToken cancellationToken = default)
+        {
+            var i = Items.FindIndex(x => x.CompanyId == map.CompanyId);
+            if (i >= 0)
+            {
+                map.Id = Items[i].Id;
+                Items[i] = map;
+            }
+            else
+            {
+                if (map.Id == 0)
+                    map.Id = Items.Count == 0 ? 1 : Items.Max(x => x.Id) + 1;
+                Items.Add(map);
+            }
+            return Task.CompletedTask;
+        }
+    }
+
+    public class FakePosSessionPostingRepository : IPosSessionPostingRepository
+    {
+        public List<PosSessionPosting> Items { get; } = new List<PosSessionPosting>();
+
+        public Task<PosSessionPosting> GetBySessionIdAsync(int sessionId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Items.FirstOrDefault(x => x.SessionId == sessionId));
+
+        public Task<IEnumerable<PosSessionPosting>> FindByCompanyIdAsync(string companyId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IEnumerable<PosSessionPosting>>(Items.Where(x => x.CompanyId == companyId).ToList());
+
+        public Task AddAsync(PosSessionPosting posting, CancellationToken cancellationToken = default)
+        {
+            if (Items.Any(x => x.SessionId == posting.SessionId))
+                throw new InvalidOperationException("La sesión ya fue asentada");
+            if (posting.Id == 0)
+                posting.Id = Items.Count == 0 ? 1 : Items.Max(x => x.Id) + 1;
+            Items.Add(posting);
             return Task.CompletedTask;
         }
     }

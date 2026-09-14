@@ -4,8 +4,7 @@
 @inject IJSRuntime JSRuntime
 
 <div class="container-fluid">
-    <h3 class="mb-3">Cajas de venta</h3>
-    <PosNav CompanyId="@CompanyId" />
+    <h1 class="page-title">Cajas de venta</h1>
     <p class="text-muted">Cada compañía puede tener varias cajas. Varias cajas pueden estar abiertas al mismo tiempo; cada una solo una sesión.</p>
 
     @if (!string.IsNullOrEmpty(errorMessage))

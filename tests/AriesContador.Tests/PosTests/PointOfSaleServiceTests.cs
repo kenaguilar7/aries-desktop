@@ -104,6 +104,48 @@ namespace AriesContador.Tests.PosTests
         }
 
         [Fact]
+        public async Task CreateSale_splits_iva_and_persists_cost()
+        {
+            var uow = SeedCompanyWithTwoRegisters();
+            AddProduct(uow, stock: 10, price: 113);
+            uow.Products.Items[0].Cost = 40;
+            uow.AccountMaps.Items.Add(new PosAccountMap
+            {
+                CompanyId = Company,
+                TaxRate = 0.13m,
+                PricesIncludeTax = true
+            });
+            var svc = new PointOfSaleService(uow);
+            await svc.OpenSessionAsync(1, 0, null, 7);
+
+            var sale = await svc.CreateSaleAsync(CashSale(1, 1));
+
+            Assert.Equal(113m, sale.Total);
+            Assert.Equal(100m, sale.NetAmount);
+            Assert.Equal(13m, sale.TaxAmount);
+            Assert.Equal(40m, sale.CostAmount);
+            Assert.Equal(100m, sale.Lines[0].NetAmount);
+            Assert.Equal(13m, sale.Lines[0].TaxAmount);
+            Assert.Equal(40m, sale.Lines[0].CostAmount);
+        }
+
+        [Fact]
+        public async Task CreateSale_exempt_product_has_zero_tax()
+        {
+            var uow = SeedCompanyWithTwoRegisters();
+            AddProduct(uow, stock: 10, price: 50);
+            uow.Products.Items[0].TaxExempt = true;
+            var svc = new PointOfSaleService(uow);
+            await svc.OpenSessionAsync(1, 0, null, 7);
+
+            var sale = await svc.CreateSaleAsync(CashSale(1, 1));
+
+            Assert.Equal(50m, sale.Total);
+            Assert.Equal(50m, sale.NetAmount);
+            Assert.Equal(0m, sale.TaxAmount);
+        }
+
+        [Fact]
         public async Task DeleteRegister_rejected_when_session_is_open()
         {
             var uow = SeedCompanyWithTwoRegisters();
