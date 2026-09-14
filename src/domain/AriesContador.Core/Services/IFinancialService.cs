@@ -18,6 +18,7 @@ namespace AriesContador.Core.Services
         Task CreateAccountAsync(Account account, CancellationToken cancellationToken = default);
         Task CreateAccountAsync(Account account, Account parent, CancellationToken cancellationToken = default);
         Task<int> EnsureAccountNameAsync(string name, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<Account>> EnsurePurchaseAccountsAsync(string companyId, int userId, CancellationToken cancellationToken = default);
         Task UpdateAccountAsync(Account account, CancellationToken cancellationToken = default);
         Task<IEnumerable<Account>> GetAccountsAsync(string companyId, CancellationToken cancellationToken = default);
         Task<(bool CanProceed, string Message)> EvaluateParentForNewChildAsync(Account parent, CancellationToken cancellationToken = default);

@@ -3,16 +3,22 @@ using System.Collections.Generic;
 namespace AriesContador.Core.Models.Accounts
 {
     /// <summary>
-    /// Maestro básico (cuentas 1–62) al crear una compañía con "POR DEFECTO".
+    /// Maestro básico (cuentas 1–64) al crear una compañía con "POR DEFECTO".
     /// Cuentas 1–57 coinciden con <c>CompañiaDao.GenerarCuentasDefault</c>;
-    /// 58–62 son auxiliares POS (ventas, IVA, costo, faltante/sobrante).
+    /// 58–62 son auxiliares POS (ventas, IVA, costo, faltante/sobrante);
+    /// 63–64 son auxiliares de compras (CxP, IVA soportado).
     /// <see cref="Account.Name"/> es el texto de <c>accounts_names</c>;
     /// <c>CompanyRepository.Add</c> lo resuelve a <c>account_name_id</c> como el API 2.0.
-    /// <see cref="Account.Id"/> 1..62 solo sirve para remapear padres al insertar.
+    /// <see cref="Account.Id"/> 1..64 solo sirve para remapear padres al insertar.
     /// </summary>
     public static class DefaultChartOfAccounts
     {
-        public const int AccountCount = 62;
+        public const int AccountCount = 64;
+
+        public const string CuentasPorPagarName = "CUENTAS POR PAGAR";
+        public const string IvaSoportadoName = "IVA SOPORTADO";
+        public const string PasivoCortoPlazoName = "PASIVO CORTO PLAZO";
+        public const string ActivoCorrienteName = "ACTIVO CORRIENTE";
 
         private static readonly string[] CatalogNames =
         {
@@ -74,7 +80,9 @@ namespace AriesContador.Core.Models.Accounts
             "IVA POR PAGAR",
             "COSTO DE MERCADERÍA",
             "FALTANTE DE CAJA",
-            "SOBRANTE DE CAJA"
+            "SOBRANTE DE CAJA",
+            CuentasPorPagarName,
+            IvaSoportadoName
         };
 
         public static IReadOnlyList<Account> Create()
@@ -132,7 +140,11 @@ namespace AriesContador.Core.Models.Accounts
                 return (57, 56, AccountTag.CostoVenta, AccountType.Cuenta_Auxiliar);
             if (j == 61)
                 return (58, 18, AccountTag.Egreso, AccountType.Cuenta_Auxiliar);
-            return (59, 55, AccountTag.Ingreso, AccountType.Cuenta_Auxiliar);
+            if (j == 62)
+                return (59, 55, AccountTag.Ingreso, AccountType.Cuenta_Auxiliar);
+            if (j == 63)
+                return (60, 9, AccountTag.Pasivo, AccountType.Cuenta_Auxiliar);
+            return (61, 7, AccountTag.Activo, AccountType.Cuenta_Auxiliar);
         }
     }
 }

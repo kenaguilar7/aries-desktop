@@ -135,6 +135,24 @@ namespace Aries.WebAPI.Tests
         }
 
         [Fact]
+        public async Task Ensure_purchase_accounts_requires_bearer()
+        {
+            var client = _factory.CreateClient();
+            var response = await client.PostAsync("/account/C001/ensure-purchase-accounts", null);
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Ensure_purchase_accounts_uses_jwt_user()
+        {
+            var client = await ClientWithToken();
+            var response = await client.PostAsync("/account/C001/ensure-purchase-accounts", null);
+            response.EnsureSuccessStatusCode();
+            Assert.Equal("C001", _factory.Financial.LastEnsurePurchaseCompanyId);
+            Assert.Equal(7, _factory.Financial.LastEnsurePurchaseUserId);
+        }
+
+        [Fact]
         public async Task SalesRegister_requires_bearer()
         {
             var client = _factory.CreateClient();

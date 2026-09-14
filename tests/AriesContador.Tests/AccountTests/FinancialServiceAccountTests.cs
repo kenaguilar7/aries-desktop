@@ -216,6 +216,90 @@ namespace AriesContador.Tests.AccountTests
         }
 
         [Fact]
+        public async Task EnsurePurchaseAccounts_creates_cxp_and_iva_soportado_under_expected_parents()
+        {
+            var uow = new FakeUnitOfWork();
+            uow.Accounts.Items.AddRange(new[]
+            {
+                Title("ACTIVO", 1),
+                Title("PASIVO", 2),
+                Mayor(DefaultChartOfAccounts.ActivoCorrienteName, 7, 1),
+                Mayor(DefaultChartOfAccounts.PasivoCortoPlazoName, 9, 2)
+            });
+            uow.Accounts.Items[0].AccountTag = AccountTag.Activo;
+            uow.Accounts.Items[1].AccountTag = AccountTag.Pasivo;
+            uow.Accounts.Items[2].AccountTag = AccountTag.Activo;
+            uow.Accounts.Items[3].AccountTag = AccountTag.Pasivo;
+            var svc = new FinancialService(uow);
+
+            var created = await svc.EnsurePurchaseAccountsAsync("C001", 7);
+
+            Assert.Equal(2, created.Count);
+            var cxp = Assert.Single(created, a => a.Name == DefaultChartOfAccounts.CuentasPorPagarName);
+            Assert.Equal(9, cxp.FatherAccount);
+            Assert.Equal(AccountTag.Pasivo, cxp.AccountTag);
+            Assert.Equal(AccountType.Cuenta_Auxiliar, cxp.AccountType);
+            Assert.True(cxp.Editable);
+            Assert.Equal(7, cxp.CreatedBy);
+
+            var iva = Assert.Single(created, a => a.Name == DefaultChartOfAccounts.IvaSoportadoName);
+            Assert.Equal(7, iva.FatherAccount);
+            Assert.Equal(AccountTag.Activo, iva.AccountTag);
+            Assert.Equal(AccountType.Cuenta_Auxiliar, iva.AccountType);
+        }
+
+        [Fact]
+        public async Task EnsurePurchaseAccounts_is_idempotent()
+        {
+            var uow = new FakeUnitOfWork();
+            uow.Accounts.Items.AddRange(new[]
+            {
+                Title("ACTIVO", 1),
+                Title("PASIVO", 2),
+                Mayor(DefaultChartOfAccounts.ActivoCorrienteName, 7, 1),
+                Mayor(DefaultChartOfAccounts.PasivoCortoPlazoName, 9, 2)
+            });
+            uow.Accounts.Items[0].AccountTag = AccountTag.Activo;
+            uow.Accounts.Items[1].AccountTag = AccountTag.Pasivo;
+            uow.Accounts.Items[2].AccountTag = AccountTag.Activo;
+            uow.Accounts.Items[3].AccountTag = AccountTag.Pasivo;
+            var svc = new FinancialService(uow);
+
+            await svc.EnsurePurchaseAccountsAsync("C001", 7);
+            var second = await svc.EnsurePurchaseAccountsAsync("C001", 7);
+
+            Assert.Equal(2, second.Count);
+            Assert.Equal(2, uow.Accounts.Items.Count(a =>
+                a.Name == DefaultChartOfAccounts.CuentasPorPagarName
+                || a.Name == DefaultChartOfAccounts.IvaSoportadoName));
+        }
+
+        [Fact]
+        public async Task EnsurePurchaseAccounts_skips_existing_names_without_rewriting_custom_chart()
+        {
+            var uow = new FakeUnitOfWork();
+            uow.Accounts.Items.AddRange(new[]
+            {
+                Title("ACTIVO", 1),
+                Title("PASIVO", 2),
+                Mayor(DefaultChartOfAccounts.ActivoCorrienteName, 7, 1),
+                Mayor(DefaultChartOfAccounts.PasivoCortoPlazoName, 9, 2),
+                Aux(DefaultChartOfAccounts.CuentasPorPagarName, 20, 9),
+                Aux(DefaultChartOfAccounts.IvaSoportadoName, 21, 7)
+            });
+            uow.Accounts.Items[4].AccountTag = AccountTag.Pasivo;
+            uow.Accounts.Items[5].AccountTag = AccountTag.Activo;
+            var beforeCount = uow.Accounts.Items.Count;
+            var svc = new FinancialService(uow);
+
+            var found = await svc.EnsurePurchaseAccountsAsync("C001", 7);
+
+            Assert.Equal(beforeCount, uow.Accounts.Items.Count);
+            Assert.Equal(20, Assert.Single(found, a => a.Name == DefaultChartOfAccounts.CuentasPorPagarName).Id);
+            Assert.Equal(21, Assert.Single(found, a => a.Name == DefaultChartOfAccounts.IvaSoportadoName).Id);
+        }
+
+        [Fact]
         public async Task FillAccountsWithBalances_rolls_up_from_account_info_rows()
         {
             var uow = new FakeUnitOfWork();
