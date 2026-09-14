@@ -62,6 +62,13 @@ namespace Aries.WebAPI.Endpoints
                 return Results.Ok();
             });
 
+            group.MapPost("/GetDeletedJournalEntries", async (HttpContext http, BasicReportParam reportParam, IFinancialService svc) =>
+                await EndpointRun.TryAsync(async () =>
+                    Results.Ok(await svc.GetAllJournalEntryDeletedAsync(reportParam, http.RequestAborted))));
+
+            group.MapPost("/GetJournalEntryReport", async (HttpContext http, BasicReportParam reportParam, IFinancialReportService svc) =>
+                Results.Ok(await svc.JournalEntryReportAsync(reportParam, http.RequestAborted)));
+
             return app;
         }
     }

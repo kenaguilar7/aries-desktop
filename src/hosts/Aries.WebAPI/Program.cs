@@ -73,6 +73,7 @@ builder.Services.AddScoped<IAdministrationService, AdministrationService>();
 builder.Services.AddScoped<IFinancialService, FinancialService>();
 builder.Services.AddScoped<IFinancialReportService, FinancialReportService>();
 builder.Services.AddScoped<IPointOfSaleService, PointOfSaleService>();
+builder.Services.AddScoped<IPosAccountingService, PosAccountingService>();
 builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
 
 var app = builder.Build();
@@ -196,6 +197,7 @@ app.MapPostingPeriodEndpoints();
 app.MapJournalEntryEndpoints();
 app.MapJournalEntryLineEndpoints();
 app.MapPosEndpoints();
+app.MapIntegrationEndpoints();
 
 app.Lifetime.ApplicationStarted.Register(() =>
 {

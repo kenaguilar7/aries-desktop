@@ -5,50 +5,90 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService LocalStorage
+@inject ThemeService ThemeService
+@implements IDisposable
 
-<MudThemeProvider/>
-<MudDialogProvider/>
-<MudSnackbarProvider/>
-<MudPopoverProvider/>
+<MudThemeProvider Theme="_mudTheme" IsDarkMode="ThemeService.IsDarkMode" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudPopoverProvider />
 
 <div class="page">
-    <AuthorizeView>
-        <Authorized>
-            <div class="sidebar">
-                <NavMenu />
-            </div>
-        </Authorized>
-    </AuthorizeView>
-
-    <main>
-        <div class="top-row px-4 justify-content-end">
+    <header class="app-header">
+        <div class="app-header-inner">
             <AuthorizeView>
                 <Authorized>
-                    <div class="d-flex align-items-center">
-                        <span class="me-3">@context.User.Identity?.Name</span>
-                        @if (currentCompany != null)
-                        {
-                            <span class="me-3 text-muted">| @currentCompany.CompanyName (@currentCompany.Code)</span>
-                        }
-                        <button class="btn btn-link" @onclick="HandleLogout">
-                            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-                        </button>
-                    </div>
+                    <button type="button" class="sidebar-toggler" title="Menú" @onclick="ToggleSidebar">
+                        <i class="fas fa-bars"></i>
+                    </button>
                 </Authorized>
             </AuthorizeView>
-        </div>
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
+            <a class="app-brand" href="@BrandHref">
+                <svg class="app-logo" viewBox="0 0 16 16" width="32" height="32" aria-hidden="true">
+                    <path fill="currentColor" d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0ZM4.75 5.5h6.5a.75.75 0 0 1 0 1.5h-6.5a.75.75 0 0 1 0-1.5Zm0 3.5h6.5a.75.75 0 0 1 0 1.5h-6.5a.75.75 0 0 1 0-1.5Z" />
+                </svg>
+                Aries Contabilidad
+            </a>
+
+            <AuthorizeView>
+                <Authorized>
+                    <CompanySwitcher />
+                </Authorized>
+            </AuthorizeView>
+
+            <div class="app-header-spacer"></div>
+
+            <div class="app-header-actions">
+                <ThemeToggle />
+                <AuthorizeView>
+                    <Authorized>
+                        <span class="header-user" title="@context.User.Identity?.Name">@context.User.Identity?.Name</span>
+                        <button type="button" class="btn-header" @onclick="HandleLogout">
+                            <i class="fas fa-sign-out-alt me-1"></i> Cerrar sesión
+                        </button>
+                    </Authorized>
+                </AuthorizeView>
+            </div>
+        </div>
+    </header>
+
+    <div class="page-body">
+        <AuthorizeView>
+            <Authorized>
+                @if (_sidebarOpen)
+                {
+                    <div class="sidebar-backdrop" @onclick="CloseSidebar"></div>
+                }
+                <div class="sidebar @(_sidebarOpen ? "open" : null)">
+                    <NavMenu OnNavigate="CloseSidebar" />
+                </div>
+            </Authorized>
+        </AuthorizeView>
+
+        <main>
+            <article class="content">
+                @Body
+            </article>
+        </main>
+    </div>
 </div>
 
 @code {
-    private Company currentCompany;
+    private readonly MudTheme _mudTheme = AriesMudTheme.Create();
+    private Company? currentCompany;
+    private bool _sidebarOpen;
+
+    private string BrandHref =>
+        currentCompany != null && !string.IsNullOrEmpty(currentCompany.Code)
+            ? $"/dashboard/{currentCompany.Code}"
+            : "/companies";
 
     protected override async Task OnInitializedAsync()
     {
+        ThemeService.Changed += OnThemeChanged;
+        NavigationManager.LocationChanged += HandleLocationChanged;
+        await ThemeService.InitializeAsync();
         await CheckCurrentCompany();
     }
 
@@ -67,5 +107,24 @@
     {
         await ((CustomAuthStateProvider)AuthStateProvider).MarkUserAsLoggedOut();
         NavigationManager.NavigateTo("/");
+    }
+
+    private void ToggleSidebar() => _sidebarOpen = !_sidebarOpen;
+
+    private void CloseSidebar() => _sidebarOpen = false;
+
+    private async void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        _sidebarOpen = false;
+        await CheckCurrentCompany();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void OnThemeChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        ThemeService.Changed -= OnThemeChanged;
+        NavigationManager.LocationChanged -= HandleLocationChanged;
     }
 }

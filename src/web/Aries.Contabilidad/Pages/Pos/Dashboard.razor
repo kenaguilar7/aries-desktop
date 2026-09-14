@@ -3,9 +3,10 @@
 @inject IPosService PosService
 @inject NavigationManager NavigationManager
 
-<div class="container-fluid">
-    <h3 class="mb-3">Punto de venta</h3>
-    <PosNav CompanyId="@CompanyId" />
+<div class="container-fluid px-0">
+    <div class="page-header">
+        <h1 class="page-title mb-0">Resumen</h1>
+    </div>
 
     @if (!string.IsNullOrEmpty(errorMessage))
     {

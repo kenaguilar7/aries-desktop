@@ -12,10 +12,14 @@ namespace AriesContador.Core.Models.PointOfSale
 
         public decimal Price { get; set; }
 
+        public decimal Cost { get; set; }
+
         public decimal Stock { get; set; }
 
         public bool SoldByWeight { get; set; }
 
         public decimal? PricePerKilo { get; set; }
+
+        public bool TaxExempt { get; set; }
     }
 }

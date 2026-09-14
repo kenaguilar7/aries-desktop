@@ -5,8 +5,7 @@
 @inject IJSRuntime JSRuntime
 
 <div class="container-fluid">
-    <h3 class="mb-3">Caja de ventas</h3>
-    <PosNav CompanyId="@CompanyId" />
+    <h1 class="page-title">Caja de ventas</h1>
 
     @if (!string.IsNullOrEmpty(errorMessage))
     {
@@ -138,6 +137,10 @@
                     }
                 </table>
                 <p><strong>Total @lastSale.Total.ToString("N2")</strong> — @lastSale.PaymentMethod</p>
+                @if (lastSale.TaxAmount > 0 || lastSale.NetAmount > 0)
+                {
+                    <p class="text-muted mb-0">Neto @lastSale.NetAmount.ToString("N2") · IVA @lastSale.TaxAmount.ToString("N2")</p>
+                }
                 <button class="btn btn-outline-primary" @onclick="PrintVoucher">Imprimir</button>
             </div>
         </div>
@@ -294,6 +297,6 @@
     {
         var lines = string.Join("", sale.Lines.Select(l =>
             $"<tr><td>{l.ProductName}</td><td>{(l.SoldByWeight ? l.WeightGrams + " g" : "x" + l.Quantity)}</td><td style='text-align:right'>{l.LineTotal:N2}</td></tr>"));
-        return $"<html><body><h3>Comprobante #{sale.Id}</h3><p>{sale.SoldAt:g} — {sale.RegisterName}</p><table width='100%'>{lines}</table><p><strong>Total {sale.Total:N2}</strong> {sale.PaymentMethod}</p></body></html>";
+        return $"<html><body><h3>Comprobante #{sale.Id}</h3><p>{sale.SoldAt:g} — {sale.RegisterName}</p><table width='100%'>{lines}</table><p><strong>Total {sale.Total:N2}</strong> {sale.PaymentMethod}</p><p>Neto {sale.NetAmount:N2} · IVA {sale.TaxAmount:N2}</p></body></html>";
     }
 }

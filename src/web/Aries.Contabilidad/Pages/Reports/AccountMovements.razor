@@ -1,0 +1,244 @@
+@page "/accounting/{CompanyId}/reports/movimientos"
+@page "/accounting/{CompanyId}/reports/movimientos/{AccountId:int}"
+@inject IAccountService AccountService
+@inject ILocalStorageService LocalStorageService
+@inject IJSRuntime JS
+@inject NavigationManager NavigationManager
+
+<PageTitle>Movimientos de cuenta - Aries Contabilidad</PageTitle>
+
+<div class="container-fluid px-0">
+    <div class="page-header">
+        <h1 class="page-title mb-0">Movimientos de cuenta</h1>
+        <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-secondary" @onclick="GoBack">Volver</button>
+            <button type="button" class="btn btn-primary" disabled="@(_rows.Count == 0 || _loading)" @onclick="ExportCsv">Exportar</button>
+        </div>
+    </div>
+
+    @if (_loadingAccounts)
+    {
+        <div class="d-flex justify-content-center py-5">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        </div>
+    }
+    else
+    {
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="movements-tree">
+                    <AccountTreeView Accounts="@_accounts"
+                                     SelectedAccount="@_selected"
+                                     OnAccountSelected="OnAccountSelected" />
+                </div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(_error))
+        {
+            <p class="text-danger">@_error</p>
+        }
+        else if (_selected == null)
+        {
+            <p class="text-muted">Elija una cuenta en el árbol para ver sus movimientos.</p>
+        }
+        else if (_loading)
+        {
+            <div class="d-flex justify-content-center py-4">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+            </div>
+        }
+        else if (_rows.Count == 0)
+        {
+            <p class="text-muted mb-0">@_selected.Name no tiene movimientos.</p>
+        }
+        else
+        {
+            <p class="text-muted mb-2">@_selected.Name (@AccountUi.TypeBadge(_selected.AccountType))</p>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Cuenta</th>
+                            <th>Tipo</th>
+                            <th>Detalle</th>
+                            <th>Referencia</th>
+                            <th>Fecha doc</th>
+                            <th>Mes</th>
+                            <th>Asiento</th>
+                            <th class="text-end">Débitos</th>
+                            <th class="text-end">Créditos</th>
+                            <th class="text-end">Saldo</th>
+                            @if (ShowFx)
+                            {
+                                <th class="text-end">Tipo cambio</th>
+                                <th class="text-end">Monto USD</th>
+                            }
+                            <th>Usuario</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in _rows)
+                        {
+                            <tr>
+                                <td>@row.AccountName</td>
+                                <td>@row.MovementType</td>
+                                <td>@row.Memo</td>
+                                <td>@row.Reference</td>
+                                <td>@(row.DocumentDate == DateTime.MinValue ? "—" : row.DocumentDate.ToString("dd/MM/yyyy"))</td>
+                                <td>@row.PostingPeriodName</td>
+                                <td>@row.JournalEntryNumber</td>
+                                <td class="text-end">@AccountUi.Colones(row.DebitAmount)</td>
+                                <td class="text-end">@AccountUi.Colones(row.CreditAmount)</td>
+                                <td class="text-end">@AccountUi.Colones(row.CurrentBalance)</td>
+                                @if (ShowFx)
+                                {
+                                    <td class="text-end">@AsientosUi.Dollars(row.RateAmount)</td>
+                                    <td class="text-end">@AsientosUi.Dollars(row.ForeignAmount)</td>
+                                }
+                                <td>@row.UserName</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string CompanyId { get; set; } = string.Empty;
+
+    [Parameter]
+    public int? AccountId { get; set; }
+
+    private List<Account> _accounts = new();
+    private Account? _selected;
+    private List<AccountMovementRow> _rows = new();
+    private bool _loadingAccounts = true;
+    private bool _loading;
+    private string? _error;
+    private string _loadedCompanyId = string.Empty;
+    private int _loadedAccountId;
+    private CurrencyTypeCompany _moneyType = CurrencyTypeCompany.Dolares_y_Colones;
+
+    private bool ShowFx => AsientosUi.ShowForeignColumns(_moneyType);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!string.Equals(_loadedCompanyId, CompanyId, StringComparison.OrdinalIgnoreCase))
+        {
+            _loadedCompanyId = CompanyId;
+            _loadedAccountId = 0;
+            await LoadAccountsAsync();
+        }
+
+        var requested = AccountId ?? 0;
+        if (requested != 0 && requested != _loadedAccountId)
+            await SelectAccountAsync(requested);
+    }
+
+    private async Task LoadAccountsAsync()
+    {
+        _loadingAccounts = true;
+        _error = null;
+        try
+        {
+            var company = await LocalStorageService.GetStoredCompany();
+            if (company != null)
+                _moneyType = company.MoneyType;
+
+            _accounts = await AccountService.GetAccountsAsync(CompanyId) ?? new List<Account>();
+            if (AccountId.HasValue && AccountId.Value != 0)
+                await SelectAccountAsync(AccountId.Value);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+            _accounts = new List<Account>();
+        }
+        finally
+        {
+            _loadingAccounts = false;
+        }
+    }
+
+    private void OnAccountSelected(Account account)
+    {
+        if (account == null || account.Id == _selected?.Id)
+            return;
+
+        NavigationManager.NavigateTo($"/accounting/{CompanyId}/reports/movimientos/{account.Id}");
+    }
+
+    private async Task SelectAccountAsync(int accountId)
+    {
+        _selected = _accounts.FirstOrDefault(a => a.Id == accountId);
+        _loadedAccountId = accountId;
+        _rows = new List<AccountMovementRow>();
+        if (_selected == null)
+        {
+            _error = "No se encontró la cuenta.";
+            return;
+        }
+
+        _error = null;
+        _loading = true;
+        try
+        {
+            _rows = await AccountService.GetAccountMovementsAsync(accountId);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+            _rows = new List<AccountMovementRow>();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task ExportCsv()
+    {
+        if (_selected == null)
+            return;
+
+        var lines = new List<string>
+        {
+            ShowFx
+                ? "Cuenta,Tipo,Detalle,Referencia,Fecha Documento,Mes Contable,Asiento,Debitos,Creditos,Saldo Actual,Tipo Cambio,Monto Dólares,Usuario"
+                : "Cuenta,Tipo,Detalle,Referencia,Fecha Documento,Mes Contable,Asiento,Debitos,Creditos,Saldo Actual,Usuario"
+        };
+
+        foreach (var row in _rows)
+        {
+            var cols = new List<string>
+            {
+                AsientosUi.CsvEscape(row.AccountName),
+                AsientosUi.CsvEscape(row.MovementType),
+                AsientosUi.CsvEscape(row.Memo),
+                AsientosUi.CsvEscape(row.Reference),
+                row.DocumentDate == DateTime.MinValue ? string.Empty : row.DocumentDate.ToString("dd/MM/yyyy"),
+                AsientosUi.CsvEscape(row.PostingPeriodName),
+                row.JournalEntryNumber.ToString(),
+                row.DebitAmount.ToString("N2"),
+                row.CreditAmount.ToString("N2"),
+                row.CurrentBalance.ToString("N2")
+            };
+            if (ShowFx)
+            {
+                cols.Add(row.RateAmount.ToString("N2"));
+                cols.Add(row.ForeignAmount.ToString("N2"));
+            }
+            cols.Add(AsientosUi.CsvEscape(row.UserName));
+            lines.Add(string.Join(",", cols));
+        }
+
+        await JS.InvokeVoidAsync("ariesAsientos.download", $"MOVIMIENTOS {_selected.Name}.csv", string.Join("\r\n", lines), "text/csv;charset=utf-8;");
+    }
+
+    private void GoBack() =>
+        NavigationManager.NavigateTo($"/accounting/{CompanyId}/reports");
+}

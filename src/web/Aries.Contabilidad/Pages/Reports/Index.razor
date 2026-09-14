@@ -1,0 +1,76 @@
+@page "/accounting/{CompanyId}/reports"
+@inject NavigationManager NavigationManager
+
+<PageTitle>Reportes - Aries Contabilidad</PageTitle>
+
+<div class="container-fluid px-0">
+    <div class="page-header">
+        <h1 class="page-title mb-0">Reportes contables</h1>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="card gh-action-card cursor-pointer" @onclick="GoAsientos">
+                <div class="card-body py-4">
+                    <h3 class="card-title h5">Reporte de asientos</h3>
+                    <p class="card-text mb-0">Asientos por rango de periodos, con exportación.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card gh-action-card report-card-wip">
+                <div class="card-body py-4">
+                    <p class="wip-badge">En construcción</p>
+                    <h3 class="card-title h5">Balance de comprobación</h3>
+                    <p class="card-text mb-0">Hoy vive en el escritorio.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card gh-action-card report-card-wip">
+                <div class="card-body py-4">
+                    <p class="wip-badge">En construcción</p>
+                    <h3 class="card-title h5">Balance de auxiliares</h3>
+                    <p class="card-text mb-0">Hoy vive en el escritorio.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card gh-action-card cursor-pointer" @onclick="GoMovimientos">
+                <div class="card-body py-4">
+                    <h3 class="card-title h5">Movimientos de cuenta</h3>
+                    <p class="card-text mb-0">Líneas de una cuenta, con exportación.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card gh-action-card report-card-wip">
+                <div class="card-body py-4">
+                    <p class="wip-badge">En construcción</p>
+                    <h3 class="card-title h5">Estado de resultado integral</h3>
+                    <p class="card-text mb-0">Hoy vive en el escritorio.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card gh-action-card report-card-wip">
+                <div class="card-body py-4">
+                    <p class="wip-badge">En construcción</p>
+                    <h3 class="card-title h5">Balance de situación</h3>
+                    <p class="card-text mb-0">Hoy vive en el escritorio.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string CompanyId { get; set; } = string.Empty;
+
+    private void GoAsientos() =>
+        NavigationManager.NavigateTo($"/accounting/{CompanyId}/reports/asientos");
+
+    private void GoMovimientos() =>
+        NavigationManager.NavigateTo($"/accounting/{CompanyId}/reports/movimientos");
+}

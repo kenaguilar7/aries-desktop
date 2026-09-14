@@ -1,0 +1,70 @@
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Cambiar periodo contable de asiento</MudText>
+    </TitleContent>
+    <DialogContent>
+        <p class="mb-2">Asiento número <strong>@JournalEntry.Number</strong></p>
+        <p class="text-muted">Periodo actual: @CurrentPeriod?.ToString()</p>
+        @if (_targets.Count == 0)
+        {
+            <MudAlert Severity="Severity.Info">No hay otros periodos abiertos para transferir.</MudAlert>
+        }
+        else
+        {
+            <MudSelect T="int"
+                       Label="Periodo destino"
+                       @bind-Value="_selectedId"
+                       Variant="Variant.Outlined"
+                       AnchorOrigin="Origin.BottomCenter">
+                @foreach (var period in _targets)
+                {
+                    <MudSelectItem T="int" Value="@period.Id">@period.ToString()</MudSelectItem>
+                }
+            </MudSelect>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="Cancel">Cerrar</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@(_busy || _targets.Count == 0)" OnClick="Save">Transferir</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public JournalEntry JournalEntry { get; set; } = new();
+
+    [Parameter]
+    public PostingPeriod? CurrentPeriod { get; set; }
+
+    [Parameter]
+    public List<PostingPeriod> PostingPeriods { get; set; } = new();
+
+    private List<PostingPeriod> _targets = new();
+    private int _selectedId;
+    private bool _busy;
+
+    protected override void OnInitialized()
+    {
+        _targets = PostingPeriods
+            .Where(p => !p.Closed && p.Id != CurrentPeriod?.Id)
+            .OrderByDescending(p => p.Date)
+            .ToList();
+        _selectedId = _targets.FirstOrDefault()?.Id ?? 0;
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Save()
+    {
+        var target = _targets.FirstOrDefault(p => p.Id == _selectedId);
+        if (target == null)
+            return;
+
+        _busy = true;
+        MudDialog.Close(DialogResult.Ok(target));
+        await Task.CompletedTask;
+    }
+}

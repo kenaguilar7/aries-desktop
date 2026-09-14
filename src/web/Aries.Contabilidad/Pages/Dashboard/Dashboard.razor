@@ -7,7 +7,7 @@
 @inject IJSRuntime JSRuntime
 @inject ILocalStorageService LocalStorage
 
-<div class="container-fluid">
+<div class="container-fluid px-0">
     @if (isLoading)
     {
         <div class="d-flex justify-content-center">
@@ -18,32 +18,34 @@
     }
     else
     {
-
-        <div class="row mt-4">
+        <div class="page-header">
+            <h1 class="page-title mb-0">Inicio</h1>
+        </div>
+        <div class="row g-3">
             <div class="col-md-4">
-                <div class="card h-100 cursor-pointer" @onclick="NavigateToJournalEntry">
-                    <div class="card-body text-center">
-                        <i class="fas fa-book fa-3x mb-3"></i>
-                        <h3 class="card-title">Asientos Contables</h3>
+                <div class="card gh-action-card cursor-pointer" @onclick="NavigateToJournalEntry">
+                    <div class="card-body text-center py-4">
+                        <i class="fas fa-book fa-2x mb-3 card-icon"></i>
+                        <h3 class="card-title h5">Asientos contables</h3>
                         <p class="card-text">Gestione sus asientos contables de manera eficiente</p>
                     </div>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card h-100 cursor-pointer" @onclick="NavigateToAccounts">
-                    <div class="card-body text-center">
-                        <i class="fas fa-sitemap fa-3x mb-3"></i>
-                        <h3 class="card-title">Catálogo de Cuentas</h3>
+                <div class="card gh-action-card cursor-pointer" @onclick="NavigateToAccounts">
+                    <div class="card-body text-center py-4">
+                        <i class="fas fa-sitemap fa-2x mb-3 card-icon"></i>
+                        <h3 class="card-title h5">Catálogo de cuentas</h3>
                         <p class="card-text">Gestione su plan de cuentas contables</p>
                     </div>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card h-100 cursor-pointer" @onclick="NavigateToPos">
-                    <div class="card-body text-center">
-                        <i class="fas fa-cash-register fa-3x mb-3"></i>
-                        <h3 class="card-title">Punto de venta</h3>
-                        <p class="card-text">Inventario, n cajas por compañía y ventas</p>
+                <div class="card gh-action-card cursor-pointer" @onclick="NavigateToPos">
+                    <div class="card-body text-center py-4">
+                        <i class="fas fa-cash-register fa-2x mb-3 card-icon"></i>
+                        <h3 class="card-title h5">Punto de venta</h3>
+                        <p class="card-text">Inventario, cajas por compañía y ventas</p>
                     </div>
                 </div>
             </div>
@@ -68,11 +70,11 @@
 
     private void NavigateToAccounts()
     {
-        NavigationManager.NavigateTo($"/accounts/{CompanyId}/create");
+        NavigationManager.NavigateTo($"/accounts/{CompanyId}");
     }
 
     private void NavigateToPos()
     {
-        NavigationManager.NavigateTo($"/pos/{CompanyId}/dashboard");
+        NavigationManager.NavigateTo($"/pos/{CompanyId}/sales");
     }
-} 
+}

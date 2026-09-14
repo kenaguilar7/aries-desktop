@@ -24,9 +24,14 @@ namespace AriesContador.Services
         public async Task<IEnumerable<Account>> GetAccountsAsync(string companyId, CancellationToken cancellationToken = default)
         {
             if (companyId == "POR DEFECTO")
-                return _unitOfWork.AccountRepository.GetDefaultAccounts();
+            {
+                var defaults = _unitOfWork.AccountRepository.GetDefaultAccounts().ToList();
+                AccountRules.ApplyNature(defaults);
+                return defaults;
+            }
 
-            var output = await _unitOfWork.AccountRepository.FindByCompanyIdAsync(companyId, cancellationToken).ConfigureAwait(false);
+            var output = (await _unitOfWork.AccountRepository.FindByCompanyIdAsync(companyId, cancellationToken).ConfigureAwait(false)).ToList();
+            AccountRules.ApplyNature(output);
             return AccountRules.OrderByTree(output);
         }
 
@@ -58,6 +63,9 @@ namespace AriesContador.Services
         {
             if (account == null)
                 throw new InvalidOperationException(AccountRules.BlankNameMessage);
+
+            if (account.UpdatedBy == 0 && account.CreatedBy != 0)
+                account.UpdatedBy = account.CreatedBy;
 
             if (!AccountRules.ValidateName(account.Name, out var nameMessage))
                 throw new InvalidOperationException(nameMessage);
@@ -165,6 +173,7 @@ namespace AriesContador.Services
                 account.CreditBalanceForeign = row.CreditBalanceForeign;
             }
 
+            AccountRules.ApplyNature(accounts);
             AccountRules.ApplyRollUp(accounts);
         }
 
@@ -208,7 +217,7 @@ namespace AriesContador.Services
                 .ConfigureAwait(false);
 
             if (postingPeriods.PeriodExist(postingPeriod))
-                throw new Exception("Periodo contable con fechas repetidas");
+                throw new InvalidOperationException("Periodo contable con fechas repetidas");
 
             await _unitOfWork.PostingPeriodRepository.AddAsync(postingPeriod, cancellationToken).ConfigureAwait(false);
         }
@@ -254,11 +263,13 @@ namespace AriesContador.Services
         {
             foreach (var postingP in postingPeriods)
             {
-                postingP.JournalEntries = (await _unitOfWork.JournalEntryRepository.FindByPostingPeriodIdAsync(postingP.Id, cancellationToken)
-                    .ConfigureAwait(false)).ToList();
+                var entries = await _unitOfWork.JournalEntryRepository.FindByPostingPeriodIdAsync(postingP.Id, cancellationToken)
+                    .ConfigureAwait(false);
+                if (entries.Any())
+                    return true;
             }
 
-            return postingPeriods.Count(x => x.JournalEntries.Count > 0) > 0;
+            return false;
         }
 
         #endregion
@@ -282,6 +293,47 @@ namespace AriesContador.Services
         public Task CreateJournalEntryAsync(JournalEntry journalEntry, CancellationToken cancellationToken = default)
         {
             return _unitOfWork.JournalEntryRepository.AddAsync(journalEntry, cancellationToken);
+        }
+
+        public async Task CreateApprovedJournalEntryAsync(JournalEntry journalEntry, string companyId, CancellationToken cancellationToken = default)
+        {
+            if (journalEntry == null)
+                throw new InvalidOperationException("El asiento es requerido");
+            if (string.IsNullOrWhiteSpace(companyId))
+                throw new InvalidOperationException("La compañía es requerida");
+            if (journalEntry.JournalEntryLines == null || journalEntry.JournalEntryLines.Count == 0)
+                throw new InvalidOperationException("El asiento no tiene líneas");
+
+            journalEntry.ApplyStatusFromBalance();
+            if (!journalEntry.Cuadrado)
+                throw new InvalidOperationException("El asiento no está cuadrado");
+
+            var periods = await GetPostingPeriodsAsync(companyId, cancellationToken).ConfigureAwait(false);
+            var period = periods.FirstOrDefault(p => p.Id == journalEntry.PostingPeriodId);
+            if (period == null)
+                throw new InvalidOperationException("El periodo contable no existe");
+            if (period.Closed)
+                throw new InvalidOperationException("El periodo contable está cerrado");
+
+            var accounts = (await GetAccountsAsync(companyId, cancellationToken).ConfigureAwait(false))
+                .ToDictionary(a => a.Id);
+            foreach (var line in journalEntry.JournalEntryLines)
+            {
+                if (line.Amount <= 0)
+                    throw new InvalidOperationException("El monto de la línea debe ser mayor a cero");
+                Account account;
+                if (!accounts.TryGetValue(line.AccountId, out account))
+                    throw new InvalidOperationException("La cuenta no pertenece a la compañía");
+                if (account.AccountType != AccountType.Cuenta_Auxiliar)
+                    throw new InvalidOperationException("Solo se pueden asentar cuentas auxiliares");
+                line.AccountName = account.Name;
+            }
+
+            if (journalEntry.Number == 0)
+                journalEntry.Number = await CreateJournalEntryConsecutiveAsync(journalEntry.PostingPeriodId, cancellationToken)
+                    .ConfigureAwait(false);
+            journalEntry.JournalEntryStatus = JournalEntryStatus.Approved;
+            await CreateJournalEntryAsync(journalEntry, cancellationToken).ConfigureAwait(false);
         }
 
         public Task UpdateJournalEntryAsync(JournalEntry journalEntry, CancellationToken cancellationToken = default)

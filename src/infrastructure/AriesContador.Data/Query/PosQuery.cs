@@ -9,9 +9,11 @@ T0.barcode AS Barcode,
 T0.name AS Name,
 T0.category AS Category,
 T0.price AS Price,
+T0.cost AS Cost,
 T0.stock AS Stock,
 T0.sold_by_weight AS SoldByWeight,
 T0.price_per_kilo AS PricePerKilo,
+T0.tax_exempt AS TaxExempt,
 T0.created_at AS CreatedAt,
 T0.updated_at AS UpdateAt,
 T0.created_by AS CreatedBy,
@@ -47,9 +49,9 @@ SELECT COUNT(*) FROM products WHERE company_id = @CompanyId AND active = 1";
 
         public const string InsertProduct = @"
 INSERT INTO products
-  (company_id, barcode, name, category, price, stock, sold_by_weight, price_per_kilo, created_by, updated_by, active)
+  (company_id, barcode, name, category, price, cost, stock, sold_by_weight, price_per_kilo, tax_exempt, created_by, updated_by, active)
 VALUES
-  (@CompanyId, @Barcode, @Name, @Category, @Price, @Stock, @SoldByWeight, @PricePerKilo, @CreatedBy, @UpdatedBy, @ActiveMySQL)";
+  (@CompanyId, @Barcode, @Name, @Category, @Price, @Cost, @Stock, @SoldByWeight, @PricePerKilo, @TaxExempt, @CreatedBy, @UpdatedBy, @ActiveMySQL)";
 
         public const string UpdateProduct = @"
 UPDATE products SET
@@ -57,9 +59,11 @@ UPDATE products SET
   name = @Name,
   category = @Category,
   price = @Price,
+  cost = @Cost,
   stock = @Stock,
   sold_by_weight = @SoldByWeight,
   price_per_kilo = @PricePerKilo,
+  tax_exempt = @TaxExempt,
   updated_by = @UpdatedBy,
   active = @ActiveMySQL
 WHERE product_id = @Id AND company_id = @CompanyId";
@@ -190,6 +194,9 @@ CASE T0.payment_method
 END AS PaymentMethod,
 T0.payment_reference AS PaymentReference,
 T0.total AS Total,
+T0.net_amount AS NetAmount,
+T0.tax_amount AS TaxAmount,
+T0.cost_amount AS CostAmount,
 T0.sold_at AS SoldAt,
 T0.created_at AS CreatedAt,
 T0.updated_at AS UpdateAt,
@@ -240,6 +247,10 @@ SELECT
   price_per_kilo AS PricePerKilo,
   weight_grams AS WeightGrams,
   line_total AS LineTotal,
+  net_amount AS NetAmount,
+  tax_amount AS TaxAmount,
+  cost_amount AS CostAmount,
+  tax_exempt AS TaxExempt,
   created_at AS CreatedAt,
   updated_at AS UpdateAt,
   created_by AS CreatedBy,
@@ -250,15 +261,15 @@ WHERE sale_id = @SaleId";
 
         public const string InsertSale = @"
 INSERT INTO sales
-  (company_id, sales_register_id, session_id, payment_method, payment_reference, total, sold_at, created_by, updated_by, active)
+  (company_id, sales_register_id, session_id, payment_method, payment_reference, total, net_amount, tax_amount, cost_amount, sold_at, created_by, updated_by, active)
 VALUES
-  (@CompanyId, @SalesRegisterId, @SessionId, @PaymentMethodDb, @PaymentReference, @Total, @SoldAt, @CreatedBy, @UpdatedBy, 1)";
+  (@CompanyId, @SalesRegisterId, @SessionId, @PaymentMethodDb, @PaymentReference, @Total, @NetAmount, @TaxAmount, @CostAmount, @SoldAt, @CreatedBy, @UpdatedBy, 1)";
 
         public const string InsertSaleLine = @"
 INSERT INTO sale_lines
-  (sale_id, product_id, product_name, quantity, unit_price, sold_by_weight, price_per_kilo, weight_grams, line_total, created_by, updated_by, active)
+  (sale_id, product_id, product_name, quantity, unit_price, sold_by_weight, price_per_kilo, weight_grams, line_total, net_amount, tax_amount, cost_amount, tax_exempt, created_by, updated_by, active)
 VALUES
-  (@SaleId, @ProductId, @ProductName, @Quantity, @UnitPrice, @SoldByWeight, @PricePerKilo, @WeightGrams, @LineTotal, @CreatedBy, @UpdatedBy, 1)";
+  (@SaleId, @ProductId, @ProductName, @Quantity, @UnitPrice, @SoldByWeight, @PricePerKilo, @WeightGrams, @LineTotal, @NetAmount, @TaxAmount, @CostAmount, @TaxExempt, @CreatedBy, @UpdatedBy, 1)";
 
         public const string DecrementStock = @"
 UPDATE products SET stock = stock - @Quantity, updated_by = @UpdatedBy

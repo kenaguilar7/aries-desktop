@@ -6,78 +6,170 @@
 @inject IJSRuntime JSRuntime
 @implements IDisposable
 
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Aries Contabilidad</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
-</div>
+<nav class="side-nav">
+    <AuthorizeView>
+        <Authorized>
+            @if (!string.IsNullOrEmpty(CurrentCompanyId))
+            {
+                <NavLink class="side-nav-link" href="@InicioHref" Match="NavLinkMatch.All" @onclick="NotifyNavigate">
+                    <i class="fas fa-home"></i>
+                    <span>Inicio</span>
+                </NavLink>
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="nav flex-column">
-        <AuthorizeView>
-            <Authorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="/companies" Match="NavLinkMatch.All">
-                        <i class="fas fa-building"></i> Compañías
-                    </NavLink>
-     @*                <div class="d-flex align-items-center">
-                        <small class="text-light me-2">Current company: @CurrentCompanyId</small>
-                        <button class="btn btn-sm btn-outline-danger" @onclick="ClearCompanyData">Clear</button>
-                    </div> *@
+                <div class="side-nav-group">
+                    <button type="button" class="side-nav-group-toggle @(IsGroupActive("contab") ? "active" : null)" @onclick='() => Toggle("contab")'>
+                        <span>Contabilidad</span>
+                        <i class="fas @(_expanded.Contains("contab") ? "fa-chevron-down" : "fa-chevron-right")"></i>
+                    </button>
+                    @if (_expanded.Contains("contab"))
+                    {
+                        <div class="side-nav-children">
+                            <NavLink class="side-nav-link" href="@JournalHref" @onclick="NotifyNavigate">
+                                <span>Asientos</span>
+                            </NavLink>
+                            <NavLink class="side-nav-link" href="@AccountsHref" @onclick="NotifyNavigate">
+                                <span>Plan de cuentas</span>
+                            </NavLink>
+                            <NavLink class="side-nav-link" href="@($"/accounting/{CurrentCompanyId}/periods")" @onclick="NotifyNavigate">
+                                <span>Periodos</span>
+                            </NavLink>
+                            <NavLink class="side-nav-link" href="@($"/accounting/{CurrentCompanyId}/restore")" @onclick="NotifyNavigate">
+                                <span>Elementos eliminados</span>
+                            </NavLink>
+                            <NavLink class="side-nav-link" href="@($"/accounting/{CurrentCompanyId}/reports")" @onclick="NotifyNavigate">
+                                <span>Reportes</span>
+                            </NavLink>
+                        </div>
+                    }
                 </div>
-                @if (!string.IsNullOrEmpty(@CurrentCompanyId))
+
+                <div class="side-nav-group">
+                    <button type="button" class="side-nav-group-toggle @(IsGroupActive("pos") ? "active" : null)" @onclick='() => Toggle("pos")'>
+                        <span>Punto de venta</span>
+                        <i class="fas @(_expanded.Contains("pos") ? "fa-chevron-down" : "fa-chevron-right")"></i>
+                    </button>
+                    @if (_expanded.Contains("pos"))
+                    {
+                        <div class="side-nav-children">
+                            <NavLink class="side-nav-link" href="@($"/pos/{CurrentCompanyId}/sales")" @onclick="NotifyNavigate">
+                                <span>Ventas</span>
+                            </NavLink>
+                            <NavLink class="side-nav-link" href="@($"/pos/{CurrentCompanyId}/registers")" @onclick="NotifyNavigate">
+                                <span>Cajas</span>
+                            </NavLink>
+                            <NavLink class="side-nav-link" href="@($"/pos/{CurrentCompanyId}/caja")" @onclick="NotifyNavigate">
+                                <span>Apertura / Cierre</span>
+                            </NavLink>
+                            <NavLink class="side-nav-link" href="@($"/pos/{CurrentCompanyId}/inventory")" @onclick="NotifyNavigate">
+                                <span>Inventario</span>
+                            </NavLink>
+                            <NavLink class="side-nav-link" href="@($"/pos/{CurrentCompanyId}/reports")" @onclick="NotifyNavigate">
+                                <span>Reportes POS</span>
+                            </NavLink>
+                            <NavLink class="side-nav-link" href="@($"/pos/{CurrentCompanyId}/dashboard")" @onclick="NotifyNavigate">
+                                <span>Resumen</span>
+                            </NavLink>
+                        </div>
+                    }
+                </div>
+
+                <div class="side-nav-group">
+                    <button type="button" class="side-nav-group-toggle @(IsGroupActive("integration") ? "active" : null)" @onclick='() => Toggle("integration")'>
+                        <span>Integración</span>
+                        <i class="fas @(_expanded.Contains("integration") ? "fa-chevron-down" : "fa-chevron-right")"></i>
+                    </button>
+                    @if (_expanded.Contains("integration"))
+                    {
+                        <div class="side-nav-children">
+                            <NavLink class="side-nav-link" href="@($"/integration/{CurrentCompanyId}/pos-accounting")" @onclick="NotifyNavigate">
+                                <span>POS → Contabilidad</span>
+                            </NavLink>
+                            <NavLink class="side-nav-link" href="@($"/integration/{CurrentCompanyId}/account-map")" @onclick="NotifyNavigate">
+                                <span>Mapeo de cuentas</span>
+                            </NavLink>
+                            <NavLink class="side-nav-link" href="@($"/integration/{CurrentCompanyId}/reconciliation")" @onclick="NotifyNavigate">
+                                <span>Conciliación</span>
+                            </NavLink>
+                        </div>
+                    }
+                </div>
+
+                <div class="side-nav-group">
+                    <button type="button" class="side-nav-group-toggle @(IsGroupActive("automations") ? "active" : null)" @onclick='() => Toggle("automations")'>
+                        <span>Automatizaciones</span>
+                        <i class="fas @(_expanded.Contains("automations") ? "fa-chevron-down" : "fa-chevron-right")"></i>
+                    </button>
+                    @if (_expanded.Contains("automations"))
+                    {
+                        <div class="side-nav-children">
+                            <NavLink class="side-nav-link side-nav-wip-link" href="@($"/automations/{CurrentCompanyId}/recurring")" @onclick="NotifyNavigate">
+                                <span>Recurrencias</span>
+                                <span class="side-nav-wip">en construcción</span>
+                            </NavLink>
+                            <NavLink class="side-nav-link side-nav-wip-link" href="@($"/automations/{CurrentCompanyId}/rules")" @onclick="NotifyNavigate">
+                                <span>Reglas</span>
+                                <span class="side-nav-wip">en construcción</span>
+                            </NavLink>
+                            <NavLink class="side-nav-link side-nav-wip-link" href="@($"/automations/{CurrentCompanyId}/alerts")" @onclick="NotifyNavigate">
+                                <span>Alertas</span>
+                                <span class="side-nav-wip">en construcción</span>
+                            </NavLink>
+                        </div>
+                    }
+                </div>
+            }
+
+            <div class="side-nav-group">
+                <button type="button" class="side-nav-group-toggle @(IsGroupActive("admin") ? "active" : null)" @onclick='() => Toggle("admin")'>
+                    <span>Administración</span>
+                    <i class="fas @(_expanded.Contains("admin") ? "fa-chevron-down" : "fa-chevron-right")"></i>
+                </button>
+                @if (_expanded.Contains("admin"))
                 {
-                    <div class="nav-item px-3 submenu">
-                        <NavLink class="nav-link" @onclick="NavigateToAccounts">
-                            <i class="fas fa-book"></i> Maestro de cuentas
+                    <div class="side-nav-children">
+                        <NavLink class="side-nav-link" href="/companies" @onclick="NotifyNavigate">
+                            <span>Compañías</span>
                         </NavLink>
-                    </div>
-                    <div class="nav-item px-3 submenu">
-                        <NavLink class="nav-link" @onclick="NavigateToJournalEntry">
-                            <i class="fas fa-journal-whills"></i> Asientos contables
-                        </NavLink>
-                    </div>
-                    <div class="nav-item px-3 submenu">
-                        <NavLink class="nav-link" @onclick="NavigateToPos">
-                            <i class="fas fa-cash-register"></i> Punto de venta
+                        <NavLink class="side-nav-link side-nav-wip-link" href="/admin/users" @onclick="NotifyNavigate">
+                            <span>Usuarios y permisos</span>
+                            <span class="side-nav-wip">en construcción</span>
                         </NavLink>
                     </div>
                 }
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="/reports">
-                        <i class="fas fa-chart-bar"></i> Reportes
-                    </NavLink>
-                    <!-- TODO: Add report submenu items here -->
-                </div>
-            </Authorized>
-        </AuthorizeView>
-    </nav>
-</div>
+            </div>
+        </Authorized>
+    </AuthorizeView>
+</nav>
 
 @code {
-    private bool collapseNavMenu = true;
-    private string? CurrentCompanyId { get; set; }
-    private Company CurrentCompany { get; set; }
+    [Parameter]
+    public EventCallback OnNavigate { get; set; }
 
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    private string? CurrentCompanyId { get; set; }
+    private Company? CurrentCompany { get; set; }
+    private readonly HashSet<string> _expanded = new(StringComparer.OrdinalIgnoreCase) { "contab", "pos" };
+
+    private string InicioHref => $"/dashboard/{CurrentCompanyId}";
+    private string JournalHref => $"/journal-entries/{CurrentCompanyId}/create";
+    private string AccountsHref => $"/accounts/{CurrentCompanyId}";
 
     protected override async Task OnInitializedAsync()
     {
         await CheckCompanyData();
+        EnsureActiveGroupExpanded();
         NavigationManager.LocationChanged += HandleLocationChanged;
     }
 
     protected override async Task OnParametersSetAsync()
     {
         await CheckCompanyData();
+        EnsureActiveGroupExpanded();
     }
 
     private async void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         await CheckCompanyData();
+        EnsureActiveGroupExpanded();
         await InvokeAsync(StateHasChanged);
     }
 
@@ -86,78 +178,76 @@
         try
         {
             var companyData = await LocalStorage.GetStoredCompany();
-            Console.WriteLine($"Company Data: {companyData?.Code ?? "null"}");
-            
             if (companyData != null)
             {
                 CurrentCompanyId = companyData.Code;
                 CurrentCompany = companyData;
-                Console.WriteLine($"Set CurrentCompanyId to: {CurrentCompanyId}");
             }
             else
             {
-                // Try to get company ID from URL if we're on a company-specific page
-                var uri = new Uri(NavigationManager.Uri);
-                var segments = uri.Segments;
-                if (segments.Length > 2 && segments[1] == "dashboard/")
-                {
-                    var companyIdFromUrl = segments[2].TrimEnd('/');
-                    CurrentCompanyId = companyIdFromUrl;
-                    Console.WriteLine($"Set CurrentCompanyId from URL to: {CurrentCompanyId}");
-                }
+                CurrentCompanyId = TryCompanyIdFromPath();
+                CurrentCompany = null;
             }
+
+            if (string.IsNullOrEmpty(CurrentCompanyId))
+                _expanded.Add("admin");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error in CheckCompanyData: {ex.Message}");
-            await JSRuntime.InvokeVoidAsync("console.error", "Error checking company data:", ex);
+            await JSRuntime.InvokeVoidAsync("console.error", "Error checking company data:", ex.Message);
         }
     }
 
-    // private async Task ClearCompanyData()
-    // {
-    //     try
-    //     {
-    //         await LocalStorage.RemoveItem("company_data");
-    //         CurrentCompanyId = null;
-    //         CurrentCompany = null;
-    //         StateHasChanged();
-    //         await JSRuntime.InvokeVoidAsync("alert", "Company data cleared");
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         Console.WriteLine($"Error clearing company data: {ex.Message}");
-    //         await JSRuntime.InvokeVoidAsync("alert", "Error clearing company data");
-    //     }
-    // }
-
-    private void NavigateToJournalEntry()
+    private string? TryCompanyIdFromPath()
     {
-        if (!string.IsNullOrEmpty(CurrentCompanyId))
+        var path = NavigationManager.ToBaseRelativePath(NavigationManager.Uri).Trim('/');
+        var segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length < 2)
+            return null;
+
+        var prefixes = new[] { "dashboard", "accounts", "journal-entries", "pos", "accounting", "integration", "automations" };
+        if (prefixes.Contains(segments[0], StringComparer.OrdinalIgnoreCase))
+            return segments[1];
+
+        return null;
+    }
+
+    private bool IsGroupActive(string group)
+    {
+        var path = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        return group switch
         {
-            NavigationManager.NavigateTo($"/journal-entries/{CurrentCompanyId}/create");
-        }
+            "contab" => Starts(path, "journal-entries") || Starts(path, "accounts") || Starts(path, "accounting"),
+            "pos" => Starts(path, "pos/"),
+            "integration" => Starts(path, "integration/"),
+            "automations" => Starts(path, "automations/"),
+            "admin" => Starts(path, "companies") || Starts(path, "admin/"),
+            _ => false
+        };
     }
 
-    private void NavigateToAccounts()
+    private static bool Starts(string path, string prefix) =>
+        path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
+
+    private void EnsureActiveGroupExpanded()
     {
-        if (!string.IsNullOrEmpty(CurrentCompanyId))
+        foreach (var group in new[] { "contab", "pos", "integration", "automations", "admin" })
         {
-            NavigationManager.NavigateTo($"/accounts/{CurrentCompanyId}/create");
+            if (IsGroupActive(group))
+                _expanded.Add(group);
         }
     }
 
-    private void NavigateToPos()
+    private void Toggle(string group)
     {
-        if (!string.IsNullOrEmpty(CurrentCompanyId))
-        {
-            NavigationManager.NavigateTo($"/pos/{CurrentCompanyId}/dashboard");
-        }
+        if (!_expanded.Add(group))
+            _expanded.Remove(group);
     }
 
-    private void ToggleNavMenu()
+    private async Task NotifyNavigate()
     {
-        collapseNavMenu = !collapseNavMenu;
+        if (OnNavigate.HasDelegate)
+            await OnNavigate.InvokeAsync();
     }
 
     public void Dispose()

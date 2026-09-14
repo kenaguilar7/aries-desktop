@@ -1,0 +1,96 @@
+@inject NavigationManager NavigationManager
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Seleccionar cuenta</MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (_loading)
+        {
+            <div class="d-flex justify-content-center py-4">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+            </div>
+        }
+        else
+        {
+            <AccountTreeView Accounts="@_accounts" OnAccountSelected="OnAccountSelected" SearchLabel="Buscar cuentas" />
+            @if (!string.IsNullOrEmpty(_error))
+            {
+                <MudAlert Severity="Severity.Error" Class="mt-3" Dense="true">@_error</MudAlert>
+            }
+            @if (_selected != null)
+            {
+                <p class="text-muted mt-2 mb-0">Seleccionada: @_selected.Name</p>
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="GoToAccounts">Ir a plan de cuentas</MudButton>
+        <MudButton Variant="Variant.Text" OnClick="Cancel">Cerrar</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Accept" Disabled="@(_selected == null)">Seleccionar</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public string CompanyId { get; set; } = string.Empty;
+
+    [Inject]
+    private IAccountService AccountService { get; set; } = default!;
+
+    private List<Account> _accounts = new();
+    private Account? _selected;
+    private bool _loading = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _accounts = await AccountService.GetAccountsAsync(CompanyId) ?? new List<Account>();
+        }
+        catch
+        {
+            _accounts = new List<Account>();
+            _error = "No se pudieron cargar las cuentas.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void OnAccountSelected(Account account)
+    {
+        _selected = account;
+        _error = null;
+    }
+
+    private void Accept()
+    {
+        if (_selected == null)
+        {
+            _error = "Seleccione una cuenta valida";
+            return;
+        }
+
+        if (_selected.AccountType != AccountType.Cuenta_Auxiliar)
+        {
+            _error = "Cuenta no valida. Solo se pueden asentar cuentas auxiliares.";
+            return;
+        }
+
+        MudDialog.Close(DialogResult.Ok(_selected));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void GoToAccounts()
+    {
+        MudDialog.Cancel();
+        NavigationManager.NavigateTo($"/accounts/{CompanyId}");
+    }
+}

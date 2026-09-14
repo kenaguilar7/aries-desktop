@@ -1,50 +1,25 @@
 @page "/journal-entries/{CompanyId}/create"
-@using Aries.Contabilidad.Components.JournalEntry
-
-@inject IJournalEntryService JournalEntryService
+@inject JournalWorkspaceGuard Guard
 @inject ISnackbar Snackbar
-@inject NavigationManager NavigationManager
 
-<JournalEntryEditor 
-    JournalEntry="@_journalEntry"
-    Title="Create Journal Entry"
-    OnSave="HandleSave"
-    OnCancel="HandleCancel"
-    CompanyId="@CompanyId" />
+<PageTitle>Asientos - Aries Contabilidad</PageTitle>
+
+<NavigationLock OnBeforeInternalNavigation="OnBeforeNav" />
+
+<div class="container-fluid px-0">
+    <JournalEntryEditor CompanyId="@CompanyId" />
+</div>
 
 @code {
     [Parameter]
-    public string CompanyId { get; set; }
+    public string CompanyId { get; set; } = string.Empty;
 
-    private JournalEntry _journalEntry;
-
-    protected override void OnInitialized()
+    private void OnBeforeNav(LocationChangingContext context)
     {
-        _journalEntry = new JournalEntry
-        {
-            JournalEntryLines = new List<JournalEntryLine>(),
-            JournalEntryStatus = JournalEntryStatus.Progress,
-            CreatedAt = DateTime.Now,
-            UpdateAt = DateTime.Now
-        };
-    }
+        if (Guard.CanLeave)
+            return;
 
-    private async Task HandleSave(JournalEntry journalEntry)
-    {
-        try
-        {
-            await JournalEntryService.CreateJournalEntryAsync(journalEntry);
-            Snackbar.Add("Journal entry created successfully", Severity.Success);
-            NavigationManager.NavigateTo($"/journal-entries/{CompanyId}");
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add("Failed to create journal entry", Severity.Error);
-        }
-    }
-
-    private void HandleCancel()
-    {
-        NavigationManager.NavigateTo($"/journal-entries/{CompanyId}");
+        context.PreventNavigation();
+        Snackbar.Add(Guard.Message, Severity.Warning);
     }
 }

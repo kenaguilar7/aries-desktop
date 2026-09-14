@@ -4,8 +4,7 @@
 @inject IJSRuntime JSRuntime
 
 <div class="container-fluid">
-    <h3 class="mb-3">Inventario</h3>
-    <PosNav CompanyId="@CompanyId" />
+    <h1 class="page-title">Inventario</h1>
 
     @if (!string.IsNullOrEmpty(errorMessage))
     {
@@ -47,6 +46,10 @@
                         <input class="form-control" type="number" step="0.01" @bind="form.Price" />
                     </div>
                     <div class="col-md-2">
+                        <label class="form-label">Costo</label>
+                        <input class="form-control" type="number" step="0.01" @bind="form.Cost" />
+                    </div>
+                    <div class="col-md-2">
                         <label class="form-label">Stock</label>
                         <input class="form-control" type="number" step="0.001" @bind="form.Stock" />
                     </div>
@@ -54,6 +57,12 @@
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="soldByWeight" @bind="form.SoldByWeight" />
                             <label class="form-check-label" for="soldByWeight">Vender por peso</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="taxExempt" @bind="form.TaxExempt" />
+                            <label class="form-check-label" for="taxExempt">Exento de IVA</label>
                         </div>
                     </div>
                     @if (form.SoldByWeight)
@@ -87,6 +96,7 @@
                             <th>Nombre</th>
                             <th>Categoría</th>
                             <th class="text-end">Precio</th>
+                            <th class="text-end">Costo</th>
                             <th class="text-end">Stock</th>
                             <th></th>
                         </tr>
@@ -99,6 +109,7 @@
                                 <td>@product.Name @(product.SoldByWeight ? "(peso)" : "")</td>
                                 <td>@product.Category</td>
                                 <td class="text-end">@(product.SoldByWeight ? product.PricePerKilo?.ToString("N2") + "/kg" : product.Price.ToString("N2"))</td>
+                                <td class="text-end">@product.Cost.ToString("N2")</td>
                                 <td class="text-end">@product.Stock.ToString("N3")</td>
                                 <td class="text-end">
                                     <button class="btn btn-sm btn-primary me-1" @onclick="() => StartEdit(product)">Editar</button>
@@ -154,9 +165,11 @@
             Name = product.Name,
             Category = product.Category,
             Price = product.Price,
+            Cost = product.Cost,
             Stock = product.Stock,
             SoldByWeight = product.SoldByWeight,
             PricePerKilo = product.PricePerKilo,
+            TaxExempt = product.TaxExempt,
             Active = product.Active
         };
         editing = true;

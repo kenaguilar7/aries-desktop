@@ -29,7 +29,10 @@ builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IPostingPeriodService, PostingPeriodService>();
 builder.Services.AddScoped<IJournalEntryLineService, JournalEntryLineService>();
 builder.Services.AddScoped<IPosService, PosService>();
+builder.Services.AddScoped<IPosAccountingClient, PosAccountingClient>();
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
+builder.Services.AddScoped<ThemeService>();
+builder.Services.AddScoped<JournalWorkspaceGuard>();
 
 var apiBaseUrl = apiSettings?.BaseUrl ?? "http://localhost:5088/";
 Console.WriteLine($"Environment: {environment}");

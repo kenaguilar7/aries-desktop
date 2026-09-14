@@ -26,6 +26,8 @@ namespace AriesContador.Data.Migrations
             "sales_register_sessions",
             "sales",
             "sale_lines",
+            "pos_account_maps",
+            "pos_session_postings",
             DatabaseMigrator.HistoryTableName
         };
 
@@ -146,6 +148,8 @@ namespace AriesContador.Data.Migrations
             new ExpectedColumn("products", "name"),
             new ExpectedColumn("products", "stock"),
             new ExpectedColumn("products", "sold_by_weight"),
+            new ExpectedColumn("products", "cost"),
+            new ExpectedColumn("products", "tax_exempt"),
             new ExpectedColumn("sales_registers", "sales_register_id"),
             new ExpectedColumn("sales_registers", "company_id") { CharLength = 5, Nullable = false },
             new ExpectedColumn("sales_registers", "code"),
@@ -162,10 +166,23 @@ namespace AriesContador.Data.Migrations
             new ExpectedColumn("sales", "session_id"),
             new ExpectedColumn("sales", "payment_method"),
             new ExpectedColumn("sales", "total"),
+            new ExpectedColumn("sales", "net_amount"),
+            new ExpectedColumn("sales", "tax_amount"),
+            new ExpectedColumn("sales", "cost_amount"),
             new ExpectedColumn("sale_lines", "sale_line_id"),
             new ExpectedColumn("sale_lines", "sale_id"),
             new ExpectedColumn("sale_lines", "product_id"),
             new ExpectedColumn("sale_lines", "line_total"),
+            new ExpectedColumn("sale_lines", "net_amount"),
+            new ExpectedColumn("sale_lines", "tax_amount"),
+            new ExpectedColumn("sale_lines", "cost_amount"),
+            new ExpectedColumn("pos_account_maps", "pos_account_map_id"),
+            new ExpectedColumn("pos_account_maps", "company_id") { CharLength = 5, Nullable = false },
+            new ExpectedColumn("pos_account_maps", "tax_rate"),
+            new ExpectedColumn("pos_session_postings", "pos_session_posting_id"),
+            new ExpectedColumn("pos_session_postings", "session_id"),
+            new ExpectedColumn("pos_session_postings", "company_id") { CharLength = 5, Nullable = false },
+            new ExpectedColumn("pos_session_postings", "journal_entry_id"),
             new ExpectedColumn(DatabaseMigrator.HistoryTableName, "migration_id"),
             new ExpectedColumn(DatabaseMigrator.HistoryTableName, "version")
         };

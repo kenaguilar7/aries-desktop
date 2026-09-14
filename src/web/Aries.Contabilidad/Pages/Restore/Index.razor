@@ -1,0 +1,314 @@
+@page "/accounting/{CompanyId}/restore"
+@inject IPostingPeriodService PeriodService
+@inject IJournalEntryService JournalEntryService
+@inject IJournalEntryLineService JournalEntryLineService
+@inject ISnackbar Snackbar
+
+<PageTitle>Elementos eliminados - Aries Contabilidad</PageTitle>
+
+<div class="container-fluid px-0">
+    <div class="page-header">
+        <h1 class="page-title mb-0">Recuperar asientos eliminados</h1>
+    </div>
+
+    @if (_loadingPeriods)
+    {
+        <div class="d-flex justify-content-center py-5">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        </div>
+    }
+    else if (_periods.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info">Esta compañía no tiene periodos contables.</MudAlert>
+    }
+    else
+    {
+        <MudGrid Class="mb-3">
+            <MudItem xs="12" md="4" lg="3">
+                <MudSelect T="int"
+                           Label="Mes inicial"
+                           Value="_startId"
+                           ValueChanged="OnStartChanged"
+                           ToStringFunc="FormatPeriod"
+                           Disabled="@_busy"
+                           Variant="Variant.Outlined"
+                           AnchorOrigin="Origin.BottomCenter">
+                    @foreach (var period in _periods)
+                    {
+                        <MudSelectItem T="int" Value="@period.Id">@period.ToString()</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="4" lg="3">
+                <MudSelect T="int"
+                           Label="Mes final"
+                           Value="_endId"
+                           ValueChanged="OnEndChanged"
+                           ToStringFunc="FormatPeriod"
+                           Disabled="@_busy"
+                           Variant="Variant.Outlined"
+                           AnchorOrigin="Origin.BottomCenter">
+                    @foreach (var period in EndOptions)
+                    {
+                        <MudSelectItem T="int" Value="@period.Id">@period.ToString()</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+        </MudGrid>
+
+        <MudTabs Rounded="true" ActivePanelIndex="_tab" ActivePanelIndexChanged="OnTabChanged" PanelClass="pt-3">
+            <MudTabPanel Text="Entradas de asiento">
+                @if (_loading)
+                {
+                    <div class="d-flex justify-content-center py-4">
+                        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                    </div>
+                }
+                else if (_lines.Count == 0)
+                {
+                    <MudAlert Severity="Severity.Info">No hay líneas eliminadas en el rango.</MudAlert>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Mes</th>
+                                    <th>Asiento</th>
+                                    <th>Cuenta</th>
+                                    <th>Referencia</th>
+                                    <th class="text-end">Débitos</th>
+                                    <th class="text-end">Créditos</th>
+                                    <th class="text-end">Tipo cambio</th>
+                                    <th class="text-end">Monto USD</th>
+                                    <th>Eliminado por</th>
+                                    <th>Fecha de acción</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var line in _lines)
+                                {
+                                    <tr>
+                                        <td>@line.PostingPeriodName</td>
+                                        <td>@line.JournalEntryNumber</td>
+                                        <td>@line.AccountName</td>
+                                        <td>@line.Reference</td>
+                                        <td class="text-end">@AsientosUi.Colones(line.DebitAmount)</td>
+                                        <td class="text-end">@AsientosUi.Colones(line.CreditAmount)</td>
+                                        <td class="text-end">@AsientosUi.Colones(line.RateAmount)</td>
+                                        <td class="text-end">@AsientosUi.Dollars(line.ForeignAmount)</td>
+                                        <td>@line.DeletedBy</td>
+                                        <td>@line.DeletedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>
+                                            <button type="button" class="btn btn-sm btn-primary" disabled="@_busy" @onclick="() => RestoreLine(line)">Recuperar</button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </MudTabPanel>
+            <MudTabPanel Text="Asientos">
+                @if (_loading)
+                {
+                    <div class="d-flex justify-content-center py-4">
+                        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                    </div>
+                }
+                else if (_entries.Count == 0)
+                {
+                    <MudAlert Severity="Severity.Info">No hay asientos eliminados en el rango.</MudAlert>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Mes</th>
+                                    <th>Número</th>
+                                    <th class="text-end">Débitos</th>
+                                    <th class="text-end">Créditos</th>
+                                    <th>Eliminado por</th>
+                                    <th>Fecha de acción</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var entry in _entries)
+                                {
+                                    <tr>
+                                        <td>@entry.PostingPeriodName</td>
+                                        <td>@entry.JournalEntryNumber</td>
+                                        <td class="text-end">@AsientosUi.Colones(entry.DebitAmount)</td>
+                                        <td class="text-end">@AsientosUi.Colones(entry.CreditAmount)</td>
+                                        <td>@entry.DeletedBy</td>
+                                        <td>@entry.DeletedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>
+                                            <button type="button" class="btn btn-sm btn-primary" disabled="@_busy" @onclick="() => RestoreEntry(entry)">Recuperar</button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </MudTabPanel>
+        </MudTabs>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string CompanyId { get; set; } = string.Empty;
+
+    private List<PostingPeriod> _periods = new();
+    private List<JournalEntryLineDeletedReport> _lines = new();
+    private List<JournalEntryDeletedReport> _entries = new();
+    private int _startId;
+    private int _endId;
+    private int _tab;
+    private bool _loadingPeriods = true;
+    private bool _loading;
+    private bool _busy;
+    private string _loadedCompanyId = string.Empty;
+
+    private IEnumerable<PostingPeriod> EndOptions => AsientosUi.EndOptions(_periods, _startId);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.Equals(_loadedCompanyId, CompanyId, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        _loadedCompanyId = CompanyId;
+        await LoadPeriodsAsync();
+    }
+
+    private async Task LoadPeriodsAsync()
+    {
+        _loadingPeriods = true;
+        try
+        {
+            _periods = (await PeriodService.GetPostingPeriodsAsync(CompanyId))
+                .OrderBy(p => p.Date)
+                .ToList();
+            var current = _periods.LastOrDefault();
+            _startId = current?.Id ?? 0;
+            _endId = current?.Id ?? 0;
+            if (_periods.Count > 0)
+                await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _loadingPeriods = false;
+        }
+    }
+
+    private async Task OnStartChanged(int id)
+    {
+        _startId = id;
+        var start = _periods.FirstOrDefault(p => p.Id == _startId);
+        var end = _periods.FirstOrDefault(p => p.Id == _endId);
+        if (start != null && (end == null || end.Date < start.Date))
+            _endId = EndOptions.LastOrDefault()?.Id ?? _startId;
+        await LoadAsync();
+    }
+
+    private async Task OnEndChanged(int id)
+    {
+        _endId = id;
+        await LoadAsync();
+    }
+
+    private async Task OnTabChanged(int index)
+    {
+        if (_tab == index)
+            return;
+        _tab = index;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        if (_periods.Count == 0)
+            return;
+
+        _loading = true;
+        try
+        {
+            var start = _periods.First(p => p.Id == _startId);
+            var end = _periods.First(p => p.Id == _endId);
+            var param = new BasicReportParam
+            {
+                CompanyId = CompanyId,
+                FirstDate = AsientosUi.PeriodKey(start),
+                EndDate = AsientosUi.PeriodKey(end)
+            };
+
+            if (_tab == 0)
+                _lines = await JournalEntryLineService.GetDeletedJournalEntryLinesAsync(param);
+            else
+                _entries = await JournalEntryService.GetDeletedJournalEntriesAsync(param);
+        }
+        catch (HttpRequestException)
+        {
+            Snackbar.Add("No se pudieron cargar los asientos eliminados. Compruebe que la API esté actualizada.", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task RestoreLine(JournalEntryLineDeletedReport line)
+    {
+        _busy = true;
+        try
+        {
+            await JournalEntryLineService.RestoreJournalEntryLineAsync(new JournalEntryLine { Id = line.JournalEntryLineId });
+            Snackbar.Add($"Entrada de asiento número {line.JournalEntryNumber}, cuenta {line.AccountName}, recuperada.", Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task RestoreEntry(JournalEntryDeletedReport entry)
+    {
+        _busy = true;
+        try
+        {
+            await JournalEntryService.RestoreJournalEntryAsync(new JournalEntry { Id = entry.JournalEntryId });
+            Snackbar.Add($"Asiento número {entry.JournalEntryNumber} ({entry.PostingPeriodName}) recuperado.", Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private string FormatPeriod(int id) =>
+        _periods.FirstOrDefault(p => p.Id == id)?.ToString() ?? string.Empty;
+}

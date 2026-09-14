@@ -1,0 +1,85 @@
+@page "/automations/{CompanyId}/recurring"
+@page "/automations/{CompanyId}/rules"
+@page "/automations/{CompanyId}/alerts"
+@page "/admin/users"
+@inject NavigationManager NavigationManager
+@implements IDisposable
+
+<PageTitle>@Title - Aries Contabilidad</PageTitle>
+
+<div class="coming-soon">
+    <p class="coming-soon-badge">En construcción</p>
+    <h1 class="page-title">@Title</h1>
+    <p class="coming-soon-body">@Description</p>
+</div>
+
+@code {
+    [Parameter]
+    public string? CompanyId { get; set; }
+
+    private string Title { get; set; } = "En construcción";
+    private string Description { get; set; } = "Esta sección estará disponible más adelante.";
+
+    private static readonly Dictionary<string, (string Title, string Description)> Pages =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["automations/recurring"] = (
+                "Recurrencias",
+                "Asientos periódicos: planilla, depreciación, alquiler y otros cargos fijos."),
+            ["automations/rules"] = (
+                "Reglas",
+                "Si ocurre un evento en POS o en un asiento, disparar un posteo, un aviso o un bloqueo."),
+            ["automations/alerts"] = (
+                "Alertas",
+                "Stock bajo, diferencia de caja, periodo por vencer o asiento descuadrado."),
+            ["admin/users"] = (
+                "Usuarios y permisos",
+                "El escritorio ya controla módulos por ventana. La web aún muestra todo a quien tenga sesión.")
+        };
+
+    protected override void OnInitialized()
+    {
+        NavigationManager.LocationChanged += OnLocationChanged;
+        Resolve();
+    }
+
+    protected override void OnParametersSet()
+    {
+        Resolve();
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        Resolve();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void Resolve()
+    {
+        var path = NavigationManager.ToBaseRelativePath(NavigationManager.Uri).Trim('/');
+        var segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        string key;
+        if (segments.Length >= 2 && segments[0].Equals("admin", StringComparison.OrdinalIgnoreCase))
+            key = $"{segments[0]}/{segments[1]}";
+        else if (segments.Length >= 3)
+            key = $"{segments[0]}/{segments[2]}";
+        else
+            key = path;
+
+        if (Pages.TryGetValue(key, out var page))
+        {
+            Title = page.Title;
+            Description = page.Description;
+        }
+        else
+        {
+            Title = "En construcción";
+            Description = "Esta sección estará disponible más adelante.";
+        }
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+}

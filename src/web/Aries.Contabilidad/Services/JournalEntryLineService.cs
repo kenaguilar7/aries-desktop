@@ -56,5 +56,24 @@ namespace Aries.Contabilidad.Services
                 $"journalEntryLine/FindJournalEntryLine/{journalEntryId}", _jsonOptions);
             return response ?? new List<JournalEntryLine>();
         }
+
+        public async Task RestoreJournalEntryLineAsync(JournalEntryLine journalEntryLine)
+        {
+            var user = await _localStorageService.GetCurrentUserSesion();
+            journalEntryLine.UpdatedBy = user.Id;
+
+            var response = await _httpClient.PostAsJsonAsync(
+                "journalEntryLine/RestoreJournalEntryLine", journalEntryLine, _jsonOptions);
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task<List<JournalEntryLineDeletedReport>> GetDeletedJournalEntryLinesAsync(BasicReportParam reportParam)
+        {
+            var response = await _httpClient.PostAsJsonAsync(
+                "journalEntryLine/GetDeletedJournalEntryLines", reportParam, _jsonOptions);
+            response.EnsureSuccessStatusCode();
+            var result = await response.Content.ReadFromJsonAsync<List<JournalEntryLineDeletedReport>>(_jsonOptions);
+            return result ?? new List<JournalEntryLineDeletedReport>();
+        }
     }
 }

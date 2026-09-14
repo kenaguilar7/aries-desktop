@@ -1,0 +1,4 @@
+.asientos-grid {
+    max-height: min(48vh, 420px);
+    overflow: auto;
+}

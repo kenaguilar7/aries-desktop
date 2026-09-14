@@ -61,6 +61,26 @@ namespace AriesContador.Tests.AccountTests
         }
 
         [Fact]
+        public async Task CreateAccount_copies_created_by_to_updated_by_when_missing()
+        {
+            var uow = new FakeUnitOfWork();
+            var padre = new Account
+            {
+                Id = 2,
+                CompanyId = "C001",
+                AccountType = AccountType.Cuenta_De_Mayor,
+                AccountTag = AccountTag.Activo
+            };
+            uow.Accounts.Items.Add(padre);
+            var svc = new FinancialService(uow);
+            var nueva = new Account { Name = "Hija", CompanyId = "C001", CreatedBy = 7 };
+
+            await svc.CreateAccountAsync(nueva, padre);
+
+            Assert.Equal(7, nueva.UpdatedBy);
+        }
+
+        [Fact]
         public async Task CreateAccount_under_auxiliar_inherits_and_promotes_father()
         {
             var uow = new FakeUnitOfWork();

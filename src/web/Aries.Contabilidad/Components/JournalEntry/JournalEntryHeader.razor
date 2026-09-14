@@ -1,61 +1,54 @@
-
-<MudGrid>
-    <MudItem xs="12" sm="6">
-        <MudSelect T="int"
-                   Value="PostingPeriodId"
-                   ValueChanged="@(async (int val) => await PostingPeriodIdChanged.InvokeAsync(val))"
-                   Label="Posting Period"
-                   Variant="Variant.Outlined"
-                   Immediate="true">
-            @if (PostingPeriods != null)
-            {
+<div class="asientos-context">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label" for="asientos-periodo">Periodo</label>
+            <select id="asientos-periodo" class="form-select" value="@PostingPeriodId" @onchange="OnPeriodChanged">
                 @foreach (var period in PostingPeriods)
                 {
-                    <MudSelectItem Value="@period.Id">@period.ToString()</MudSelectItem>
+                    <option value="@period.Id">@period</option>
                 }
-            }
-        </MudSelect>
-    </MudItem>
-    <MudItem xs="12" sm="6">
-        <MudSelect T="JournalEntry"
-                   Value="JournalEntry"
-                   ValueChanged="@(async (JournalEntry val) => await JournalEntryIdChanged.InvokeAsync(val))"
-                   Label="Journal Entry Number"
-                   Variant="Variant.Outlined"
-                   Immediate="true">
-            @if (JournalEntries != null)
-            {
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label" for="asientos-numero">Número de asiento</label>
+            <select id="asientos-numero" class="form-select" value="@SelectedEntryId" @onchange="OnEntryChanged">
                 @foreach (var entry in JournalEntries)
                 {
-                    <MudSelectItem Value="@entry">@entry.Number</MudSelectItem>
+                    <option value="@entry.Id">@entry.Number@(entry.Id == 0 ? " (nuevo)" : string.Empty)</option>
                 }
-            }
-        </MudSelect>
-    </MudItem>
-
-</MudGrid>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <span class="asientos-status @(IsBalanced ? "asientos-status-ok" : "asientos-status-bad")">
+                @(IsBalanced ? "Cuadrado" : "Descuadrado")
+            </span>
+        </div>
+    </div>
+    @if (PeriodClosed)
+    {
+        <div class="alert alert-warning mt-3 mb-0">Periodo cerrado. Este asiento es de solo lectura.</div>
+    }
+</div>
 
 @code {
+    [Parameter] public int PostingPeriodId { get; set; }
+    [Parameter] public int SelectedEntryId { get; set; }
+    [Parameter] public List<PostingPeriod> PostingPeriods { get; set; } = new();
+    [Parameter] public List<JournalEntry> JournalEntries { get; set; } = new();
+    [Parameter] public bool IsBalanced { get; set; }
+    [Parameter] public bool PeriodClosed { get; set; }
+    [Parameter] public EventCallback<int> PostingPeriodIdChanged { get; set; }
+    [Parameter] public EventCallback<int> JournalEntryIdChanged { get; set; }
 
-    // [Parameter]
-    // public int JournalEntryId { get; set; }
+    private async Task OnPeriodChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var id))
+            await PostingPeriodIdChanged.InvokeAsync(id);
+    }
 
-    [Parameter]
-    public JournalEntry JournalEntry { get; set; } = new();
-
-    [Parameter]
-    public int PostingPeriodId { get; set; }
-
-    [Parameter]
-    public EventCallback<JournalEntry> JournalEntryIdChanged { get; set; }
-
-    [Parameter]
-    public EventCallback<int> PostingPeriodIdChanged { get; set; }
-
-    [Parameter]
-    public List<PostingPeriod> PostingPeriods { get; set; } = new();
-
-    [Parameter]
-    public List<JournalEntry> JournalEntries { get; set; } = new();
-
+    private async Task OnEntryChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var id))
+            await JournalEntryIdChanged.InvokeAsync(id);
+    }
 }

@@ -1,0 +1,104 @@
+@page "/integration/{CompanyId}/reconciliation"
+@inject IPosAccountingClient AccountingClient
+
+<PageTitle>Conciliación POS - Aries Contabilidad</PageTitle>
+
+<div class="container-fluid">
+    <h1 class="page-title">Conciliación POS</h1>
+    <p class="text-muted">Cruce de sesiones cerradas con los asientos emitidos.</p>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    @if (rows == null)
+    {
+        <div class="d-flex justify-content-center"><div class="spinner-border"></div></div>
+    }
+    else if (rows.Count == 0)
+    {
+        <p class="text-muted">No hay sesiones cerradas.</p>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-body table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Estado</th>
+                            <th>Caja</th>
+                            <th>Cierre</th>
+                            <th class="text-end">Ventas</th>
+                            <th class="text-end">Neto</th>
+                            <th class="text-end">IVA</th>
+                            <th class="text-end">Costo</th>
+                            <th class="text-end">Dif. caja</th>
+                            <th>Asiento</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in rows)
+                        {
+                            <tr>
+                                <td>
+                                    <span class="badge @StatusClass(row.Status)">@row.Status</span>
+                                </td>
+                                <td>@row.RegisterCode — @row.RegisterName</td>
+                                <td>@row.ClosedAt?.ToString("g")</td>
+                                <td class="text-end">@row.TotalSales.ToString("N2")</td>
+                                <td class="text-end">@row.NetSales.ToString("N2")</td>
+                                <td class="text-end">@row.TaxAmount.ToString("N2")</td>
+                                <td class="text-end">@row.CostAmount.ToString("N2")</td>
+                                <td class="text-end">@row.Difference.ToString("N2")</td>
+                                <td>
+                                    @if (row.JournalEntryId.HasValue)
+                                    {
+                                        <a href="@($"/journal-entries/{CompanyId}")">#@row.JournalEntryId</a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string CompanyId { get; set; } = string.Empty;
+    private List<PosSessionReconciliationRow>? rows;
+    private string? errorMessage;
+
+    private string? _loadedCompany;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_loadedCompany == CompanyId && rows != null)
+            return;
+        _loadedCompany = CompanyId;
+        errorMessage = null;
+        try
+        {
+            rows = await AccountingClient.GetReconciliationAsync(CompanyId);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private static string StatusClass(string status) => status switch
+    {
+        "Posteado" => "bg-success",
+        "Pendiente" => "bg-warning text-dark",
+        "Diferencia" => "bg-danger",
+        _ => "bg-secondary"
+    };
+}
