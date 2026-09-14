@@ -20,7 +20,8 @@ namespace AriesContador.Core.Services
         Task<int> EnsureAccountNameAsync(string name, CancellationToken cancellationToken = default);
         Task UpdateAccountAsync(Account account, CancellationToken cancellationToken = default);
         Task<IEnumerable<Account>> GetAccountsAsync(string companyId, CancellationToken cancellationToken = default);
-        Task<(bool CanProceed, string Message)> EvaluateParentForNewChildAsync(Account parent, CancellationToken cancellationToken = default);
+        // No ValueTuple: WinForms (net48) lo liga a mscorlib y Core a netstandard → MissingMethodException.
+        Task<EvaluateParentResult> EvaluateParentForNewChildAsync(Account parent, CancellationToken cancellationToken = default);
         Task FillAccountsWithBalancesAsync(IList<Account> accounts, DateTime from, DateTime to, CancellationToken cancellationToken = default);
         #endregion
 

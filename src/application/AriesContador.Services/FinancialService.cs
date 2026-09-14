@@ -124,23 +124,23 @@ namespace AriesContador.Services
             await _unitOfWork.AccountRepository.RemoveAsync(account, cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<(bool CanProceed, string Message)> EvaluateParentForNewChildAsync(Account parent, CancellationToken cancellationToken = default)
+        public async Task<EvaluateParentResult> EvaluateParentForNewChildAsync(Account parent, CancellationToken cancellationToken = default)
         {
             if (parent == null)
-                return (true, "");
+                return EvaluateParentResult.Allow();
 
             var periods = (await GetPostingPeriodsAsync(parent.CompanyId, cancellationToken).ConfigureAwait(false)).ToList();
             if (periods.Count == 0)
-                return (true, "");
+                return EvaluateParentResult.Allow();
 
             var dummy = CloneAccountBalances(parent);
             await FillAccountsWithBalancesAsync(new List<Account> { dummy }, periods[0].Date, periods[periods.Count - 1].Date, cancellationToken)
                 .ConfigureAwait(false);
 
             if (dummy.AccountType == AccountType.Cuenta_Auxiliar && AccountRules.HasMovement(dummy))
-                return (false, AccountRules.ParentHasMovementsWarning(dummy));
+                return EvaluateParentResult.Warn(AccountRules.ParentHasMovementsWarning(dummy));
 
-            return (true, "");
+            return EvaluateParentResult.Allow();
         }
 
         public async Task FillAccountsWithBalancesAsync(IList<Account> accounts, DateTime from, DateTime to, CancellationToken cancellationToken = default)
