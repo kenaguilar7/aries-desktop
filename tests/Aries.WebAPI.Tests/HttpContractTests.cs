@@ -8,7 +8,9 @@ using System.Threading.Tasks;
 using AriesContador.Core.Models.Companies;
 using AriesContador.Core.Models.JournalEntries;
 using AriesContador.Core.Models.PointOfSale;
+using AriesContador.Core.Models.Purchases;
 using AriesContador.Core.Models.Users;
+using AriesContador.Core.Models.Utils;
 using Newtonsoft.Json;
 using Xunit;
 
@@ -135,6 +137,24 @@ namespace Aries.WebAPI.Tests
         }
 
         [Fact]
+        public async Task Ensure_purchase_accounts_requires_bearer()
+        {
+            var client = _factory.CreateClient();
+            var response = await client.PostAsync("/account/C001/ensure-purchase-accounts", null);
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Ensure_purchase_accounts_uses_jwt_user()
+        {
+            var client = await ClientWithToken();
+            var response = await client.PostAsync("/account/C001/ensure-purchase-accounts", null);
+            response.EnsureSuccessStatusCode();
+            Assert.Equal("C001", _factory.Financial.LastEnsurePurchaseCompanyId);
+            Assert.Equal(7, _factory.Financial.LastEnsurePurchaseUserId);
+        }
+
+        [Fact]
         public async Task SalesRegister_requires_bearer()
         {
             var client = _factory.CreateClient();
@@ -165,6 +185,35 @@ namespace Aries.WebAPI.Tests
             var status = JsonConvert.DeserializeObject<CashRegisterStatus>(
                 await estado.Content.ReadAsStringAsync());
             Assert.False(status.Abierta);
+        }
+
+        [Fact]
+        public async Task Supplier_requires_bearer()
+        {
+            var client = _factory.CreateClient();
+            var response = await client.GetAsync("/supplier/GetAll/C001");
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Supplier_create_sets_createdBy_from_jwt()
+        {
+            var client = await ClientWithToken();
+            var payload = JsonConvert.SerializeObject(new Supplier
+            {
+                CompanyId = "C001",
+                Name = "Distribuidora Sol",
+                IdType = IdType.CEDULA_JURIDICA,
+                NumberId = "3-101-123456"
+            });
+            using var content = new StringContent(payload, Encoding.UTF8, "application/json");
+            var created = await client.PostAsync("/supplier/Create", content);
+            created.EnsureSuccessStatusCode();
+            var supplier = JsonConvert.DeserializeObject<Supplier>(
+                await created.Content.ReadAsStringAsync());
+            Assert.Equal(1, supplier.Id);
+            Assert.Equal(7, supplier.CreatedBy);
+            Assert.Equal("Distribuidora Sol", supplier.Name);
         }
 
         private async Task<HttpClient> ClientWithToken()

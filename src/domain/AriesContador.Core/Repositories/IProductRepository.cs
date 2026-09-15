@@ -9,6 +9,7 @@ namespace AriesContador.Core.Repositories
     {
         Task<Product> GetByIdAsync(int id, CancellationToken cancellationToken = default);
         Task<IEnumerable<Product>> FindByCompanyIdAsync(string companyId, CancellationToken cancellationToken = default);
+        Task<IEnumerable<Product>> FindByIdsAsync(string companyId, IEnumerable<int> ids, CancellationToken cancellationToken = default);
         Task<Product> FindByBarcodeAsync(string companyId, string barcode, CancellationToken cancellationToken = default);
         Task<IEnumerable<Product>> FindLowStockAsync(string companyId, decimal minimum, CancellationToken cancellationToken = default);
         Task<int> CountActiveByCompanyAsync(string companyId, CancellationToken cancellationToken = default);

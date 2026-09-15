@@ -28,6 +28,7 @@ namespace AriesContador.Data.Migrations
             "sale_lines",
             "pos_account_maps",
             "pos_session_postings",
+            "suppliers",
             DatabaseMigrator.HistoryTableName
         };
 
@@ -183,6 +184,16 @@ namespace AriesContador.Data.Migrations
             new ExpectedColumn("pos_session_postings", "session_id"),
             new ExpectedColumn("pos_session_postings", "company_id") { CharLength = 5, Nullable = false },
             new ExpectedColumn("pos_session_postings", "journal_entry_id"),
+            new ExpectedColumn("suppliers", "supplier_id"),
+            new ExpectedColumn("suppliers", "company_id") { CharLength = 5, Nullable = false },
+            new ExpectedColumn("suppliers", "name") { Nullable = false },
+            new ExpectedColumn("suppliers", "id_type"),
+            new ExpectedColumn("suppliers", "number_id"),
+            new ExpectedColumn("suppliers", "email"),
+            new ExpectedColumn("suppliers", "phone"),
+            new ExpectedColumn("suppliers", "address"),
+            new ExpectedColumn("suppliers", "notes"),
+            new ExpectedColumn("suppliers", "active"),
             new ExpectedColumn(DatabaseMigrator.HistoryTableName, "migration_id"),
             new ExpectedColumn(DatabaseMigrator.HistoryTableName, "version")
         };

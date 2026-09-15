@@ -12,6 +12,7 @@ using AriesContador.Core.Models.JournalEntries;
 using AriesContador.Core.Models.Permissions;
 using AriesContador.Core.Models.PointOfSale;
 using AriesContador.Core.Models.PostingPeriods;
+using AriesContador.Core.Models.Purchases;
 using AriesContador.Core.Models.Reports;
 using AriesContador.Core.Models.Users;
 using AriesContador.Core.Repositories;
@@ -32,6 +33,7 @@ namespace AriesContador.Tests.Fakes
         public FakeSaleRepository Sales { get; } = new FakeSaleRepository();
         public FakePosAccountMapRepository AccountMaps { get; } = new FakePosAccountMapRepository();
         public FakePosSessionPostingRepository SessionPostings { get; } = new FakePosSessionPostingRepository();
+        public FakeSupplierRepository Suppliers { get; } = new FakeSupplierRepository();
 
         public ICompanyRepository CompanyRepository => Companies;
         public IUserRepository UserRepository => Users;
@@ -55,6 +57,7 @@ namespace AriesContador.Tests.Fakes
         }
         public IPosAccountMapRepository PosAccountMapRepository => AccountMaps;
         public IPosSessionPostingRepository PosSessionPostingRepository => SessionPostings;
+        public ISupplierRepository SupplierRepository => Suppliers;
     }
 
     public class FakePermissionRepository : IPermissionRepository
@@ -391,6 +394,8 @@ namespace AriesContador.Tests.Fakes
     public class FakeProductRepository : IProductRepository
     {
         public List<Product> Items { get; } = new List<Product>();
+        public int GetByIdCalls { get; private set; }
+        public int FindByIdsCalls { get; private set; }
 
         public Task AddAsync(Product entity, CancellationToken cancellationToken = default)
         {
@@ -414,14 +419,25 @@ namespace AriesContador.Tests.Fakes
             return Task.CompletedTask;
         }
 
-        public Task<Product> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
-            Task.FromResult(Items.FirstOrDefault(x => x.Id == id));
+        public Task<Product> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+        {
+            GetByIdCalls++;
+            return Task.FromResult(Items.FirstOrDefault(x => x.Id == id));
+        }
 
         public Task<IEnumerable<Product>> FindByCompanyIdAsync(string companyId, CancellationToken cancellationToken = default) =>
             Task.FromResult<IEnumerable<Product>>(Items.Where(x => x.CompanyId == companyId && x.Active).ToList());
 
         public Task<Product> FindByBarcodeAsync(string companyId, string barcode, CancellationToken cancellationToken = default) =>
             Task.FromResult(Items.FirstOrDefault(x => x.CompanyId == companyId && x.Barcode == barcode && x.Active));
+
+        public Task<IEnumerable<Product>> FindByIdsAsync(string companyId, IEnumerable<int> ids, CancellationToken cancellationToken = default)
+        {
+            FindByIdsCalls++;
+            var set = new HashSet<int>(ids ?? Array.Empty<int>());
+            return Task.FromResult<IEnumerable<Product>>(
+                Items.Where(x => x.CompanyId == companyId && set.Contains(x.Id)).ToList());
+        }
 
         public Task<IEnumerable<Product>> FindLowStockAsync(string companyId, decimal minimum, CancellationToken cancellationToken = default) =>
             Task.FromResult<IEnumerable<Product>>(Items.Where(x => x.CompanyId == companyId && x.Active && x.Stock <= minimum).ToList());
@@ -614,5 +630,44 @@ namespace AriesContador.Tests.Fakes
             Items.Add(posting);
             return Task.CompletedTask;
         }
+    }
+
+    public class FakeSupplierRepository : ISupplierRepository
+    {
+        public List<Supplier> Items { get; } = new List<Supplier>();
+
+        public Task AddAsync(Supplier entity, CancellationToken cancellationToken = default)
+        {
+            if (entity.Id == 0)
+                entity.Id = Items.Count == 0 ? 1 : Items.Max(x => x.Id) + 1;
+            Items.Add(entity);
+            return Task.CompletedTask;
+        }
+
+        public Task UpdateAsync(Supplier entity, CancellationToken cancellationToken = default)
+        {
+            var i = Items.FindIndex(x => x.Id == entity.Id);
+            if (i >= 0) Items[i] = entity;
+            return Task.CompletedTask;
+        }
+
+        public Task RemoveAsync(Supplier entity, CancellationToken cancellationToken = default)
+        {
+            var found = Items.FirstOrDefault(x => x.Id == entity.Id);
+            if (found != null) found.Active = false;
+            return Task.CompletedTask;
+        }
+
+        public Task<Supplier> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Items.FirstOrDefault(x => x.Id == id));
+
+        public Task<IEnumerable<Supplier>> FindByCompanyIdAsync(string companyId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IEnumerable<Supplier>>(Items.Where(x => x.CompanyId == companyId && x.Active).ToList());
+
+        public Task<Supplier> FindByNumberIdAsync(string companyId, string numberId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Items.FirstOrDefault(x =>
+                x.CompanyId == companyId
+                && !string.IsNullOrEmpty(numberId)
+                && string.Equals(x.NumberId, numberId, StringComparison.Ordinal)));
     }
 }

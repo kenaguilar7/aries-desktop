@@ -39,8 +39,9 @@
                             <label class="form-check-label" for="pricesIncludeTax">Precios incluyen IVA</label>
                         </div>
                     </div>
-                    <div class="col-md-4 d-flex align-items-end justify-content-md-end">
+                    <div class="col-md-4 d-flex align-items-end justify-content-md-end gap-2 flex-wrap">
                         <button class="btn btn-outline-secondary" @onclick="EnsureAccounts" disabled="@busy">Crear cuentas POS sugeridas</button>
+                        <button class="btn btn-outline-secondary" @onclick="EnsurePurchaseAccounts" disabled="@busy">Crear cuentas de compras</button>
                     </div>
                 </div>
             </div>
@@ -125,6 +126,28 @@
             var accounts = await AccountService.GetAccountsAsync(CompanyId);
             auxiliaries = accounts.Where(a => a.AccountType == AccountType.Cuenta_Auxiliar).OrderBy(a => a.Name).ToList();
             infoMessage = "Cuentas sugeridas listas. Revise el mapeo y guarde.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task EnsurePurchaseAccounts()
+    {
+        busy = true;
+        errorMessage = null;
+        infoMessage = null;
+        try
+        {
+            await AccountService.EnsurePurchaseAccountsAsync(CompanyId);
+            var accounts = await AccountService.GetAccountsAsync(CompanyId);
+            auxiliaries = accounts.Where(a => a.AccountType == AccountType.Cuenta_Auxiliar).OrderBy(a => a.Name).ToList();
+            infoMessage = "Cuentas por pagar e IVA soportado listas.";
         }
         catch (Exception ex)
         {

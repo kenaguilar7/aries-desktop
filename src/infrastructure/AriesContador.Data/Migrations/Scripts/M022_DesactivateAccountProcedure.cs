@@ -4,10 +4,10 @@ namespace AriesContador.Data.Migrations.Scripts
     /// Dump SP_DesactivateAccount is not in the migration catalog. Pin the Dapper
     /// contract to Id + UpdatedBy so WinForms no longer sends the full Account graph.
     /// </summary>
-    public sealed class M021_DesactivateAccountProcedure : SqlMigration
+    public sealed class M022_DesactivateAccountProcedure : SqlMigration
     {
-        public override int Version => 21;
-        public override string Id => "021_DesactivateAccountProcedure";
+        public override int Version => 22;
+        public override string Id => "022_DesactivateAccountProcedure";
         public override string Description => "SP_DesactivateAccount: Id + UpdatedBy";
 
         public override string Sql => @"

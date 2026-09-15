@@ -97,6 +97,77 @@ namespace AriesContador.Services
             return _unitOfWork.AccountRepository.GetOrCreateAccountNameAsync(name, cancellationToken);
         }
 
+        public async Task<IReadOnlyList<Account>> EnsurePurchaseAccountsAsync(
+            string companyId,
+            int userId,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(companyId))
+                throw new InvalidOperationException("La compañía es requerida");
+
+            var accounts = (await GetAccountsAsync(companyId, cancellationToken).ConfigureAwait(false)).ToList();
+            await EnsureNamedAuxiliarAsync(
+                    accounts,
+                    companyId,
+                    userId,
+                    DefaultChartOfAccounts.CuentasPorPagarName,
+                    DefaultChartOfAccounts.PasivoCortoPlazoName,
+                    AccountTag.Pasivo,
+                    cancellationToken)
+                .ConfigureAwait(false);
+            await EnsureNamedAuxiliarAsync(
+                    accounts,
+                    companyId,
+                    userId,
+                    DefaultChartOfAccounts.IvaSoportadoName,
+                    DefaultChartOfAccounts.ActivoCorrienteName,
+                    AccountTag.Activo,
+                    cancellationToken)
+                .ConfigureAwait(false);
+
+            return accounts
+                .Where(a =>
+                    string.Equals(a.Name, DefaultChartOfAccounts.CuentasPorPagarName, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(a.Name, DefaultChartOfAccounts.IvaSoportadoName, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
+        private async Task EnsureNamedAuxiliarAsync(
+            List<Account> accounts,
+            string companyId,
+            int userId,
+            string name,
+            string parentName,
+            AccountTag fallbackTag,
+            CancellationToken cancellationToken)
+        {
+            if (accounts.Any(a => string.Equals(a.Name, name, StringComparison.OrdinalIgnoreCase)))
+                return;
+
+            var parent = accounts.FirstOrDefault(a =>
+                    a.AccountType == AccountType.Cuenta_De_Mayor
+                    && string.Equals(a.Name, parentName, StringComparison.OrdinalIgnoreCase))
+                ?? accounts.FirstOrDefault(a =>
+                    a.AccountType == AccountType.Cuenta_Titulo && a.AccountTag == fallbackTag);
+            if (parent == null)
+                throw new InvalidOperationException("No se encontró la cuenta padre para " + name);
+
+            var account = new Account
+            {
+                Name = name,
+                CompanyId = companyId,
+                FatherAccount = parent.Id,
+                AccountTag = parent.AccountTag,
+                AccountType = AccountType.Cuenta_Auxiliar,
+                Editable = true,
+                Active = true,
+                CreatedBy = userId,
+                UpdatedBy = userId
+            };
+            await CreateAccountAsync(account, parent, cancellationToken).ConfigureAwait(false);
+            accounts.Add(account);
+        }
+
         public async Task UpdateAccountAsync(Account account, CancellationToken cancellationToken = default)
         {
             if (account == null)

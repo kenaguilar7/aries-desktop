@@ -61,6 +61,14 @@ namespace Aries.Contabilidad.Services
             await EnsureSuccess(response);
         }
 
+        public async Task<List<Account>> EnsurePurchaseAccountsAsync(string companyId)
+        {
+            var response = await _httpClient.PostAsync(
+                $"account/{Uri.EscapeDataString(companyId)}/ensure-purchase-accounts", null);
+            await EnsureSuccess(response);
+            return await Read<List<Account>>(response) ?? new List<Account>();
+        }
+
         public async Task<List<AccountMovementRow>> GetAccountMovementsAsync(int accountId)
         {
             var response = await _httpClient.GetAsync($"account/{accountId}/movements");

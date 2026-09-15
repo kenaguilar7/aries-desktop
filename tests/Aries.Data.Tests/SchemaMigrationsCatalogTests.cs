@@ -55,18 +55,34 @@ namespace Aries.Data.Tests
             Assert.Contains("018_AccountPathFunctions", ids);
             Assert.Contains("019_PosTables", ids);
             Assert.Contains("020_PosAccounting", ids);
-            Assert.Contains("021_DesactivateAccountProcedure", ids);
+            Assert.Contains("021_Suppliers", ids);
+            Assert.Contains("022_DesactivateAccountProcedure", ids);
         }
 
         [Fact]
-        public void M021_pins_desactivate_account_contract()
+        public void M021_creates_suppliers_table()
         {
-            var m021 = SchemaMigrations.All.Single(m => m.Id == "021_DesactivateAccountProcedure");
+            var m021 = SchemaMigrations.All.Single(m => m.Id == "021_Suppliers");
             Assert.Equal(21, m021.Version);
-            Assert.Contains("SP_DesactivateAccount", m021.Sql);
-            Assert.Contains("IN Id INT", m021.Sql);
-            Assert.Contains("IN UpdatedBy INT", m021.Sql);
-            Assert.Contains("`active` = 0", m021.Sql);
+            Assert.Contains("CREATE TABLE IF NOT EXISTS `suppliers`", m021.Sql);
+            Assert.Contains("`supplier_id`", m021.Sql);
+            Assert.Contains("`company_id` VARCHAR(5) NOT NULL", m021.Sql);
+            Assert.Contains("uk_suppliers_company_number_id", m021.Sql);
+            Assert.Contains("number_id_key", m021.Sql);
+            Assert.Contains("utf8mb4_unicode_ci", m021.Sql);
+            Assert.DoesNotContain("DELETE FROM", m021.Sql);
+            Assert.Contains("suppliers", ExpectedSchema.Tables);
+        }
+
+        [Fact]
+        public void M022_pins_desactivate_account_contract()
+        {
+            var m022 = SchemaMigrations.All.Single(m => m.Id == "022_DesactivateAccountProcedure");
+            Assert.Equal(22, m022.Version);
+            Assert.Contains("SP_DesactivateAccount", m022.Sql);
+            Assert.Contains("IN Id INT", m022.Sql);
+            Assert.Contains("IN UpdatedBy INT", m022.Sql);
+            Assert.Contains("`active` = 0", m022.Sql);
         }
 
         [Fact]
