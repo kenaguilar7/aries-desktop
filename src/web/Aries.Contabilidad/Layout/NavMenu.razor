@@ -81,6 +81,12 @@
                     @if (_expanded.Contains("compras"))
                     {
                         <div class="side-nav-children">
+                            <NavLink class="side-nav-link" href="@($"/purchases/{CurrentCompanyId}")" @onclick="NotifyNavigate" Match="NavLinkMatch.All">
+                                <span>Compras</span>
+                            </NavLink>
+                            <NavLink class="side-nav-link" href="@($"/purchases/{CurrentCompanyId}/new")" @onclick="NotifyNavigate">
+                                <span>Nueva compra</span>
+                            </NavLink>
                             <NavLink class="side-nav-link" href="@($"/purchases/{CurrentCompanyId}/suppliers")" @onclick="NotifyNavigate">
                                 <span>Proveedores</span>
                             </NavLink>
@@ -99,8 +105,14 @@
                             <NavLink class="side-nav-link" href="@($"/integration/{CurrentCompanyId}/pos-accounting")" @onclick="NotifyNavigate">
                                 <span>POS → Contabilidad</span>
                             </NavLink>
+                            <NavLink class="side-nav-link" href="@($"/integration/{CurrentCompanyId}/purchase-accounting")" @onclick="NotifyNavigate">
+                                <span>Compras → Contabilidad</span>
+                            </NavLink>
                             <NavLink class="side-nav-link" href="@($"/integration/{CurrentCompanyId}/account-map")" @onclick="NotifyNavigate">
-                                <span>Mapeo de cuentas</span>
+                                <span>Mapeo POS</span>
+                            </NavLink>
+                            <NavLink class="side-nav-link" href="@($"/integration/{CurrentCompanyId}/purchase-account-map")" @onclick="NotifyNavigate">
+                                <span>Mapeo compras</span>
                             </NavLink>
                             <NavLink class="side-nav-link" href="@($"/integration/{CurrentCompanyId}/reconciliation")" @onclick="NotifyNavigate">
                                 <span>Conciliación</span>

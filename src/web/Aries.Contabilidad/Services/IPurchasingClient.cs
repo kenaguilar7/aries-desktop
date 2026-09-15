@@ -9,5 +9,10 @@ namespace Aries.Contabilidad.Services
         Task<Supplier> CreateAsync(Supplier supplier);
         Task UpdateAsync(Supplier supplier);
         Task DeleteAsync(int id);
+
+        Task<List<Purchase>> GetPurchasesAsync(string companyId);
+        Task<Purchase?> FindPurchaseAsync(int id);
+        Task<Purchase> ConfirmPurchaseAsync(Purchase purchase);
+        Task CancelPurchaseAsync(int id);
     }
 }

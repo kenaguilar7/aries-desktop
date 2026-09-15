@@ -23,6 +23,10 @@ namespace AriesContador.Data
         private IPosAccountMapRepository _posAccountMapRepository;
         private IPosSessionPostingRepository _posSessionPostingRepository;
         private ISupplierRepository _supplierRepository;
+        private IPurchaseRepository _purchaseRepository;
+        private IPurchaseAccountMapRepository _purchaseAccountMapRepository;
+        private IPurchasePostingRepository _purchasePostingRepository;
+        private ISupplierPaymentRepository _supplierPaymentRepository;
 
         public UnitOfWork(IConnectionString context)
         {
@@ -75,6 +79,18 @@ namespace AriesContador.Data
 
         public ISupplierRepository SupplierRepository
             => _supplierRepository = _supplierRepository ?? new SupplierRepository(_context);
+
+        public IPurchaseRepository PurchaseRepository
+            => _purchaseRepository = _purchaseRepository ?? new PurchaseRepository(_context);
+
+        public IPurchaseAccountMapRepository PurchaseAccountMapRepository
+            => _purchaseAccountMapRepository = _purchaseAccountMapRepository ?? new PurchaseAccountMapRepository(_context);
+
+        public IPurchasePostingRepository PurchasePostingRepository
+            => _purchasePostingRepository = _purchasePostingRepository ?? new PurchasePostingRepository(_context);
+
+        public ISupplierPaymentRepository SupplierPaymentRepository
+            => _supplierPaymentRepository = _supplierPaymentRepository ?? new SupplierPaymentRepository(_context);
 
         public void Dispose()
         {

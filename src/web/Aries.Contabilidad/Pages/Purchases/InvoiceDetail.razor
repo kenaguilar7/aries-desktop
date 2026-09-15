@@ -1,0 +1,271 @@
+@page "/purchases/{CompanyId}/{PurchaseId:int}"
+@using AriesContador.Core.Models.Purchases
+@inject IPurchaseAccountingClient AccountingClient
+@inject IPurchasingClient Purchasing
+@inject NavigationManager Nav
+
+<PageTitle>Detalle de compra - Aries Contabilidad</PageTitle>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h1 class="page-title mb-0">Detalle de compra</h1>
+        <a class="btn btn-outline-secondary" href="@($"/purchases/{CompanyId}")">Volver al listado</a>
+    </div>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+    @if (!string.IsNullOrEmpty(infoMessage))
+    {
+        <div class="alert alert-success">@infoMessage</div>
+    }
+
+    @if (detail == null)
+    {
+        <div class="d-flex justify-content-center"><div class="spinner-border"></div></div>
+    }
+    else
+    {
+        var p = detail.Purchase;
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3"><strong>Factura</strong><div>@p.DocumentNumber</div></div>
+                    <div class="col-md-3"><strong>Proveedor</strong><div>@(p.SupplierName ?? ("#" + p.SupplierId))</div></div>
+                    <div class="col-md-3"><strong>Fecha</strong><div>@p.PurchasedAt.ToString("g")</div></div>
+                    <div class="col-md-3"><strong>Liquidación</strong><div>@PurchaseSettlementNames.ToDisplay(p.PaymentMethod)</div></div>
+                    <div class="col-md-3"><strong>Total</strong><div>@p.Total.ToString("N2")</div></div>
+                    <div class="col-md-3"><strong>Neto</strong><div>@p.NetAmount.ToString("N2")</div></div>
+                    <div class="col-md-3"><strong>IVA</strong><div>@p.TaxAmount.ToString("N2")</div></div>
+                    <div class="col-md-3">
+                        <strong>Estado</strong>
+                        <div>
+                            <span class="badge @(StatusBadgeClass(p))">@PurchaseStatusNames.ToDisplay(p.Status)</span>
+                            @if (p.Active && p.Status == PurchaseStatus.Confirmed)
+                            {
+                                <span class="badge ms-1 @(detail.Posted ? "bg-success" : "bg-warning text-dark")">@(detail.Posted ? "Asentada" : "Sin asentar")</span>
+                                @if (p.PaymentMethod == PurchaseSettlement.OnAccount)
+                                {
+                                    <span class="badge ms-1 @(detail.Paid ? "bg-primary" : "bg-secondary")">@(detail.Paid ? "Pagada" : "Pendiente de pago")</span>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+                @if (detail.JournalEntryId.HasValue)
+                {
+                    <p class="mt-3 mb-0 text-muted">Asiento de compra #@detail.JournalEntryId</p>
+                }
+                @if (detail.CanCancel)
+                {
+                    <div class="mt-3">
+                        <button class="btn btn-outline-danger" @onclick="CancelPurchase" disabled="@busy">
+                            Anular compra
+                        </button>
+                        <span class="text-muted ms-2 small">Revierte el stock; no cambia el costo del producto.</span>
+                    </div>
+                }
+                else if (p.Status == PurchaseStatus.Cancelled || !p.Active)
+                {
+                    <div class="alert alert-secondary mt-3 mb-0">Esta compra fue anulada. El stock se revirtió; el costo del producto no se modificó.</div>
+                }
+                else if (detail.Posted && !detail.Paid)
+                {
+                    <p class="mt-3 mb-0 text-muted small">Para anular, primero debe revertirse el asiento contable (no disponible en v1).</p>
+                }
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5>Líneas</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th class="text-end">Cantidad</th>
+                                <th class="text-end">P. unitario</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var line in p.Lines)
+                            {
+                                <tr>
+                                    <td>@line.ProductName</td>
+                                    <td class="text-end">@line.Quantity.ToString("N0")</td>
+                                    <td class="text-end">@line.UnitPrice.ToString("N2")</td>
+                                    <td class="text-end">@line.LineTotal.ToString("N2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        @if (detail.Paid && detail.Payment != null)
+        {
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5>Pago registrado</h5>
+                    <p class="mb-1">@detail.Payment.PaidAt.ToString("g") — @PurchaseSettlementNames.ToDisplay(detail.Payment.PaymentMethod) — @detail.Payment.Amount.ToString("N2")</p>
+                    @if (!string.IsNullOrWhiteSpace(detail.Payment.PaymentReference))
+                    {
+                        <p class="mb-1 text-muted">Ref. @detail.Payment.PaymentReference</p>
+                    }
+                    <p class="mb-0 text-muted">Asiento de pago #@detail.Payment.JournalEntryId</p>
+                </div>
+            </div>
+        }
+
+        @if (detail.CanPay)
+        {
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5>Registrar pago</h5>
+                    <p class="text-muted">Pago total v1: saldo @detail.OutstandingBalance.ToString("N2") (Dr CxP / Cr medio de pago).</p>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Fecha</label>
+                            <input class="form-control" type="date" @bind="paidAtDate" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Medio</label>
+                            <select class="form-select" @bind="payMethod">
+                                <option value="@PurchaseSettlement.Cash">Efectivo</option>
+                                <option value="@PurchaseSettlement.Card">Tarjeta</option>
+                                <option value="@PurchaseSettlement.Transfer">Transferencia</option>
+                            </select>
+                        </div>
+                        @if (payMethod != PurchaseSettlement.Cash)
+                        {
+                            <div class="col-md-3">
+                                <label class="form-label">Referencia</label>
+                                <input class="form-control" @bind="payReference" />
+                            </div>
+                        }
+                        <div class="col-md-3">
+                            <label class="form-label">Notas</label>
+                            <input class="form-control" @bind="payNotes" />
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <button class="btn btn-success" @onclick="RegisterPayment" disabled="@busy">
+                            Pagar @detail.OutstandingBalance.ToString("N2")
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+        else if (p.PaymentMethod == PurchaseSettlement.OnAccount && !detail.Posted && p.Active)
+        {
+            <div class="alert alert-info">
+                Asiente la compra en Integración → Compras → Contabilidad antes de registrar el pago.
+                <a href="@($"/integration/{CompanyId}/purchase-accounting")">Ir a posteo</a>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public string CompanyId { get; set; } = string.Empty;
+    [Parameter] public int PurchaseId { get; set; }
+
+    private PurchaseDetail? detail;
+    private DateTime paidAtDate = DateTime.Today;
+    private PurchaseSettlement payMethod = PurchaseSettlement.Cash;
+    private string payReference = string.Empty;
+    private string payNotes = string.Empty;
+    private bool busy;
+    private string? errorMessage;
+    private string? infoMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await Reload();
+    }
+
+    private static string StatusBadgeClass(Purchase p) =>
+        p.Status == PurchaseStatus.Cancelled || !p.Active
+            ? "bg-secondary"
+            : p.Status == PurchaseStatus.Confirmed
+                ? "bg-success"
+                : "bg-secondary";
+
+    private async Task Reload()
+    {
+        errorMessage = null;
+        try
+        {
+            detail = await AccountingClient.GetPurchaseDetailAsync(PurchaseId);
+            if (detail?.Purchase != null && !string.Equals(detail.Purchase.CompanyId, CompanyId, StringComparison.Ordinal))
+            {
+                errorMessage = "La compra no pertenece a esta compañía";
+                detail = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            detail = null;
+            errorMessage = ex.Message;
+        }
+    }
+
+    private async Task CancelPurchase()
+    {
+        if (detail?.Purchase == null) return;
+        busy = true;
+        errorMessage = null;
+        infoMessage = null;
+        try
+        {
+            await Purchasing.CancelPurchaseAsync(PurchaseId);
+            infoMessage = "Compra anulada. El stock se revirtió.";
+            await Reload();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task RegisterPayment()
+    {
+        if (detail?.Purchase == null) return;
+        busy = true;
+        errorMessage = null;
+        infoMessage = null;
+        try
+        {
+            await AccountingClient.PayPurchaseAsync(new SupplierPayment
+            {
+                PurchaseId = PurchaseId,
+                Amount = detail.OutstandingBalance,
+                PaidAt = paidAtDate,
+                PaymentMethod = payMethod,
+                PaymentReference = payReference,
+                Notes = payNotes
+            });
+            infoMessage = "Pago registrado y asentado";
+            payReference = string.Empty;
+            payNotes = string.Empty;
+            payMethod = PurchaseSettlement.Cash;
+            await Reload();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+}

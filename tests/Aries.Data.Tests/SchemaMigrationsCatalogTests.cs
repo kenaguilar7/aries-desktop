@@ -57,6 +57,63 @@ namespace Aries.Data.Tests
             Assert.Contains("020_PosAccounting", ids);
             Assert.Contains("021_Suppliers", ids);
             Assert.Contains("022_DesactivateAccountProcedure", ids);
+            Assert.Contains("023_Purchases", ids);
+            Assert.Contains("024_PurchaseAccounting", ids);
+            Assert.Contains("025_SupplierPayments", ids);
+            Assert.Contains("026_PurchaseCancel", ids);
+        }
+
+        [Fact]
+        public void M026_enables_purchase_cancel_unique_and_status()
+        {
+            var m026 = SchemaMigrations.All.Single(m => m.Id == "026_PurchaseCancel");
+            Assert.Equal(26, m026.Version);
+            Assert.Contains("document_number_key", m026.Sql);
+            Assert.Contains("cancelled", m026.Sql);
+            Assert.Contains("uk_purchases_company_supplier_doc", m026.Sql);
+            Assert.Contains("document_number_key", ExpectedSchema.Columns.Select(c => c.Name));
+        }
+
+        [Fact]
+        public void M025_creates_supplier_payments_table()
+        {
+            var m025 = SchemaMigrations.All.Single(m => m.Id == "025_SupplierPayments");
+            Assert.Equal(25, m025.Version);
+            Assert.Contains("CREATE TABLE IF NOT EXISTS `supplier_payments`", m025.Sql);
+            Assert.Contains("`company_id` VARCHAR(5) NOT NULL", m025.Sql);
+            Assert.Contains("uk_supplier_payments_purchase", m025.Sql);
+            Assert.Contains("utf8mb4_unicode_ci", m025.Sql);
+            Assert.Contains("supplier_payments", ExpectedSchema.Tables);
+        }
+
+        [Fact]
+        public void M024_creates_purchase_accounting_tables()
+        {
+            var m024 = SchemaMigrations.All.Single(m => m.Id == "024_PurchaseAccounting");
+            Assert.Equal(24, m024.Version);
+            Assert.Contains("CREATE TABLE IF NOT EXISTS `purchase_account_maps`", m024.Sql);
+            Assert.Contains("CREATE TABLE IF NOT EXISTS `purchase_postings`", m024.Sql);
+            Assert.Contains("`company_id` VARCHAR(5) NOT NULL", m024.Sql);
+            Assert.Contains("uk_purchase_postings_purchase", m024.Sql);
+            Assert.Contains("utf8mb4_unicode_ci", m024.Sql);
+            Assert.Contains("purchase_account_maps", ExpectedSchema.Tables);
+            Assert.Contains("purchase_postings", ExpectedSchema.Tables);
+        }
+
+        [Fact]
+        public void M023_creates_purchases_tables()
+        {
+            var m023 = SchemaMigrations.All.Single(m => m.Id == "023_Purchases");
+            Assert.Equal(23, m023.Version);
+            Assert.Contains("CREATE TABLE IF NOT EXISTS `purchases`", m023.Sql);
+            Assert.Contains("CREATE TABLE IF NOT EXISTS `purchase_lines`", m023.Sql);
+            Assert.Contains("`company_id` VARCHAR(5) NOT NULL", m023.Sql);
+            Assert.Contains("uk_purchases_company_supplier_doc", m023.Sql);
+            Assert.Contains("credito", m023.Sql);
+            Assert.Contains("utf8mb4_unicode_ci", m023.Sql);
+            Assert.DoesNotContain("DELETE FROM", m023.Sql);
+            Assert.Contains("purchases", ExpectedSchema.Tables);
+            Assert.Contains("purchase_lines", ExpectedSchema.Tables);
         }
 
         [Fact]

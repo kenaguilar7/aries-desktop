@@ -1,5 +1,6 @@
 using Aries.WebAPI.Infrastructure;
 using AriesContador.Core.Models.PointOfSale;
+using AriesContador.Core.Models.Purchases;
 using AriesContador.Core.Services;
 
 namespace Aries.WebAPI.Endpoints
@@ -46,13 +47,66 @@ namespace Aries.WebAPI.Endpoints
             group.MapPost("/pos-accounting/post/{sessionId:int}", async (HttpContext http, int sessionId, IPosAccountingService svc) =>
                 await EndpointRun.TryAsync(async () =>
                 {
-                    var userId = http.TryGetUserId() ?? 0;
+                    var userId = http.GetUserId();
                     return Results.Ok(await svc.PostSessionAsync(sessionId, userId, http.RequestAborted));
                 }));
 
             group.MapGet("/reconciliation/{companyId}", async (HttpContext http, string companyId, IPosAccountingService svc) =>
                 await EndpointRun.TryAsync(async () =>
                     Results.Ok(await svc.GetReconciliationAsync(companyId, http.RequestAborted))));
+
+            group.MapGet("/purchase-account-map/{companyId}", async (HttpContext http, string companyId, IPurchaseAccountingService svc) =>
+                await EndpointRun.TryAsync(async () =>
+                    Results.Ok(await svc.GetAccountMapAsync(companyId, http.RequestAborted))));
+
+            group.MapPost("/purchase-account-map", async (HttpContext http, PurchaseAccountMap map, IPurchaseAccountingService svc) =>
+                await EndpointRun.TryAsync(async () =>
+                {
+                    var userId = http.TryGetUserId();
+                    if (userId.HasValue)
+                    {
+                        if (map.CreatedBy == 0)
+                            map.CreatedBy = userId.Value;
+                        map.UpdatedBy = userId.Value;
+                    }
+                    await svc.SaveAccountMapAsync(map, http.RequestAborted);
+                    return Results.Ok(map);
+                }));
+
+            group.MapPost("/purchase-account-map/{companyId}/ensure-accounts", async (HttpContext http, string companyId, IPurchaseAccountingService svc) =>
+                await EndpointRun.TryAsync(async () =>
+                {
+                    var userId = http.TryGetUserId() ?? 0;
+                    return Results.Ok(await svc.EnsureSuggestedAccountsAsync(companyId, userId, http.RequestAborted));
+                }));
+
+            group.MapGet("/purchase-accounting/{companyId}/unposted", async (HttpContext http, string companyId, IPurchaseAccountingService svc) =>
+                await EndpointRun.TryAsync(async () =>
+                    Results.Ok(await svc.GetUnpostedPurchasesAsync(companyId, http.RequestAborted))));
+
+            group.MapGet("/purchase-accounting/preview/{purchaseId:int}", async (HttpContext http, int purchaseId, IPurchaseAccountingService svc) =>
+                await EndpointRun.TryAsync(async () =>
+                    Results.Ok(await svc.PreviewPurchaseAsync(purchaseId, http.RequestAborted))));
+
+            group.MapPost("/purchase-accounting/post/{purchaseId:int}", async (HttpContext http, int purchaseId, IPurchaseAccountingService svc) =>
+                await EndpointRun.TryAsync(async () =>
+                {
+                    var userId = http.GetUserId();
+                    return Results.Ok(await svc.PostPurchaseAsync(purchaseId, userId, http.RequestAborted));
+                }));
+
+            group.MapGet("/purchase-accounting/detail/{purchaseId:int}", async (HttpContext http, int purchaseId, IPurchaseAccountingService svc) =>
+                await EndpointRun.TryAsync(async () =>
+                    Results.Ok(await svc.GetPurchaseDetailAsync(purchaseId, http.RequestAborted))));
+
+            group.MapPost("/purchase-accounting/pay", async (HttpContext http, SupplierPayment payment, IPurchaseAccountingService svc) =>
+                await EndpointRun.TryAsync(async () =>
+                {
+                    var userId = http.GetUserId();
+                    if (payment.CreatedBy == 0)
+                        payment.CreatedBy = userId;
+                    return Results.Ok(await svc.PayPurchaseAsync(payment, userId, http.RequestAborted));
+                }));
 
             return app;
         }

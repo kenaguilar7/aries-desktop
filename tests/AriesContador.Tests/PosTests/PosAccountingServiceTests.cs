@@ -40,6 +40,8 @@ namespace AriesContador.Tests.PosTests
             Assert.Contains(preview.Lines, l => l.AccountId == 5 && l.AccountName == "IVA POR PAGAR");
             Assert.Contains(preview.Lines, l => l.AccountId == 7 && l.AccountName == "COSTO DE MERCADERÍA");
             Assert.Contains(preview.Lines, l => l.AccountId == 6 && l.AccountName == "INVENTARIOS");
+            Assert.All(entry.JournalEntryLines, l => Assert.Equal(7, l.UpdatedBy));
+            Assert.All(entry.JournalEntryLines, l => Assert.Equal(7, l.CreatedBy));
         }
 
         [Fact]

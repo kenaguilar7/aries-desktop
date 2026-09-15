@@ -1,0 +1,160 @@
+@page "/integration/{CompanyId}/purchase-account-map"
+@using AriesContador.Core.Models.Accounts
+@using AriesContador.Core.Models.Purchases
+@inject IPurchaseAccountingClient AccountingClient
+@inject IAccountService AccountService
+
+<PageTitle>Mapeo de compras - Aries Contabilidad</PageTitle>
+
+<div class="container-fluid">
+    <h1 class="page-title">Mapeo de cuentas de compras</h1>
+    <p class="text-muted">Asigne cuentas auxiliares para asentar inventario, IVA soportado, CxP y medios de pago.</p>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+    @if (!string.IsNullOrEmpty(infoMessage))
+    {
+        <div class="alert alert-success">@infoMessage</div>
+    }
+
+    @if (map == null)
+    {
+        <div class="d-flex justify-content-center"><div class="spinner-border"></div></div>
+    }
+    else
+    {
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Tasa IVA</label>
+                        <div class="input-group">
+                            <input class="form-control" type="number" step="0.01" min="0" max="100" @bind="taxPercent" />
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="purchasePricesIncludeTax" @bind="map.PricesIncludeTax" />
+                            <label class="form-check-label" for="purchasePricesIncludeTax">Precios incluyen IVA</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end justify-content-md-end">
+                        <button class="btn btn-outline-secondary" @onclick="EnsureAccounts" disabled="@busy">Crear / sugerir cuentas de compras</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="row g-3">
+                    @AccountSelect("Inventario", () => map.InventoryAccountId, v => map.InventoryAccountId = v)
+                    @AccountSelect("IVA soportado", () => map.TaxAccountId, v => map.TaxAccountId = v)
+                    @AccountSelect("Cuentas por pagar", () => map.PayableAccountId, v => map.PayableAccountId = v)
+                    @AccountSelect("Efectivo / caja", () => map.CashAccountId, v => map.CashAccountId = v)
+                    @AccountSelect("Tarjeta", () => map.CardAccountId, v => map.CardAccountId = v)
+                    @AccountSelect("Transferencia", () => map.TransferAccountId, v => map.TransferAccountId = v)
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-primary" @onclick="Save" disabled="@busy">Guardar mapeo</button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string CompanyId { get; set; } = string.Empty;
+    private PurchaseAccountMap? map;
+    private List<Account> auxiliaries = new();
+    private decimal taxPercent = 13m;
+    private bool busy;
+    private string? errorMessage;
+    private string? infoMessage;
+    private string? _loadedCompany;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_loadedCompany == CompanyId && map != null)
+            return;
+        _loadedCompany = CompanyId;
+        await Reload();
+    }
+
+    private async Task Reload()
+    {
+        errorMessage = null;
+        var accounts = await AccountService.GetAccountsAsync(CompanyId);
+        auxiliaries = accounts.Where(a => a.AccountType == AccountType.Cuenta_Auxiliar).OrderBy(a => a.Name).ToList();
+        map = await AccountingClient.GetAccountMapAsync(CompanyId);
+        map.CompanyId = CompanyId;
+        taxPercent = Math.Round(map.TaxRate * 100m, 2);
+    }
+
+    private RenderFragment AccountSelect(string label, Func<int> getter, Action<int> setter) => __builder =>
+    {
+        <div class="col-md-4">
+            <label class="form-label">@label</label>
+            <select class="form-select" value="@getter()" @onchange="e => setter(ParseId(e.Value))">
+                <option value="0">Seleccione una cuenta auxiliar</option>
+                @foreach (var account in auxiliaries)
+                {
+                    <option value="@account.Id">@account.Name</option>
+                }
+            </select>
+        </div>
+    };
+
+    private static int ParseId(object? value) => int.TryParse(value?.ToString(), out var id) ? id : 0;
+
+    private async Task EnsureAccounts()
+    {
+        if (map == null) return;
+        busy = true;
+        errorMessage = null;
+        infoMessage = null;
+        try
+        {
+            map = await AccountingClient.EnsureSuggestedAccountsAsync(CompanyId);
+            map.CompanyId = CompanyId;
+            taxPercent = Math.Round(map.TaxRate * 100m, 2);
+            var accounts = await AccountService.GetAccountsAsync(CompanyId);
+            auxiliaries = accounts.Where(a => a.AccountType == AccountType.Cuenta_Auxiliar).OrderBy(a => a.Name).ToList();
+            infoMessage = "Cuentas de compras sugeridas";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task Save()
+    {
+        if (map == null) return;
+        busy = true;
+        errorMessage = null;
+        infoMessage = null;
+        try
+        {
+            map.TaxRate = taxPercent / 100m;
+            map.CompanyId = CompanyId;
+            await AccountingClient.SaveAccountMapAsync(map);
+            infoMessage = "Mapeo de compras guardado";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+}

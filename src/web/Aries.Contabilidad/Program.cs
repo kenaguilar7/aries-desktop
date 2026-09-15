@@ -30,6 +30,7 @@ builder.Services.AddScoped<IPostingPeriodService, PostingPeriodService>();
 builder.Services.AddScoped<IJournalEntryLineService, JournalEntryLineService>();
 builder.Services.AddScoped<IPosService, PosService>();
 builder.Services.AddScoped<IPosAccountingClient, PosAccountingClient>();
+builder.Services.AddScoped<IPurchaseAccountingClient, PurchaseAccountingClient>();
 builder.Services.AddScoped<IPurchasingClient, PurchasingClient>();
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 builder.Services.AddScoped<ThemeService>();

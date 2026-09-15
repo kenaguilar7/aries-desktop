@@ -8,6 +8,13 @@ namespace Aries.WebAPI.Endpoints
     {
         public static IEndpointRouteBuilder MapPurchasingEndpoints(this IEndpointRouteBuilder app)
         {
+            MapSupplierEndpoints(app);
+            MapPurchaseEndpoints(app);
+            return app;
+        }
+
+        private static void MapSupplierEndpoints(IEndpointRouteBuilder app)
+        {
             var group = app.MapGroup("/supplier").RequireAuthorization();
 
             group.MapGet("/GetAll/{companyId}", async (HttpContext http, string companyId, IPurchasingService svc) =>
@@ -48,8 +55,41 @@ namespace Aries.WebAPI.Endpoints
                     await svc.DeleteSupplierAsync(id, http.RequestAborted);
                     return Results.Ok();
                 }));
+        }
 
-            return app;
+        private static void MapPurchaseEndpoints(IEndpointRouteBuilder app)
+        {
+            var group = app.MapGroup("/purchase").RequireAuthorization();
+
+            group.MapGet("/GetAll/{companyId}", async (HttpContext http, string companyId, IPurchasingService svc) =>
+                await EndpointRun.TryAsync(async () =>
+                    Results.Ok(await svc.GetPurchasesAsync(companyId, http.RequestAborted))));
+
+            group.MapGet("/Find/{id:int}", async (HttpContext http, int id, IPurchasingService svc) =>
+                await EndpointRun.TryAsync(async () =>
+                {
+                    var purchase = await svc.FindPurchaseAsync(id, http.RequestAborted);
+                    return purchase == null ? Results.NotFound() : Results.Ok(purchase);
+                }));
+
+            group.MapPost("/Confirm", async (HttpContext http, Purchase purchase, IPurchasingService svc) =>
+                await EndpointRun.TryAsync(async () =>
+                {
+                    var userId = http.TryGetUserId();
+                    if (userId.HasValue && purchase.CreatedBy == 0)
+                        purchase.CreatedBy = userId.Value;
+                    purchase.UpdatedBy = purchase.CreatedBy;
+                    var confirmed = await svc.ConfirmPurchaseAsync(purchase, http.RequestAborted);
+                    return Results.Ok(confirmed);
+                }));
+
+            group.MapPost("/Cancel/{id:int}", async (HttpContext http, int id, IPurchasingService svc) =>
+                await EndpointRun.TryAsync(async () =>
+                {
+                    var userId = http.TryGetUserId() ?? 0;
+                    await svc.CancelPurchaseAsync(id, userId, http.RequestAborted);
+                    return Results.Ok();
+                }));
         }
     }
 }

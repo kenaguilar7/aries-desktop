@@ -74,6 +74,7 @@ builder.Services.AddScoped<IFinancialService, FinancialService>();
 builder.Services.AddScoped<IFinancialReportService, FinancialReportService>();
 builder.Services.AddScoped<IPointOfSaleService, PointOfSaleService>();
 builder.Services.AddScoped<IPosAccountingService, PosAccountingService>();
+builder.Services.AddScoped<IPurchaseAccountingService, PurchaseAccountingService>();
 builder.Services.AddScoped<IPurchasingService, PurchasingService>();
 builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
 

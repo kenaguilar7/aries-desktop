@@ -12,5 +12,14 @@ namespace AriesContador.Core.Services
         Task CreateSupplierAsync(Supplier supplier, CancellationToken cancellationToken = default);
         Task UpdateSupplierAsync(Supplier supplier, CancellationToken cancellationToken = default);
         Task DeleteSupplierAsync(int id, CancellationToken cancellationToken = default);
+
+        Task<IEnumerable<Purchase>> GetPurchasesAsync(string companyId, CancellationToken cancellationToken = default);
+        Task<Purchase> FindPurchaseAsync(int id, CancellationToken cancellationToken = default);
+        Task<Purchase> ConfirmPurchaseAsync(Purchase purchase, CancellationToken cancellationToken = default);
+        /// <summary>
+        /// Anula una compra confirmada sin asentar: soft delete, revierte stock, no toca costo.
+        /// Rechaza si ya está asentada o pagada.
+        /// </summary>
+        Task CancelPurchaseAsync(int purchaseId, int userId, CancellationToken cancellationToken = default);
     }
 }

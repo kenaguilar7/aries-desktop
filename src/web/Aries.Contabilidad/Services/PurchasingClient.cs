@@ -47,6 +47,35 @@ namespace Aries.Contabilidad.Services
             await EnsureSuccess(response);
         }
 
+        public async Task<List<Purchase>> GetPurchasesAsync(string companyId)
+        {
+            var response = await _httpClient.GetAsync($"purchase/GetAll/{Uri.EscapeDataString(companyId)}");
+            await EnsureSuccess(response);
+            return await Read<List<Purchase>>(response) ?? new List<Purchase>();
+        }
+
+        public async Task<Purchase?> FindPurchaseAsync(int id)
+        {
+            var response = await _httpClient.GetAsync($"purchase/Find/{id}");
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                return null;
+            await EnsureSuccess(response);
+            return await Read<Purchase>(response);
+        }
+
+        public async Task<Purchase> ConfirmPurchaseAsync(Purchase purchase)
+        {
+            var response = await _httpClient.PostAsJsonAsync("purchase/Confirm", purchase, _jsonOptions);
+            await EnsureSuccess(response);
+            return await Read<Purchase>(response) ?? purchase;
+        }
+
+        public async Task CancelPurchaseAsync(int id)
+        {
+            var response = await _httpClient.PostAsync($"purchase/Cancel/{id}", null);
+            await EnsureSuccess(response);
+        }
+
         private async Task<T?> Read<T>(HttpResponseMessage response)
         {
             var content = await response.Content.ReadAsStringAsync();
