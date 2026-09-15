@@ -35,6 +35,8 @@ namespace AriesContador.Tests.Fakes
         public FakePosSessionPostingRepository SessionPostings { get; } = new FakePosSessionPostingRepository();
         public FakeSupplierRepository Suppliers { get; } = new FakeSupplierRepository();
         public FakePurchaseRepository Purchases { get; } = new FakePurchaseRepository();
+        public FakePurchaseAccountMapRepository PurchaseAccountMaps { get; } = new FakePurchaseAccountMapRepository();
+        public FakePurchasePostingRepository PurchasePostings { get; } = new FakePurchasePostingRepository();
 
         public ICompanyRepository CompanyRepository => Companies;
         public IUserRepository UserRepository => Users;
@@ -67,6 +69,8 @@ namespace AriesContador.Tests.Fakes
                 return Purchases;
             }
         }
+        public IPurchaseAccountMapRepository PurchaseAccountMapRepository => PurchaseAccountMaps;
+        public IPurchasePostingRepository PurchasePostingRepository => PurchasePostings;
     }
 
     public class FakePermissionRepository : IPermissionRepository
@@ -720,6 +724,52 @@ namespace AriesContador.Tests.Fakes
                     line.Id = nextLine++;
             }
             Items.Add(purchase);
+            return Task.CompletedTask;
+        }
+    }
+
+    public class FakePurchaseAccountMapRepository : IPurchaseAccountMapRepository
+    {
+        public List<PurchaseAccountMap> Items { get; } = new List<PurchaseAccountMap>();
+
+        public Task<PurchaseAccountMap> GetByCompanyIdAsync(string companyId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Items.FirstOrDefault(x => x.CompanyId == companyId));
+
+        public Task UpsertAsync(PurchaseAccountMap map, CancellationToken cancellationToken = default)
+        {
+            var i = Items.FindIndex(x => x.CompanyId == map.CompanyId);
+            if (i >= 0)
+            {
+                map.Id = Items[i].Id;
+                Items[i] = map;
+            }
+            else
+            {
+                if (map.Id == 0)
+                    map.Id = Items.Count == 0 ? 1 : Items.Max(x => x.Id) + 1;
+                Items.Add(map);
+            }
+            return Task.CompletedTask;
+        }
+    }
+
+    public class FakePurchasePostingRepository : IPurchasePostingRepository
+    {
+        public List<PurchasePosting> Items { get; } = new List<PurchasePosting>();
+
+        public Task<PurchasePosting> GetByPurchaseIdAsync(int purchaseId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Items.FirstOrDefault(x => x.PurchaseId == purchaseId));
+
+        public Task<IEnumerable<PurchasePosting>> FindByCompanyIdAsync(string companyId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IEnumerable<PurchasePosting>>(Items.Where(x => x.CompanyId == companyId).ToList());
+
+        public Task AddAsync(PurchasePosting posting, CancellationToken cancellationToken = default)
+        {
+            if (Items.Any(x => x.PurchaseId == posting.PurchaseId))
+                throw new InvalidOperationException("La compra ya fue asentada");
+            if (posting.Id == 0)
+                posting.Id = Items.Count == 0 ? 1 : Items.Max(x => x.Id) + 1;
+            Items.Add(posting);
             return Task.CompletedTask;
         }
     }

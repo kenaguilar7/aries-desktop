@@ -57,6 +57,21 @@ namespace Aries.Data.Tests
             Assert.Contains("020_PosAccounting", ids);
             Assert.Contains("021_Suppliers", ids);
             Assert.Contains("022_Purchases", ids);
+            Assert.Contains("023_PurchaseAccounting", ids);
+        }
+
+        [Fact]
+        public void M023_creates_purchase_accounting_tables()
+        {
+            var m023 = SchemaMigrations.All.Single(m => m.Id == "023_PurchaseAccounting");
+            Assert.Equal(23, m023.Version);
+            Assert.Contains("CREATE TABLE IF NOT EXISTS `purchase_account_maps`", m023.Sql);
+            Assert.Contains("CREATE TABLE IF NOT EXISTS `purchase_postings`", m023.Sql);
+            Assert.Contains("`company_id` VARCHAR(5) NOT NULL", m023.Sql);
+            Assert.Contains("uk_purchase_postings_purchase", m023.Sql);
+            Assert.Contains("utf8mb4_unicode_ci", m023.Sql);
+            Assert.Contains("purchase_account_maps", ExpectedSchema.Tables);
+            Assert.Contains("purchase_postings", ExpectedSchema.Tables);
         }
 
         [Fact]
