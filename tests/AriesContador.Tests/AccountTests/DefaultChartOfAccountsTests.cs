@@ -59,6 +59,23 @@ namespace AriesContador.Tests.AccountTests
 
             Assert.Equal("FALTANTE DE CAJA", accounts[60].Name);
             Assert.Equal("SOBRANTE DE CAJA", accounts[61].Name);
+
+            Assert.Equal(DefaultChartOfAccounts.CuentasPorPagarName, accounts[62].Name);
+            Assert.Equal(9, accounts[62].FatherAccount);
+            Assert.Equal(DefaultChartOfAccounts.PasivoCortoPlazoName, accounts[8].Name);
+            Assert.Equal(AccountTag.Pasivo, accounts[62].AccountTag);
+            Assert.Equal(AccountType.Cuenta_Auxiliar, accounts[62].AccountType);
+            Assert.False(accounts[62].Editable);
+
+            Assert.Equal(DefaultChartOfAccounts.IvaSoportadoName, accounts[63].Name);
+            Assert.Equal(7, accounts[63].FatherAccount);
+            Assert.Equal(DefaultChartOfAccounts.ActivoCorrienteName, accounts[6].Name);
+            Assert.Equal(AccountTag.Activo, accounts[63].AccountTag);
+            Assert.Equal(AccountType.Cuenta_Auxiliar, accounts[63].AccountType);
+            Assert.False(accounts[63].Editable);
+
+            Assert.Contains(accounts, a => a.Name == DefaultChartOfAccounts.CuentasPorPagarName);
+            Assert.Contains(accounts, a => a.Name == DefaultChartOfAccounts.IvaSoportadoName);
         }
     }
 }

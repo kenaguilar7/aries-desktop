@@ -22,6 +22,14 @@ namespace Aries.WebAPI.Tests
         public Task CreateAccountAsync(Account account, CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task CreateAccountAsync(Account account, Account parent, CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task<int> EnsureAccountNameAsync(string name, CancellationToken cancellationToken = default) => Task.FromResult(1);
+        public string LastEnsurePurchaseCompanyId { get; private set; }
+        public int LastEnsurePurchaseUserId { get; private set; }
+        public Task<IReadOnlyList<Account>> EnsurePurchaseAccountsAsync(string companyId, int userId, CancellationToken cancellationToken = default)
+        {
+            LastEnsurePurchaseCompanyId = companyId;
+            LastEnsurePurchaseUserId = userId;
+            return Task.FromResult<IReadOnlyList<Account>>(Array.Empty<Account>());
+        }
         public Task UpdateAccountAsync(Account account, CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task<IEnumerable<Account>> GetAccountsAsync(string companyId, CancellationToken cancellationToken = default) =>
             Task.FromResult<IEnumerable<Account>>(Array.Empty<Account>());

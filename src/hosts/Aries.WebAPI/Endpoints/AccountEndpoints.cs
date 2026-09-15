@@ -96,6 +96,13 @@ namespace Aries.WebAPI.Endpoints
                     return Results.Ok();
                 }));
 
+            group.MapPost("/{companyId}/ensure-purchase-accounts", async (HttpContext http, string companyId, IFinancialService svc) =>
+                await EndpointRun.TryAsync(async () =>
+                {
+                    var userId = http.TryGetUserId() ?? 0;
+                    return Results.Ok(await svc.EnsurePurchaseAccountsAsync(companyId, userId, http.RequestAborted));
+                }));
+
             return app;
         }
     }

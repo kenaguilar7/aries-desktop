@@ -12,6 +12,7 @@ namespace Aries.Contabilidad.Services
         Task CreateAccountAsync(Account account);
         Task UpdateAccountAsync(Account account);
         Task DeleteAccountAsync(Account account);
+        Task<List<Account>> EnsurePurchaseAccountsAsync(string companyId);
         Task<List<AccountMovementRow>> GetAccountMovementsAsync(int accountId);
     }
 }
