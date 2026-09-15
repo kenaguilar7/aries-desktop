@@ -130,6 +130,36 @@ namespace AriesContador.Services
             return purchase;
         }
 
+        public async Task CancelPurchaseAsync(int purchaseId, int userId, CancellationToken cancellationToken = default)
+        {
+            if (purchaseId <= 0)
+                throw new InvalidOperationException("Compra inválida");
+
+            var purchase = await _unitOfWork.PurchaseRepository.GetByIdAsync(purchaseId, cancellationToken)
+                .ConfigureAwait(false);
+            if (purchase == null || !purchase.Active)
+                throw new InvalidOperationException("Compra no encontrada");
+            if (purchase.Status != PurchaseStatus.Confirmed)
+                throw new InvalidOperationException("Solo se pueden anular compras confirmadas");
+
+            var posting = await _unitOfWork.PurchasePostingRepository.GetByPurchaseIdAsync(purchaseId, cancellationToken)
+                .ConfigureAwait(false);
+            if (posting != null)
+                throw new InvalidOperationException("No se puede anular: la compra ya fue asentada");
+
+            var payment = await _unitOfWork.SupplierPaymentRepository.GetByPurchaseIdAsync(purchaseId, cancellationToken)
+                .ConfigureAwait(false);
+            if (payment != null)
+                throw new InvalidOperationException("No se puede anular: la compra ya tiene un pago registrado");
+
+            if (purchase.Lines == null || purchase.Lines.Count == 0)
+                purchase.Lines = new List<PurchaseLine>();
+
+            purchase.UpdatedBy = userId;
+            await _unitOfWork.PurchaseRepository.CancelWithEffectsAsync(purchase, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         private static PurchaseLine PrepareLine(Product product, PurchaseLine raw, decimal taxRate, bool pricesIncludeTax)
         {
             var qty = raw.Quantity;

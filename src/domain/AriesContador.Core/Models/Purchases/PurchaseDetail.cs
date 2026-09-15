@@ -26,5 +26,13 @@ namespace AriesContador.Core.Models.Purchases
             && Posted
             && !Paid
             && OutstandingBalance > 0;
+
+        /// <summary>Solo compras confirmadas, activas, sin asentar y sin pago.</summary>
+        public bool CanCancel =>
+            Purchase != null
+            && Purchase.Active
+            && Purchase.Status == PurchaseStatus.Confirmed
+            && !Posted
+            && !Paid;
     }
 }

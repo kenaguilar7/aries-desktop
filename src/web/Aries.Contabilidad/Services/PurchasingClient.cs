@@ -70,6 +70,12 @@ namespace Aries.Contabilidad.Services
             return await Read<Purchase>(response) ?? purchase;
         }
 
+        public async Task CancelPurchaseAsync(int id)
+        {
+            var response = await _httpClient.PostAsync($"purchase/Cancel/{id}", null);
+            await EnsureSuccess(response);
+        }
+
         private async Task<T?> Read<T>(HttpResponseMessage response)
         {
             var content = await response.Content.ReadAsStringAsync();

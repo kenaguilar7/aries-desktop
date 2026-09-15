@@ -13,5 +13,6 @@ namespace Aries.Contabilidad.Services
         Task<List<Purchase>> GetPurchasesAsync(string companyId);
         Task<Purchase?> FindPurchaseAsync(int id);
         Task<Purchase> ConfirmPurchaseAsync(Purchase purchase);
+        Task CancelPurchaseAsync(int id);
     }
 }

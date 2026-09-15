@@ -26,7 +26,7 @@ namespace AriesContador.Data.Repositories
             throw new NotSupportedException("Las facturas de compra confirmadas no se editan");
 
         public Task RemoveAsync(Purchase entity, CancellationToken cancellationToken = default) =>
-            throw new NotSupportedException("Las facturas de compra no se eliminan de forma individual en v1");
+            CancelWithEffectsAsync(entity, cancellationToken);
 
         public async Task<Purchase> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
@@ -119,6 +119,71 @@ namespace AriesContador.Data.Repositories
                         line.UpdatedBy = purchase.UpdatedBy;
                         line.Id = await dataAccess.InsertAndGetIdInTransactionAsync(
                             PurchasesQuery.InsertPurchaseLine, line, cancellationToken).ConfigureAwait(false);
+                    }
+
+                    await dataAccess.CommitTransactionAsync(cancellationToken).ConfigureAwait(false);
+                }
+                catch
+                {
+                    await dataAccess.RollBackTransactionAsync(cancellationToken).ConfigureAwait(false);
+                    throw;
+                }
+            }
+        }
+
+        public async Task CancelWithEffectsAsync(Purchase purchase, CancellationToken cancellationToken = default)
+        {
+            if (purchase == null)
+                throw new InvalidOperationException("La compra es requerida");
+            if (purchase.Lines == null)
+                purchase.Lines = new List<PurchaseLine>();
+
+            using (var dataAccess = new MySqlDataAccess(_connectionString))
+            {
+                await dataAccess.StartTransactionAsync(cancellationToken).ConfigureAwait(false);
+                try
+                {
+                    foreach (var line in purchase.Lines)
+                    {
+                        var affected = await dataAccess.ExecuteTextInTransactionAsync(
+                            PurchasesQuery.DecrementStockOnly,
+                            new
+                            {
+                                Quantity = line.Quantity,
+                                line.ProductId,
+                                purchase.CompanyId,
+                                purchase.UpdatedBy
+                            },
+                            cancellationToken).ConfigureAwait(false);
+                        if (affected == 0)
+                            throw new InvalidOperationException(
+                                "No se puede anular: stock insuficiente de " + line.ProductName
+                                + " (posiblemente ya se vendió)");
+                    }
+
+                    var deactivated = await dataAccess.ExecuteTextInTransactionAsync(
+                        PurchasesQuery.DeactivatePurchase,
+                        new
+                        {
+                            purchase.Id,
+                            StatusDb = PurchaseStatusNames.ToDb(PurchaseStatus.Cancelled),
+                            purchase.UpdatedBy
+                        },
+                        cancellationToken).ConfigureAwait(false);
+                    if (deactivated == 0)
+                        throw new InvalidOperationException("Compra no encontrada o ya anulada");
+
+                    await dataAccess.ExecuteTextInTransactionAsync(
+                        PurchasesQuery.DeactivatePurchaseLines,
+                        new { PurchaseId = purchase.Id, purchase.UpdatedBy },
+                        cancellationToken).ConfigureAwait(false);
+
+                    purchase.Active = false;
+                    purchase.Status = PurchaseStatus.Cancelled;
+                    if (purchase.Lines != null)
+                    {
+                        foreach (var line in purchase.Lines)
+                            line.Active = false;
                     }
 
                     await dataAccess.CommitTransactionAsync(cancellationToken).ConfigureAwait(false);

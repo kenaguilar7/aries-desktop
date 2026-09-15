@@ -60,6 +60,18 @@ namespace Aries.Data.Tests
             Assert.Contains("023_Purchases", ids);
             Assert.Contains("024_PurchaseAccounting", ids);
             Assert.Contains("025_SupplierPayments", ids);
+            Assert.Contains("026_PurchaseCancel", ids);
+        }
+
+        [Fact]
+        public void M026_enables_purchase_cancel_unique_and_status()
+        {
+            var m026 = SchemaMigrations.All.Single(m => m.Id == "026_PurchaseCancel");
+            Assert.Equal(26, m026.Version);
+            Assert.Contains("document_number_key", m026.Sql);
+            Assert.Contains("cancelled", m026.Sql);
+            Assert.Contains("uk_purchases_company_supplier_doc", m026.Sql);
+            Assert.Contains("document_number_key", ExpectedSchema.Columns.Select(c => c.Name));
         }
 
         [Fact]

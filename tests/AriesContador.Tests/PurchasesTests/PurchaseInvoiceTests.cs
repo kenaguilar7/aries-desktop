@@ -139,6 +139,108 @@ namespace AriesContador.Tests.PurchasesTests
             Assert.Equal("B-1", fromB[0].DocumentNumber);
         }
 
+        [Fact]
+        public async Task CancelPurchase_soft_deletes_and_reverts_stock_without_changing_cost()
+        {
+            var uow = new FakeUnitOfWork();
+            var svc = new PurchasingService(uow);
+            var supplier = await SeedSupplier(svc, CompanyA);
+            var product = SeedProduct(uow, CompanyA, stock: 5m, cost: 80m, taxExempt: false);
+
+            var purchase = await svc.ConfirmPurchaseAsync(new Purchase
+            {
+                CompanyId = CompanyA,
+                SupplierId = supplier.Id,
+                DocumentNumber = "F-ANULA",
+                PaymentMethod = PurchaseSettlement.Cash,
+                Lines =
+                {
+                    new PurchaseLine { ProductId = product.Id, Quantity = 2, UnitPrice = 113m }
+                }
+            });
+
+            Assert.Equal(7m, product.Stock);
+            Assert.Equal(100m, product.Cost);
+
+            await svc.CancelPurchaseAsync(purchase.Id, userId: 9);
+
+            Assert.False(purchase.Active);
+            Assert.Equal(PurchaseStatus.Cancelled, purchase.Status);
+            Assert.Equal(5m, product.Stock);
+            Assert.Equal(100m, product.Cost); // no se restaura el costo anterior
+            Assert.Empty(await svc.GetPurchasesAsync(CompanyA));
+        }
+
+        [Fact]
+        public async Task CancelPurchase_allows_reusing_document_number()
+        {
+            var uow = new FakeUnitOfWork();
+            var svc = new PurchasingService(uow);
+            var supplier = await SeedSupplier(svc, CompanyA);
+            var product = SeedProduct(uow, CompanyA, stock: 0m, cost: 0m, taxExempt: false);
+
+            var first = await svc.ConfirmPurchaseAsync(SamplePurchase(CompanyA, supplier.Id, "REUSE-1", product.Id));
+            await svc.CancelPurchaseAsync(first.Id, userId: 1);
+
+            var second = await svc.ConfirmPurchaseAsync(SamplePurchase(CompanyA, supplier.Id, "REUSE-1", product.Id));
+            Assert.True(second.Id > 0);
+            Assert.NotEqual(first.Id, second.Id);
+            Assert.Equal(1m, product.Stock);
+        }
+
+        [Fact]
+        public async Task CancelPurchase_rejects_when_already_posted()
+        {
+            var uow = new FakeUnitOfWork();
+            var svc = new PurchasingService(uow);
+            var supplier = await SeedSupplier(svc, CompanyA);
+            var product = SeedProduct(uow, CompanyA, stock: 0m, cost: 0m, taxExempt: false);
+            var purchase = await svc.ConfirmPurchaseAsync(SamplePurchase(CompanyA, supplier.Id, "POSTED-1", product.Id));
+
+            uow.PurchasePostings.Items.Add(new PurchasePosting
+            {
+                Id = 1,
+                CompanyId = CompanyA,
+                PurchaseId = purchase.Id,
+                JournalEntryId = 50,
+                Active = true
+            });
+
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                svc.CancelPurchaseAsync(purchase.Id, userId: 1));
+            Assert.Equal("No se puede anular: la compra ya fue asentada", ex.Message);
+            Assert.True(purchase.Active);
+            Assert.Equal(1m, product.Stock);
+        }
+
+        [Fact]
+        public async Task CancelPurchase_rejects_when_stock_insufficient()
+        {
+            var uow = new FakeUnitOfWork();
+            var svc = new PurchasingService(uow);
+            var supplier = await SeedSupplier(svc, CompanyA);
+            var product = SeedProduct(uow, CompanyA, stock: 0m, cost: 0m, taxExempt: false);
+            var purchase = await svc.ConfirmPurchaseAsync(new Purchase
+            {
+                CompanyId = CompanyA,
+                SupplierId = supplier.Id,
+                DocumentNumber = "STOCK-1",
+                PaymentMethod = PurchaseSettlement.Cash,
+                Lines =
+                {
+                    new PurchaseLine { ProductId = product.Id, Quantity = 3, UnitPrice = 113m }
+                }
+            });
+
+            product.Stock = 1m; // se vendió después
+
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                svc.CancelPurchaseAsync(purchase.Id, userId: 1));
+            Assert.Contains("stock insuficiente", ex.Message);
+            Assert.True(purchase.Active);
+            Assert.Equal(1m, product.Stock);
+        }
+
         private static async Task<Supplier> SeedSupplier(PurchasingService svc, string companyId, string name = "Proveedor A")
         {
             var supplier = new Supplier

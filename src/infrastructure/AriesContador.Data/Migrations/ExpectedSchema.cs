@@ -203,6 +203,7 @@ namespace AriesContador.Data.Migrations
             new ExpectedColumn("purchases", "company_id") { CharLength = 5, Nullable = false },
             new ExpectedColumn("purchases", "supplier_id"),
             new ExpectedColumn("purchases", "document_number"),
+            new ExpectedColumn("purchases", "document_number_key"),
             new ExpectedColumn("purchases", "purchased_at"),
             new ExpectedColumn("purchases", "payment_method"),
             new ExpectedColumn("purchases", "total"),

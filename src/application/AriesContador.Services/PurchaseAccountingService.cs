@@ -96,7 +96,7 @@ namespace AriesContador.Services
         {
             var purchase = await _unitOfWork.PurchaseRepository.GetByIdAsync(purchaseId, cancellationToken)
                 .ConfigureAwait(false);
-            if (purchase == null || !purchase.Active)
+            if (purchase == null)
                 throw new InvalidOperationException("Compra no encontrada");
 
             var posting = await _unitOfWork.PurchasePostingRepository.GetByPurchaseIdAsync(purchaseId, cancellationToken)
@@ -105,7 +105,10 @@ namespace AriesContador.Services
                 .ConfigureAwait(false);
 
             var outstanding = 0m;
-            if (purchase.PaymentMethod == PurchaseSettlement.OnAccount && payment == null)
+            if (purchase.Active
+                && purchase.Status == PurchaseStatus.Confirmed
+                && purchase.PaymentMethod == PurchaseSettlement.OnAccount
+                && payment == null)
                 outstanding = purchase.Total;
             else if (purchase.PaymentMethod == PurchaseSettlement.OnAccount && payment != null)
                 outstanding = 0m;

@@ -702,7 +702,7 @@ namespace AriesContador.Tests.Fakes
             throw new NotSupportedException();
 
         public Task RemoveAsync(Purchase entity, CancellationToken cancellationToken = default) =>
-            throw new NotSupportedException();
+            CancelWithEffectsAsync(entity, cancellationToken);
 
         public Task<Purchase> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
             Task.FromResult(Items.FirstOrDefault(x => x.Id == id));
@@ -716,7 +716,8 @@ namespace AriesContador.Tests.Fakes
             string documentNumber,
             CancellationToken cancellationToken = default) =>
             Task.FromResult(Items.FirstOrDefault(x =>
-                x.CompanyId == companyId
+                x.Active
+                && x.CompanyId == companyId
                 && x.SupplierId == supplierId
                 && string.Equals(x.DocumentNumber, documentNumber, StringComparison.Ordinal)));
 
@@ -743,6 +744,37 @@ namespace AriesContador.Tests.Fakes
                     line.Id = nextLine++;
             }
             Items.Add(purchase);
+            return Task.CompletedTask;
+        }
+
+        public Task CancelWithEffectsAsync(Purchase purchase, CancellationToken cancellationToken = default)
+        {
+            var current = Items.FirstOrDefault(x => x.Id == purchase.Id && x.Active);
+            if (current == null)
+                throw new InvalidOperationException("Compra no encontrada o ya anulada");
+
+            foreach (var line in current.Lines ?? purchase.Lines ?? new List<PurchaseLine>())
+            {
+                var product = Products?.Items.FirstOrDefault(x => x.Id == line.ProductId && x.Active);
+                if (product == null || !string.Equals(product.CompanyId, current.CompanyId, StringComparison.Ordinal))
+                    throw new InvalidOperationException(
+                        "No se puede anular: stock insuficiente de " + line.ProductName
+                        + " (posiblemente ya se vendió)");
+                if (product.Stock < line.Quantity)
+                    throw new InvalidOperationException(
+                        "No se puede anular: stock insuficiente de " + line.ProductName
+                        + " (posiblemente ya se vendió)");
+                product.Stock -= line.Quantity;
+                // Costo no se toca
+            }
+
+            current.Active = false;
+            current.Status = PurchaseStatus.Cancelled;
+            current.UpdatedBy = purchase.UpdatedBy;
+            purchase.Active = false;
+            purchase.Status = PurchaseStatus.Cancelled;
+            foreach (var line in current.Lines ?? Enumerable.Empty<PurchaseLine>())
+                line.Active = false;
             return Task.CompletedTask;
         }
     }

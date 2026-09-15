@@ -82,6 +82,14 @@ namespace Aries.WebAPI.Endpoints
                     var confirmed = await svc.ConfirmPurchaseAsync(purchase, http.RequestAborted);
                     return Results.Ok(confirmed);
                 }));
+
+            group.MapPost("/Cancel/{id:int}", async (HttpContext http, int id, IPurchasingService svc) =>
+                await EndpointRun.TryAsync(async () =>
+                {
+                    var userId = http.TryGetUserId() ?? 0;
+                    await svc.CancelPurchaseAsync(id, userId, http.RequestAborted);
+                    return Results.Ok();
+                }));
         }
     }
 }

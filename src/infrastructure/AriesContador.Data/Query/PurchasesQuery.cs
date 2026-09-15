@@ -99,6 +99,7 @@ FROM purchases AS T0
 WHERE T0.company_id = @CompanyId
   AND T0.supplier_id = @SupplierId
   AND T0.document_number = @DocumentNumber
+  AND T0.active = 1
 LIMIT 1";
 
         public const string SelectPurchaseLines = @"
@@ -144,5 +145,25 @@ UPDATE products SET
   cost = @Cost,
   updated_by = @UpdatedBy
 WHERE product_id = @ProductId AND company_id = @CompanyId AND active = 1";
+
+        /// <summary>Revierte stock sin tocar cost.</summary>
+        public const string DecrementStockOnly = @"
+UPDATE products SET
+  stock = stock - @Quantity,
+  updated_by = @UpdatedBy
+WHERE product_id = @ProductId AND company_id = @CompanyId AND active = 1 AND stock >= @Quantity";
+
+        public const string DeactivatePurchase = @"
+UPDATE purchases SET
+  status = @StatusDb,
+  active = 0,
+  updated_by = @UpdatedBy
+WHERE purchase_id = @Id AND active = 1";
+
+        public const string DeactivatePurchaseLines = @"
+UPDATE purchase_lines SET
+  active = 0,
+  updated_by = @UpdatedBy
+WHERE purchase_id = @PurchaseId AND active = 1";
     }
 }

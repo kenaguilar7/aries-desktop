@@ -11,5 +11,7 @@ namespace AriesContador.Core.Repositories
         Task<IEnumerable<Purchase>> FindByCompanyIdAsync(string companyId, CancellationToken cancellationToken = default);
         Task<Purchase> FindByDocumentAsync(string companyId, int supplierId, string documentNumber, CancellationToken cancellationToken = default);
         Task CreateWithEffectsAsync(Purchase purchase, CancellationToken cancellationToken = default);
+        /// <summary>Soft delete + revierte stock. No modifica product.Cost.</summary>
+        Task CancelWithEffectsAsync(Purchase purchase, CancellationToken cancellationToken = default);
     }
 }
