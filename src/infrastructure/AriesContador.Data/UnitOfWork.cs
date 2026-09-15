@@ -26,6 +26,7 @@ namespace AriesContador.Data
         private IPurchaseRepository _purchaseRepository;
         private IPurchaseAccountMapRepository _purchaseAccountMapRepository;
         private IPurchasePostingRepository _purchasePostingRepository;
+        private ISupplierPaymentRepository _supplierPaymentRepository;
 
         public UnitOfWork(IConnectionString context)
         {
@@ -87,6 +88,9 @@ namespace AriesContador.Data
 
         public IPurchasePostingRepository PurchasePostingRepository
             => _purchasePostingRepository = _purchasePostingRepository ?? new PurchasePostingRepository(_context);
+
+        public ISupplierPaymentRepository SupplierPaymentRepository
+            => _supplierPaymentRepository = _supplierPaymentRepository ?? new SupplierPaymentRepository(_context);
 
         public void Dispose()
         {

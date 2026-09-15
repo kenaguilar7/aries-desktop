@@ -95,6 +95,19 @@ namespace Aries.WebAPI.Endpoints
                     return Results.Ok(await svc.PostPurchaseAsync(purchaseId, userId, http.RequestAborted));
                 }));
 
+            group.MapGet("/purchase-accounting/detail/{purchaseId:int}", async (HttpContext http, int purchaseId, IPurchaseAccountingService svc) =>
+                await EndpointRun.TryAsync(async () =>
+                    Results.Ok(await svc.GetPurchaseDetailAsync(purchaseId, http.RequestAborted))));
+
+            group.MapPost("/purchase-accounting/pay", async (HttpContext http, SupplierPayment payment, IPurchaseAccountingService svc) =>
+                await EndpointRun.TryAsync(async () =>
+                {
+                    var userId = http.TryGetUserId() ?? 0;
+                    if (userId != 0 && payment.CreatedBy == 0)
+                        payment.CreatedBy = userId;
+                    return Results.Ok(await svc.PayPurchaseAsync(payment, userId, http.RequestAborted));
+                }));
+
             return app;
         }
     }

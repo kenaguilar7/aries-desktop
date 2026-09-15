@@ -39,6 +39,7 @@
                             <th class="text-end">Total</th>
                             <th class="text-end">Neto</th>
                             <th class="text-end">IVA</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -57,6 +58,9 @@
                                 <td class="text-end">@p.Total.ToString("N2")</td>
                                 <td class="text-end">@p.NetAmount.ToString("N2")</td>
                                 <td class="text-end">@p.TaxAmount.ToString("N2")</td>
+                                <td class="text-end">
+                                    <a class="btn btn-sm btn-outline-primary" href="@($"/purchases/{CompanyId}/{p.Id}")">Ver</a>
+                                </td>
                             </tr>
                         }
                     </tbody>

@@ -37,6 +37,7 @@ namespace AriesContador.Tests.Fakes
         public FakePurchaseRepository Purchases { get; } = new FakePurchaseRepository();
         public FakePurchaseAccountMapRepository PurchaseAccountMaps { get; } = new FakePurchaseAccountMapRepository();
         public FakePurchasePostingRepository PurchasePostings { get; } = new FakePurchasePostingRepository();
+        public FakeSupplierPaymentRepository SupplierPayments { get; } = new FakeSupplierPaymentRepository();
 
         public ICompanyRepository CompanyRepository => Companies;
         public IUserRepository UserRepository => Users;
@@ -71,6 +72,7 @@ namespace AriesContador.Tests.Fakes
         }
         public IPurchaseAccountMapRepository PurchaseAccountMapRepository => PurchaseAccountMaps;
         public IPurchasePostingRepository PurchasePostingRepository => PurchasePostings;
+        public ISupplierPaymentRepository SupplierPaymentRepository => SupplierPayments;
     }
 
     public class FakePermissionRepository : IPermissionRepository
@@ -770,6 +772,30 @@ namespace AriesContador.Tests.Fakes
             if (posting.Id == 0)
                 posting.Id = Items.Count == 0 ? 1 : Items.Max(x => x.Id) + 1;
             Items.Add(posting);
+            return Task.CompletedTask;
+        }
+    }
+
+    public class FakeSupplierPaymentRepository : ISupplierPaymentRepository
+    {
+        public List<SupplierPayment> Items { get; } = new List<SupplierPayment>();
+
+        public Task<SupplierPayment> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Items.FirstOrDefault(x => x.Id == id));
+
+        public Task<SupplierPayment> GetByPurchaseIdAsync(int purchaseId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Items.FirstOrDefault(x => x.PurchaseId == purchaseId));
+
+        public Task<IEnumerable<SupplierPayment>> FindByCompanyIdAsync(string companyId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IEnumerable<SupplierPayment>>(Items.Where(x => x.CompanyId == companyId && x.Active).ToList());
+
+        public Task AddAsync(SupplierPayment payment, CancellationToken cancellationToken = default)
+        {
+            if (Items.Any(x => x.PurchaseId == payment.PurchaseId))
+                throw new InvalidOperationException("La factura ya está pagada");
+            if (payment.Id == 0)
+                payment.Id = Items.Count == 0 ? 1 : Items.Max(x => x.Id) + 1;
+            Items.Add(payment);
             return Task.CompletedTask;
         }
     }

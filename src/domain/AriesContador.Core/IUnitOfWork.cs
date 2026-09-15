@@ -26,5 +26,6 @@ namespace AriesContador.Core
         IPurchaseRepository PurchaseRepository { get; }
         IPurchaseAccountMapRepository PurchaseAccountMapRepository { get; }
         IPurchasePostingRepository PurchasePostingRepository { get; }
+        ISupplierPaymentRepository SupplierPaymentRepository { get; }
     }
 }

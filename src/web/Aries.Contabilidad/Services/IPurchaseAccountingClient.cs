@@ -10,5 +10,7 @@ namespace Aries.Contabilidad.Services
         Task<List<Purchase>> GetUnpostedPurchasesAsync(string companyId);
         Task<PurchasePostingPreview> PreviewPurchaseAsync(int purchaseId);
         Task<PurchasePostingPreview> PostPurchaseAsync(int purchaseId);
+        Task<PurchaseDetail> GetPurchaseDetailAsync(int purchaseId);
+        Task<SupplierPayment> PayPurchaseAsync(SupplierPayment payment);
     }
 }

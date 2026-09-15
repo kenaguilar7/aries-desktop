@@ -13,5 +13,7 @@ namespace AriesContador.Core.Services
         Task<IEnumerable<Purchase>> GetUnpostedPurchasesAsync(string companyId, CancellationToken cancellationToken = default);
         Task<PurchasePostingPreview> PreviewPurchaseAsync(int purchaseId, CancellationToken cancellationToken = default);
         Task<PurchasePostingPreview> PostPurchaseAsync(int purchaseId, int userId, CancellationToken cancellationToken = default);
+        Task<PurchaseDetail> GetPurchaseDetailAsync(int purchaseId, CancellationToken cancellationToken = default);
+        Task<SupplierPayment> PayPurchaseAsync(SupplierPayment payment, int userId, CancellationToken cancellationToken = default);
     }
 }

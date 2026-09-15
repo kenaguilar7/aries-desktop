@@ -56,6 +56,20 @@ namespace Aries.Contabilidad.Services
             return await Read<PurchasePostingPreview>(response) ?? new PurchasePostingPreview();
         }
 
+        public async Task<PurchaseDetail> GetPurchaseDetailAsync(int purchaseId)
+        {
+            var response = await _httpClient.GetAsync($"integration/purchase-accounting/detail/{purchaseId}");
+            await EnsureSuccess(response);
+            return await Read<PurchaseDetail>(response) ?? new PurchaseDetail();
+        }
+
+        public async Task<SupplierPayment> PayPurchaseAsync(SupplierPayment payment)
+        {
+            var response = await _httpClient.PostAsJsonAsync("integration/purchase-accounting/pay", payment, _jsonOptions);
+            await EnsureSuccess(response);
+            return await Read<SupplierPayment>(response) ?? payment;
+        }
+
         private async Task<T?> Read<T>(HttpResponseMessage response)
         {
             var content = await response.Content.ReadAsStringAsync();
