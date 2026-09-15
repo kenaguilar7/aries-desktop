@@ -56,6 +56,7 @@ namespace Aries.Data.Tests
             Assert.Contains("019_PosTables", ids);
             Assert.Contains("020_PosAccounting", ids);
             Assert.Contains("021_Suppliers", ids);
+            Assert.Contains("022_DesactivateAccountProcedure", ids);
         }
 
         [Fact]
@@ -71,6 +72,17 @@ namespace Aries.Data.Tests
             Assert.Contains("utf8mb4_unicode_ci", m021.Sql);
             Assert.DoesNotContain("DELETE FROM", m021.Sql);
             Assert.Contains("suppliers", ExpectedSchema.Tables);
+        }
+
+        [Fact]
+        public void M022_pins_desactivate_account_contract()
+        {
+            var m022 = SchemaMigrations.All.Single(m => m.Id == "022_DesactivateAccountProcedure");
+            Assert.Equal(22, m022.Version);
+            Assert.Contains("SP_DesactivateAccount", m022.Sql);
+            Assert.Contains("IN Id INT", m022.Sql);
+            Assert.Contains("IN UpdatedBy INT", m022.Sql);
+            Assert.Contains("`active` = 0", m022.Sql);
         }
 
         [Fact]

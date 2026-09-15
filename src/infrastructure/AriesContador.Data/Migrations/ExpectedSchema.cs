@@ -212,6 +212,8 @@ namespace AriesContador.Data.Migrations
             new ExpectedParameter("SP_CopyChartOfAccounts", "ToCompany", "varchar(5)", "IN"),
             new ExpectedParameter("SP_CopyChartOfAccounts", "UpdatedBy", "int", "IN"),
             new ExpectedParameter("SP_InsertChartFromTemp", "ToCompany", "varchar(5)", "IN"),
+            new ExpectedParameter("SP_DesactivateAccount", "Id", "int", "IN"),
+            new ExpectedParameter("SP_DesactivateAccount", "UpdatedBy", "int", "IN"),
             new ExpectedParameter("SP_GetAccountsByCompanyId", "CompanyId", "varchar(5)", "IN"),
             new ExpectedParameter("SP_GetAllPostingPeriod", "CompanyId", "varchar(5)", "IN"),
             new ExpectedParameter("SP_InsertPostingPeriod", "CompanyId", "varchar(5)", "IN"),
