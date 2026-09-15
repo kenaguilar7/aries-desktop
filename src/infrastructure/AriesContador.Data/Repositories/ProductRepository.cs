@@ -61,6 +61,22 @@ namespace AriesContador.Data.Repositories
             return rows.FirstOrDefault();
         }
 
+        public async Task<IEnumerable<Product>> FindByIdsAsync(
+            string companyId,
+            IEnumerable<int> ids,
+            CancellationToken cancellationToken = default)
+        {
+            var idList = ids == null ? new List<int>() : ids.Distinct().ToList();
+            if (idList.Count == 0)
+                return Enumerable.Empty<Product>();
+
+            var dataAccess = new MySqlDataAccess(_connectionString);
+            return await dataAccess.ExecuteQueryAsync<Product, object>(
+                PosQuery.SelectProductsByIds,
+                new { CompanyId = companyId, Ids = idList },
+                cancellationToken).ConfigureAwait(false);
+        }
+
         public async Task<IEnumerable<Product>> FindLowStockAsync(string companyId, decimal minimum, CancellationToken cancellationToken = default)
         {
             var dataAccess = new MySqlDataAccess(_connectionString);

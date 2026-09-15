@@ -216,30 +216,43 @@ namespace AriesContador.Services
             if (sale.Lines == null || sale.Lines.Count == 0)
                 throw new InvalidOperationException("La venta debe tener al menos un producto");
 
-            var register = await RequireRegisterAsync(sale.SalesRegisterId, sale.CompanyId, cancellationToken)
-                .ConfigureAwait(false);
-            var session = await _unitOfWork.SalesRegisterRepository.GetOpenSessionAsync(register.Id, cancellationToken)
-                .ConfigureAwait(false);
-            if (session == null)
-                throw new InvalidOperationException("Debe abrir la caja antes de vender");
-
             if (sale.PaymentMethod != PaymentMethod.Efectivo && string.IsNullOrWhiteSpace(sale.PaymentReference))
                 throw new InvalidOperationException("La referencia de pago es requerida");
 
-            var prepared = new List<SaleLine>();
-            var map = await _unitOfWork.PosAccountMapRepository.GetByCompanyIdAsync(sale.CompanyId, cancellationToken)
-                .ConfigureAwait(false);
-            var taxRate = map?.TaxRate ?? PosTax.DefaultRate;
-            var pricesIncludeTax = map == null || map.PricesIncludeTax;
             foreach (var raw in sale.Lines)
             {
                 if (raw.ProductId <= 0)
                     throw new InvalidOperationException("Línea de venta sin producto");
-                var product = await RequireProductAsync(raw.ProductId, sale.CompanyId, cancellationToken)
-                    .ConfigureAwait(false);
+            }
+
+            var productIds = sale.Lines.Select(l => l.ProductId).Distinct().ToList();
+            var registerTask = RequireRegisterAsync(sale.SalesRegisterId, sale.CompanyId, cancellationToken);
+            var sessionTask = _unitOfWork.SalesRegisterRepository.GetOpenSessionAsync(sale.SalesRegisterId, cancellationToken);
+            var mapTask = _unitOfWork.PosAccountMapRepository.GetByCompanyIdAsync(sale.CompanyId, cancellationToken);
+            var productsTask = _unitOfWork.ProductRepository.FindByIdsAsync(sale.CompanyId, productIds, cancellationToken);
+
+            var register = await registerTask.ConfigureAwait(false);
+            var session = await sessionTask.ConfigureAwait(false);
+            if (session == null)
+                throw new InvalidOperationException("Debe abrir la caja antes de vender");
+
+            var map = await mapTask.ConfigureAwait(false);
+            var productsById = (await productsTask.ConfigureAwait(false)).ToDictionary(p => p.Id);
+            var remainingStock = productsById.ToDictionary(pair => pair.Key, pair => pair.Value.Stock);
+            var taxRate = map?.TaxRate ?? PosTax.DefaultRate;
+            var pricesIncludeTax = map == null || map.PricesIncludeTax;
+            var prepared = new List<SaleLine>();
+            foreach (var raw in sale.Lines)
+            {
+                Product product;
+                if (!productsById.TryGetValue(raw.ProductId, out product) || product == null || !product.Active)
+                    throw new InvalidOperationException("Producto no encontrado");
                 var line = PrepareLine(product, raw, taxRate, pricesIncludeTax);
-                if (product.Stock < line.StockToDecrement)
+                decimal remaining;
+                remainingStock.TryGetValue(product.Id, out remaining);
+                if (remaining < line.StockToDecrement)
                     throw new InvalidOperationException("Stock insuficiente para " + product.Name);
+                remainingStock[product.Id] = remaining - line.StockToDecrement;
                 prepared.Add(line);
             }
 
@@ -266,12 +279,14 @@ namespace AriesContador.Services
         {
             RequireCompany(companyId);
             var start = (day ?? DateTime.Today).Date;
-            var sales = (await _unitOfWork.SaleRepository.FindByCompanyAndDateRangeAsync(
-                companyId, start, start.AddDays(1), cancellationToken).ConfigureAwait(false)).ToList();
-            var products = await _unitOfWork.ProductRepository.CountActiveByCompanyAsync(companyId, cancellationToken)
-                .ConfigureAwait(false);
-            var low = await _unitOfWork.ProductRepository.FindLowStockAsync(
-                companyId, DefaultLowStockMinimum, cancellationToken).ConfigureAwait(false);
+            var salesTask = _unitOfWork.SaleRepository.FindByCompanyAndDateRangeAsync(
+                companyId, start, start.AddDays(1), cancellationToken);
+            var productsTask = _unitOfWork.ProductRepository.CountActiveByCompanyAsync(companyId, cancellationToken);
+            var lowTask = _unitOfWork.ProductRepository.FindLowStockAsync(
+                companyId, DefaultLowStockMinimum, cancellationToken);
+            var sales = (await salesTask.ConfigureAwait(false)).ToList();
+            var products = await productsTask.ConfigureAwait(false);
+            var low = await lowTask.ConfigureAwait(false);
             return new PosTodaySalesReport
             {
                 SaleCount = sales.Count,

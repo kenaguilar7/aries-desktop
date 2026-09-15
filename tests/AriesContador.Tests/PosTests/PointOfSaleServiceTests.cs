@@ -104,6 +104,59 @@ namespace AriesContador.Tests.PosTests
         }
 
         [Fact]
+        public async Task CreateSale_multiple_products_decrements_each_stock()
+        {
+            var uow = SeedCompanyWithTwoRegisters();
+            AddProduct(uow, stock: 10, price: 25, id: 1, barcode: "1001", name: "Pan");
+            AddProduct(uow, stock: 4, price: 80, id: 2, barcode: "1002", name: "Queso");
+            var svc = new PointOfSaleService(uow);
+            await svc.OpenSessionAsync(1, 0, null, 7);
+
+            var sale = await svc.CreateSaleAsync(new Sale
+            {
+                CompanyId = Company,
+                SalesRegisterId = 1,
+                PaymentMethod = PaymentMethod.Efectivo,
+                Lines =
+                {
+                    new SaleLine { ProductId = 1, Quantity = 2 },
+                    new SaleLine { ProductId = 2, Quantity = 1 }
+                }
+            });
+
+            Assert.Equal(130m, sale.Total);
+            Assert.Equal(8m, uow.Products.Items.Single(p => p.Id == 1).Stock);
+            Assert.Equal(3m, uow.Products.Items.Single(p => p.Id == 2).Stock);
+            Assert.Equal(2, sale.Lines.Count);
+            Assert.Equal(0, uow.Products.GetByIdCalls);
+            Assert.Equal(1, uow.Products.FindByIdsCalls);
+        }
+
+        [Fact]
+        public async Task CreateSale_same_product_on_two_lines_checks_combined_stock()
+        {
+            var uow = SeedCompanyWithTwoRegisters();
+            AddProduct(uow, stock: 3, price: 10);
+            var svc = new PointOfSaleService(uow);
+            await svc.OpenSessionAsync(1, 0, null, 7);
+
+            var sale = new Sale
+            {
+                CompanyId = Company,
+                SalesRegisterId = 1,
+                PaymentMethod = PaymentMethod.Efectivo,
+                Lines =
+                {
+                    new SaleLine { ProductId = 1, Quantity = 2 },
+                    new SaleLine { ProductId = 1, Quantity = 2 }
+                }
+            };
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => svc.CreateSaleAsync(sale));
+            Assert.StartsWith("Stock insuficiente", ex.Message);
+            Assert.Equal(3m, uow.Products.Items[0].Stock);
+        }
+
+        [Fact]
         public async Task CreateSale_splits_iva_and_persists_cost()
         {
             var uow = SeedCompanyWithTwoRegisters();
@@ -164,14 +217,14 @@ namespace AriesContador.Tests.PosTests
             return uow;
         }
 
-        private static void AddProduct(FakeUnitOfWork uow, decimal stock, decimal price = 25)
+        private static void AddProduct(FakeUnitOfWork uow, decimal stock, decimal price = 25, int id = 1, string barcode = "1001", string name = "Pan")
         {
             uow.Products.Items.Add(new Product
             {
-                Id = 1,
+                Id = id,
                 CompanyId = Company,
-                Barcode = "1001",
-                Name = "Pan",
+                Barcode = barcode,
+                Name = name,
                 Category = "Panadería",
                 Price = price,
                 Stock = stock,
