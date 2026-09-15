@@ -394,6 +394,8 @@ namespace AriesContador.Tests.Fakes
     public class FakeProductRepository : IProductRepository
     {
         public List<Product> Items { get; } = new List<Product>();
+        public int GetByIdCalls { get; private set; }
+        public int FindByIdsCalls { get; private set; }
 
         public Task AddAsync(Product entity, CancellationToken cancellationToken = default)
         {
@@ -417,14 +419,25 @@ namespace AriesContador.Tests.Fakes
             return Task.CompletedTask;
         }
 
-        public Task<Product> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
-            Task.FromResult(Items.FirstOrDefault(x => x.Id == id));
+        public Task<Product> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+        {
+            GetByIdCalls++;
+            return Task.FromResult(Items.FirstOrDefault(x => x.Id == id));
+        }
 
         public Task<IEnumerable<Product>> FindByCompanyIdAsync(string companyId, CancellationToken cancellationToken = default) =>
             Task.FromResult<IEnumerable<Product>>(Items.Where(x => x.CompanyId == companyId && x.Active).ToList());
 
         public Task<Product> FindByBarcodeAsync(string companyId, string barcode, CancellationToken cancellationToken = default) =>
             Task.FromResult(Items.FirstOrDefault(x => x.CompanyId == companyId && x.Barcode == barcode && x.Active));
+
+        public Task<IEnumerable<Product>> FindByIdsAsync(string companyId, IEnumerable<int> ids, CancellationToken cancellationToken = default)
+        {
+            FindByIdsCalls++;
+            var set = new HashSet<int>(ids ?? Array.Empty<int>());
+            return Task.FromResult<IEnumerable<Product>>(
+                Items.Where(x => x.CompanyId == companyId && set.Contains(x.Id)).ToList());
+        }
 
         public Task<IEnumerable<Product>> FindLowStockAsync(string companyId, decimal minimum, CancellationToken cancellationToken = default) =>
             Task.FromResult<IEnumerable<Product>>(Items.Where(x => x.CompanyId == companyId && x.Active && x.Stock <= minimum).ToList());
