@@ -4,10 +4,10 @@ namespace AriesContador.Data.Migrations.Scripts
     /// Facturas de compra y líneas. Soft delete; no asienta (posteo en T4).
     /// Unique (company_id, supplier_id, document_number).
     /// </summary>
-    public sealed class M022_Purchases : SqlMigration
+    public sealed class M023_Purchases : SqlMigration
     {
-        public override int Version => 22;
-        public override string Id => "022_Purchases";
+        public override int Version => 23;
+        public override string Id => "023_Purchases";
         public override string Description => "Tablas purchases y purchase_lines: facturas de compra e inventario";
 
         public override string Sql => @"

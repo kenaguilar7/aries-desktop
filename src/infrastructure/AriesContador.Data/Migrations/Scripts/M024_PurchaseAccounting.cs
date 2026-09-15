@@ -3,10 +3,10 @@ namespace AriesContador.Data.Migrations.Scripts
     /// <summary>
     /// Mapeo de cuentas de compras y vínculo factura → asiento.
     /// </summary>
-    public sealed class M023_PurchaseAccounting : SqlMigration
+    public sealed class M024_PurchaseAccounting : SqlMigration
     {
-        public override int Version => 23;
-        public override string Id => "023_PurchaseAccounting";
+        public override int Version => 24;
+        public override string Id => "024_PurchaseAccounting";
         public override string Description => "Compras: mapeo de cuentas y posteo a asientos";
 
         public override string Sql => @"

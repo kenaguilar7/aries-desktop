@@ -132,6 +132,7 @@
     <Compile Include="Enumeradores\TipoUsuario.cs" />
     <Compile Include="Interfaces\ICallingForm.cs" />
     <Compile Include="Interfaces\ITipoCuenta.cs" />
+    <Compile Include="Mappers\AccountDeleteWorkflow.cs" />
     <Compile Include="Mappers\CuentaMapper.cs" />
     <Compile Include="Mappers\UserMapper.cs" />
     <Compile Include="Mappers\PermissionMapper.cs" />

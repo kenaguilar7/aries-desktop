@@ -3,10 +3,10 @@ namespace AriesContador.Data.Migrations.Scripts
     /// <summary>
     /// Pagos a proveedores: liquidación total de facturas a crédito ya asentadas.
     /// </summary>
-    public sealed class M024_SupplierPayments : SqlMigration
+    public sealed class M025_SupplierPayments : SqlMigration
     {
-        public override int Version => 24;
-        public override string Id => "024_SupplierPayments";
+        public override int Version => 25;
+        public override string Id => "025_SupplierPayments";
         public override string Description => "Tabla supplier_payments: pagos a proveedores (factura a crédito)";
 
         public override string Sql => @"
