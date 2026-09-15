@@ -64,7 +64,11 @@ namespace AriesContador.Data.Repositories
         public async Task RemoveAsync(Account entity, CancellationToken cancellationToken = default)
         {
             var dataAccess = new MySqlDataAccess(_connectionString);
-            await dataAccess.SaveDataAsync("SP_DesactivateAccount", entity, cancellationToken).ConfigureAwait(false);
+            await dataAccess.SaveDataAsync("SP_DesactivateAccount", new
+            {
+                entity.Id,
+                entity.UpdatedBy
+            }, cancellationToken).ConfigureAwait(false);
         }
 
         public Task UpdateAsync(Account entity, CancellationToken cancellationToken = default)

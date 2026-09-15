@@ -30,6 +30,7 @@ namespace Aries.Desktop.FrameCuentas
         {
             _financialService = financialService;
             InitializeComponent();
+            btnEliminar.Enabled = false;
             Load += FrameMaestroCuenta_Load;
         }
 
@@ -84,6 +85,7 @@ namespace Aries.Desktop.FrameCuentas
             if (cuenta != null)
             {
                 TreeViewCuentas.CargarCuentaAlTreeView(cuenta, ref treeCuentas, _lstCuentas);
+                UpdateDeleteButtonState();
                 return true;
             }
             else { return false; }
@@ -217,7 +219,13 @@ namespace Aries.Desktop.FrameCuentas
             this.txtBoxDetalle.ReadOnly = true;
             this.btnGuardarNuevoNombre.Enabled = false;
             this.btnGuardarNuevoNombre.Visible = false;
-            CuentaActual = (Cuenta)e.Node.Tag;
+            CuentaActual = e.Node != null ? e.Node.Tag as Cuenta : null;
+            UpdateDeleteButtonState();
+            if (CuentaActual == null)
+            {
+                ClearAccountInfo();
+                return;
+            }
             CargarDatosAlPanelDeInformacion();
 
             if (tabControlGeneral.SelectedIndex == 0)
@@ -282,29 +290,32 @@ namespace Aries.Desktop.FrameCuentas
         }
         private async void Eliminar_Click(object sender, EventArgs e)
         {
-            if (CuentaActual is null)
+            var updatedBy = GlobalConfig.Usuario != null ? GlobalConfig.Usuario.Id : 0;
+            if (!AccountDeleteWorkflow.TryPrepare(CuentaActual, updatedBy, out var account, out var error))
             {
-                MessageBox.Show("Seleccione una cuenta", TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Hand);
+                MessageBox.Show(error, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Hand);
                 return;
             }
 
-            if (MessageBox.Show("Esta acción no se puede deshacer ¿desea continuar de todos modos?", TextoGeneral.NombreApp, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            if (MessageBox.Show("Esta acción no se puede deshacer ¿desea continuar de todos modos?", TextoGeneral.NombreApp, MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                return;
+
+            try
             {
-                try
-                {
-                    var account = CuentaMapper.ToAccount(CuentaActual);
-                    account.UpdatedBy = GlobalConfig.Usuario.Id;
-                    await _financialService.DeleteAccountAsync(account);
-                    MessageBox.Show(AccountRules.DeleteSuccessMessage, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    _lstCuentas.Remove(CuentaActual);
-                    var padre = treeCuentas.SelectedNode.Parent;
-                    treeCuentas.Nodes.Remove(treeCuentas.SelectedNode);
-                    treeCuentas.SelectedNode = padre;
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                }
+                var accountId = account.Id;
+                await _financialService.DeleteAccountAsync(account);
+                AccountDeleteWorkflow.RemoveFromList(_lstCuentas, accountId);
+                var parentNode = TreeViewCuentas.RemoveCuenta(treeCuentas, accountId);
+                CuentaActual = parentNode != null ? parentNode.Tag as Cuenta : null;
+                treeCuentas.SelectedNode = parentNode;
+                UpdateDeleteButtonState();
+                if (CuentaActual == null)
+                    ClearAccountInfo();
+                MessageBox.Show(AccountRules.DeleteSuccessMessage, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, TextoGeneral.NombreApp, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             }
         }
 
@@ -385,6 +396,22 @@ namespace Aries.Desktop.FrameCuentas
         {
             btnGuardarNuevoNombre.Enabled = true;
             btnGuardarNuevoNombre.Visible = true;
+        }
+
+        private void UpdateDeleteButtonState()
+        {
+            btnEliminar.Enabled = AccountDeleteWorkflow.CanDelete(CuentaActual, out _);
+        }
+
+        private void ClearAccountInfo()
+        {
+            txtNombreInfo.Text = string.Empty;
+            txtTipoInfo.Text = string.Empty;
+            txtIndicadorInfo.Text = string.Empty;
+            txtBoxDetalle.Text = string.Empty;
+            infoPanel.Tag = null;
+            gridDatosA.Rows.Clear();
+            gridDatosB.Rows.Clear();
         }
         private void UsuarioKeyPress(object sender, KeyPressEventArgs e)
         {

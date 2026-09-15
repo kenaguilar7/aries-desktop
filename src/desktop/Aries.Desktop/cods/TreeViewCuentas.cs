@@ -125,6 +125,38 @@ namespace Aries.Desktop.cods
                 }
             }
         }
+        public static TreeNode RemoveCuenta(TreeView tree, int accountId)
+        {
+            if (tree == null)
+                return null;
+
+            var node = FindNodeByAccountId(tree.Nodes, accountId);
+            if (node == null)
+                return null;
+
+            var parent = node.Parent;
+            node.Remove();
+            return parent;
+        }
+
+        private static TreeNode FindNodeByAccountId(TreeNodeCollection nodes, int accountId)
+        {
+            if (nodes == null)
+                return null;
+
+            foreach (TreeNode node in nodes)
+            {
+                if (node.Tag is Cuenta cuenta && cuenta.Id == accountId)
+                    return node;
+
+                var child = FindNodeByAccountId(node.Nodes, accountId);
+                if (child != null)
+                    return child;
+            }
+
+            return null;
+        }
+
         public static List<Cuenta> GetCuentasHIjas(Cuenta cuentaPadre, List<Cuenta> cuentas)
         {
 

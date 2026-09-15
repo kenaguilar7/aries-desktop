@@ -23,8 +23,8 @@ namespace Aries.Reporting.Mappers
                 Editable = cuenta.Editable,
                 Active = cuenta.Active,
                 FatherAccount = cuenta.Padre == 0 ? (int?)null : cuenta.Padre,
-                CompanyId = cuenta.MyCompania?.Code,
-                AccountType = (AccountType)cuenta.Indicador,
+                CompanyId = cuenta.MyCompania != null ? cuenta.MyCompania.Code : null,
+                AccountType = ToAccountType(cuenta.Indicador),
                 AccountTag = cuenta.TipoCuenta != null
                     ? (AccountTag)(int)cuenta.TipoCuenta.TipoCuenta
                     : default,
@@ -51,7 +51,7 @@ namespace Aries.Reporting.Mappers
                 Active = account.Active,
                 Padre = account.FatherAccount ?? 0,
                 MyCompania = company,
-                Indicador = (IndicadorCuenta)account.AccountType,
+                Indicador = ToIndicador(account.AccountType),
                 TipoCuenta = Cuenta.GenerarTipoCuenta((int)account.AccountTag),
                 SaldoAnteriorColones = account.PriorBalance,
                 SaldoAnteriorDolares = account.PriorBalanceForeign,
@@ -80,7 +80,7 @@ namespace Aries.Reporting.Mappers
             to.CreditosColones = from.CreditBalance;
             to.DebitosDolares = from.DebitBalanceForeign;
             to.CreditosDolares = from.CreditBalanceForeign;
-            to.Indicador = (IndicadorCuenta)from.AccountType;
+            to.Indicador = ToIndicador(from.AccountType);
         }
 
         public static void CopyBalancesToCuentas(IEnumerable<Account> from, List<Cuenta> to)
@@ -104,6 +104,36 @@ namespace Aries.Reporting.Mappers
         {
             if (periods == null) return new List<FechaTransaccion>();
             return periods.Select(ToFechaTransaccion).ToList();
+        }
+
+        public static AccountType ToAccountType(IndicadorCuenta indicador)
+        {
+            switch (indicador)
+            {
+                case IndicadorCuenta.Cuenta_Titulo:
+                    return AccountType.Cuenta_Titulo;
+                case IndicadorCuenta.Cuenta_De_Mayor:
+                    return AccountType.Cuenta_De_Mayor;
+                case IndicadorCuenta.Cuenta_Auxiliar:
+                    return AccountType.Cuenta_Auxiliar;
+                default:
+                    return (AccountType)indicador;
+            }
+        }
+
+        public static IndicadorCuenta ToIndicador(AccountType accountType)
+        {
+            switch (accountType)
+            {
+                case AccountType.Cuenta_Titulo:
+                    return IndicadorCuenta.Cuenta_Titulo;
+                case AccountType.Cuenta_De_Mayor:
+                    return IndicadorCuenta.Cuenta_De_Mayor;
+                case AccountType.Cuenta_Auxiliar:
+                    return IndicadorCuenta.Cuenta_Auxiliar;
+                default:
+                    return (IndicadorCuenta)accountType;
+            }
         }
     }
 }

@@ -55,6 +55,18 @@ namespace Aries.Data.Tests
             Assert.Contains("018_AccountPathFunctions", ids);
             Assert.Contains("019_PosTables", ids);
             Assert.Contains("020_PosAccounting", ids);
+            Assert.Contains("021_DesactivateAccountProcedure", ids);
+        }
+
+        [Fact]
+        public void M021_pins_desactivate_account_contract()
+        {
+            var m021 = SchemaMigrations.All.Single(m => m.Id == "021_DesactivateAccountProcedure");
+            Assert.Equal(21, m021.Version);
+            Assert.Contains("SP_DesactivateAccount", m021.Sql);
+            Assert.Contains("IN Id INT", m021.Sql);
+            Assert.Contains("IN UpdatedBy INT", m021.Sql);
+            Assert.Contains("`active` = 0", m021.Sql);
         }
 
         [Fact]
