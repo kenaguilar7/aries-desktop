@@ -299,6 +299,10 @@ namespace AriesContador.Tests.Fakes
                 foreach (var line in entity.JournalEntryLines)
                 {
                     line.JournalEntryId = entity.Id;
+                    if (line.CreatedBy == 0)
+                        line.CreatedBy = entity.CreatedBy != 0 ? entity.CreatedBy : entity.UpdatedBy;
+                    if (line.UpdatedBy == 0)
+                        line.UpdatedBy = entity.UpdatedBy != 0 ? entity.UpdatedBy : entity.CreatedBy;
                     if (line.Id == 0)
                         line.Id = nextId++;
                     else if (line.Id >= nextId)

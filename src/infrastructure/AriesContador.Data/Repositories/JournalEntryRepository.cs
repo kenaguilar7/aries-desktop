@@ -32,6 +32,10 @@ namespace AriesContador.Data.Repositories
                         foreach (var line in lines)
                         {
                             line.JournalEntryId = entity.Id;
+                            if (line.CreatedBy == 0)
+                                line.CreatedBy = entity.CreatedBy != 0 ? entity.CreatedBy : entity.UpdatedBy;
+                            if (line.UpdatedBy == 0)
+                                line.UpdatedBy = entity.UpdatedBy != 0 ? entity.UpdatedBy : entity.CreatedBy;
                             line.Id = await dataAccess.SaveDataInTransactionAsync<JournalEntryLine, int>("SP_InsertJournalEntryLine", line, cancellationToken)
                                 .ConfigureAwait(false);
                         }

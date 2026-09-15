@@ -404,6 +404,20 @@ namespace AriesContador.Services
                 journalEntry.Number = await CreateJournalEntryConsecutiveAsync(journalEntry.PostingPeriodId, cancellationToken)
                     .ConfigureAwait(false);
             journalEntry.JournalEntryStatus = JournalEntryStatus.Approved;
+
+            var userId = journalEntry.UpdatedBy != 0 ? journalEntry.UpdatedBy : journalEntry.CreatedBy;
+            if (userId <= 0)
+                throw new InvalidOperationException("Se requiere un usuario válido para asentar");
+            journalEntry.CreatedBy = journalEntry.CreatedBy != 0 ? journalEntry.CreatedBy : userId;
+            journalEntry.UpdatedBy = userId;
+            foreach (var line in journalEntry.JournalEntryLines)
+            {
+                if (line.CreatedBy == 0)
+                    line.CreatedBy = userId;
+                if (line.UpdatedBy == 0)
+                    line.UpdatedBy = userId;
+            }
+
             await CreateJournalEntryAsync(journalEntry, cancellationToken).ConfigureAwait(false);
         }
 

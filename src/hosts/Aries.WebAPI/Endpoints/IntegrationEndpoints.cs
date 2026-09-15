@@ -47,7 +47,7 @@ namespace Aries.WebAPI.Endpoints
             group.MapPost("/pos-accounting/post/{sessionId:int}", async (HttpContext http, int sessionId, IPosAccountingService svc) =>
                 await EndpointRun.TryAsync(async () =>
                 {
-                    var userId = http.TryGetUserId() ?? 0;
+                    var userId = http.GetUserId();
                     return Results.Ok(await svc.PostSessionAsync(sessionId, userId, http.RequestAborted));
                 }));
 
@@ -91,7 +91,7 @@ namespace Aries.WebAPI.Endpoints
             group.MapPost("/purchase-accounting/post/{purchaseId:int}", async (HttpContext http, int purchaseId, IPurchaseAccountingService svc) =>
                 await EndpointRun.TryAsync(async () =>
                 {
-                    var userId = http.TryGetUserId() ?? 0;
+                    var userId = http.GetUserId();
                     return Results.Ok(await svc.PostPurchaseAsync(purchaseId, userId, http.RequestAborted));
                 }));
 
@@ -102,8 +102,8 @@ namespace Aries.WebAPI.Endpoints
             group.MapPost("/purchase-accounting/pay", async (HttpContext http, SupplierPayment payment, IPurchaseAccountingService svc) =>
                 await EndpointRun.TryAsync(async () =>
                 {
-                    var userId = http.TryGetUserId() ?? 0;
-                    if (userId != 0 && payment.CreatedBy == 0)
+                    var userId = http.GetUserId();
+                    if (payment.CreatedBy == 0)
                         payment.CreatedBy = userId;
                     return Results.Ok(await svc.PayPurchaseAsync(payment, userId, http.RequestAborted));
                 }));
