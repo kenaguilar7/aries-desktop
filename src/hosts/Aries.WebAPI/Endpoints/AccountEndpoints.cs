@@ -58,12 +58,10 @@ namespace Aries.WebAPI.Endpoints
             group.MapPost("/EvaluateParent", async (HttpContext http, Account parent, IFinancialService svc) =>
                 await EndpointRun.TryAsync(async () =>
                 {
-                    var (canProceed, message) = await svc.EvaluateParentForNewChildAsync(parent, http.RequestAborted);
-                    return Results.Ok(new EvaluateParentResult
-                    {
-                        CanProceed = canProceed,
-                        Message = message ?? string.Empty
-                    });
+                    var result = await svc.EvaluateParentForNewChildAsync(parent, http.RequestAborted);
+                    if (result.Message == null)
+                        result.Message = string.Empty;
+                    return Results.Ok(result);
                 }));
 
             group.MapPost("/Create", async (HttpContext http, Account account, IFinancialService svc) =>

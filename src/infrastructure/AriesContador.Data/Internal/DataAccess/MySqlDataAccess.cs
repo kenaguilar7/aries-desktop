@@ -107,11 +107,19 @@ namespace AriesContador.Data.Internal.DataAccess
 
         public async Task<int> InsertAndGetIdInTransactionAsync(string insertSql, object parameters, CancellationToken cancellationToken = default)
         {
-            await _connection.ExecuteAsync(Text(insertSql, parameters, _transaction, cancellationToken))
-                .ConfigureAwait(false);
-            var ids = await _connection.QueryAsync<int>(
-                Text("SELECT LAST_INSERT_ID()", transaction: _transaction, cancellationToken: cancellationToken)).ConfigureAwait(false);
-            return ids.Single();
+            var sql = insertSql.Trim().TrimEnd(';') + "; SELECT LAST_INSERT_ID();";
+            using (var grid = await _connection.QueryMultipleAsync(Text(sql, parameters, _transaction, cancellationToken))
+                .ConfigureAwait(false))
+            {
+                while (!grid.IsConsumed)
+                {
+                    var rows = grid.Read<int>().ToList();
+                    if (rows.Count > 0)
+                        return rows[0];
+                }
+            }
+
+            throw new InvalidOperationException("No se pudo obtener el id insertado");
         }
 
         public async Task<DataTable> QueryTableAsync(string sql, object parameters, CancellationToken cancellationToken = default)

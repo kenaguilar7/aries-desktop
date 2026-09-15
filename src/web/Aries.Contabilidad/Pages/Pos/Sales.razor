@@ -272,9 +272,8 @@
             cart.Clear();
             paymentReference = string.Empty;
             paymentMethod = PaymentMethod.Efectivo;
+            ApplyLocalCheckoutEffects(sale);
             infoMessage = "Venta registrada";
-            products = await PosService.GetProductsAsync(CompanyId);
-            status = await PosService.GetStatusAsync(selectedRegisterId);
         }
         catch (Exception ex)
         {
@@ -283,6 +282,33 @@
         finally
         {
             busy = false;
+        }
+    }
+
+    private void ApplyLocalCheckoutEffects(Sale sale)
+    {
+        foreach (var line in sale.Lines)
+        {
+            var product = products.FirstOrDefault(p => p.Id == line.ProductId);
+            if (product != null)
+                product.Stock -= line.StockToDecrement;
+        }
+
+        if (status?.Session == null)
+            return;
+
+        if (sale.PaymentMethod == PaymentMethod.Efectivo)
+        {
+            status.Session.CashSales += sale.Total;
+            status.Session.ExpectedClosingAmount = status.Session.OpeningAmount + status.Session.CashSales;
+        }
+        else if (sale.PaymentMethod == PaymentMethod.Tarjeta)
+        {
+            status.Session.CardSales += sale.Total;
+        }
+        else
+        {
+            status.Session.TransferSales += sale.Total;
         }
     }
 

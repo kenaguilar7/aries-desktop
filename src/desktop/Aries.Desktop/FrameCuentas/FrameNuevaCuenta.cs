@@ -53,10 +53,10 @@ namespace Aries.Desktop.FrameCuentas
                 };
 
                 var parentAccount = CuentaMapper.ToAccount(CuentaPadre);
-                var (ok, msg) = await _financialService.EvaluateParentForNewChildAsync(parentAccount);
-                if (!ok)
+                var eval = await _financialService.EvaluateParentForNewChildAsync(parentAccount);
+                if (!eval.CanProceed)
                 {
-                    if (MessageBox.Show(msg, TextoGeneral.NombreApp, MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) == DialogResult.No)
+                    if (MessageBox.Show(eval.Message, TextoGeneral.NombreApp, MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) == DialogResult.No)
                     {
                         return;
                     }

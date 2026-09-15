@@ -38,6 +38,11 @@ FROM products AS T0
 WHERE T0.company_id = @CompanyId AND T0.barcode = @Barcode AND T0.active = 1
 LIMIT 1";
 
+        public const string SelectProductsByIds = @"
+SELECT " + ProductColumns + @"
+FROM products AS T0
+WHERE T0.company_id = @CompanyId AND T0.product_id IN @Ids";
+
         public const string SelectLowStock = @"
 SELECT " + ProductColumns + @"
 FROM products AS T0
@@ -235,8 +240,7 @@ WHERE T0.company_id = @CompanyId AND T0.active = 1
   AND T0.sold_at >= @FromInclusive AND T0.sold_at < @ToExclusive
 ORDER BY T0.sold_at DESC";
 
-        public const string SelectSaleLines = @"
-SELECT
+        public const string SaleLineColumns = @"
   sale_line_id AS Id,
   sale_id AS SaleId,
   product_id AS ProductId,
@@ -255,9 +259,20 @@ SELECT
   updated_at AS UpdateAt,
   created_by AS CreatedBy,
   updated_by AS UpdatedBy,
-  active AS Active
+  active AS Active";
+
+        public const string SelectSaleLines = @"
+SELECT" + SaleLineColumns + @"
 FROM sale_lines
 WHERE sale_id = @SaleId";
+
+        public const string SelectSaleLinesBySaleIds = @"
+SELECT" + SaleLineColumns + @"
+FROM sale_lines
+WHERE sale_id IN @SaleIds";
+
+        public const string SelectInsertedSaleLineIds = @"
+SELECT sale_line_id FROM sale_lines WHERE sale_id = @SaleId ORDER BY sale_line_id";
 
         public const string InsertSale = @"
 INSERT INTO sales
