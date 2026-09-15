@@ -23,6 +23,7 @@ namespace AriesContador.Data
         private IPosAccountMapRepository _posAccountMapRepository;
         private IPosSessionPostingRepository _posSessionPostingRepository;
         private ISupplierRepository _supplierRepository;
+        private IPurchaseRepository _purchaseRepository;
 
         public UnitOfWork(IConnectionString context)
         {
@@ -75,6 +76,9 @@ namespace AriesContador.Data
 
         public ISupplierRepository SupplierRepository
             => _supplierRepository = _supplierRepository ?? new SupplierRepository(_context);
+
+        public IPurchaseRepository PurchaseRepository
+            => _purchaseRepository = _purchaseRepository ?? new PurchaseRepository(_context);
 
         public void Dispose()
         {

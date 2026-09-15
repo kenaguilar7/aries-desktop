@@ -1,0 +1,86 @@
+@page "/purchases/{CompanyId}"
+@using AriesContador.Core.Models.Purchases
+@inject IPurchasingClient Purchasing
+@inject NavigationManager Nav
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h1 class="page-title mb-0">Compras</h1>
+        <a class="btn btn-primary" href="@($"/purchases/{CompanyId}/new")">
+            <i class="fas fa-plus"></i> Nueva compra
+        </a>
+    </div>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    @if (purchases == null)
+    {
+        <div class="d-flex justify-content-center"><div class="spinner-border"></div></div>
+    }
+    else if (purchases.Count == 0)
+    {
+        <div class="alert alert-info">No hay facturas de compra registradas.</div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-body table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Proveedor</th>
+                            <th>Factura</th>
+                            <th>Pago</th>
+                            <th>Estado</th>
+                            <th class="text-end">Total</th>
+                            <th class="text-end">Neto</th>
+                            <th class="text-end">IVA</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in purchases)
+                        {
+                            <tr>
+                                <td>@p.PurchasedAt.ToString("g")</td>
+                                <td>@(p.SupplierName ?? ("#" + p.SupplierId))</td>
+                                <td>@p.DocumentNumber</td>
+                                <td>@PurchaseSettlementNames.ToDisplay(p.PaymentMethod)</td>
+                                <td>
+                                    <span class="badge @(p.Status == PurchaseStatus.Confirmed ? "bg-success" : "bg-secondary")">
+                                        @PurchaseStatusNames.ToDisplay(p.Status)
+                                    </span>
+                                </td>
+                                <td class="text-end">@p.Total.ToString("N2")</td>
+                                <td class="text-end">@p.NetAmount.ToString("N2")</td>
+                                <td class="text-end">@p.TaxAmount.ToString("N2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string CompanyId { get; set; } = string.Empty;
+    private List<Purchase>? purchases;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            purchases = await Purchasing.GetPurchasesAsync(CompanyId);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            purchases = new List<Purchase>();
+        }
+    }
+}

@@ -29,6 +29,8 @@ namespace AriesContador.Data.Migrations
             "pos_account_maps",
             "pos_session_postings",
             "suppliers",
+            "purchases",
+            "purchase_lines",
             DatabaseMigrator.HistoryTableName
         };
 
@@ -194,6 +196,24 @@ namespace AriesContador.Data.Migrations
             new ExpectedColumn("suppliers", "address"),
             new ExpectedColumn("suppliers", "notes"),
             new ExpectedColumn("suppliers", "active"),
+            new ExpectedColumn("purchases", "purchase_id"),
+            new ExpectedColumn("purchases", "company_id") { CharLength = 5, Nullable = false },
+            new ExpectedColumn("purchases", "supplier_id"),
+            new ExpectedColumn("purchases", "document_number"),
+            new ExpectedColumn("purchases", "purchased_at"),
+            new ExpectedColumn("purchases", "payment_method"),
+            new ExpectedColumn("purchases", "total"),
+            new ExpectedColumn("purchases", "net_amount"),
+            new ExpectedColumn("purchases", "tax_amount"),
+            new ExpectedColumn("purchases", "status"),
+            new ExpectedColumn("purchases", "active"),
+            new ExpectedColumn("purchase_lines", "purchase_line_id"),
+            new ExpectedColumn("purchase_lines", "purchase_id"),
+            new ExpectedColumn("purchase_lines", "product_id"),
+            new ExpectedColumn("purchase_lines", "line_total"),
+            new ExpectedColumn("purchase_lines", "net_amount"),
+            new ExpectedColumn("purchase_lines", "tax_amount"),
+            new ExpectedColumn("purchase_lines", "cost_amount"),
             new ExpectedColumn(DatabaseMigrator.HistoryTableName, "migration_id"),
             new ExpectedColumn(DatabaseMigrator.HistoryTableName, "version")
         };

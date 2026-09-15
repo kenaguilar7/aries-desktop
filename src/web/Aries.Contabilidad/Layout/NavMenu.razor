@@ -81,6 +81,12 @@
                     @if (_expanded.Contains("compras"))
                     {
                         <div class="side-nav-children">
+                            <NavLink class="side-nav-link" href="@($"/purchases/{CurrentCompanyId}")" @onclick="NotifyNavigate" Match="NavLinkMatch.All">
+                                <span>Compras</span>
+                            </NavLink>
+                            <NavLink class="side-nav-link" href="@($"/purchases/{CurrentCompanyId}/new")" @onclick="NotifyNavigate">
+                                <span>Nueva compra</span>
+                            </NavLink>
                             <NavLink class="side-nav-link" href="@($"/purchases/{CurrentCompanyId}/suppliers")" @onclick="NotifyNavigate">
                                 <span>Proveedores</span>
                             </NavLink>

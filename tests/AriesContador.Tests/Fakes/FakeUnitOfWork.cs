@@ -34,6 +34,7 @@ namespace AriesContador.Tests.Fakes
         public FakePosAccountMapRepository AccountMaps { get; } = new FakePosAccountMapRepository();
         public FakePosSessionPostingRepository SessionPostings { get; } = new FakePosSessionPostingRepository();
         public FakeSupplierRepository Suppliers { get; } = new FakeSupplierRepository();
+        public FakePurchaseRepository Purchases { get; } = new FakePurchaseRepository();
 
         public ICompanyRepository CompanyRepository => Companies;
         public IUserRepository UserRepository => Users;
@@ -58,6 +59,14 @@ namespace AriesContador.Tests.Fakes
         public IPosAccountMapRepository PosAccountMapRepository => AccountMaps;
         public IPosSessionPostingRepository PosSessionPostingRepository => SessionPostings;
         public ISupplierRepository SupplierRepository => Suppliers;
+        public IPurchaseRepository PurchaseRepository
+        {
+            get
+            {
+                Purchases.Products = Products;
+                return Purchases;
+            }
+        }
     }
 
     public class FakePermissionRepository : IPermissionRepository
@@ -656,5 +665,62 @@ namespace AriesContador.Tests.Fakes
                 x.CompanyId == companyId
                 && !string.IsNullOrEmpty(numberId)
                 && string.Equals(x.NumberId, numberId, StringComparison.Ordinal)));
+    }
+
+    public class FakePurchaseRepository : IPurchaseRepository
+    {
+        public List<Purchase> Items { get; } = new List<Purchase>();
+        public FakeProductRepository Products { get; set; }
+
+        public Task AddAsync(Purchase entity, CancellationToken cancellationToken = default) =>
+            CreateWithEffectsAsync(entity, cancellationToken);
+
+        public Task UpdateAsync(Purchase entity, CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+
+        public Task RemoveAsync(Purchase entity, CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+
+        public Task<Purchase> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Items.FirstOrDefault(x => x.Id == id));
+
+        public Task<IEnumerable<Purchase>> FindByCompanyIdAsync(string companyId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IEnumerable<Purchase>>(Items.Where(x => x.CompanyId == companyId && x.Active).ToList());
+
+        public Task<Purchase> FindByDocumentAsync(
+            string companyId,
+            int supplierId,
+            string documentNumber,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(Items.FirstOrDefault(x =>
+                x.CompanyId == companyId
+                && x.SupplierId == supplierId
+                && string.Equals(x.DocumentNumber, documentNumber, StringComparison.Ordinal)));
+
+        public Task CreateWithEffectsAsync(Purchase purchase, CancellationToken cancellationToken = default)
+        {
+            foreach (var line in purchase.Lines)
+            {
+                var product = Products?.Items.FirstOrDefault(x => x.Id == line.ProductId && x.Active);
+                if (product == null || !string.Equals(product.CompanyId, purchase.CompanyId, StringComparison.Ordinal))
+                    throw new InvalidOperationException("Producto no encontrado: " + line.ProductName);
+                product.Stock += line.Quantity;
+                product.Cost = line.Quantity > 0
+                    ? Math.Round(line.NetAmount / line.Quantity, 2, MidpointRounding.AwayFromZero)
+                    : line.NetAmount;
+            }
+
+            if (purchase.Id == 0)
+                purchase.Id = Items.Count == 0 ? 1 : Items.Max(x => x.Id) + 1;
+            var nextLine = 1;
+            foreach (var line in purchase.Lines)
+            {
+                line.PurchaseId = purchase.Id;
+                if (line.Id == 0)
+                    line.Id = nextLine++;
+            }
+            Items.Add(purchase);
+            return Task.CompletedTask;
+        }
     }
 }

@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AriesContador.Core;
+using AriesContador.Core.Models.PointOfSale;
 using AriesContador.Core.Models.Purchases;
 using AriesContador.Core.Models.Utils;
 using AriesContador.Core.Services;
@@ -60,6 +62,118 @@ namespace AriesContador.Services
             await _unitOfWork.SupplierRepository.RemoveAsync(supplier, cancellationToken).ConfigureAwait(false);
         }
 
+        public Task<IEnumerable<Purchase>> GetPurchasesAsync(string companyId, CancellationToken cancellationToken = default)
+        {
+            RequireCompany(companyId);
+            return _unitOfWork.PurchaseRepository.FindByCompanyIdAsync(companyId, cancellationToken);
+        }
+
+        public Task<Purchase> FindPurchaseAsync(int id, CancellationToken cancellationToken = default)
+        {
+            return _unitOfWork.PurchaseRepository.GetByIdAsync(id, cancellationToken);
+        }
+
+        public async Task<Purchase> ConfirmPurchaseAsync(Purchase purchase, CancellationToken cancellationToken = default)
+        {
+            if (purchase == null)
+                throw new InvalidOperationException("La compra es requerida");
+            RequireCompany(purchase.CompanyId);
+            if (purchase.SupplierId <= 0)
+                throw new InvalidOperationException("Debe indicar el proveedor");
+            if (string.IsNullOrWhiteSpace(purchase.DocumentNumber))
+                throw new InvalidOperationException("El número de factura es requerido");
+            if (purchase.Lines == null || purchase.Lines.Count == 0)
+                throw new InvalidOperationException("La compra debe tener al menos un producto");
+            if (!Enum.IsDefined(typeof(PurchaseSettlement), purchase.PaymentMethod))
+                throw new InvalidOperationException("El medio de pago no es válido");
+            if (purchase.PaymentMethod != PurchaseSettlement.Cash
+                && purchase.PaymentMethod != PurchaseSettlement.OnAccount
+                && string.IsNullOrWhiteSpace(purchase.PaymentReference))
+                throw new InvalidOperationException("La referencia de pago es requerida");
+
+            var supplier = await RequireSupplierAsync(purchase.SupplierId, purchase.CompanyId, cancellationToken)
+                .ConfigureAwait(false);
+
+            purchase.DocumentNumber = purchase.DocumentNumber.Trim();
+            var duplicate = await _unitOfWork.PurchaseRepository.FindByDocumentAsync(
+                purchase.CompanyId, purchase.SupplierId, purchase.DocumentNumber, cancellationToken)
+                .ConfigureAwait(false);
+            if (duplicate != null)
+                throw new InvalidOperationException("Ya existe una factura con ese número para este proveedor");
+
+            var taxRate = PosTax.DefaultRate;
+            const bool pricesIncludeTax = true;
+            var prepared = new List<PurchaseLine>();
+            foreach (var raw in purchase.Lines)
+            {
+                if (raw.ProductId <= 0)
+                    throw new InvalidOperationException("Línea de compra sin producto");
+                var product = await RequireProductAsync(raw.ProductId, purchase.CompanyId, cancellationToken)
+                    .ConfigureAwait(false);
+                prepared.Add(PrepareLine(product, raw, taxRate, pricesIncludeTax));
+            }
+
+            purchase.SupplierName = supplier.Name;
+            purchase.Lines = prepared;
+            purchase.Total = prepared.Sum(l => l.LineTotal);
+            purchase.NetAmount = prepared.Sum(l => l.NetAmount);
+            purchase.TaxAmount = prepared.Sum(l => l.TaxAmount);
+            purchase.PurchasedAt = purchase.PurchasedAt == default ? DateTime.Now : purchase.PurchasedAt;
+            purchase.Notes = NullIfEmpty(purchase.Notes);
+            purchase.PaymentReference = NullIfEmpty(purchase.PaymentReference);
+            purchase.Status = PurchaseStatus.Confirmed;
+            purchase.UpdatedBy = purchase.CreatedBy;
+            purchase.Active = true;
+
+            await _unitOfWork.PurchaseRepository.CreateWithEffectsAsync(purchase, cancellationToken)
+                .ConfigureAwait(false);
+            return purchase;
+        }
+
+        private static PurchaseLine PrepareLine(Product product, PurchaseLine raw, decimal taxRate, bool pricesIncludeTax)
+        {
+            var qty = raw.Quantity;
+            if (qty <= 0)
+                throw new InvalidOperationException("La cantidad debe ser mayor a cero para " + product.Name);
+            var unitPrice = raw.UnitPrice;
+            if (unitPrice <= 0)
+                throw new InvalidOperationException("El precio unitario debe ser mayor a cero para " + product.Name);
+
+            var line = new PurchaseLine
+            {
+                ProductId = product.Id,
+                ProductName = product.Name,
+                Quantity = qty,
+                UnitPrice = unitPrice,
+                TaxExempt = product.TaxExempt,
+                LineTotal = Math.Round(unitPrice * qty, 2, MidpointRounding.AwayFromZero)
+            };
+
+            if (line.LineTotal <= 0)
+                throw new InvalidOperationException("El importe de la línea debe ser mayor a cero");
+
+            if (pricesIncludeTax)
+            {
+                var split = PosTax.SplitGross(line.LineTotal, taxRate, product.TaxExempt);
+                line.NetAmount = split.Net;
+                line.TaxAmount = split.Tax;
+            }
+            else if (product.TaxExempt || taxRate <= 0)
+            {
+                line.NetAmount = line.LineTotal;
+                line.TaxAmount = 0m;
+            }
+            else
+            {
+                line.NetAmount = line.LineTotal;
+                line.TaxAmount = Math.Round(line.LineTotal * taxRate, 2, MidpointRounding.AwayFromZero);
+                line.LineTotal = line.NetAmount + line.TaxAmount;
+            }
+
+            line.CostAmount = line.NetAmount;
+            return line;
+        }
+
         private async Task EnsureUniqueNumberIdAsync(Supplier supplier, int excludeId, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(supplier.NumberId))
@@ -78,6 +192,14 @@ namespace AriesContador.Services
             if (supplier == null || !supplier.Active || !string.Equals(supplier.CompanyId, companyId, StringComparison.Ordinal))
                 throw new InvalidOperationException("Proveedor no encontrado");
             return supplier;
+        }
+
+        private async Task<Product> RequireProductAsync(int id, string companyId, CancellationToken cancellationToken)
+        {
+            var product = await _unitOfWork.ProductRepository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+            if (product == null || !product.Active || !string.Equals(product.CompanyId, companyId, StringComparison.Ordinal))
+                throw new InvalidOperationException("Producto no encontrado");
+            return product;
         }
 
         private static void ValidateSupplier(Supplier supplier)

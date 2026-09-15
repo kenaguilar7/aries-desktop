@@ -1,0 +1,274 @@
+@page "/purchases/{CompanyId}/new"
+@using AriesContador.Core.Models.PointOfSale
+@using AriesContador.Core.Models.Purchases
+@inject IPurchasingClient Purchasing
+@inject IPosService PosService
+@inject NavigationManager Nav
+
+<div class="container-fluid">
+    <h1 class="page-title">Nueva compra</h1>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+    @if (!string.IsNullOrEmpty(infoMessage))
+    {
+        <div class="alert alert-success">@infoMessage</div>
+    }
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            <label class="form-label">Proveedor</label>
+            <select class="form-select" @bind="supplierId">
+                <option value="0">Seleccione un proveedor</option>
+                @foreach (var s in suppliers)
+                {
+                    <option value="@s.Id">@s.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Número de factura</label>
+            <input class="form-control" @bind="documentNumber" placeholder="Ej. 001-000123" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Fecha</label>
+            <input class="form-control" type="date" @bind="purchasedAtDate" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Pago</label>
+            <select class="form-select" @bind="settlement">
+                <option value="@PurchaseSettlement.Cash">Efectivo</option>
+                <option value="@PurchaseSettlement.Card">Tarjeta</option>
+                <option value="@PurchaseSettlement.Transfer">Transferencia</option>
+                <option value="@PurchaseSettlement.OnAccount">Crédito (CxP)</option>
+            </select>
+        </div>
+        @if (settlement == PurchaseSettlement.Card || settlement == PurchaseSettlement.Transfer)
+        {
+            <div class="col-md-4">
+                <label class="form-label">Referencia</label>
+                <input class="form-control" @bind="paymentReference" />
+            </div>
+        }
+        <div class="col-md-8">
+            <label class="form-label">Notas</label>
+            <input class="form-control" @bind="notes" />
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <label class="form-label">Código de barras</label>
+                    <input class="form-control mb-2" @bind="barcode" @onkeydown="OnBarcodeKey" placeholder="Escanee o escriba y pulse Enter" />
+                    <input class="form-control" @bind="productSearch" @bind:event="oninput" placeholder="Buscar producto" />
+                    <div class="table-responsive mt-2" style="max-height: 240px; overflow:auto;">
+                        <table class="table table-sm table-hover">
+                            <tbody>
+                                @foreach (var product in FilteredProducts.Take(20))
+                                {
+                                    <tr style="cursor:pointer" @onclick="() => AddProduct(product)">
+                                        <td>@product.Barcode</td>
+                                        <td>@product.Name</td>
+                                        <td class="text-end">Costo @(product.Cost.ToString("N2"))</td>
+                                        <td class="text-end">Stock @product.Stock.ToString("N0")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Líneas</h5>
+                    @if (pendingProduct != null)
+                    {
+                        <div class="alert alert-info">
+                            <div>@pendingProduct.Name — precio unitario (con IVA) y cantidad</div>
+                            <div class="row g-2 mt-2">
+                                <div class="col-6">
+                                    <input class="form-control" type="number" step="0.01" @bind="pendingUnitPrice" placeholder="Precio" />
+                                </div>
+                                <div class="col-6">
+                                    <input class="form-control" type="number" step="0.001" @bind="pendingQty" placeholder="Cantidad" />
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <button class="btn btn-primary me-2" @onclick="ConfirmPending">Agregar</button>
+                                <button class="btn btn-secondary" @onclick="() => pendingProduct = null">Cancelar</button>
+                            </div>
+                        </div>
+                    }
+                    <table class="table table-sm">
+                        <tbody>
+                            @foreach (var line in cart)
+                            {
+                                <tr>
+                                    <td>@line.ProductName</td>
+                                    <td>x@(line.Quantity.ToString("N0")) · @(line.UnitPrice.ToString("N2"))</td>
+                                    <td class="text-end">@line.LineTotal.ToString("N2")</td>
+                                    <td><button class="btn btn-sm btn-outline-danger" @onclick="() => cart.Remove(line)">×</button></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    <h4 class="text-end">Total @CartTotal.ToString("N2")</h4>
+                    <p class="text-muted small">Precios con IVA 13% incluido (igual que el POS).</p>
+                    <button class="btn btn-success w-100" disabled="@(busy || cart.Count == 0 || supplierId == 0)" @onclick="Confirm">
+                        Confirmar compra
+                    </button>
+                    <a class="btn btn-link w-100 mt-2" href="@($"/purchases/{CompanyId}")">Volver al listado</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (lastPurchase != null)
+    {
+        <div class="card mt-3">
+            <div class="card-body">
+                <h5>Compra #@lastPurchase.Id confirmada</h5>
+                <p>@lastPurchase.PurchasedAt.ToString("g") — @lastPurchase.SupplierName — factura @lastPurchase.DocumentNumber</p>
+                <table class="table table-sm">
+                    @foreach (var line in lastPurchase.Lines)
+                    {
+                        <tr>
+                            <td>@line.ProductName</td>
+                            <td>x@line.Quantity.ToString("N0")</td>
+                            <td class="text-end">@line.LineTotal.ToString("N2")</td>
+                        </tr>
+                    }
+                </table>
+                <p><strong>Total @lastPurchase.Total.ToString("N2")</strong></p>
+                <p class="text-muted mb-0">Neto @lastPurchase.NetAmount.ToString("N2") · IVA @lastPurchase.TaxAmount.ToString("N2")</p>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string CompanyId { get; set; } = string.Empty;
+
+    private List<Supplier> suppliers = new();
+    private List<Product> products = new();
+    private List<PurchaseLine> cart = new();
+    private int supplierId;
+    private string documentNumber = string.Empty;
+    private DateTime purchasedAtDate = DateTime.Today;
+    private PurchaseSettlement settlement = PurchaseSettlement.Cash;
+    private string paymentReference = string.Empty;
+    private string notes = string.Empty;
+    private string barcode = string.Empty;
+    private string productSearch = string.Empty;
+    private Product? pendingProduct;
+    private decimal pendingUnitPrice;
+    private decimal pendingQty = 1;
+    private Purchase? lastPurchase;
+    private bool busy;
+    private string? errorMessage;
+    private string? infoMessage;
+
+    private IEnumerable<Product> FilteredProducts =>
+        products.Where(p =>
+            string.IsNullOrWhiteSpace(productSearch)
+            || (p.Name?.Contains(productSearch, StringComparison.OrdinalIgnoreCase) ?? false)
+            || (p.Barcode?.Contains(productSearch, StringComparison.OrdinalIgnoreCase) ?? false));
+
+    private decimal CartTotal => cart.Sum(l => l.LineTotal);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            suppliers = await Purchasing.GetAllAsync(CompanyId);
+            products = await PosService.GetProductsAsync(CompanyId);
+            if (suppliers.Count == 1)
+                supplierId = suppliers[0].Id;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private async Task OnBarcodeKey(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter" || string.IsNullOrWhiteSpace(barcode))
+            return;
+        var found = await PosService.FindByBarcodeAsync(CompanyId, barcode.Trim());
+        barcode = string.Empty;
+        if (found == null)
+            errorMessage = "Producto no encontrado";
+        else
+            AddProduct(found);
+    }
+
+    private void AddProduct(Product product)
+    {
+        errorMessage = null;
+        pendingProduct = product;
+        pendingUnitPrice = product.Cost > 0 ? product.Cost : product.Price;
+        pendingQty = 1;
+    }
+
+    private void ConfirmPending()
+    {
+        if (pendingProduct == null || pendingQty <= 0 || pendingUnitPrice <= 0)
+        {
+            errorMessage = "Indique precio y cantidad válidos";
+            return;
+        }
+        cart.Add(new PurchaseLine
+        {
+            ProductId = pendingProduct.Id,
+            ProductName = pendingProduct.Name,
+            Quantity = pendingQty,
+            UnitPrice = pendingUnitPrice,
+            LineTotal = Math.Round(pendingUnitPrice * pendingQty, 2)
+        });
+        pendingProduct = null;
+    }
+
+    private async Task Confirm()
+    {
+        busy = true;
+        errorMessage = null;
+        infoMessage = null;
+        try
+        {
+            var purchase = await Purchasing.ConfirmPurchaseAsync(new Purchase
+            {
+                CompanyId = CompanyId,
+                SupplierId = supplierId,
+                DocumentNumber = documentNumber,
+                PurchasedAt = purchasedAtDate,
+                PaymentMethod = settlement,
+                PaymentReference = paymentReference,
+                Notes = notes,
+                Lines = cart.ToList()
+            });
+            lastPurchase = purchase;
+            cart.Clear();
+            documentNumber = string.Empty;
+            paymentReference = string.Empty;
+            notes = string.Empty;
+            settlement = PurchaseSettlement.Cash;
+            infoMessage = "Compra confirmada — stock y costo actualizados";
+            products = await PosService.GetProductsAsync(CompanyId);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+}
