@@ -127,6 +127,12 @@ namespace Aries.Reporting.Reportes
 
                         break;
                     default:
+                        // money_type+0 en 0/NULL no mapea a 1, 2 ni 3. No dejar el Excel mudo.
+                        Trace.TraceWarning(
+                            "Balance Auxiliares: tipo de moneda {0} no es 1, 2 ni 3. Se emite el layout de colones.",
+                            (int)tipoMoneda);
+                        LLenarNombreCuentas(ref worksheet, 5, ref column, nuevaLista);
+                        LlenarSaldoCuentasColones(ref worksheet, 6, column, tablaCuentas);
                         break;
                 }
 
