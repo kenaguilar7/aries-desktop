@@ -53,6 +53,12 @@ namespace Aries.Reporting.Reportes
                             LlenarSaldoCuentasColonesDolares(ref worksheet, row, column, list);
                             break;
                         default:
+                            // Misma moneda no reconocida que el Balance de Auxiliares: no perder los saldos.
+                            Trace.TraceWarning(
+                                "Maestro de cuentas: tipo de moneda {0} no es 1, 2 ni 3. Se emiten saldos en colones.",
+                                (int)compañia.CurrencyType);
+                            LlenarTitulosUnaDivisa(ref worksheet, row, column, list);
+                            LlenarSaldoCuentasColones(ref worksheet, row, column, list);
                             break;
                     }
                 }
