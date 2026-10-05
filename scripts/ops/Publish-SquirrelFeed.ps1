@@ -16,7 +16,7 @@ param(
     [ValidateSet('Test', 'Staging', 'Production')]
     [string]$Environment = 'Test',
     [string]$FeedDir,
-    [string]$Bucket = 'ariescontadorcr',
+    [string]$Bucket = 'ariescontadorcrv2',
     [string]$ProfileName,
     [switch]$ConfirmProduction
 )
