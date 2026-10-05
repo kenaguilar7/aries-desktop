@@ -157,6 +157,39 @@ if ($ConnectionStringsConfig) {
     $built.Save($exeConfig)
 }
 
+if ($ExpectedUpdateUrlContains -or $ForbiddenUpdateUrlContains) {
+    $exeConfig = Join-Path $BinDir 'CapaPresentacion.exe.config'
+    if (-not (Test-Path -LiteralPath $exeConfig)) {
+        throw "Falta $exeConfig; no se puede validar UpdateUrl."
+    }
+    [xml]$packedCfg = Get-Content -LiteralPath $exeConfig -Raw
+    $updateUrl = ''
+    foreach ($add in @($packedCfg.configuration.appSettings.add)) {
+        if ([string]$add.key -eq 'UpdateUrl' -and -not [string]::IsNullOrWhiteSpace([string]$add.value)) {
+            $updateUrl = [string]$add.value
+            break
+        }
+    }
+    # --- BEGIN: fallback a connectionStrings comentado ---
+    # No queremos comparar ni derivar la URL desde la connection string.
+    # La URL valida debe vivir en appSettings/add key='UpdateUrl'.
+    #
+    # if ([string]::IsNullOrWhiteSpace($updateUrl)) {
+    #     $updateNode = @($packedCfg.configuration.connectionStrings.add) |
+    #         Where-Object { [string]$_.name -eq 'UpdateServerString' } |
+    #         Select-Object -First 1
+    #     if ($updateNode) { $updateUrl = [string]$updateNode.connectionString }
+    # }
+    # --- END: fallback a connectionStrings comentado ---
+    if ($ExpectedUpdateUrlContains -and ([string]::IsNullOrWhiteSpace($updateUrl) -or ($updateUrl -notlike "*$ExpectedUpdateUrlContains*"))) {
+        throw "UpdateUrl='$updateUrl' no contiene '$ExpectedUpdateUrlContains'. Abortando pack para no enviar clientes al canal equivocado."
+    }
+    if ($ForbiddenUpdateUrlContains -and $updateUrl -like "*$ForbiddenUpdateUrlContains*") {
+        throw "UpdateUrl='$updateUrl' contiene '$ForbiddenUpdateUrlContains' (canal prohibido para este pack)."
+    }
+    Write-Host "UpdateUrl OK: $updateUrl"
+}
+
 $nuspecPath = Join-Path $work "$PackageId.nuspec"
 $nuspec = @"
 <?xml version="1.0" encoding="utf-8"?>
